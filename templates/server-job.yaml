@@ -1,0 +1,189 @@
+{{- if .Values.schema.setup.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "temporal.componentname" (list . "schema-setup") }}
+  labels:
+    app.kubernetes.io/name: {{ include "temporal.name" . }}
+    helm.sh/chart: {{ include "temporal.chart" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+  annotations:
+    {{- if .Values.cassandra.enabled }}
+    "helm.sh/hook": post-install
+    {{- else }}
+    "helm.sh/hook": pre-install
+    {{- end }}
+    "helm.sh/hook-weight": "0"
+    {{- if not .Values.debug }}
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+    {{- end }}
+spec:
+  backoffLimit: {{ .Values.schema.setup.backoffLimit }}
+  template:
+    metadata:
+      name: {{ include "temporal.componentname" (list . "schema-setup") }}
+      labels:
+        app.kubernetes.io/name: {{ include "temporal.name" . }}
+        helm.sh/chart: {{ include "temporal.chart" . }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: {{ .Chart.Name }}
+    spec:
+      restartPolicy: "OnFailure"
+      initContainers:
+        {{- if or .Values.cassandra.enabled }}
+        {{- if .Values.cassandra.enabled }}
+        - name: check-cassandra-service
+          image: busybox
+          command: ['sh', '-c', 'until nslookup {{ include "cassandra.host" $ }}; do echo waiting for cassandra service; sleep 1; done;']
+        - name: check-cassandra
+          image: "{{ .Values.cassandra.image.repo }}:{{ .Values.cassandra.image.tag }}"
+          imagePullPolicy: {{ .Values.cassandra.image.pullPolicy }}
+          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ .Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+        {{- end }}
+        {{- range $store := (list "default" "visibility") }}
+        {{- $storeConfig := index $.Values.server.config.persistence $store }}
+        - name: create-{{ $store }}-store
+          image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
+          imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
+          {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
+          args: ['sh', '-c', 'temporal-cassandra-tool create -k {{ $storeConfig.cassandra.keyspace }}']
+          {{- end }}
+          env:
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
+            - name: CASSANDRA_HOST
+              value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $ $store))) }}
+            - name: CASSANDRA_PORT
+              value: {{ include "temporal.persistence.cassandra.port" (list $ $store) | quote }}
+            - name: CASSANDRA_KEYSPACE
+              value: {{ $storeConfig.cassandra.keyspace }}
+            {{- if $storeConfig.cassandra.user }}
+            - name: CASSANDRA_USER
+              value: {{ $storeConfig.cassandra.user }}
+            {{- end }}
+            {{- if $storeConfig.cassandra.password }}
+            - name: CASSANDRA_PASSWORD
+              value: {{ $storeConfig.cassandra.password }}
+            {{- end }}
+            {{- end }}
+        {{- end }}
+        {{- else }}
+          []
+        {{- end }}
+      containers:
+        {{- range $store := (list "default" "visibility") }}
+        {{- $storeConfig := index $.Values.server.config.persistence $store }}
+        - name: {{ $store }}-schema
+          image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
+          imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
+          args: ["temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool", "setup-schema", "-v", "0.0"]
+          env:
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
+            - name: CASSANDRA_HOST
+              value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $ $store))) }}
+            - name: CASSANDRA_PORT
+              value: {{ include "temporal.persistence.cassandra.port" (list $ $store) | quote }}
+            - name: CASSANDRA_KEYSPACE
+              value: {{ $storeConfig.cassandra.keyspace }}
+            {{- if $storeConfig.cassandra.user }}
+            - name: CASSANDRA_USER
+              value: {{ $storeConfig.cassandra.user }}
+            {{- end }}
+            {{- if $storeConfig.cassandra.password }}
+            - name: CASSANDRA_PASSWORD
+              value: {{ $storeConfig.cassandra.password }}
+            {{- end }}
+            {{- end }}
+        {{- end }}
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+---
+{{- end }}
+{{- if .Values.schema.update.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "temporal.componentname" (list . "schema-update") }}
+  labels:
+    app.kubernetes.io/name: {{ include "temporal.name" . }}
+    helm.sh/chart: {{ include "temporal.chart" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+  annotations:
+    {{- if .Values.cassandra.enabled }}
+    "helm.sh/hook": post-install,pre-upgrade
+    {{- else }}
+    "helm.sh/hook": pre-install,pre-upgrade
+    {{- end }}
+    "helm.sh/hook-weight": "1"
+    {{- if not .Values.debug }}
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+    {{- end }}
+spec:
+  backoffLimit: {{ .Values.schema.update.backoffLimit }}
+  template:
+    metadata:
+      name: {{ include "temporal.componentname" (list . "schema-update") }}
+      labels:
+        app.kubernetes.io/name: {{ include "temporal.name" . }}
+        helm.sh/chart: {{ include "temporal.chart" . }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: {{ .Chart.Name }}
+    spec:
+      restartPolicy: "OnFailure"
+      initContainers:
+        {{- if .Values.cassandra.enabled }}
+        - name: check-cassandra-service
+          image: busybox
+          command: ['sh', '-c', 'until nslookup {{ include "cassandra.host" $ }}; do echo waiting for cassandra service; sleep 1; done;']
+        - name: check-cassandra
+          image: "{{ .Values.cassandra.image.repo }}:{{ .Values.cassandra.image.tag }}"
+          imagePullPolicy: {{ .Values.cassandra.image.pullPolicy }}
+          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ .Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+        {{- else }}
+          []
+        {{- end }}
+      containers:
+        {{- range $store := (list "default" "visibility") }}
+        {{- $storeConfig := index $.Values.server.config.persistence $store }}
+        - name: {{ $store }}-schema
+          image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
+          imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
+          {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
+          # args: ["temporal-cassandra-tool", "update-schema", "-d", "/etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned"]
+          args: ['sh', '-c', 'temporal-cassandra-tool update-schema -d /etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
+          {{- end }}
+          env:
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
+            - name: CASSANDRA_HOST
+              value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $ $store))) }}
+            - name: CASSANDRA_PORT
+              value: {{ include "temporal.persistence.cassandra.port" (list $ $store) | quote }}
+            - name: CASSANDRA_KEYSPACE
+              value: {{ $storeConfig.cassandra.keyspace }}
+            {{- if $storeConfig.cassandra.user }}
+            - name: CASSANDRA_USER
+              value: {{ $storeConfig.cassandra.user }}
+            {{- end }}
+            {{- if $storeConfig.cassandra.password }}
+            - name: CASSANDRA_PASSWORD
+              value: {{ $storeConfig.cassandra.password }}
+            {{- end }}
+            {{- end }}
+        {{- end }}
+{{- end }}

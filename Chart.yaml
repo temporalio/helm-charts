@@ -1,0 +1,59 @@
+apiVersion: v2
+
+name: temporal
+
+description: Temporal is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous long-running business logic in a scalable and resilient way.
+
+home: https://temporal.io/
+
+keywords:
+  - temporal
+  - workflow
+  - orchestration
+
+maintainers:
+  - name: Temporal Technologies Inc.
+    url: https://temporal.io/
+
+sources:
+        - https://github.com/temporalio/temporal
+
+dependencies:
+  - name: cassandra
+    version: "0.14.3"
+    repository: https://kubernetes-charts-incubator.storage.googleapis.com/
+    condition: cassandra.enabled
+  - name: grafana
+    repository: https://kubernetes-charts.storage.googleapis.com
+    version: 5.0.5
+  - name: elasticsearch
+    repository: https://helm.elastic.co
+    version: 7.6.1
+  - name: kafka
+    repository: https://charts.bitnami.com/bitnami
+    version: 7.2.9
+  - name: kibana
+    repository: https://helm.elastic.co
+    version: 7.6.1
+  - name: prometheus
+    repository: https://kubernetes-charts.storage.googleapis.com
+    version: 11.0.1
+
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+version: 0.1.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application.
+appVersion: 0.1.0

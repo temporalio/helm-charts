@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "temporal.componentname" (list . "frontend") }}
+  labels:
+    app.kubernetes.io/name: {{ include "temporal.name" . }}
+    helm.sh/chart: {{ include "temporal.chart" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+spec:
+  type: {{ .Values.server.frontend.service.type }}
+  ports:
+    - port: {{ .Values.server.frontend.service.port }}
+      targetPort: rpc
+      protocol: TCP
+      name: rpc
+      {{- if hasKey .Values.server.frontend.service "nodePort" }}
+      nodePort: {{ .Values.server.frontend.service.nodePort }}
+      {{- end }}
+  selector:
+    app.kubernetes.io/name: {{ include "temporal.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: frontend
+
+---
+{{- range $service := (list "frontend" "matching" "history" "worker") }}
+{{- $serviceValues := index $.Values.server $service -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "temporal.componentname" (list $ (printf "%s-headless" $service)) }}
+  labels:
+    app.kubernetes.io/name: {{ include "temporal.name" $ }}
+    helm.sh/chart: {{ include "temporal.chart" $ }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/component: {{ $service }}
+    app.kubernetes.io/part-of: {{ $.Chart.Name }}
+    app.kubernetes.io/headless: 'true'
+  annotations:
+    # Use this annotation in addition to the actual field below because the
+    # annotation will stop being respected soon but the field is broken in
+    # some versions of Kubernetes:
+    # https://github.com/kubernetes/kubernetes/issues/58662
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - port: {{ $serviceValues.service.port }}
+      targetPort: rpc
+      protocol: TCP
+      name: rpc
+    - port: 9090
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: {{ include "temporal.name" $ }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/component: {{ $service }}
+
+---
+{{- end }}

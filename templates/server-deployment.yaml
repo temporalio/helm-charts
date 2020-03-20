@@ -1,0 +1,121 @@
+{{- range $service := (list "frontend" "history" "matching" "worker") }}
+{{- $serviceValues := index $.Values.server $service -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "temporal.componentname" (list $ $service) }}
+  labels:
+    app.kubernetes.io/name: {{ include "temporal.name" $ }}
+    helm.sh/chart: {{ include "temporal.chart" $ }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/component: {{ $service }}
+    app.kubernetes.io/part-of: {{ $.Chart.Name }}
+spec:
+  replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "temporal.name" $ }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+      app.kubernetes.io/component: {{ $service }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "temporal.name" $ }}
+        helm.sh/chart: {{ include "temporal.chart" $ }}
+        app.kubernetes.io/managed-by: {{ $.Release.Service }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+        app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
+        app.kubernetes.io/component: {{ $service }}
+        app.kubernetes.io/part-of: {{ $.Chart.Name }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/server-configmap.yaml") $ | sha256sum }}
+        {{- if (default $.Values.server.metrics.annotations.enabled $serviceValues.metrics.annotations.enabled) }}
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9090'
+        {{- end }}
+        {{- with (default $.Values.server.podAnnotations $serviceValues.podAnnotations) }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      initContainers:
+        {{- if $.Values.cassandra.enabled }}
+        - name: check-cassandra-service
+          image: busybox
+          command: ['sh', '-c', 'until nslookup {{ include "cassandra.host" $ }}; do echo waiting for cassandra service; sleep 1; done;']
+        - name: check-cassandra
+          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
+          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
+          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+        - name: check-cassandra-temporal-schema
+          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
+          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
+          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$; do echo waiting for default keyspace to become ready; sleep 1; done;']
+        - name: check-cassandra-visibility-schema
+          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
+          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
+          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.visibility.cassandra.keyspace }}$; do echo waiting for visibility keyspace to become ready; sleep 1; done;']
+        {{- else }}
+          []
+        {{- end }}
+      containers:
+        - name: {{ $.Chart.Name }}-{{ $service }}
+          image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
+          imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SERVICES
+              value: {{ $service }}
+            - name: TEMPORAL_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ "default") }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ "default") }}
+            - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ "visibility") }}
+          ports:
+            - name: rpc
+              containerPort: {{ include (printf "temporal.%s.grpcPort" $service) $ }}
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          livenessProbe:
+             initialDelaySeconds: 150
+             tcpSocket:
+               port: rpc
+          volumeMounts:
+            - name: config
+              mountPath: /etc/temporal/config/config_template.yaml
+              subPath: config_template.yaml
+          resources:
+            {{- toYaml (default $.Values.server.resources $serviceValues.resources) | nindent 12 }}
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "temporal.fullname" $ }}
+      {{- with (default $.Values.server.nodeSelector $serviceValues.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with (default $.Values.server.affinity $serviceValues.affinity) }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with (default $.Values.server.tolerations $serviceValues.tolerations) }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+---
+{{- end }}
