@@ -1,0 +1,258 @@
+nameOverride: ""
+fullnameOverride: ""
+
+# Chart debug mode
+# (eg. disable helm hook delete policy)
+debug: false
+
+server:
+  image:
+    repository: temporalio/temporal
+    tag: 7b4b09afa0dd516b54c5e0f824d7e5376fc81643
+    pullPolicy: IfNotPresent
+
+  # Global default settings (can be overridden per service)
+  replicaCount: 1
+  metrics:
+    # Annotate pods directly with Prometheus annotations.
+    # Use this if you installed Prometheus from a Helm chart.
+    annotations:
+      enabled: false
+    # Enable Prometheus ServiceMonitor
+    # Use this if you installed the Prometheus Operator (https://github.com/coreos/prometheus-operator).
+    serviceMonitor:
+      enabled: false
+      interval: 30s
+    prometheus:
+      timerType: histogram
+  podAnnotations: {}
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  config:
+    logLevel: "debug,info"
+
+    # IMPORTANT: This value cannot be changed, once it's set.
+    numHistoryShards: 512
+
+    persistence:
+      default:
+        driver: "cassandra"
+
+        cassandra:
+          hosts: []
+          # port: 9042
+          keyspace: temporal
+          user: "user"
+          password: "password"
+          existingSecret: ""
+          consistency: One
+          # datacenter: "us-east-1a"
+          # maxQPS: 1000
+          # maxConns: 2
+
+
+      visibility:
+        driver: "cassandra" 
+
+        cassandra:
+          hosts: []
+          # port: 9042
+          keyspace: temporal_visibility
+          user: "user"
+          password: "password"
+          existingSecret: ""
+          consistency: One
+          # datacenter: "us-east-1a"
+          # maxQPS: 1000
+          # maxConns: 2
+
+  frontend:
+    # replicaCount: 1
+    service:
+      type: ClusterIP
+      port: 7233
+    metrics:
+      annotations: {}
+        # enabled: false
+      serviceMonitor: {}
+        # enabled: false
+      prometheus: {}
+        # timerType: histogram
+    podAnnotations: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  history:
+    # replicaCount: 1
+    service:
+      # type: ClusterIP
+      port: 7934
+    metrics:
+      annotations: {}
+        # enabled: false
+      serviceMonitor: {}
+        # enabled: false
+      prometheus: {}
+        # timerType: histogram
+    podAnnotations: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  matching:
+    # replicaCount: 1
+    service:
+      # type: ClusterIP
+      port: 7935
+    metrics:
+      annotations: {}
+        # enabled: false
+      serviceMonitor: {}
+        # enabled: false
+      prometheus: {}
+        # timerType: histogram
+    podAnnotations: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  worker:
+    # replicaCount: 1
+    service:
+      # type: ClusterIP
+      port: 7239
+    metrics:
+      annotations: {}
+        # enabled: false
+      serviceMonitor: {}
+        # enabled: false
+      prometheus: {}
+        # timerType: histogram
+    podAnnotations: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+admintools:
+  enabled: true
+  image:
+    repository: temporalio/admin-tools
+    tag: master
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 22
+    annotations: {}
+
+
+web:
+  enabled: false
+
+  replicaCount: 1
+
+  image:
+    repository: temporalio/temporal
+    tag: 7b4b09afa0dd516b54c5e0f824d7e5376fc81643
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 80
+    annotations: {}
+    # loadBalancerIP:
+
+  ingress:
+    enabled: false
+    annotations: {}
+      # kubernetes.io/ingress.class: traefik
+      # ingress.kubernetes.io/ssl-redirect: "false"
+      # traefik.frontend.rule.type: PathPrefix
+    hosts:
+      - "/"
+      # - "domain.com/xyz"
+      # - "domain.com"
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+schema:
+  setup:
+    enabled: true
+    backoffLimit: 100
+  update:
+    enabled: true
+    backoffLimit: 100
+
+elasticsearch:
+  replicas: 3
+
+prometheus:
+  nodeExporter:
+    enabled: false
+
+grafana:
+  replicas: 1
+  testFramework:
+    enabled: false
+  rbac:
+    create: false
+    pspEnabled: false
+    namespaced: true
+
+cassandra:
+  enabled: true
+  persistence:
+    enabled: false
+  image:
+    repo: cassandra
+    tag: 3.11.3
+    pullPolicy: IfNotPresent
+  config:
+    cluster_size: 3
+    ports:
+      cql: 9042
+    num_tokens: 0
+    max_heap_size: 512M
+    heap_new_size: 128M
+    seed_size: 0
+  service:
+      type: ClusterIP

@@ -1,0 +1,40 @@
+{{- range $service := (list "frontend" "matching" "history" "worker") }}
+{{- $serviceValues := index $.Values.server $service -}}
+{{- if (default $.Values.server.metrics.serviceMonitor.enabled $serviceValues.metrics.serviceMonitor.enabled) }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "temporal.componentname" (list $ $service) }}
+  labels:
+    app.kubernetes.io/name: {{ include "temporal.name" $ }}
+    helm.sh/chart: {{ include "temporal.chart" $ }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/component: {{ $service }}
+    app.kubernetes.io/part-of: {{ $.Chart.Name }}
+    {{- with (default $.Values.server.metrics.serviceMonitor.additionalLabels $serviceValues.metrics.serviceMonitor.additionalLabels) }}
+    {{- toYaml . | indent 4 }}
+    {{- end }}
+spec:
+  endpoints:
+    - port: metrics
+      interval: {{ default $.Values.server.metrics.serviceMonitor.interval $serviceValues.metrics.serviceMonitor.interval }}
+      {{- with (default $.Values.server.metrics.serviceMonitor.relabellings $serviceValues.metrics.serviceMonitor.relabellings) }}
+      metricRelabelings:
+        {{- toYaml . | indent 8 }}
+      {{- end }}
+  jobLabel: {{ include "temporal.componentname" (list $ $service) }}
+  namespaceSelector:
+    matchNames:
+      - "{{ $.Release.Namespace }}"
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "temporal.name" $ }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+      app.kubernetes.io/component: {{ $service }}
+      app.kubernetes.io/headless: 'true'
+
+---
+{{- end }}
+{{- end }}

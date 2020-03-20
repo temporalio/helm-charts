@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "temporal.componentname" (list . "admintools") }}
+  labels:
+    app.kubernetes.io/name: {{ include "temporal.name" . }}
+    helm.sh/chart: {{ include "temporal.chart" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/component: admintools
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+spec:
+  type: ClusterIP 
+  ports:
+    - port: 22
+      targetPort: 22
+      protocol: TCP
+      name: ssh
+
+  selector:
+    app.kubernetes.io/name: {{ include "temporal.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: admintools
+
