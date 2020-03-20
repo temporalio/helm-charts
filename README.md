@@ -109,3 +109,7 @@ Note: in this example chart, uninstalling a Temporal instance also removes all t
 ```bash
 ~/temporal-helm $ helm uninstall temporaltest
 ```
+
+# Acknowledgements
+
+Many thanks to [Banzai Cloud](https://github.com/banzaicloud) whose [Cadence Helm Charts](https://github.com/banzaicloud/banzai-charts/tree/master/cadence) heavily inspired this work.
