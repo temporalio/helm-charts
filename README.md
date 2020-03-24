@@ -10,7 +10,7 @@ The version of Helm chart is provided for demo purposes and provides not intende
 
 ## Prerequisites
 
-This sequence assumes that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and that your machine has [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [Helm](https://helm.sh) installed and able to access your cluster.
+This sequence assumes that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and that your machine has [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [Helm v3.1.x](https://helm.sh) installed and able to access your cluster.
 
 ## Install an Instance of Temporal to Your k8s Cluster
 
