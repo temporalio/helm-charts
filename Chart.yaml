@@ -22,23 +22,6 @@ dependencies:
   - name: cassandra
     version: "0.14.3"
     repository: https://kubernetes-charts-incubator.storage.googleapis.com/
-    condition: cassandra.enabled
-  - name: grafana
-    repository: https://kubernetes-charts.storage.googleapis.com
-    version: 5.0.5
-  - name: elasticsearch
-    repository: https://helm.elastic.co
-    version: 7.6.1
-  - name: kafka
-    repository: https://charts.bitnami.com/bitnami
-    version: 7.2.9
-  - name: kibana
-    repository: https://helm.elastic.co
-    version: 7.6.1
-  - name: prometheus
-    repository: https://kubernetes-charts.storage.googleapis.com
-    version: 11.0.1
-
 
 # A chart can be either an 'application' or a 'library' chart.
 #
