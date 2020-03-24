@@ -7,8 +7,8 @@ debug: false
 
 server:
   image:
-    repository: temporalio/temporal
-    tag: 7b4b09afa0dd516b54c5e0f824d7e5376fc81643
+    repository: temporalio/server
+    tag: 0.20.0
     pullPolicy: IfNotPresent
 
   # Global default settings (can be overridden per service)
@@ -155,7 +155,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: master
+    tag: 0.20.0
     pullPolicy: IfNotPresent
 
   service:
@@ -170,8 +170,8 @@ web:
   replicaCount: 1
 
   image:
-    repository: temporalio/temporal
-    tag: 7b4b09afa0dd516b54c5e0f824d7e5376fc81643
+    repository: temporalio/server
+    tag: 0.20.0
     pullPolicy: IfNotPresent
 
   service:
