@@ -36,6 +36,9 @@ spec:
             - name: http
               containerPort: 22
               protocol: TCP
+          env:
+            - name: TEMPORAL_CLI_ADDRESS
+              value: {{ .Release.Name }}-frontend:{{ include "temporal.frontend.grpcPort" . }}
           livenessProbe:
               exec:
                 command:
