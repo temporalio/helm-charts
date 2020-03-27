@@ -60,16 +60,16 @@ temporaltest-worker-769b996fd-qmvbw                     1/1     Running   2     
 You can also drop into `admin-tools` container via k9s and run Temporal CLI from there:
 
 ```
-bash-5.0# tctl --address ${TEMPORALTEST_FRONTEND_PORT_7233_TCP_ADDR}:${TEMPORALTEST_FRONTEND_PORT_7233_TCP_PORT} --domain nonesuch domain desc
+bash-5.0# tctl --domain nonesuch domain desc
 Error: Domain nonesuch does not exist.
 Error Details: Domain nonesuch does not exist.
 ```
 ```
-bash-5.0# tctl --address ${TEMPORALTEST_FRONTEND_PORT_7233_TCP_ADDR}:${TEMPORALTEST_FRONTEND_PORT_7233_TCP_PORT} --domain nonesuch domain re
+bash-5.0# tctl --domain nonesuch domain re
 Domain nonesuch successfully registered.
 ```
 ```
-bash-5.0# tctl --address ${TEMPORALTEST_FRONTEND_PORT_7233_TCP_ADDR}:${TEMPORALTEST_FRONTEND_PORT_7233_TCP_PORT} --domain nonesuch domain desc
+bash-5.0# tctl --domain nonesuch domain desc
 Name: nonesuch
 UUID: 465bb575-8c01-43f8-a67d-d676e1ae5eae
 Description:
