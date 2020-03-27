@@ -10,7 +10,7 @@ The version of Helm chart is provided for demo purposes and provides not intende
 
 ## Prerequisites
 
-This sequence assumes that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and that your machine has [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [Helm v3.1.x](https://helm.sh) installed and able to access your cluster.
+This sequence assumes that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and that your machine has [AWS CLI V2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html), [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [Helm v3.1.x](https://helm.sh) installed and able to access your cluster.
 
 ## Install an Instance of Temporal to Your k8s Cluster
 
@@ -28,7 +28,7 @@ Install an instance of Temporal to your kubernetes cluster:
 
 ## Play With It
 
-### Exploring your cluster
+### Exploring Your Cluster
 
 As always, you can use your favorite kubernetes tools ([k9s](https://github.com/derailed/k9s), [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/), etc.) to interact with your cluster.
 
@@ -55,9 +55,16 @@ temporaltest-worker-769b996fd-qmvbw                     1/1     Running   2     
 ...
 ```
 
-### Running temporal CLI from the admin tools container
+### Running Temporal CLI From the Admin Tools Container
 
-You can also drop into `admin-tools` container via k9s and run Temporal CLI from there:
+You can also shell into `admin-tools` container via [k9s](https://github.com/derailed/k9s) or by running
+
+```
+$ kubectl exec -it services/temporaltest-admintools /bin/bash
+bash-5.0#
+```
+
+and run Temporal CLI from there:
 
 ```
 bash-5.0# tctl --domain nonesuch domain desc
