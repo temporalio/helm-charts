@@ -25,6 +25,9 @@ dependencies:
   - name: prometheus
     repository: https://kubernetes-charts.storage.googleapis.com
     version: 11.0.4
+  - name: elasticsearch
+    repository: https://helm.elastic.co
+    version: 7.6.1
 
 # A chart can be either an 'application' or a 'library' chart.
 #
