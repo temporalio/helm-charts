@@ -22,6 +22,12 @@ dependencies:
   - name: cassandra
     version: "0.14.3"
     repository: https://kubernetes-charts-incubator.storage.googleapis.com/
+  - name: prometheus
+    repository: https://kubernetes-charts.storage.googleapis.com
+    version: 11.0.4
+  - name: grafana
+    repository: https://kubernetes-charts.storage.googleapis.com
+    version: 5.0.10
 
 # A chart can be either an 'application' or a 'library' chart.
 #

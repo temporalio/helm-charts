@@ -17,7 +17,7 @@ server:
     # Annotate pods directly with Prometheus annotations.
     # Use this if you installed Prometheus from a Helm chart.
     annotations:
-      enabled: false
+      enabled: true
     # Enable Prometheus ServiceMonitor
     # Use this if you installed the Prometheus Operator (https://github.com/coreos/prometheus-operator).
     serviceMonitor:
@@ -85,8 +85,8 @@ server:
       type: ClusterIP
       port: 7233
     metrics:
-      annotations: {}
-        # enabled: false
+      annotations:
+        enabled: true
       serviceMonitor: {}
         # enabled: false
       prometheus: {}
@@ -103,8 +103,8 @@ server:
       # type: ClusterIP
       port: 7934
     metrics:
-      annotations: {}
-        # enabled: false
+      annotations:
+        enabled: true
       serviceMonitor: {}
         # enabled: false
       prometheus: {}
@@ -121,8 +121,8 @@ server:
       # type: ClusterIP
       port: 7935
     metrics:
-      annotations: {}
-        # enabled: false
+      annotations:
+        enabled: false
       serviceMonitor: {}
         # enabled: false
       prometheus: {}
@@ -139,8 +139,8 @@ server:
       # type: ClusterIP
       port: 7239
     metrics:
-      annotations: {}
-        # enabled: false
+      annotations:
+        enabled: true
       serviceMonitor: {}
         # enabled: false
       prometheus: {}
@@ -177,7 +177,8 @@ web:
   service:
     type: ClusterIP
     port: 80
-    annotations: {}
+    annotations:
+        enabled: true
     # loadBalancerIP:
 
   ingress:
