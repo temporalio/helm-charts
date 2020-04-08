@@ -224,6 +224,8 @@ schema:
 
 elasticsearch:
   replicas: 3
+  persistence:
+    enabled: false
 
 prometheus:
   nodeExporter:

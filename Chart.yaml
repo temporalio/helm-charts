@@ -27,7 +27,7 @@ dependencies:
     version: 11.0.4
   - name: elasticsearch
     repository: https://helm.elastic.co
-    version: 7.6.1
+    version: 7.6.2
 
 # A chart can be either an 'application' or a 'library' chart.
 #
