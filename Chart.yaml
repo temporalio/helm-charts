@@ -31,6 +31,9 @@ dependencies:
   - name: kafka
     repository: https://charts.bitnami.com/bitnami
     version: 7.2.9
+  - name: grafana
+    repository: https://kubernetes-charts.storage.googleapis.com
+    version: 5.0.10
 
 # A chart can be either an 'application' or a 'library' chart.
 #

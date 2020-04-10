@@ -41,6 +41,10 @@ metadata:
     app.kubernetes.io/component: {{ $service }}
     app.kubernetes.io/part-of: {{ $.Chart.Name }}
     app.kubernetes.io/headless: 'true'
+    prometheus.io/scrape: 'true'
+    prometheus.io/scheme: http
+    prometheus.io/port: "9090"
+
   annotations:
     # Use this annotation in addition to the actual field below because the
     # annotation will stop being respected soon but the field is broken in
