@@ -18,6 +18,7 @@ data:
     persistence:
       defaultStore: default
       visibilityStore: visibility
+      advancedVisibilityStore: es-visibility
       numHistoryShards: {{ .Values.server.config.numHistoryShards }}
       datastores:
         default:
@@ -40,6 +41,14 @@ data:
             {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
+        es-visibility:
+            elasticsearch:
+                url:
+                    scheme: "http"
+                    host: "elasticsearch-master-headless:9200"
+                indices:
+                    visibility: temporal-visibility-dev
+
 
     server:
       ringpop:
@@ -99,6 +108,23 @@ data:
           prometheus:
             timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.worker.metrics.prometheus.timerType }}
             listenAddress: "0.0.0.0:9090"
+
+    kafka:
+        tls:
+            enabled: false
+        clusters:
+            test:
+                brokers:
+                    - temporaltest-kafka-headless:9092
+        topics:
+            temporal-visibility-dev:
+                cluster: test
+            temporal-visibility-dev-dlq:
+                cluster: test
+        applications:
+            visibility:
+                topic: temporal-visibility-dev
+                dlq-topic: temporal-visibility-dev-dlq
 
     clusterMetadata:
       enableGlobalDomain: false
