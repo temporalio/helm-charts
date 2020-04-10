@@ -28,6 +28,9 @@ dependencies:
   - name: elasticsearch
     repository: https://helm.elastic.co
     version: 7.6.2
+  - name: kafka
+    repository: https://charts.bitnami.com/bitnami
+    version: 7.2.9
 
 # A chart can be either an 'application' or a 'library' chart.
 #
