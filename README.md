@@ -4,7 +4,7 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 
 This repo contains a basic [Helm](https://helm.sh) chart that allows you to install temporal to a kubernetes cluster, and to play with it.
 
-The version of Helm chart is provided for demo purposes and provides not intended to be used in a production systems.
+The version of Helm chart is provided for demo purposes and is not intended to be used in production systems.
 
 # Deploying Temporal Service to a Kubernetes Cluster
 
