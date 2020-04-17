@@ -47,8 +47,7 @@ data:
                     scheme: "http"
                     host: "elasticsearch-master-headless:9200"
                 indices:
-                    visibility: temporal-visibility-dev
-
+                    visibility: temporal-visibility
 
     server:
       ringpop:
@@ -58,7 +57,6 @@ data:
 
       pprof:
         port: 7936
-
 
     services:
       frontend:
@@ -113,18 +111,18 @@ data:
         tls:
             enabled: false
         clusters:
-            test:
+            cluster_a:
                 brokers:
                     - temporaltest-kafka-headless:9092
         topics:
-            temporal-visibility-dev:
-                cluster: test
-            temporal-visibility-dev-dlq:
-                cluster: test
+            temporal-visibility:
+                cluster: cluster_a
+            temporal-visibility-dlq:
+                cluster: cluster_a
         applications:
             visibility:
-                topic: temporal-visibility-dev
-                dlq-topic: temporal-visibility-dev-dlq
+                topic: temporal-visibility
+                dlq-topic: temporal-visibility-dlq
 
     clusterMetadata:
       enableGlobalDomain: false
