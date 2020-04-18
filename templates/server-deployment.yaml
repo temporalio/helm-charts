@@ -68,6 +68,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            - name: ENABLE_ES
+              value: "true"
+            - name: ES_SEEDS
+              value: elasticsearch-master-headless
+            - name: ES_PORT
+              value: "9200"
             - name: SERVICES
               value: {{ $service }}
             - name: TEMPORAL_STORE_PASSWORD
