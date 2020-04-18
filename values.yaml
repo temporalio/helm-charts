@@ -173,6 +173,9 @@ schema:
 
 elasticsearch:
   replicas: 3
+  persistence:
+    enabled: false
+  imageTag: 6.8.8
 
 prometheus:
   nodeExporter:
