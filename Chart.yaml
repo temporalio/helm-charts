@@ -22,6 +22,8 @@ dependencies:
   - name: cassandra
     version: "0.14.3"
     repository: https://kubernetes-charts-incubator.storage.googleapis.com/
+    enabled: false
+    condition: cassandra.enabled
   - name: prometheus
     repository: https://kubernetes-charts.storage.googleapis.com
     version: 11.0.4

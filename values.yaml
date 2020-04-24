@@ -48,8 +48,9 @@ server:
     numHistoryShards: 512
 
     persistence:
+
       default:
-        driver: "cassandra"
+        driver: "sql"
 
         cassandra:
           hosts: []
@@ -64,8 +65,19 @@ server:
           # maxConns: 2
 
 
+        sql:
+          driver: "mysql"
+          host: "mysql"
+          port: 3306
+          database: temporal
+          user: "temporal"
+          password: "temporal"
+          existingSecret: ""
+          secretName: ""
+
+
       visibility:
-        driver: "cassandra" 
+        driver: "sql"
 
         cassandra:
           hosts: []
@@ -78,6 +90,18 @@ server:
           # datacenter: "us-east-1a"
           # maxQPS: 1000
           # maxConns: 2
+
+
+        sql:
+          driver: "mysql"
+          host: "mysql"
+          port: 3306
+          database: temporal_visibility
+          user: "temporal"
+          password: "temporal"
+          existingSecret: ""
+          secretName: ""
+
 
   frontend:
     # replicaCount: 1
@@ -165,10 +189,10 @@ admintools:
 
 schema:
   setup:
-    enabled: true
+    enabled: false
     backoffLimit: 100
   update:
-    enabled: true
+    enabled: false
     backoffLimit: 100
 
 elasticsearch:
@@ -208,3 +232,6 @@ cassandra:
     seed_size: 0
   service:
       type: ClusterIP
+
+mysql:
+  enabled: false
