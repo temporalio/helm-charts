@@ -20,10 +20,55 @@ Download Helm dependencies:
 ~/temporal-helm$ helm dependencies update
 ```
 
-Install an instance of Temporal to your kubernetes cluster:
+### Install Temporal
+
+Temporal can be configured to run with a couple of database choices.
+
+#### Cassandra and ElasticSearch
+
+By default, Temporal Helm Chart configures Temporal to runs with Cassandra (for persistence) and ElasticSearch (for "visibility" features).
+
+To install Temporal with all of its dependencies, including Cassandra and ElasticSearch, run this command:
 
 ```bash
 ~/temporal-helm$ helm install temporaltest . --timeout 900s
+```
+
+#### MySQL (installed separately)
+
+You may already have a MySQL installation that you want to use with Temporal.
+
+In this case, create and configure temporal databases on your mysql host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal).
+
+Here are the commands you can use to create and initialize the databases:
+
+```bash
+~/temporal$ export SQL_DRIVER=sql
+~/temporal$ export SQL_HOST=mysqlhost
+~/temporal$ export SQL_PORT=3306
+~/temporal$ export SQL_USER=mysqluser
+~/temporal$ export SQL_PASSWORD=userpassword
+
+~/temporal$ ./temporal-sql-tool create-database -database temporal
+~/temporal$ SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
+~/temporal$ SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/mysql/v57/temporal/versioned
+
+~/temporal$ ./temporal-sql-tool create-database -database temporal_visibility
+~/temporal$ SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
+~/temporal$ SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/mysql/v57/visibility/versioned
+```
+
+
+Once you initialized the two databases, fill in the configuration values in `values/values.mysql.yaml`, and run
+
+```bash
+~/temporal-helm$ helm install -f values/values.mysql.yaml temporaltest . --timeout 900s
+```
+
+Alternatively, instad of modifying `values/values.mysql.yaml`, you can supply those values in your command line:
+
+```bash
+~/temporal-helm$ helm install -f values/values.mysql.yaml temporaltest --set server.config.persistence.default.sql.user=mysqluser --set server.config.persistence.default.sql.password=userpassword --set server.config.persistence.visibility.sql.user=mysqluser --set server.config.persistence.visibility.sql.password=userpassword --set server.config.persistence.default.sql.host=mysqlhost --set server.config.persistence.visibility.sql.host=mysqlhost . --timeout 900s
 ```
 
 ## Play With It
