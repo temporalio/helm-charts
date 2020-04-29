@@ -50,7 +50,7 @@ server:
     persistence:
 
       default:
-        driver: "sql"
+        driver: "cassandra"
 
         cassandra:
           hosts: []
@@ -77,7 +77,7 @@ server:
 
 
       visibility:
-        driver: "sql"
+        driver: "cassandra"
 
         cassandra:
           hosts: []
@@ -189,10 +189,10 @@ admintools:
 
 schema:
   setup:
-    enabled: false
+    enabled: true
     backoffLimit: 100
   update:
-    enabled: false
+    enabled: true
     backoffLimit: 100
 
 elasticsearch:

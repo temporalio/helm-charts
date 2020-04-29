@@ -28,3 +28,9 @@ cassandra:
 
 mysql:
   enabled: true
+
+schema:
+  setup:
+    enabled: false
+  update:
+    enabled: false
