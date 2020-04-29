@@ -102,6 +102,8 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $storeConfig.driver -}}
 {{- else if $global.Values.cassandra.enabled -}}
 {{- print "cassandra" -}}
+{{- else if $global.Values.mysql.enabled -}}
+{{- print "sql" -}}
 {{- else -}}
 {{- required (printf "Please specify persistence driver for %s store" $store) $storeConfig.driver -}}
 {{- end -}}
@@ -153,6 +155,103 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
 {{/* Cassandra password is optional, but we will create an empty secret for it */}}
 {{- print "password" -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.driver" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if $storeConfig.sql.driver -}}
+{{- $storeConfig.sql.driver -}}
+{{- else if $global.Values.mysql.enabled -}}
+{{- print "mysql" -}}
+{{- else -}}
+{{- required (printf "Please specify sql driver for %s store" $store) $storeConfig.sql.host -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.host" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if $storeConfig.sql.host -}}
+{{- $storeConfig.sql.host -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- include "mysql.host" $global -}}
+{{- else -}}
+{{- required (printf "Please specify sql host for %s store" $store) $storeConfig.sql.host -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.port" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if $storeConfig.sql.port -}}
+{{- $storeConfig.sql.port -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- $global.Values.mysql.service.port -}}
+{{- else -}}
+{{- required (printf "Please specify sql port for %s store" $store) $storeConfig.sql.port -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.user" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if $storeConfig.sql.user -}}
+{{- $storeConfig.sql.user -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- $global.Values.mysql.mysqlUser -}}
+{{- else -}}
+{{- required (printf "Please specify sql user for %s store" $store) $storeConfig.sql.user -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.password" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if $storeConfig.sql.password -}}
+{{- $storeConfig.sql.password -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- if or $global.Values.schema.setup.enabled $global.Values.schema.update.enabled -}}
+{{- required "Please specify password for MySQL chart" $global.Values.mysql.mysqlPassword -}}
+{{- else -}}
+{{- $global.Values.mysql.mysqlPassword -}}
+{{- end -}}
+{{- else -}}
+{{- required (printf "Please specify sql password for %s store" $store) $storeConfig.sql.password -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.secretName" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if $storeConfig.sql.existingSecret -}}
+{{- $storeConfig.sql.existingSecret -}}
+{{- else if $storeConfig.sql.password -}}
+{{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- include "call-nested" (list $global "mysql" "mysql.secretName") -}}
+{{- else -}}
+{{- required (printf "Please specify sql password or existing secret for %s store" $store) $storeConfig.sql.existingSecret -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.secretKey" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if or $storeConfig.sql.existingSecret $storeConfig.sql.password -}}
+{{- print "password" -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- print "mysql-password" -}}
+{{- else -}}
+{{- fail (printf "Please specify sql password or existing secret for %s store" $store) -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.persistence.secretName" -}}
