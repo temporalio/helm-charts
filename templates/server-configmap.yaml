@@ -142,7 +142,7 @@ data:
         clusters:
             test:
                 brokers:
-                    - temporaltest-kafka-headless:9092
+                    - {{ .Release.Name }}-kafka-headless:9092
         topics:
             temporal-visibility-dev:
                 cluster: test
