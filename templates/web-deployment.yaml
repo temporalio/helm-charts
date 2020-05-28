@@ -44,10 +44,6 @@ spec:
             - name: http
               containerPort: 8088
               protocol: TCP
-          #          livenessProbe:
-          #            httpGet:
-          #              path: /health
-          #              port: http
           resources:
             {{- toYaml .Values.web.resources | nindent 12 }}
       {{- with .Values.web.nodeSelector }}
