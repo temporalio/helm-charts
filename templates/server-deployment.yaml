@@ -69,7 +69,7 @@ spec:
                 fieldRef:
                   fieldPath: status.podIP
             - name: ENABLE_ES
-              value: "true"
+              value: "{{ $.Values.elasticsearch.enabled }}"
             - name: ES_SEEDS
               value: elasticsearch-master-headless
             - name: ES_PORT
