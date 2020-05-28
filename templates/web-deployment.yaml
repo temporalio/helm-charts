@@ -29,9 +29,6 @@ spec:
         app.kubernetes.io/component: web
         app.kubernetes.io/part-of: {{ .Chart.Name }}
     spec:
-      #      - name: check-frontend
-      #          image: busybox
-      #          command: ['sh', '-c', 'until nslookup {{ include "cassandra.host" $ }}; do echo waiting for cassandra service; sleep 1; done;']
       containers:
         - name: {{ .Chart.Name }}-web
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
