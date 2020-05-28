@@ -242,7 +242,7 @@ schema:
     backoffLimit: 100
 
 elasticsearch:
-  enabled: false
+  enabled: true
   replicas: 3
   persistence:
     enabled: false
