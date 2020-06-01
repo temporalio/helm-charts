@@ -26,8 +26,7 @@ server:
     prometheus:
       timerType: histogram
   podAnnotations: {}
-  resources:
-    {}
+  resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -56,8 +55,8 @@ server:
           hosts: []
           # port: 9042
           keyspace: temporal
-          user: "user"
-          password: "password"
+          user: ""
+          password: ""
           existingSecret: ""
           consistency: One
           # datacenter: "us-east-1a"
@@ -81,8 +80,8 @@ server:
           hosts: []
           # port: 9042
           keyspace: temporal_visibility
-          user: "user"
-          password: "password"
+          user: ""
+          password: ""
           existingSecret: ""
           consistency: One
           # datacenter: "us-east-1a"
@@ -214,7 +213,6 @@ web:
     #    hosts:
     #      - chart-example.local
 
-
   resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -264,7 +262,7 @@ elasticsearch:
 
   # Request smaller persistent volumes.
   volumeClaimTemplate:
-    accessModes: [ "ReadWriteOnce" ]
+    accessModes: ["ReadWriteOnce"]
     storageClassName: "standard"
     resources:
       requests:
