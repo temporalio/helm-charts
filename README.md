@@ -34,6 +34,13 @@ To install Temporal with all of its dependencies, including Cassandra and Elasti
 ~/temporal-helm$ helm install temporaltest . --timeout 900s
 ```
 
+#### Install using an existing Cassandra Cluster
+
+You can use an existing Cassandra cluster instead of installing one.
+```bash
+~/temporal-helm$ helm install -f values/values.cassandra.yaml temporaltest .
+```
+
 #### MySQL (installed separately)
 
 You may already have a MySQL installation that you want to use with Temporal.
