@@ -1,0 +1,31 @@
+server:
+  config:
+    persistence:
+      default:
+        driver: "cassandra"
+
+        cassandra:
+          hosts: "cassandra-0.cassandra"
+          port: 9042
+          keyspace: "temporal"
+          consistency: "One"
+
+          # Authentication
+          # user: ""
+          # password: ""
+
+      visibility:
+        driver: "cassandra"
+
+        cassandra:
+          hosts: "cassandra-0.cassandra"
+          port: 9042
+          keyspace: "temporal_visibility"
+          consistency: "One"
+
+          # Authentication
+          # user: ""
+          # password: ""
+
+cassandra:
+  enabled: false
