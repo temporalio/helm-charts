@@ -40,22 +40,22 @@ spec:
         {{- end }}
     spec:
       initContainers:
-        {{- if $.Values.cassandra.enabled }}
+        {{- if eq (include "temporal.persistence.driver" (list $ "default")) "cassandra" }}
         - name: check-cassandra-service
           image: busybox
-          command: ['sh', '-c', 'until nslookup {{ include "cassandra.host" $ }}; do echo waiting for cassandra service; sleep 1; done;']
+          command: ['sh', '-c', 'until nslookup {{ include "temporal.persistence.cassandra.hosts" (list $ "default") }}; do echo waiting for cassandra service; sleep 1; done;']
         - name: check-cassandra
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+          command: ['sh', '-c', 'until cqlsh {{ include "temporal.persistence.cassandra.hosts" (list $ "default") }} {{ include "temporal.persistence.cassandra.port" (list $ "default") }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
         - name: check-cassandra-temporal-schema
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$; do echo waiting for default keyspace to become ready; sleep 1; done;']
+          command: ['sh', '-c', 'until cqlsh {{ include "temporal.persistence.cassandra.hosts" (list $ "default") }} {{ include "temporal.persistence.cassandra.port" (list $ "default") }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$; do echo waiting for default keyspace to become ready; sleep 1; done;']
         - name: check-cassandra-visibility-schema
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.visibility.cassandra.keyspace }}$; do echo waiting for visibility keyspace to become ready; sleep 1; done;']
+          command: ['sh', '-c', 'until cqlsh {{ include "temporal.persistence.cassandra.hosts" (list $ "default") }} {{ include "temporal.persistence.cassandra.port" (list $ "default") }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.visibility.cassandra.keyspace }}$; do echo waiting for visibility keyspace to become ready; sleep 1; done;']
         {{- else }}
           []
         {{- end }}
