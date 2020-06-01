@@ -23,16 +23,16 @@ dependencies:
     version: 0.15.1
     repository: https://kubernetes-charts-incubator.storage.googleapis.com/
     condition: cassandra.enabled
-  - name: prometheus
-    repository: https://kubernetes-charts.storage.googleapis.com
-    version: 11.0.4
+  - name: kafka
+    repository: https://charts.bitnami.com/bitnami
+    version: 7.2.9
   - name: elasticsearch
     repository: https://helm.elastic.co
     version: 7.6.2
     condition: elasticsearch.enabled
-  - name: kafka
-    repository: https://charts.bitnami.com/bitnami
-    version: 7.2.9
+  - name: prometheus
+    repository: https://kubernetes-charts.storage.googleapis.com
+    version: 11.0.4
   - name: grafana
     repository: https://kubernetes-charts.storage.googleapis.com
     version: 5.0.10
