@@ -21,24 +21,24 @@ annotations:
     {{- end }}
 spec:
   {{- if .Values.web.ingress.tls }}
-tls:
-  {{- range .Values.web.ingress.tls }}
-  - hosts:
-    {{- range .hosts }}
-    - {{ . }}
-    {{- end }}
-    secretName: {{ .secretName }}
-    {{- end }}
-    {{- end }}
-rules:
-  {{- range .Values.web.ingress.hosts }}
-    {{- $url := splitList "/" . }}
-    - host: {{ first $url }}
-      http:
-        paths:
-          - path: /{{ rest $url | join "/" }}
-            backend:
-              serviceName: {{ include "temporal.fullname" $ }}-web
-              servicePort: {{ $.Values.web.service.port }}
-      {{- end}}
+  tls:
+    {{- range .Values.web.ingress.tls }}
+    - hosts:
+      {{- range .hosts }}
+      - {{ . }}
       {{- end }}
+      secretName: {{ .secretName }}
+      {{- end }}
+      {{- end }}
+  rules:
+    {{- range .Values.web.ingress.hosts }}
+      {{- $url := splitList "/" . }}
+      - host: {{ first $url }}
+        http:
+          paths:
+            - path: /{{ rest $url | join "/" }}
+              backend:
+                serviceName: {{ include "temporal.fullname" $ }}-web
+                servicePort: {{ $.Values.web.service.port }}
+        {{- end}}
+        {{- end }}
