@@ -246,7 +246,29 @@ elasticsearch:
   replicas: 3
   persistence:
     enabled: false
-  imageTag: 6.8.8
+  imageTag: 7.7.0
+  # Permit co-located instances for solitary minikube virtual machines.
+  antiAffinity: soft
+
+  # Shrink default JVM heap.
+  esJavaOpts: "-Xmx128m -Xms128m"
+
+  # Allocate smaller chunks of memory per pod.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512M
+    limits:
+      cpu: 1000m
+      memory: 512M
+
+  # Request smaller persistent volumes.
+  volumeClaimTemplate:
+    accessModes: [ "ReadWriteOnce" ]
+    storageClassName: "standard"
+    resources:
+      requests:
+        storage: 100M
 
 prometheus:
   nodeExporter:
@@ -267,7 +289,7 @@ cassandra:
     enabled: false
   image:
     repo: cassandra
-    tag: 3.11.3
+    tag: 3.11.6
     pullPolicy: IfNotPresent
   config:
     cluster_size: 3
@@ -277,6 +299,13 @@ cassandra:
     max_heap_size: 512M
     heap_new_size: 128M
     seed_size: 0
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512M
+    limits:
+      cpu: 1000m
+      memory: 512M
   service:
     type: ClusterIP
 

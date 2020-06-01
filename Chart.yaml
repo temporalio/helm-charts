@@ -16,11 +16,11 @@ maintainers:
     url: https://temporal.io/
 
 sources:
-        - https://github.com/temporalio/temporal
+  - https://github.com/temporalio/temporal
 
 dependencies:
   - name: cassandra
-    version: "0.14.3"
+    version: 0.15.1
     repository: https://kubernetes-charts-incubator.storage.googleapis.com/
     enabled: false
     condition: cassandra.enabled
