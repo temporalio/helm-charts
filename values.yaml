@@ -260,6 +260,15 @@ grafana:
     create: false
     pspEnabled: false
     namespaced: true
+  datasources:
+   datasources.yaml:
+     apiVersion: 1
+     datasources:
+     - name: Prometheus
+       type: prometheus
+       url: http://{{ .Release.Name }}-prometheus-server
+       access: proxy
+       isDefault: true
 
 cassandra:
   enabled: true
