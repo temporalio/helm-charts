@@ -260,15 +260,38 @@ grafana:
     create: false
     pspEnabled: false
     namespaced: true
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
   datasources:
    datasources.yaml:
      apiVersion: 1
      datasources:
-     - name: Prometheus
+     - name: TemporalMetrics
        type: prometheus
        url: http://{{ .Release.Name }}-prometheus-server
        access: proxy
        isDefault: true
+  dashboards:
+     default:
+       frontend-github:
+         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/frontend.json
+         datasource: TemporalMetrics
+       temporal-github:
+         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/temporal.json
+         datasource: TemporalMetrics
+       carary-github:
+         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/canary.json
+         datasource: TemporalMetrics
 
 cassandra:
   enabled: true
