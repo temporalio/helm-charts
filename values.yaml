@@ -289,7 +289,7 @@ grafana:
        temporal-github:
          url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/temporal.json
          datasource: TemporalMetrics
-       carary-github:
+       canary-github:
          url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/canary.json
          datasource: TemporalMetrics
 
