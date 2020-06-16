@@ -1,3 +1,4 @@
+{{- if $.Values.server.enabled }}
 {{- if .Values.schema.setup.enabled }}
 apiVersion: batch/v1
 kind: Job
@@ -186,4 +187,5 @@ spec:
             {{- end }}
             {{- end }}
         {{- end }}
+{{- end }}
 {{- end }}
