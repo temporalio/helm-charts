@@ -6,6 +6,7 @@ fullnameOverride: ""
 debug: false
 
 server:
+  enabled: true
   image:
     repository: temporalio/server
     tag: 0.23.1
