@@ -93,7 +93,7 @@ Here are the commands you can use to create and initialize the keyspaces:
 ~/temporal$ CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool update -schema-dir schema/cassandra/temporal/versioned
 
 ~/temporal$ ./temporal-cassandra-tool create-Keyspace -k temporal_visibility
-~/temporal$ CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool  setup-schema  -v 0.0
+~/temporal$ CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool setup-schema  -v 0.0
 ~/temporal$ CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool update -schema-dir /etc/temporal/schema/cassandra/visibility/versioned
 ```
 
