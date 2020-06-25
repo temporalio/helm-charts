@@ -24,9 +24,9 @@ Download Helm dependencies:
 
 Temporal can be configured to run with a couple of database choices.
 
-#### Cassandra and ElasticSearch
+#### Default Installation: Batteries Included
 
-By default, Temporal Helm Chart configures Temporal to runs with Cassandra (for persistence) and ElasticSearch (for "visibility" features).
+By default, Temporal Helm Chart configures Temporal to runs with Cassandra (for persistence) and ElasticSearch (for "visibility" features). By default, Temporal Helm Chart installs all the dependencies, out of the box.
 
 To install Temporal with all of its dependencies, including Cassandra and ElasticSearch, run this command:
 
@@ -34,7 +34,20 @@ To install Temporal with all of its dependencies, including Cassandra and Elasti
 ~/temporal-helm$ helm install temporaltest . --timeout 900s
 ```
 
-#### MySQL Running Separately
+#### Bring Your Own ElasticSearch
+
+You might already be operating an intance of ElasticSearch that you want to use with Temporal.
+
+To do so, fill in the relevant configuration values in `values/values.cassandra.yaml`, and pass the file to 'helm install'.
+
+Exmaple:
+
+```bash
+~/temporal-helm$ helm install -f values/values.elasticsearch.yaml temporaltest . --timeout 900s
+```
+
+
+#### Bring Your Own MySQL
 
 You might already be operating a MySQL instance that you want to use with Temporal.
 
@@ -72,7 +85,7 @@ Alternatively, instad of modifying `values/values.mysql.yaml`, you can supply th
 ~/temporal-helm$ helm install -f values/values.mysql.yaml temporaltest --set server.config.persistence.default.sql.user=mysqluser --set server.config.persistence.default.sql.password=userpassword --set server.config.persistence.visibility.sql.user=mysqluser --set server.config.persistence.visibility.sql.password=userpassword --set server.config.persistence.default.sql.host=mysqlhost --set server.config.persistence.visibility.sql.host=mysqlhost . --timeout 900s
 ```
 
-#### Cassandra, Installed Separately
+#### Bring Your Own Cassandra
 
 You might already be operating a Cassandra instance that you want to use with Temporal.
 

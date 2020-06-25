@@ -19,7 +19,7 @@ data:
     persistence:
       defaultStore: default
       visibilityStore: visibility
-    {{- if $.Values.elasticsearch.enabled }}
+    {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.hosted }}
       advancedVisibilityStore: es-visibility
     {{- end }}
       numHistoryShards: {{ .Values.server.config.numHistoryShards }}
@@ -71,12 +71,12 @@ data:
             {{- end }}
           {{- end }}
 
-        {{- if $.Values.elasticsearch.enabled }}
+        {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.hosted }}
         es-visibility:
             elasticsearch:
                 url:
-                    scheme: "http"
-                    host: "elasticsearch-master-headless:9200"
+                    scheme: "{{ $.Values.elasticsearch.scheme }}"
+                    host: "{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}"
                 indices:
                     visibility: temporal-visibility-dev
         {{- end }}

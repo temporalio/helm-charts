@@ -70,11 +70,11 @@ spec:
                 fieldRef:
                   fieldPath: status.podIP
             - name: ENABLE_ES
-              value: "{{ $.Values.elasticsearch.enabled }}"
+              value: "{{ or $.Values.elasticsearch.enabled $.Values.elasticsearch.hosted }}"
             - name: ES_SEEDS
-              value: elasticsearch-master-headless
+              value: {{ $.Values.elasticsearch.host }}
             - name: ES_PORT
-              value: "9200"
+              value: "{{ $.Values.elasticsearch.port }}"
             - name: SERVICES
               value: {{ $service }}
             - name: TEMPORAL_STORE_PASSWORD

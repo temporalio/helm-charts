@@ -1,0 +1,7 @@
+elasticsearch:
+  enabled: false
+  hosted: true
+  external: true
+  host: "elasticsearch-master-headless"
+  port: "9200"
+  scheme: "http"
