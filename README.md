@@ -26,13 +26,22 @@ Temporal can be configured to run with a couple of database choices.
 
 #### Default Installation: Batteries Included
 
-By default, Temporal Helm Chart configures Temporal to runs with Cassandra (for persistence) and ElasticSearch (for "visibility" features). By default, Temporal Helm Chart installs all the dependencies, out of the box.
+By default, Temporal Helm Chart configures Temporal to runs with Cassandra (for persistence) and ElasticSearch/Kafka (for "visibility" features), Prometheus, and Grafana. By default, Temporal Helm Chart installs all dependencies, out of the box.
 
 To install Temporal with all of its dependencies, including Cassandra and ElasticSearch, run this command:
 
 ```bash
 ~/temporal-helm$ helm install temporaltest . --timeout 900s
 ```
+
+To use your own instance of ElasticSearch, MySQL, or Cassandra, please read the "Bring Your Own" sections below.
+
+Other components can be omitted by setting their corresponding 'enable' flag to `false`, e. g.
+
+```bash
+~/temporal-helm$ helm install --set grafana.enabled=false temporaltest . --timeout 900s
+```
+
 
 #### Bring Your Own ElasticSearch
 
@@ -107,7 +116,7 @@ Here are the commands you can use to create and initialize the keyspaces:
 
 ~/temporal$ ./temporal-cassandra-tool create-Keyspace -k temporal_visibility
 ~/temporal$ CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool setup-schema  -v 0.0
-~/temporal$ CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool update -schema-dir /etc/temporal/schema/cassandra/visibility/versioned
+~/temporal$ CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool update -schema-dir schema/cassandra/visibility/versioned
 ```
 
 Once you initialized the two keyspaces, fill in the configuration values in `values/values.cassandra.yaml`, and run

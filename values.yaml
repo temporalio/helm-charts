@@ -250,10 +250,15 @@ elasticsearch:
   imageTag: 6.8.8
 
 prometheus:
+  enabled: true
   nodeExporter:
     enabled: false
 
+kafka:
+  enabled: true
+
 grafana:
+  enabled: true
   replicas: 1
   testFramework:
     enabled: false
