@@ -34,11 +34,12 @@ To install Temporal with all of its dependencies, including Cassandra and Elasti
 ~/temporal-helm$ helm install temporaltest . --timeout 900s
 ```
 
-#### MySQL (installed separately)
+#### MySQL Running Separately
 
-You may already have a MySQL installation that you want to use with Temporal.
+You might already be operating a MySQL instance that you want to use with Temporal.
 
-In this case, create and configure temporal databases on your mysql host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal).
+In this case, create and configure temporal databases on your mysql host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
+
 
 Here are the commands you can use to create and initialize the databases:
 
@@ -70,6 +71,38 @@ Alternatively, instad of modifying `values/values.mysql.yaml`, you can supply th
 ```bash
 ~/temporal-helm$ helm install -f values/values.mysql.yaml temporaltest --set server.config.persistence.default.sql.user=mysqluser --set server.config.persistence.default.sql.password=userpassword --set server.config.persistence.visibility.sql.user=mysqluser --set server.config.persistence.visibility.sql.password=userpassword --set server.config.persistence.default.sql.host=mysqlhost --set server.config.persistence.visibility.sql.host=mysqlhost . --timeout 900s
 ```
+
+#### Cassandra, Installed Separately
+
+You might already be operating a Cassandra instance that you want to use with Temporal.
+
+In this case, create and setup keyspaces in your cassandra instance with `temporal-cassandra-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
+
+
+Here are the commands you can use to create and initialize the keyspaces:
+
+```bash
+
+~/temporal$ export CASSANDRA_HOST=cassandra.default.svc.cluster.local
+~/temporal$ export CASSANDRA_PORT=9042
+~/temporal$ export CASSANDRA_USER=cassandra_user
+~/temporal$ export CASSANDRA_PASSWORD=cassandra_user_password
+
+~/temporal$ ./temporal-cassandra-tool create-Keyspace -k temporal
+~/temporal$ CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool setup-schema -v 0.0
+~/temporal$ CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool update -schema-dir schema/cassandra/temporal/versioned
+
+~/temporal$ ./temporal-cassandra-tool create-Keyspace -k temporal_visibility
+~/temporal$ CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool  setup-schema  -v 0.0
+~/temporal$ CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool update -schema-dir /etc/temporal/schema/cassandra/visibility/versioned
+```
+
+Once you initialized the two keyspaces, fill in the configuration values in `values/values.cassandra.yaml`, and run
+
+```bash
+~/temporal-helm$ helm install -f values/values.cassandra.yaml temporaltest . --timeout 900s
+```
+
 
 ## Play With It
 
