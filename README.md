@@ -36,7 +36,7 @@ To install Temporal with all of its dependencies, including Cassandra and Elasti
 
 #### Bring Your Own ElasticSearch
 
-You might already be operating an intance of ElasticSearch that you want to use with Temporal.
+You might already be operating an instance of ElasticSearch that you want to use with Temporal.
 
 To do so, fill in the relevant configuration values in `values/values.cassandra.yaml`, and pass the file to 'helm install'.
 
