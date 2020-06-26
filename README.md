@@ -38,7 +38,7 @@ To install Temporal with all of its dependencies, including Cassandra and Elasti
 
 You might already be operating a MySQL instance that you want to use with Temporal.
 
-In this case, create and configure temporal databases on your mysql host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
+In this case, create and configure temporal databases on your MySQL host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
 
 
 Here are the commands you can use to create and initialize the databases:
