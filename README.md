@@ -76,7 +76,7 @@ Alternatively, instad of modifying `values/values.mysql.yaml`, you can supply th
 
 You might already be operating a Cassandra instance that you want to use with Temporal.
 
-In this case, create and setup keyspaces in your cassandra instance with `temporal-cassandra-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
+In this case, create and setup keyspaces in your Cassandra instance with `temporal-cassandra-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
 
 
 Here are the commands you can use to create and initialize the keyspaces:
