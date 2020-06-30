@@ -1,3 +1,4 @@
+{{- if $.Values.server.enabled }}
 {{- range $service := (list "frontend" "matching" "history" "worker") }}
 {{- $serviceValues := index $.Values.server $service -}}
 {{- if (default $.Values.server.metrics.serviceMonitor.enabled $serviceValues.metrics.serviceMonitor.enabled) }}
@@ -36,5 +37,6 @@ spec:
       app.kubernetes.io/headless: 'true'
 
 ---
+{{- end }}
 {{- end }}
 {{- end }}
