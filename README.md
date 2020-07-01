@@ -147,22 +147,43 @@ bash-5.0#
 and run Temporal CLI from there:
 
 ```
-bash-5.0# tctl --domain nonesuch domain desc
-Error: Domain nonesuch does not exist.
-Error Details: Domain nonesuch does not exist.
+bash-5.0# tctl namespace list
+Name: temporal-system
+Id: 32049b68-7872-4094-8e63-d0dd59896a83
+Description: Temporal internal system namespace
+OwnerEmail: temporal-core@temporal.io
+NamespaceData: map[string]string(nil)
+Status: Registered
+RetentionInDays: 7
+EmitMetrics: true
+ActiveClusterName: active
+Clusters: active
+HistoryArchivalStatus: Disabled
+VisibilityArchivalStatus: Disabled
+Bad binaries to reset:
++-----------------+----------+------------+--------+
+| BINARY CHECKSUM | OPERATOR | START TIME | REASON |
++-----------------+----------+------------+--------+
++-----------------+----------+------------+--------+
+```
+
+```
+bash-5.0# tctl --namespace nonesuch namespace desc
+Error: Namespace nonesuch does not exist.
+Error Details: Namespace nonesuch does not exist.
 ```
 ```
-bash-5.0# tctl --domain nonesuch domain re
-Domain nonesuch successfully registered.
+bash-5.0# tctl --namespace nonesuch namespace re
+Namespace nonesuch successfully registered.
 ```
 ```
-bash-5.0# tctl --domain nonesuch domain desc
+bash-5.0# tctl --namespace nonesuch namespace desc
 Name: nonesuch
 UUID: 465bb575-8c01-43f8-a67d-d676e1ae5eae
 Description:
 OwnerEmail:
-DomainData: map[string]string(nil)
-Status: DomainStatusRegistered
+NamespaceData: map[string]string(nil)
+Status: Registered
 RetentionInDays: 3
 EmitMetrics: false
 ActiveClusterName: active
