@@ -38,9 +38,9 @@ To install Temporal with all of its dependencies, including Cassandra and Elasti
 
 You might already be operating an instance of ElasticSearch that you want to use with Temporal.
 
-To do so, fill in the relevant configuration values in `values/values.cassandra.yaml`, and pass the file to 'helm install'.
+To do so, fill in the relevant configuration values in `values.elasticsearch.yaml`, and pass the file to 'helm install'.
 
-Exmaple:
+Example:
 
 ```bash
 ~/temporal-helm$ helm install -f values/values.elasticsearch.yaml temporaltest . --timeout 900s
