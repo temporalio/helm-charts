@@ -248,6 +248,9 @@ elasticsearch:
   persistence:
     enabled: false
   imageTag: 6.8.8
+  host: elasticsearch-master-headless
+  scheme: http
+  port: 9200
 
 prometheus:
   nodeExporter:
