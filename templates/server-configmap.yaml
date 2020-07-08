@@ -19,7 +19,7 @@ data:
     persistence:
       defaultStore: default
       visibilityStore: visibility
-    {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.hosted }}
+    {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
       advancedVisibilityStore: es-visibility
     {{- end }}
       numHistoryShards: {{ .Values.server.config.numHistoryShards }}
@@ -71,7 +71,7 @@ data:
             {{- end }}
           {{- end }}
 
-        {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.hosted }}
+        {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
         es-visibility:
             elasticsearch:
                 url:
