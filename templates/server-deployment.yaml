@@ -70,7 +70,7 @@ spec:
                 fieldRef:
                   fieldPath: status.podIP
             - name: ENABLE_ES
-              value: "{{ or $.Values.elasticsearch.enabled $.Values.elasticsearch.hosted }}"
+              value: "{{ or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}"
             - name: ES_SEEDS
               value: {{ $.Values.elasticsearch.host }}
             - name: ES_PORT

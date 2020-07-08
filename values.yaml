@@ -9,7 +9,7 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 0.23.1
+    tag: 0.26.0
     pullPolicy: IfNotPresent
 
   # Global default settings (can be overridden per service)
@@ -176,7 +176,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 0.23.1
+    tag: 0.26.0
     pullPolicy: IfNotPresent
 
   service:
@@ -191,7 +191,7 @@ web:
 
   image:
     repository: temporalio/web
-    tag: 0.23.2
+    tag: 0.26.0
     pullPolicy: IfNotPresent
 
   service:
@@ -248,6 +248,9 @@ elasticsearch:
   persistence:
     enabled: false
   imageTag: 6.8.8
+  host: elasticsearch-master-headless
+  scheme: http
+  port: 9200
 
 prometheus:
   enabled: true

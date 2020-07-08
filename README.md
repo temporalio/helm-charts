@@ -1,4 +1,6 @@
 # Temporal
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts?ref=badge_shield)
+
 
 Temporal is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous long-running business logic in a scalable and resilient way.
 
@@ -45,11 +47,11 @@ Other components can be omitted by setting their corresponding 'enable' flag to 
 
 #### Bring Your Own ElasticSearch
 
-You might already be operating an intance of ElasticSearch that you want to use with Temporal.
+You might already be operating an instance of ElasticSearch that you want to use with Temporal.
 
-To do so, fill in the relevant configuration values in `values/values.cassandra.yaml`, and pass the file to 'helm install'.
+To do so, fill in the relevant configuration values in `values.elasticsearch.yaml`, and pass the file to 'helm install'.
 
-Exmaple:
+Example:
 
 ```bash
 ~/temporal-helm$ helm install -f values/values.elasticsearch.yaml temporaltest . --timeout 900s
@@ -60,7 +62,7 @@ Exmaple:
 
 You might already be operating a MySQL instance that you want to use with Temporal.
 
-In this case, create and configure temporal databases on your mysql host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
+In this case, create and configure temporal databases on your MySQL host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
 
 
 Here are the commands you can use to create and initialize the databases:
@@ -98,7 +100,7 @@ Alternatively, instad of modifying `values/values.mysql.yaml`, you can supply th
 
 You might already be operating a Cassandra instance that you want to use with Temporal.
 
-In this case, create and setup keyspaces in your cassandra instance with `temporal-cassandra-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
+In this case, create and setup keyspaces in your Cassandra instance with `temporal-cassandra-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
 
 
 Here are the commands you can use to create and initialize the keyspaces:
@@ -167,22 +169,43 @@ bash-5.0#
 and run Temporal CLI from there:
 
 ```
-bash-5.0# tctl --domain nonesuch domain desc
-Error: Domain nonesuch does not exist.
-Error Details: Domain nonesuch does not exist.
+bash-5.0# tctl namespace list
+Name: temporal-system
+Id: 32049b68-7872-4094-8e63-d0dd59896a83
+Description: Temporal internal system namespace
+OwnerEmail: temporal-core@temporal.io
+NamespaceData: map[string]string(nil)
+Status: Registered
+RetentionInDays: 7
+EmitMetrics: true
+ActiveClusterName: active
+Clusters: active
+HistoryArchivalStatus: Disabled
+VisibilityArchivalStatus: Disabled
+Bad binaries to reset:
++-----------------+----------+------------+--------+
+| BINARY CHECKSUM | OPERATOR | START TIME | REASON |
++-----------------+----------+------------+--------+
++-----------------+----------+------------+--------+
+```
+
+```
+bash-5.0# tctl --namespace nonesuch namespace desc
+Error: Namespace nonesuch does not exist.
+Error Details: Namespace nonesuch does not exist.
 ```
 ```
-bash-5.0# tctl --domain nonesuch domain re
-Domain nonesuch successfully registered.
+bash-5.0# tctl --namespace nonesuch namespace re
+Namespace nonesuch successfully registered.
 ```
 ```
-bash-5.0# tctl --domain nonesuch domain desc
+bash-5.0# tctl --namespace nonesuch namespace desc
 Name: nonesuch
 UUID: 465bb575-8c01-43f8-a67d-d676e1ae5eae
 Description:
 OwnerEmail:
-DomainData: map[string]string(nil)
-Status: DomainStatusRegistered
+NamespaceData: map[string]string(nil)
+Status: Registered
 RetentionInDays: 3
 EmitMetrics: false
 ActiveClusterName: active
@@ -220,3 +243,7 @@ Note: in this example chart, uninstalling a Temporal instance also removes all t
 # Acknowledgements
 
 Many thanks to [Banzai Cloud](https://github.com/banzaicloud) whose [Cadence Helm Charts](https://github.com/banzaicloud/banzai-charts/tree/master/cadence) heavily inspired this work.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts?ref=badge_large)
