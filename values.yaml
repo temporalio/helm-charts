@@ -60,7 +60,10 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
-          consistency: One
+          consistency:
+            default:
+              consistency: "local_quorum"
+              serialConsistency: "local_serial"
           # datacenter: "us-east-1a"
           # maxQPS: 1000
           # maxConns: 2
@@ -85,10 +88,13 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
-          consistency: One
           # datacenter: "us-east-1a"
           # maxQPS: 1000
           # maxConns: 2
+          consistency:
+            default:
+              consistency: "local_quorum"
+              serialConsistency: "local_serial"
 
         sql:
           driver: "mysql"
