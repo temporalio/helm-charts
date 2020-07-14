@@ -91,6 +91,10 @@ server:
           # datacenter: "us-east-1a"
           # maxQPS: 1000
           # maxConns: 2
+          consistency:
+            default:
+              consistency: "local_quorum"
+              serialConsistency: "local_serial"
 
         sql:
           driver: "mysql"
