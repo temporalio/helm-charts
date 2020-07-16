@@ -9,7 +9,7 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 0.26.0
+    tag: 0.27.0
     pullPolicy: IfNotPresent
 
   # Global default settings (can be overridden per service)
@@ -60,7 +60,10 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
-          consistency: One
+          consistency:
+            default:
+              consistency: "local_quorum"
+              serialConsistency: "local_serial"
           # datacenter: "us-east-1a"
           # maxQPS: 1000
           # maxConns: 2
@@ -85,10 +88,13 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
-          consistency: One
           # datacenter: "us-east-1a"
           # maxQPS: 1000
           # maxConns: 2
+          consistency:
+            default:
+              consistency: "local_quorum"
+              serialConsistency: "local_serial"
 
         sql:
           driver: "mysql"
@@ -176,7 +182,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 0.26.0
+    tag: 0.27.0
     pullPolicy: IfNotPresent
 
   service:
@@ -191,7 +197,7 @@ web:
 
   image:
     repository: temporalio/web
-    tag: 0.26.0
+    tag: 0.27.0
     pullPolicy: IfNotPresent
 
   service:

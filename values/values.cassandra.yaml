@@ -15,7 +15,10 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
-          consistency: One
+          consistency:
+            default:
+              consistency: "local_quorum"
+              serialConsistency: "local_serial"
 
       visibility:
         driver: "cassandra"
@@ -27,7 +30,10 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
-          consistency: One
+          consistency:
+            default:
+              consistency: "local_quorum"
+              serialConsistency: "local_serial"
 
 cassandra:
   enabled: false
