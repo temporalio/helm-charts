@@ -38,10 +38,16 @@ To install Temporal with all of its dependencies, including Cassandra and Elasti
 
 To use your own instance of ElasticSearch, MySQL, or Cassandra, please read the "Bring Your Own" sections below.
 
-Other components can be omitted by setting their corresponding 'enable' flag to `false`, e. g.
+Other components (Prometheus, Kafka, Grafana) can be omitted from the installation by setting their corresponding 'enable' flag to `false` (and by pointing `server.kafka.host` to your existing instance of Kafka):
+
 
 ```bash
-~/temporal-helm$ helm install --set grafana.enabled=false temporaltest . --timeout 900s
+~/temporal-helm$ helm install
+    --set prometheus.enabled=false \
+    --set grafana.enabled=false \
+    --set kafka.enabled=false \
+    --set server.kafka.host=mykafka-headless:9092
+    temporaltest . --timeout 900s
 ```
 
 

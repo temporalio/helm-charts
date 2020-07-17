@@ -12,6 +12,9 @@ server:
     tag: 0.27.0
     pullPolicy: IfNotPresent
 
+  kafka:
+    host:
+
   # Global default settings (can be overridden per service)
   replicaCount: 1
   metrics:
