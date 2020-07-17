@@ -27,6 +27,7 @@ dependencies:
   - name: prometheus
     repository: https://kubernetes-charts.storage.googleapis.com
     version: 11.0.4
+    condition: prometheus.enabled
   - name: elasticsearch
     repository: https://helm.elastic.co
     version: 7.6.2
@@ -34,9 +35,11 @@ dependencies:
   - name: kafka
     repository: https://charts.bitnami.com/bitnami
     version: 7.2.9
+    condition: kafka.enabled
   - name: grafana
     repository: https://kubernetes-charts.storage.googleapis.com
     version: 5.0.10
+    condition: grafana.enabled
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -50,7 +53,7 @@ type: application
 
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 0.1.1
+version: 0.2.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
