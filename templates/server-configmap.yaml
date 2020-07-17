@@ -146,7 +146,7 @@ data:
         clusters:
             test:
                 brokers:
-                    - {{ .Release.Name }}-kafka-headless:9092
+                    - {{ include "temporal.kafka.address" . }}
         topics:
             temporal-visibility-dev:
                 cluster: test
