@@ -14,6 +14,8 @@ The version of Helm chart is provided for demo purposes and is not intended to b
 
 This sequence assumes that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and that your machine has [AWS CLI V2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html), [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [Helm v3.1.x](https://helm.sh) installed and able to access your cluster.
 
+Kubernetes clusters must have more than one node if deploying the bundled-in ElasticSearch.
+
 ## Install an Instance of Temporal to Your k8s Cluster
 
 Download Helm dependencies:
@@ -30,10 +32,10 @@ Temporal can be configured to run with a couple of database choices.
 
 By default, Temporal Helm Chart configures Temporal to runs with Cassandra (for persistence) and ElasticSearch/Kafka (for "visibility" features), Prometheus, and Grafana. By default, Temporal Helm Chart installs all dependencies, out of the box.
 
-To install Temporal with all of its dependencies, including Cassandra and ElasticSearch, run this command:
+To install Temporal with all of its dependencies, including Cassandra and ElasticSearch, into a kubernetes `temporal` namesapce, run this command:
 
 ```bash
-~/temporal-helm$ helm install temporaltest . --timeout 900s
+~/temporal-helm$ helm install temporaltest . --timeout 900s --namespace temporal --create-namespace
 ```
 
 To use your own instance of ElasticSearch, MySQL, or Cassandra, please read the "Bring Your Own" sections below.
@@ -47,7 +49,7 @@ Other components (Prometheus, Kafka, Grafana) can be omitted from the installati
     --set grafana.enabled=false \
     --set kafka.enabled=false \
     --set server.kafka.host=mykafka-headless:9092
-    temporaltest . --timeout 900s
+    temporaltest . --timeout 900s --namespace temporal --create-namespace
 ```
 
 
@@ -60,7 +62,7 @@ To do so, fill in the relevant configuration values in `values.elasticsearch.yam
 Example:
 
 ```bash
-~/temporal-helm$ helm install -f values/values.elasticsearch.yaml temporaltest . --timeout 900s
+~/temporal-helm$ helm install -f values/values.elasticsearch.yaml temporaltest . --timeout 900s --namespace temporal --create-namespace
 ```
 
 
@@ -93,13 +95,13 @@ Here are the commands you can use to create and initialize the databases:
 Once you initialized the two databases, fill in the configuration values in `values/values.mysql.yaml`, and run
 
 ```bash
-~/temporal-helm$ helm install -f values/values.mysql.yaml temporaltest . --timeout 900s
+~/temporal-helm$ helm install -f values/values.mysql.yaml temporaltest . --timeout 900s --namespace temporal --create-namespace
 ```
 
 Alternatively, instad of modifying `values/values.mysql.yaml`, you can supply those values in your command line:
 
 ```bash
-~/temporal-helm$ helm install -f values/values.mysql.yaml temporaltest --set server.config.persistence.default.sql.user=mysqluser --set server.config.persistence.default.sql.password=userpassword --set server.config.persistence.visibility.sql.user=mysqluser --set server.config.persistence.visibility.sql.password=userpassword --set server.config.persistence.default.sql.host=mysqlhost --set server.config.persistence.visibility.sql.host=mysqlhost . --timeout 900s
+~/temporal-helm$ helm install -f values/values.mysql.yaml temporaltest --set server.config.persistence.default.sql.user=mysqluser --set server.config.persistence.default.sql.password=userpassword --set server.config.persistence.visibility.sql.user=mysqluser --set server.config.persistence.visibility.sql.password=userpassword --set server.config.persistence.default.sql.host=mysqlhost --set server.config.persistence.visibility.sql.host=mysqlhost . --timeout 900s --namespace temporal --create-namespace
 ```
 
 #### Bring Your Own Cassandra
@@ -130,7 +132,7 @@ Here are the commands you can use to create and initialize the keyspaces:
 Once you initialized the two keyspaces, fill in the configuration values in `values/values.cassandra.yaml`, and run
 
 ```bash
-~/temporal-helm$ helm install -f values/values.cassandra.yaml temporaltest . --timeout 900s
+~/temporal-helm$ helm install -f values/values.cassandra.yaml temporaltest . --timeout 900s --namespace temporal --create-namespace
 ```
 
 
