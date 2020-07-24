@@ -254,6 +254,7 @@ schema:
 elasticsearch:
   enabled: true
   replicas: 3
+  antiAffinity: "soft"
   persistence:
     enabled: false
   imageTag: 6.8.8
