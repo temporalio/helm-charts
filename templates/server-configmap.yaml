@@ -165,7 +165,7 @@ data:
       clusterInformation:
         active:
           enabled: true
-          initialFailoverVersion: 0
+          initialFailoverVersion: 1
           rpcName: "temporal-frontend"
           rpcAddress: "127.0.0.1:7933"
 
