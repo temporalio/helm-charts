@@ -307,8 +307,17 @@ grafana:
        temporal-github:
          url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/temporal.json
          datasource: TemporalMetrics
-       canary-github:
-         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/canary.json
+       history-github:
+         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/history.json
+         datasource: TemporalMetrics
+       matching-github:
+         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/matching.json
+         datasource: TemporalMetrics
+       clusteroverview-github:
+         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/10000.json
+         datasource: TemporalMetrics
+       common-github:
+         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/common.json
          datasource: TemporalMetrics
 
 cassandra:
