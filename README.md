@@ -26,6 +26,39 @@ Download Helm dependencies:
 
 Temporal can be configured to run with a couple of database choices.
 
+#### [Tiny] Batteries Included
+
+To install Temporal in a limited but working configuration (one replica of Cassandra and each of Temporal's services, no metrics or Elastic Search), you can run the following command
+
+```
+~/temporal-helm$ helm install \
+    --set server.replicaCount=1 \
+    --set cassandra.config.cluster_size=1 \
+    --set prometheus.enabled=false \
+    --set grafana.enabled=false \
+    --set elasticsearch.enabled=false \
+    --set kafka.enabled=false \
+    temporaltest . --timeout 15m
+```
+
+This configuration consumes limited resources and it is useful for small scale test deployments (such as minikube).
+
+Below is an example of an enviroment installed in this configuration:
+
+```
+$ kubectl get pods
+NAME                                           READY   STATUS    RESTARTS   AGE
+temporaltest-admintools-6cdf56b869-xdxz2       1/1     Running   0          11m
+temporaltest-cassandra-0                       1/1     Running   0          11m
+temporaltest-frontend-5d5b6d9c59-v9g5j         1/1     Running   2          11m
+temporaltest-history-64b9ddbc4b-bwk6j          1/1     Running   2          11m
+temporaltest-matching-c8887ddc4-jnzg2          1/1     Running   2          11m
+temporaltest-metrics-server-7fbbf65cff-rp2ks   1/1     Running   0          11m
+temporaltest-web-77f68bff76-ndkzf              1/1     Running   0          11m
+temporaltest-worker-7c9d68f4cf-8tzfw           1/1     Running   2          11m
+```
+
+
 #### Default Installation: Batteries Included
 
 By default, Temporal Helm Chart configures Temporal to runs with Cassandra (for persistence) and ElasticSearch/Kafka (for "visibility" features), Prometheus, and Grafana. By default, Temporal Helm Chart installs all dependencies, out of the box.
