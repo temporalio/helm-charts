@@ -271,6 +271,32 @@ Forwarding from [::1]:7233 -> 7233
 and, from a separate window, use the local port to access the service.
 
 
+### Exploring Metrics in Grafana
+
+By default, the full "Batteris Included" configruation comes with a few Grafana dashboards.
+
+To access those dashboards, follow the following steps:
+
+1. Exract Grafana's `admin` password from your installation:
+
+```
+$ kubectl get secret --namespace default temporaltest-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
+
+t7EqZQpiB6BztZV321dEDppXbeisdpiEAMgnu6yy%
+```
+
+2. Setup port forwarding, so you can access Grafana from your host:
+
+```
+$ kubectl port-forward services/temporaltest-grafana 8081:80
+Forwarding from 127.0.0.1:8081 -> 3000
+Forwarding from [::1]:8081 -> 3000
+...
+```
+
+3. Navigate to the forwarded Grafana port in your browser (http://localhost:8081/), login as `admin` (using the password from step 1), and click on the "Home" button (upper left corner) to see available dashboards.
+
+
 ## Uninstalling
 
 Note: in this example chart, uninstalling a Temporal instance also removes all the data that might have been created during its  lifetime.
