@@ -271,9 +271,9 @@ Forwarding from [::1]:7233 -> 7233
 and, from a separate window, use the local port to access the service.
 
 
-### Exploring Metrics in Grafana
+### Exploring Metrics via Grafana
 
-By default, the full "Batteris Included" configruation comes with a few Grafana dashboards.
+By default, the full "Batteris Included" configuration comes with a few Grafana dashboards.
 
 To access those dashboards, follow the following steps:
 
