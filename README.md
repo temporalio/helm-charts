@@ -273,11 +273,11 @@ and, from a separate window, use the local port to access the service.
 
 ### Exploring Metrics via Grafana
 
-By default, the full "Batteris Included" configuration comes with a few Grafana dashboards.
+By default, the full "Batteries Included" configuration comes with a few Grafana dashboards.
 
 To access those dashboards, follow the following steps:
 
-1. Exract Grafana's `admin` password from your installation:
+1. Extract Grafana's `admin` password from your installation:
 
 ```
 $ kubectl get secret --namespace default temporaltest-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
