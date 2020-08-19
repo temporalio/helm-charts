@@ -184,41 +184,10 @@ data:
       pollInterval: "10s"
 
   dynamic_config.yaml: |-
-    frontend.enableClientVersionCheck:
-    - value: true
-      constraints: {}
-    system.minRetentionDays:
-    - value: 0
-      constraints: {}
-    history.persistenceMaxQPS:
-    - value: 3000
-      constraints: {}
-    frontend.persistenceMaxQPS:
-    - value: 3000
-      constraints: {}
-    frontend.historyMgrNumConns:
-    - value: 10
-      constraints: {}
-    frontend.throttledLogRPS:
-    - value: 20
-      constraints: {}
-    history.historyMgrNumConns:
-    - value: 50
-      constraints: {}
-    system.advancedVisibilityWritingMode:
-    - value: "off"
-      constraints: {}
-    history.defaultActivityRetryPolicy:
-    - value:
-        InitialIntervalInSeconds: 2
-        MaximumIntervalCoefficient: 100.0
-        BackoffCoefficient: 2.0
-        MaximumAttempts: 0
-    history.defaultWorkflowRetryPolicy:
-    - value:
-        InitialIntervalInSeconds: {{ .Values.server.history.workflowRetryPolicy.initialIntervalInSeconds }}
-        MaximumIntervalCoefficient: 100.0
-        BackoffCoefficient: 2.0
-        MaximumAttempts: 0
+    # Add properties here.
+    # matching.numTaskqueueReadPartitions:
+    # - value: 5
+    # matching.numTaskqueueWritePartitions:
+    # - value: 5
 
 {{- end }}
