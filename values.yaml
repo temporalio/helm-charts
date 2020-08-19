@@ -144,6 +144,8 @@ server:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+    workflowRetryPolicy:
+      initialIntervalInSeconds: 1
 
   matching:
     # replicaCount: 1
