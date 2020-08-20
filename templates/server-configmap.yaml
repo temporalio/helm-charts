@@ -184,10 +184,6 @@ data:
       pollInterval: "10s"
 
   dynamic_config.yaml: |-
-    # Add properties here.
-    # matching.numTaskqueueReadPartitions:
-    # - value: 5
-    # matching.numTaskqueueWritePartitions:
-    # - value: 5
+    {{- toYaml .Values.server.dynamic_config | nindent 4 }}
 
 {{- end }}
