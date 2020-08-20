@@ -299,15 +299,12 @@ Forwarding from [::1]:8081 -> 3000
 ### Updating dynamic config
 By default dynamic config is empty, if you want to override some properties for your cluster, you should:
 1. Create a yaml file with your config (for example dc.yaml).
-2. Populate it with some values under server.dynamicConfig prefix, for example:
+2. Populate it with some values under server.dynamicConfig prefix (use the sample provided at `values/values.dynamic_config.yaml` as a starting point)
+3. Install or upgrade your helm configuration:
+```bash
+$ helm install -f values/values.dynamic_config.yaml temporaltest . --timeout 900s
 ```
-server:
-  dynamicConfig:
-    frontend.enableClientVersionCheck:
-    - value: true
-      constraints: {}
-```
-3. Install or upgrade your helm configuration passing `-f dc.yaml` as a parameter to helm.
+
 
 ## Uninstalling
 
