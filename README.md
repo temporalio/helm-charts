@@ -296,6 +296,18 @@ Forwarding from [::1]:8081 -> 3000
 
 3. Navigate to the forwarded Grafana port in your browser (http://localhost:8081/), login as `admin` (using the password from step 1), and click on the "Home" button (upper left corner) to see available dashboards.
 
+### Updating dynamic config
+By default dynamic config is empty, if you want to override some properties for your cluster, you should:
+1. Create a yaml file with your config (for example dc.yaml).
+2. Populate it with some values under server.dynamicConfig prefix (use the sample provided at `values/values.dynamic_config.yaml` as a starting point)
+3. Install your helm configuration:
+```bash
+$ helm install -f values/values.dynamic_config.yaml temporaltest . --timeout 900s
+```
+Note that if you already have a running cluster you could use upgrade command to change dynamic config values:
+```bash
+$ helm upgrade -f values/values.dynamic_config.yaml temporaltest . --timeout 900s
+```
 
 ## Uninstalling
 
