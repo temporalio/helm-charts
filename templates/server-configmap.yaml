@@ -184,6 +184,7 @@ data:
       pollInterval: "10s"
 
   dynamic_config.yaml: |-
-    {{- toYaml .Values.server.dynamic_config | nindent 4 }}
-
+  {{- if $.Values.server.dynamicConfig }}
+    {{- toYaml .Values.server.dynamicConfig | nindent 4 }}
+  {{- end }}
 {{- end }}
