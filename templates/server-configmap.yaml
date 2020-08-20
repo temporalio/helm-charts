@@ -178,4 +178,13 @@ data:
 
     publicClient:
       hostPort: "{{ include "temporal.componentname" (list . "frontend") }}:{{ .Values.server.frontend.service.port }}"
+
+    dynamicConfigClient:
+      filepath: "/etc/temporal/config/dynamic_config.yaml"
+      pollInterval: "10s"
+
+  dynamic_config.yaml: |-
+  {{- if $.Values.server.dynamicConfig }}
+    {{- toYaml .Values.server.dynamicConfig | nindent 4 }}
+  {{- end }}
 {{- end }}
