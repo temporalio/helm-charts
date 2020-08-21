@@ -3,7 +3,6 @@ server:
     matching.numTaskqueueReadPartitions:
     - value: 5
       constraints: {}
-      matching.numTaskqueueWritePartitions:
+    matching.numTaskqueueWritePartitions:
     - value: 5
       constraints: {}
-
