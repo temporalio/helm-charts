@@ -15,6 +15,7 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
+          replicationFactor: 1
           consistency:
             default:
               consistency: "local_quorum"
@@ -30,6 +31,7 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
+          replicationFactor: 1
           consistency:
             default:
               consistency: "local_quorum"
