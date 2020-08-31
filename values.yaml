@@ -63,6 +63,7 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
+          replicationFactor: 1
           consistency:
             default:
               consistency: "local_quorum"
@@ -94,6 +95,7 @@ server:
           # datacenter: "us-east-1a"
           # maxQPS: 1000
           # maxConns: 2
+          replicationFactor: 1
           consistency:
             default:
               consistency: "local_quorum"
