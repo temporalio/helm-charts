@@ -332,7 +332,7 @@ cassandra:
     cluster_size: 3
     ports:
       cql: 9042
-    num_tokens: 0
+    num_tokens: 4
     max_heap_size: 512M
     heap_new_size: 128M
     seed_size: 0
