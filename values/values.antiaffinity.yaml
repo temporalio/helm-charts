@@ -8,8 +8,14 @@ cassandra:
             operator: In
             values:
             - frontend
+            - history
+            - matching
+            - worker
             - zookeeper
             - kafka
+        topologyKey: kubernetes.io/hostname
+      - labelSelector:
+          matchExpressions:
           - key: app
             operator: In
             values:
@@ -28,13 +34,13 @@ server:
               operator: In
               values:
               - frontend
-              - zookeeper
-              - kafka
+          topologyKey: kubernetes.io/hostname
+        - labelSelector:
+            matchExpressions:
             - key: app
               operator: In
               values:
               - cassandra
-              - elasticsearch-master
           topologyKey: kubernetes.io/hostname
  
   history:
@@ -47,13 +53,13 @@ server:
               operator: In
               values:
               - history
-              - zookeeper
-              - kafka
+          topologyKey: kubernetes.io/hostname
+        - labelSelector:
+            matchExpressions:
             - key: app
               operator: In
               values:
               - cassandra
-              - elasticsearch-master
           topologyKey: kubernetes.io/hostname
   
 
@@ -67,13 +73,13 @@ server:
               operator: In
               values:
               - matching
-              - zookeeper
-              - kafka
+          topologyKey: kubernetes.io/hostname
+        - labelSelector:
+            matchExpressions:
             - key: app
               operator: In
               values:
               - cassandra
-              - elasticsearch-master
           topologyKey: kubernetes.io/hostname
 
   worker:
@@ -86,11 +92,11 @@ server:
               operator: In
               values:
               - worker
-              - zookeeper
-              - kafka
+          topologyKey: kubernetes.io/hostname
+        - labelSelector:
+            matchExpressions:
             - key: app
               operator: In
               values:
               - cassandra
-              - elasticsearch-master
           topologyKey: kubernetes.io/hostname
