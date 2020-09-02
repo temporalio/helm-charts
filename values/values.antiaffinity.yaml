@@ -63,6 +63,19 @@ cassandra:
 server:
   frontend:
     affinity:
+      podAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 50
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                 - history
+                 - matching
+                 - worker
+            topologyKey: kubernetes.io/hostname
       podAntiAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
@@ -94,6 +107,19 @@ server:
  
   history:
     affinity:
+      podAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 50
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                 - frontend
+                 - matching
+                 - worker
+            topologyKey: kubernetes.io/hostname
       podAntiAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
@@ -125,6 +151,19 @@ server:
 
   matching:
     affinity:
+      podAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 50
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                 - frontend
+                 - history
+                 - worker
+            topologyKey: kubernetes.io/hostname
       podAntiAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
@@ -156,6 +195,19 @@ server:
 
   worker:
     affinity:
+      podAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 50
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                 - frontend
+                 - matching
+                 - history
+            topologyKey: kubernetes.io/hostname
       podAntiAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
         - weight: 100
