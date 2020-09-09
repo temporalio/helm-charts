@@ -202,7 +202,7 @@ web:
 
   image:
     repository: temporalio/web
-    tag: 0.29.0
+    tag: 0.29.1
     pullPolicy: IfNotPresent
 
   service:
