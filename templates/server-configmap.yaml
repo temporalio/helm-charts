@@ -43,6 +43,9 @@ data:
             connectProtocol: "tcp"
             user: {{ include "temporal.persistence.sql.user" (list . "default") }}
             password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD }}` }}
+            maxConns: {{ include "temporal.persistence.sql.maxConns" (list . "default") }}
+            maxIdleConns: {{ include "temporal.persistence.sql.maxIdleConns" (list . "default") }}
+            maxConnLifetime: {{ include "temporal.persistence.sql.maxConnLifetime" (list . "default") }}
             {{- with (omit .Values.server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -66,6 +69,9 @@ data:
             connectProtocol: "tcp"
             user: {{ include "temporal.persistence.sql.user" (list . "visibility") }}
             password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD }}` }}
+            maxConns: {{ include "temporal.persistence.sql.maxConns" (list . "visibility") }}
+            maxIdleConns: {{ include "temporal.persistence.sql.maxIdleConns" (list . "visibility") }}
+            maxConnLifetime: {{ include "temporal.persistence.sql.maxConnLifetime" (list . "visibility") }}
             {{- with (omit .Values.server.config.persistence.visibility.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
