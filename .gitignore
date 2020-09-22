@@ -1,2 +1,3 @@
-charts/*
-Chart.lock
+/charts
+/Chart.lock
+/.idea
