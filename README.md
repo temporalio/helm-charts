@@ -168,7 +168,7 @@ Once you initialized the two keyspaces, fill in the configuration values in `val
 
 #### Bring Your Own Everything: Just Deploy Temporal
 
-In a production environment, where all dependencies are already hardened and operational, it's possible to deploy only the Temporal server components with this Helm chart. Whether using MySQL or Cassandra, the preceeding steps to configure schema should be followed. This example assumes Cassandra, demonstrates setting values on the commandline rather than via environment, and enabled TLS for the database connection:
+In a production environment, where all dependencies are already hardened and operational, it's possible to deploy only the Temporal server components with this Helm chart. Whether using MySQL or Cassandra, the preceeding steps to configure schema should be followed. This example assumes Cassandra, demonstrates setting values on the commandline rather than via environment, and enables TLS for the database connection:
 
 ```bash
 helm install temporaltest \
