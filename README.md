@@ -6,13 +6,13 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 
 This repo contains a basic [Helm](https://helm.sh) chart that allows you to install temporal to a kubernetes cluster, and to play with it.
 
-The version of Helm chart is provided for demo purposes and is not intended to be used in production systems.
+The bundled dependencies included in this Helm chart provide minimal required functionality to ease getting started and experimentation with Temporal.
 
 # Deploying Temporal Service to a Kubernetes Cluster
 
 ## Prerequisites
 
-This sequence assumes that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and that your machine has [AWS CLI V2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html), [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [Helm v3.1.x](https://helm.sh) installed and able to access your cluster.
+This sequence assumes that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), [kind](https://kind.sigs.k8s.io/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and that your machine has [AWS CLI V2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html), [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [Helm v3.1.x](https://helm.sh) installed and able to access your cluster.
 
 ## Install an Instance of Temporal to Your k8s Cluster
 
@@ -24,9 +24,9 @@ Download Helm dependencies:
 
 ### Install Temporal
 
-Temporal can be configured to run with a couple of database choices.
+Temporal can be configured to run with a variety of different dependencies. By default this Helm chart deploys Cassandra, ElasticSearch, Kafka, Zookeeper, Promethueus and Grafana to support various features of Temporal. Cassandra can be swapped for MySQL if desired. The following sections will walk through deploying with everything included on a single node cluster and conclude with a configurtion that lets you bring all of your own dependencies.
 
-#### [Tiny] Batteries Included
+#### [Tiny] Batteries Included for Getting Started / Development
 
 To install Temporal in a limited but working configuration (one replica of Cassandra and each of Temporal's services, no metrics or Elastic Search), you can run the following command
 
@@ -165,6 +165,39 @@ Once you initialized the two keyspaces, fill in the configuration values in `val
 ```bash
 ~/temporal-helm$ helm install -f values/values.cassandra.yaml temporaltest . --timeout 900s
 ```
+
+#### Bring Your Own Everything: Just Deploy Temporal
+
+In a production environment, where all dependencies are already hardened and operational, it's possible to deploy only the Temporal server components with this Helm chart. Whether using MySQL or Cassandra, the preceeding steps to configure schema should be followed. This example assumes Cassandra, demonstrates setting values on the commandline rather than via environment, and enabled TLS for the database connection:
+
+```bash
+helm install temporaltest \
+   -f values/values.cassandra.yaml \
+   -f values/values.elasticsearch.yaml \
+   --set kafka.enabled=false \
+   --set grafana.enabled=false \
+   --set prometheus.enabled=false \
+   --set server.replicaCount=5 \
+   --set server.kafka.host=kafkat-headless:9092 \
+   --set server.config.persistence.default.cassandra.hosts=cassandra.data.host.example \
+   --set server.config.persistence.default.cassandra.user=cassandra_user \
+   --set server.config.persistence.default.cassandra.password=cassandra_user_password \
+   --set server.config.persistence.default.cassandra.tls.caData=$(base64 --wrap=0 cassandra.ca.pem) \
+   --set server.config.persistence.default.cassandra.tls.enabled=true \
+   --set server.config.persistence.default.cassandra.replicationFactor=3 \
+   --set server.config.persistence.default.cassandra.keyspace=temporal \
+   --set server.config.persistence.visibility.cassandra.hosts=cassandra.vis.host.example \
+   --set server.config.persistence.visibility.cassandra.user=cassandra_user_vis \
+   --set server.config.persistence.visibility.cassandra.password=cassandra_user_vis_password \
+   --set server.config.persistence.visibility.cassandra.tls.caData=$(base64 --wrap=0 cassandra.ca.pem) \
+   --set server.config.persistence.visibility.cassandra.tls.enabled=true \
+   --set server.config.persistence.visibility.cassandra.replicationFactor=3 \
+   --set server.config.persistence.visibility.cassandra.keyspace=temporal_visibility \
+   . \
+   --timeout 15m \
+   --wait
+```
+
 
 
 ## Play With It
