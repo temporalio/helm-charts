@@ -4,7 +4,7 @@
 
 Temporal is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous long-running business logic in a scalable and resilient way.
 
-This repo contains a basic [Helm](https://helm.sh) chart that allows you to install temporal to a kubernetes cluster, and to play with it.
+This repo contains a basic [Helm](https://helm.sh) chart that installs Temporal to a Kubernetes cluster. The dependencies that are bundled with this installation solution offer an easy way to **experiment** with the Temporal server.
 
 The bundled dependencies included in this Helm chart provide minimal required functionality to ease getting started and experimentation with Temporal.
 
