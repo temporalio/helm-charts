@@ -173,7 +173,7 @@ Once you initialized the two keyspaces, fill in the configuration values in `val
 ~/temporal-helm$ helm install -f values/values.cassandra.yaml temporaltest . --timeout 900s
 ```
 
-### Install with your own everything: just Temporal
+### Install and configure Temporal
 
 In a live environment, where all dependencies are already hardened and operational, it's possible to install only the Temporal server components with this Helm chart. Whether using MySQL or Cassandra, the preceeding steps to configure schema should be followed. This example assumes Cassandra, demonstrates setting values on the commandline rather than via environment, and enables TLS for the database connection:
 
