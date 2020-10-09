@@ -167,7 +167,12 @@ Once you initialized the two keyspaces, fill in the configuration values in `val
 
 ### Install and configure Temporal
 
-In a live environment, where all dependencies are already hardened and operational, it's possible to install only the Temporal server components with this Helm chart. Whether using MySQL or Cassandra, the preceeding steps to configure schema should be followed. This example assumes Cassandra, demonstrates setting values on the commandline rather than via environment, and enables TLS for the database connection:
+If a live application environment already uses systems that Temporal can use as dependencies, then those systems can continue to be used. This Helm chart can install the minimal pieces of Temporal such that it can then be configured to use those systems as its dependencies.
+
+The example below demonstrates a few things:
+1. How to set values via the command line rather than the environment.
+2. How to configure a database (shows Cassandra, but MySQL works the same way)
+3. How to enable TLS for the database connection.
 
 ```bash
 helm install temporaltest \
