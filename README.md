@@ -1,20 +1,15 @@
 # Temporal
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts?ref=badge_shield)
 
-
-Temporal is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous long-running business logic in a scalable and resilient way.
+Temporal is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous long-running business logic in a scalable and resilient way. The bundled dependencies included in this Helm chart provide minimal required functionality to ease getting started and experimentation with Temporal. This Helm chart can also be used to install only the Temproal services and configure them to connect to live dependencies.
 
 This repo contains a basic [Helm](https://helm.sh) chart that installs Temporal to a Kubernetes cluster. The dependencies that are bundled with this installation solution offer an easy way to **experiment** with the Temporal server.
 
-The bundled dependencies included in this Helm chart provide minimal required functionality to ease getting started and experimentation with Temporal.
-
-# Deploying Temporal Service to a Kubernetes Cluster
+# Install Temporal service on a Kubernetes cluster
 
 ## Prerequisites
 
 This sequence assumes that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), [kind](https://kind.sigs.k8s.io/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and that your machine has [AWS CLI V2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html), [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [Helm v3.1.x](https://helm.sh) installed and able to access your cluster.
-
-## Install an Instance of Temporal to Your k8s Cluster
 
 Download Helm dependencies:
 
@@ -22,11 +17,21 @@ Download Helm dependencies:
 ~/temporal-helm$ helm dependencies update
 ```
 
-### Install Temporal
+## Install Temporal Helm chart
 
-Temporal can be configured to run with a variety of different dependencies. By default this Helm chart deploys Cassandra, ElasticSearch, Kafka, Zookeeper, Promethueus and Grafana to support various features of Temporal. Cassandra can be swapped for MySQL if desired. The following sections will walk through deploying with everything included on a single node cluster and conclude with a configurtion that lets you bring all of your own dependencies.
+Temporal can be configured to run with a variety of different dependencies and the Helm chart installs these by default:
 
-#### [Tiny] Batteries Included for Getting Started / Development
+* Cassandra
+* ElasticSearch
+* Kafka (with Zookeeper)
+* Promethueus
+* Grafana
+
+MySQL can be swapped in for Cassandra but is not deployed as part of this Helm chart.
+
+The following sections will walk through installing with everything included on a single node cluster and conclude with a configurtion that lets you bring all of your own dependencies.
+
+### Install minimal versions of only requried dependencies
 
 To install Temporal in a limited but working configuration (one replica of Cassandra and each of Temporal's services, no metrics or Elastic Search), you can run the following command
 
@@ -41,7 +46,7 @@ To install Temporal in a limited but working configuration (one replica of Cassa
     temporaltest . --timeout 15m
 ```
 
-This configuration consumes limited resources and it is useful for small scale test deployments (such as minikube).
+This configuration consumes limited resources and it is useful for small scale tests (such as using minikube).
 
 Below is an example of an enviroment installed in this configuration:
 
@@ -59,11 +64,13 @@ temporaltest-worker-7c9d68f4cf-8tzfw           1/1     Running   2          11m
 ```
 
 
-#### Default Installation: Batteries Included
+### Install with required and optional dependencies
 
-By default, Temporal Helm Chart configures Temporal to runs with Cassandra (for persistence) and ElasticSearch/Kafka (for "visibility" features), Prometheus, and Grafana. By default, Temporal Helm Chart installs all dependencies, out of the box.
+This method requires a three node kubernetes cluster to successfully bring up all the dependencies.
 
-To install Temporal with all of its dependencies, including Cassandra and ElasticSearch, run this command:
+By default, Temporal Helm Chart configures Temporal to run with a three node Cassandra cluster (for persistence) and ElasticSearch/Kafka (for "visibility" features), Prometheus, and Grafana. Kafka also depends on Zookeeper. By default, Temporal Helm Chart installs all dependencies, out of the box.
+
+To install Temporal with all of its dependencies run this command:
 
 ```bash
 ~/temporal-helm$ helm install temporaltest . --timeout 900s
@@ -84,7 +91,7 @@ Other components (Prometheus, Kafka, Grafana) can be omitted from the installati
 ```
 
 
-#### Bring Your Own ElasticSearch
+### Install with your own ElasticSearch
 
 You might already be operating an instance of ElasticSearch that you want to use with Temporal.
 
@@ -97,7 +104,7 @@ Example:
 ```
 
 
-#### Bring Your Own MySQL
+### Install with your own MySQL
 
 You might already be operating a MySQL instance that you want to use with Temporal.
 
@@ -135,7 +142,7 @@ Alternatively, instad of modifying `values/values.mysql.yaml`, you can supply th
 ~/temporal-helm$ helm install -f values/values.mysql.yaml temporaltest --set server.config.persistence.default.sql.user=mysqluser --set server.config.persistence.default.sql.password=userpassword --set server.config.persistence.visibility.sql.user=mysqluser --set server.config.persistence.visibility.sql.password=userpassword --set server.config.persistence.default.sql.host=mysqlhost --set server.config.persistence.visibility.sql.host=mysqlhost . --timeout 900s
 ```
 
-#### Bring Your Own Cassandra
+### Install with your own Cassandra
 
 You might already be operating a Cassandra instance that you want to use with Temporal.
 
@@ -166,9 +173,9 @@ Once you initialized the two keyspaces, fill in the configuration values in `val
 ~/temporal-helm$ helm install -f values/values.cassandra.yaml temporaltest . --timeout 900s
 ```
 
-#### Bring Your Own Everything: Just Deploy Temporal
+### Install with your own everything: just Temporal
 
-In a production environment, where all dependencies are already hardened and operational, it's possible to deploy only the Temporal server components with this Helm chart. Whether using MySQL or Cassandra, the preceeding steps to configure schema should be followed. This example assumes Cassandra, demonstrates setting values on the commandline rather than via environment, and enables TLS for the database connection:
+In a live environment, where all dependencies are already hardened and operational, it's possible to install only the Temporal server components with this Helm chart. Whether using MySQL or Cassandra, the preceeding steps to configure schema should be followed. This example assumes Cassandra, demonstrates setting values on the commandline rather than via environment, and enables TLS for the database connection:
 
 ```bash
 helm install temporaltest \
@@ -197,8 +204,6 @@ helm install temporaltest \
    --timeout 15m \
    --wait
 ```
-
-
 
 ## Play With It
 
