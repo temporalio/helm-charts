@@ -1,9 +1,7 @@
 # Temporal
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts?ref=badge_shield)
 
-Temporal is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous long-running business logic in a scalable and resilient way. The bundled dependencies included in this Helm chart provide minimal required functionality to ease getting started and experimentation with Temporal. This Helm chart can also be used to install only the Temproal services and configure them to connect to live dependencies.
-
-This repo contains a basic [Helm](https://helm.sh) chart that installs Temporal to a Kubernetes cluster. The dependencies that are bundled with this installation solution offer an easy way to **experiment** with the Temporal server.
+Temporal is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous long-running business logic in a resilient way. This repo contains a basic [Helm](https://helm.sh) chart that installs Temporal to a Kubernetes cluster. The dependencies that are bundled with this solution offer an easy way to **experiment** with the Temporal server. This Helm chart can also be used to install just the Temporal server and configure it to connect to live dependencies.
 
 # Install Temporal service on a Kubernetes cluster
 
@@ -29,9 +27,9 @@ Temporal can be configured to run with a variety of different dependencies and t
 
 MySQL can be swapped in for Cassandra but is not deployed as part of this Helm chart.
 
-The following sections will walk through installing with everything included on a single node cluster and conclude with a configurtion that lets you bring all of your own dependencies.
+The following sections work forward from a single node installation using included dependencies to a replicated deployment on existing infrastructure.
 
-### Install minimal versions of only requried dependencies
+### Minimal installation with required dependencies only
 
 To install Temporal in a limited but working configuration (one replica of Cassandra and each of Temporal's services, no metrics or Elastic Search), you can run the following command
 
@@ -63,7 +61,6 @@ temporaltest-web-77f68bff76-ndkzf              1/1     Running   0          11m
 temporaltest-worker-7c9d68f4cf-8tzfw           1/1     Running   2          11m
 ```
 
-
 ### Install with required and optional dependencies
 
 This method requires a three node kubernetes cluster to successfully bring up all the dependencies.
@@ -80,7 +77,6 @@ To use your own instance of ElasticSearch, MySQL, or Cassandra, please read the 
 
 Other components (Prometheus, Kafka, Grafana) can be omitted from the installation by setting their corresponding 'enable' flag to `false` (and by pointing `server.kafka.host` to your existing instance of Kafka):
 
-
 ```bash
 ~/temporal-helm$ helm install
     --set prometheus.enabled=false \
@@ -89,7 +85,6 @@ Other components (Prometheus, Kafka, Grafana) can be omitted from the installati
     --set server.kafka.host=mykafka-headless:9092
     temporaltest . --timeout 900s
 ```
-
 
 ### Install with your own ElasticSearch
 
@@ -103,13 +98,11 @@ Example:
 ~/temporal-helm$ helm install -f values/values.elasticsearch.yaml temporaltest . --timeout 900s
 ```
 
-
 ### Install with your own MySQL
 
 You might already be operating a MySQL instance that you want to use with Temporal.
 
 In this case, create and configure temporal databases on your MySQL host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
-
 
 Here are the commands you can use to create and initialize the databases:
 
@@ -128,7 +121,6 @@ Here are the commands you can use to create and initialize the databases:
 ~/temporal$ SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
 ~/temporal$ SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/mysql/v57/visibility/versioned
 ```
-
 
 Once you initialized the two databases, fill in the configuration values in `values/values.mysql.yaml`, and run
 
