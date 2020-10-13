@@ -352,6 +352,33 @@ Note: in this example chart, uninstalling a Temporal instance also removes all t
 ~/temporal-helm $ helm uninstall temporaltest
 ```
 
+## Upgrading
+
+To upgrade your cluster, upgrade your database schema, and then use `helm upgrade` command to perform a rolling upgrade of your docker images.
+
+Example:
+
+### Upgrade Schema
+
+Here are examples of commands you can use to upgrade the "default" and "visibility" schemas in your "bring your own" Cassandra database.
+
+```
+temporal_v1.0.1 $ temporal-cassandra-tool --tls --tls-ca-file ... --user cassandra-user --password cassandra-password --endpoint cassandra.example.com --keyspace temporal --timeout 120 update --schema-dir ./schema/cassandra/temporal/versioned
+
+temporal_v1.0.1 $ temporal-cassandra-tool --tls --tls-ca-file ... --user cassandra-user --password cassandra-password --endpoint cassandra.example.com --keyspace temporal_visibility --timeout 120  update --schema-dir ./schema/cassandra/visibility/versioned
+```
+
+To upgrade your MySQL database, please use `temporal-sql-tool` tool instead of `temporal-cassandra-tool`.
+
+### Upgrade the Images running in yhour cluster
+
+Here is an example of a `helm upgrade` command that you can use to upgrade your cluster:
+
+```
+helm-charts $ helm upgrade temporaltest -f values/values.cassandra.yaml --set elasticsearch.enabled=true --set server.replicaCount=8 --set 'server.config.persistence.default.cassandra.hosts={c1.example.com,c2.example.com,c3.example.com}' --set server.config.persistence.default.cassandra.user=cassandra-user --set server.config.persistence.default.cassandra.password=cassandra-password --set server.config.persistence.default.cassandra.tls.caData=...= --set server.config.persistence.default.cassandra.tls.enabled=true --set server.config.persistence.default.cassandra.replicationFactor=3 --set server.config.persistence.default.cassandra.keyspace=temporal --set 'server.config.persistence.visibility.cassandra.hosts={c1.example.com,c2.example.com,c3.example.com}' --set server.config.persistence.visibility.cassandra.user=cassandra-user --set server.config.persistence.visibility.cassandra.password=cassandra-password --set server.config.persistence.visibility.cassandra.tls.caData=... = --set server.config.persistence.visibility.cassandra.tls.enabled=true --set server.config.persistence.visibility.cassandra.replicationFactor=3 --set server.config.persistence.visibility.cassandra.keyspace=temporal_visibility --set server.image.tag=v1.0.1 --set server.image.repository=temporalio/server --set admintools.image.tag=v1.0.1 --set admintools.image.repository=temporalio/admin-tools --set web.image.tag=v1.0.1 --set web.image.repository=temporalio/web . --wait --timeout 15m
+```
+
+
 # Acknowledgements
 
 Many thanks to [Banzai Cloud](https://github.com/banzaicloud) whose [Cadence Helm Charts](https://github.com/banzaicloud/banzai-charts/tree/master/cadence) heavily inspired this work.
