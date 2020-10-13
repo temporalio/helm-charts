@@ -1,13 +1,25 @@
-# Temporal
+# Temporal Helm Chart
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts?ref=badge_shield)
 
-Temporal is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous long-running business logic in a resilient way. This repo contains a basic [Helm](https://helm.sh) chart that installs Temporal to a Kubernetes cluster. The dependencies that are bundled with this solution offer an easy way to **experiment** with the Temporal server. This Helm chart can also be used to install just the Temporal server and configure it to connect to live dependencies.
+Temporal is a distributed, scalable, durable, and highly available orchestration engine designed to execute asynchronous long-running business logic in a resilient way.
+
+This repo contains a basic V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. The dependencies that are bundled with this solution by default offer an easy way to experiment with Temporal software. This Helm chart can also be used to install just the Temporal server, configured to connect to dependencies (such as a Cassandra or MySQL database) that you may already have available in your environment.
+
+This Helm Chart code is tested by a dedictated test pipeline. It is also used extensively by other Temporal pipelines for testing various aspects of Temporal systems. Our test pipeline currently use Helm 3.1.1.
 
 # Install Temporal service on a Kubernetes cluster
 
 ## Prerequisites
 
-This sequence assumes that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), [kind](https://kind.sigs.k8s.io/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and that your machine has [AWS CLI V2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html), [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [Helm v3.1.x](https://helm.sh) installed and able to access your cluster.
+This sequence assumes
+* that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), [kind](https://kind.sigs.k8s.io/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and
+* that your machine has
+  - [AWS CLI V2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html),
+  - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/), and
+  - [Helm v3](https://helm.sh)
+  installed and able to access your cluster.
+
+## Download Helm Chart Dependencies
 
 Download Helm dependencies:
 
@@ -15,9 +27,9 @@ Download Helm dependencies:
 ~/temporal-helm$ helm dependencies update
 ```
 
-## Install Temporal Helm chart
+## Install Temporal with Helm Chart
 
-Temporal can be configured to run with a variety of different dependencies and the Helm chart installs these by default:
+Temporal can be configured to run with various dependencies. The default "Batteries Included" Helm Chart configuration deploys and configures the following components:
 
 * Cassandra
 * ElasticSearch
@@ -25,13 +37,11 @@ Temporal can be configured to run with a variety of different dependencies and t
 * Promethueus
 * Grafana
 
-MySQL can be swapped in for Cassandra but is not deployed as part of this Helm chart.
-
-The following sections work forward from a single node installation using included dependencies to a replicated deployment on existing infrastructure.
+The sections that follow describe various deployment configurations, from a minimal one-replica installation using included dependencies, to a replicated deployment on existing infrastructure.
 
 ### Minimal installation with required dependencies only
 
-To install Temporal in a limited but working configuration (one replica of Cassandra and each of Temporal's services, no metrics or Elastic Search), you can run the following command
+To install Temporal in a limited but working and self-contained configuration (one replica of Cassandra and each of Temporal's services, no metrics or Elastic Search), you can run the following command
 
 ```
 ~/temporal-helm$ helm install \
@@ -104,10 +114,10 @@ You might already be operating a MySQL instance that you want to use with Tempor
 
 In this case, create and configure temporal databases on your MySQL host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
 
-Here are the commands you can use to create and initialize the databases:
+Here are examples of commands you can use to create and initialize the databases:
 
 ```bash
-~/temporal$ export SQL_DRIVER=sql
+~/temporal$ export SQL_PLUGIN=mysql
 ~/temporal$ export SQL_HOST=mysqlhost
 ~/temporal$ export SQL_PORT=3306
 ~/temporal$ export SQL_USER=mysqluser
@@ -141,7 +151,7 @@ You might already be operating a Cassandra instance that you want to use with Te
 In this case, create and setup keyspaces in your Cassandra instance with `temporal-cassandra-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
 
 
-Here are the commands you can use to create and initialize the keyspaces:
+Here are examples of commands you can use to create and initialize the keyspaces:
 
 ```bash
 
@@ -206,10 +216,10 @@ helm install temporaltest \
 
 ### Exploring Your Cluster
 
-As always, you can use your favorite kubernetes tools ([k9s](https://github.com/derailed/k9s), [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/), etc.) to interact with your cluster.
+You can use your favorite kubernetes tools ([k9s](https://github.com/derailed/k9s), [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/), etc.) to interact with your cluster.
 
 ```bash
-$ kubectl get svc 
+$ kubectl get svc
 NAME                                   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                                        AGE
 ...
 temporaltest-admintools                ClusterIP   172.20.237.59    <none>        22/TCP                                         15m
@@ -293,17 +303,31 @@ Bad binaries to reset:
 +-----------------+----------+------------+--------+
 ```
 
-### Forwarding Your Machine's Local Port
+### Forwarding Your Machine's Local Port to Temporal FrontEnd
 
 You can also expose your instance's front end port on your local machine:
 
 ```
-$ kubectl port-forward services/temporaltest-frontend-headless 7233:7233 
+$ kubectl port-forward services/temporaltest-frontend-headless 7233:7233
 Forwarding from 127.0.0.1:7233 -> 7233
 Forwarding from [::1]:7233 -> 7233
 ```
 
-and, from a separate window, use the local port to access the service.
+and, from a separate window, use the local port to access the service from your application or Temporal samples.
+
+### Forwarding Your Machine's Local Port to Temporal Web UI
+
+Similarly to how you accessed Temporal front end via kubernetes port forwarding, you can access your Temporal instance's web user interface.
+
+To do so, forward your machine's local port to the Web service in your Temporal installation
+
+```
+$ kubectl port-forward services/temporaltest-web 8088:8088
+Forwarding from 127.0.0.1:8088 -> 8088
+Forwarding from [::1]:8088 -> 8088
+```
+
+and navigate to http://127.0.0.1:8088 in your browser.
 
 
 ### Exploring Metrics via Grafana
@@ -331,7 +355,7 @@ Forwarding from [::1]:8081 -> 3000
 
 3. Navigate to the forwarded Grafana port in your browser (http://localhost:8081/), login as `admin` (using the password from step 1), and click on the "Home" button (upper left corner) to see available dashboards.
 
-### Updating dynamic config
+### Updating Dynamic Configs
 By default dynamic config is empty, if you want to override some properties for your cluster, you should:
 1. Create a yaml file with your config (for example dc.yaml).
 2. Populate it with some values under server.dynamicConfig prefix (use the sample provided at `values/values.dynamic_config.yaml` as a starting point)
@@ -343,6 +367,8 @@ Note that if you already have a running cluster you could use upgrade command to
 ```bash
 $ helm upgrade -f values/values.dynamic_config.yaml temporaltest . --timeout 900s
 ```
+
+Note that doing so will trigger a rolling upgrade of your system.
 
 ## Uninstalling
 
