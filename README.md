@@ -354,7 +354,7 @@ Note: in this example chart, uninstalling a Temporal instance also removes all t
 
 ## Upgrading
 
-To upgrade your cluster, upgrade your database schema, and then use `helm upgrade` command to perform a rolling upgrade of your docker images.
+To upgrade your cluster, upgrade your database schema (if the release includes schema changes), and then use `helm upgrade` command to perform a rolling upgrade of your installation.
 
 Example:
 
