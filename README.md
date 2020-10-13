@@ -356,6 +356,10 @@ Note: in this example chart, uninstalling a Temporal instance also removes all t
 
 To upgrade your cluster, upgrade your database schema (if the release includes schema changes), and then use `helm upgrade` command to perform a rolling upgrade of your installation.
 
+Note:
+* Not supported: running newer binaries with an older schema.
+* Supported: downgrading binaries – running older binaries with a newer schema.
+
 Example:
 
 ### Upgrade Schema
