@@ -5,9 +5,9 @@ server:
         driver: "sql"
 
         sql:
-          driver: "mysql"
+          driver: "postgres"
           host: _HOST_
-          port: 3306
+          port: 5432
           database: temporal
           user: _USERNAME_
           password: _PASSWORD_
@@ -16,9 +16,9 @@ server:
         driver: "sql"
 
         sql:
-          driver: "mysql"
+          driver: "postgres"
           host: _HOST_
-          port: 3306
+          port: 5432
           database: temporal_visibility
           user: _USERNAME_
           password: _PASSWORD_
@@ -27,10 +27,10 @@ cassandra:
   enabled: false
 
 mysql:
-  enabled: true
+  enabled: false
 
 postgresql:
-  enabled: false
+  enabled: true
 
 schema:
   setup:
