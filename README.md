@@ -3,7 +3,7 @@
 
 Temporal is a distributed, scalable, durable, and highly available orchestration engine designed to execute asynchronous long-running business logic in a resilient way.
 
-This repo contains a basic V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. The dependencies that are bundled with this solution by default offer an easy way to experiment with Temporal software. This Helm chart can also be used to install just the Temporal server, configured to connect to dependencies (such as a Cassandra or MySQL database) that you may already have available in your environment.
+This repo contains a basic V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. The dependencies that are bundled with this solution by default offer an easy way to experiment with Temporal software. This Helm chart can also be used to install just the Temporal server, configured to connect to dependencies (such as a Cassandra, MySQL database or PostgreSQL database) that you may already have available in your environment.
 
 This Helm Chart code is tested by a dedictated test pipeline. It is also used extensively by other Temporal pipelines for testing various aspects of Temporal systems. Our test pipeline currently use Helm 3.1.1.
 
@@ -83,7 +83,7 @@ To install Temporal with all of its dependencies run this command:
 ~/temporal-helm$ helm install temporaltest . --timeout 900s
 ```
 
-To use your own instance of ElasticSearch, MySQL, or Cassandra, please read the "Bring Your Own" sections below.
+To use your own instance of ElasticSearch, MySQL. PostgreSQL, or Cassandra, please read the "Bring Your Own" sections below.
 
 Other components (Prometheus, Kafka, Grafana) can be omitted from the installation by setting their corresponding 'enable' flag to `false` (and by pointing `server.kafka.host` to your existing instance of Kafka):
 
@@ -117,31 +117,88 @@ In this case, create and configure temporal databases on your MySQL host with `t
 Here are examples of commands you can use to create and initialize the databases:
 
 ```bash
-~/temporal$ export SQL_PLUGIN=mysql
-~/temporal$ export SQL_HOST=mysqlhost
-~/temporal$ export SQL_PORT=3306
-~/temporal$ export SQL_USER=mysqluser
-~/temporal$ export SQL_PASSWORD=userpassword
+# in https://github.com/temporalio/temporal git repo dir
+export SQL_PLUGIN=mysql
+export SQL_HOST=mysql_host
+export SQL_PORT=3306
+export SQL_USER=mysql_user
+export SQL_PASSWORD=mysql_password
 
-~/temporal$ ./temporal-sql-tool create-database -database temporal
-~/temporal$ SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
-~/temporal$ SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/mysql/v57/temporal/versioned
+./temporal-sql-tool create-database -database temporal
+SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
+SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/mysql/v57/temporal/versioned
 
-~/temporal$ ./temporal-sql-tool create-database -database temporal_visibility
-~/temporal$ SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
-~/temporal$ SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/mysql/v57/visibility/versioned
+./temporal-sql-tool create-database -database temporal_visibility
+SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
+SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/mysql/v57/visibility/versioned
 ```
 
 Once you initialized the two databases, fill in the configuration values in `values/values.mysql.yaml`, and run
 
 ```bash
-~/temporal-helm$ helm install -f values/values.mysql.yaml temporaltest . --timeout 900s
+# in https://github.com/temporalio/helm-charts git repo dir
+helm install -f values/values.mysql.yaml temporaltest . --timeout 900s
 ```
 
-Alternatively, instad of modifying `values/values.mysql.yaml`, you can supply those values in your command line:
+Alternatively, instead of modifying `values/values.mysql.yaml`, you can supply those values in your command line:
 
 ```bash
-~/temporal-helm$ helm install -f values/values.mysql.yaml temporaltest --set server.config.persistence.default.sql.user=mysqluser --set server.config.persistence.default.sql.password=userpassword --set server.config.persistence.visibility.sql.user=mysqluser --set server.config.persistence.visibility.sql.password=userpassword --set server.config.persistence.default.sql.host=mysqlhost --set server.config.persistence.visibility.sql.host=mysqlhost . --timeout 900s
+# in https://github.com/temporalio/helm-charts git repo dir
+helm install -f values/values.mysql.yaml temporaltest \
+  --set elasticsearch.enabled=false \
+  --set server.config.persistence.default.sql.user=mysql_user \
+  --set server.config.persistence.default.sql.password=mysql_password \
+  --set server.config.persistence.visibility.sql.user=mysql_user \
+  --set server.config.persistence.visibility.sql.password=mysql_password \
+  --set server.config.persistence.default.sql.host=mysql_host \
+  --set server.config.persistence.visibility.sql.host=mysql_host . --timeout 900s
+```
+
+
+### Install with your own PostgreSQL
+
+You might already be operating a PostgreSQL instance that you want to use with Temporal.
+
+In this case, create and configure temporal databases on your PostgreSQL host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
+
+Here are examples of commands you can use to create and initialize the databases:
+
+```bash
+# in https://github.com/temporalio/temporal git repo dir
+export SQL_PLUGIN=postgres
+export SQL_HOST=postgresql_host
+export SQL_PORT=5432
+export SQL_USER=postgresql_user
+export SQL_PASSWORD=postgresql_password
+
+./temporal-sql-tool create-database -database temporal
+SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
+SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/postgresql/v96/temporal/versioned
+
+./temporal-sql-tool create-database -database temporal_visibility
+SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
+SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/postgresql/v96/visibility/versioned
+```
+
+Once you initialized the two databases, fill in the configuration values in `values/values.postgresql.yaml`, and run
+
+```bash
+# in https://github.com/temporalio/helm-charts git repo dir
+helm install -f values/values.postgresql.yaml temporaltest . --timeout 900s
+```
+
+Alternatively, instead of modifying `values/values.postgresql.yaml`, you can supply those values in your command line:
+
+```bash
+# in https://github.com/temporalio/helm-charts git repo dir
+helm install -f values/values.postgresql.yaml temporaltest \
+  --set elasticsearch.enabled=false \
+  --set server.config.persistence.default.sql.user=postgresql_user \
+  --set server.config.persistence.default.sql.password=postgresql_password \
+  --set server.config.persistence.visibility.sql.user=postgresql_user \
+  --set server.config.persistence.visibility.sql.password=postgresql_password \
+  --set server.config.persistence.default.sql.host=postgresql_host \
+  --set server.config.persistence.visibility.sql.host=postgresql_host . --timeout 900s
 ```
 
 ### Install with your own Cassandra
@@ -154,19 +211,19 @@ In this case, create and setup keyspaces in your Cassandra instance with `tempor
 Here are examples of commands you can use to create and initialize the keyspaces:
 
 ```bash
+# in https://github.com/temporalio/temporal git repo dir
+export CASSANDRA_HOST=cassandra_host
+export CASSANDRA_PORT=9042
+export CASSANDRA_USER=cassandra_user
+export CASSANDRA_PASSWORD=cassandra_user_password
 
-~/temporal$ export CASSANDRA_HOST=cassandra.default.svc.cluster.local
-~/temporal$ export CASSANDRA_PORT=9042
-~/temporal$ export CASSANDRA_USER=cassandra_user
-~/temporal$ export CASSANDRA_PASSWORD=cassandra_user_password
+./temporal-cassandra-tool create-Keyspace -k temporal
+CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool setup-schema -v 0.0
+CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool update -schema-dir schema/cassandra/temporal/versioned
 
-~/temporal$ ./temporal-cassandra-tool create-Keyspace -k temporal
-~/temporal$ CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool setup-schema -v 0.0
-~/temporal$ CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool update -schema-dir schema/cassandra/temporal/versioned
-
-~/temporal$ ./temporal-cassandra-tool create-Keyspace -k temporal_visibility
-~/temporal$ CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool setup-schema  -v 0.0
-~/temporal$ CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool update -schema-dir schema/cassandra/visibility/versioned
+./temporal-cassandra-tool create-Keyspace -k temporal_visibility
+CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool setup-schema  -v 0.0
+CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool update -schema-dir schema/cassandra/visibility/versioned
 ```
 
 Once you initialized the two keyspaces, fill in the configuration values in `values/values.cassandra.yaml`, and run
@@ -180,6 +237,7 @@ Once you initialized the two keyspaces, fill in the configuration values in `val
 If a live application environment already uses systems that Temporal can use as dependencies, then those systems can continue to be used. This Helm chart can install the minimal pieces of Temporal such that it can then be configured to use those systems as its dependencies.
 
 The example below demonstrates a few things:
+
 1. How to set values via the command line rather than the environment.
 2. How to configure a database (shows Cassandra, but MySQL works the same way)
 3. How to enable TLS for the database connection.
