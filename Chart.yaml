@@ -16,7 +16,7 @@ maintainers:
     url: https://temporal.io/
 
 sources:
-        - https://github.com/temporalio/temporal
+  - https://github.com/temporalio/temporal
 
 dependencies:
   - name: cassandra
