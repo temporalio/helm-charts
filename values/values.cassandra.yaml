@@ -43,6 +43,9 @@ cassandra:
 mysql:
   enabled: false
 
+postgresql:
+  enabled: false
+
 schema:
   setup:
     enabled: false
