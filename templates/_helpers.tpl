@@ -204,6 +204,36 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- end -}}
 {{- end -}}
 
+{{- define "temporal.persistence.sql.maxConns" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if $storeConfig.sql.maxConns -}}
+{{- $storeConfig.sql.maxConns -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- $global.Values.mysql.service.maxConns -}}
+{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres")) -}}
+{{- $global.Values.postgresql.service.maxConns -}}
+{{- else -}}
+{{- 20 -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.maxConnLifetime" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if $storeConfig.sql.maxConnLifetime -}}
+{{- $storeConfig.sql.maxConnLifetime -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- $global.Values.mysql.service.maxConnLifetime -}}
+{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres")) -}}
+{{- $global.Values.postgresql.service.maxConnLifetime -}}
+{{- else -}}
+{{- "1h" -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "temporal.persistence.sql.user" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}

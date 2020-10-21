@@ -11,6 +11,8 @@ server:
           database: temporal
           user: _USERNAME_
           password: _PASSWORD_
+          maxConns: 20
+          maxConnLifetime: "1h"
 
       visibility:
         driver: "sql"
@@ -22,6 +24,8 @@ server:
           database: temporal_visibility
           user: _USERNAME_
           password: _PASSWORD_
+          maxConns: 20
+          maxConnLifetime: "1h"
 
 cassandra:
   enabled: false
