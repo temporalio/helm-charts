@@ -35,7 +35,7 @@ spec:
           imagePullPolicy: {{ .Values.web.image.pullPolicy }}
           env:
             - name: TEMPORAL_GRPC_ENDPOINT
-              value: "{{ include "temporal.fullname" . }}-frontend.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.server.frontend.service.port }}"
+              value: "{{ include "temporal.fullname" . }}-frontend.{{ .Release.Namespace }}.svc:{{ .Values.server.frontend.service.port }}"
 
           ports:
             - name: http
