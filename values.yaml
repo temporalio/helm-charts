@@ -27,6 +27,25 @@ server:
     serviceMonitor:
       enabled: false
       interval: 30s
+      # Set Prometheus metric_relabel_configs via ServiceMonitor
+      # Use metricRelabelings to adjust metric and label names as needed
+      #metricRelabelings:
+      # - action: replace
+      #   sourceLabels:
+      #   - exported_namespace
+      #   targetLabel: temporal_namespace
+      # - action: replace
+      #   regex: service_errors_(.+)
+      #   replacement: ${1}
+      #   sourceLabels:
+      #   - __name__
+      #   targetLabel: temporal_error_kind
+      # - action: replace
+      #   regex: service_errors_.+
+      #   replacement: temporal_service_errors
+      #   sourceLabels:
+      #   - __name__
+      #   targetLabel: __name__
     prometheus:
       timerType: histogram
   podAnnotations: {}
