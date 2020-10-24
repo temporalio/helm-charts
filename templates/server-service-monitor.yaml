@@ -19,23 +19,19 @@ metadata:
     {{- end }}
 spec:
   endpoints:
-    - port: metrics
-      interval: {{ default $.Values.server.metrics.serviceMonitor.interval $serviceValues.metrics.serviceMonitor.interval }}
-      {{- with (default $.Values.server.metrics.serviceMonitor.metricRelabelings $serviceValues.metrics.serviceMonitor.metricRelabelings) }}
-      metricRelabelings:
-        {{- toYaml . | indent 8 }}
-      {{- end }}
+  - port: metrics
+    interval: {{ default $.Values.server.metrics.serviceMonitor.interval $serviceValues.metrics.serviceMonitor.interval }}
+    metricRelabelings: {{ toYaml (default $.Values.server.metrics.serviceMonitor.metricRelabelings $serviceValues.metrics.serviceMonitor.metricRelabelings) | nindent 4 }}
   jobLabel: {{ include "temporal.componentname" (list $ $service) }}
   namespaceSelector:
     matchNames:
-      - "{{ $.Release.Namespace }}"
+    - "{{ $.Release.Namespace }}"
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "temporal.name" $ }}
       app.kubernetes.io/instance: {{ $.Release.Name }}
       app.kubernetes.io/component: {{ $service }}
       app.kubernetes.io/headless: 'true'
-
 ---
 {{- end }}
 {{- end }}

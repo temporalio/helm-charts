@@ -29,7 +29,7 @@ server:
       interval: 30s
       # Set Prometheus metric_relabel_configs via ServiceMonitor
       # Use metricRelabelings to adjust metric and label names as needed
-      #metricRelabelings:
+      metricRelabelings: []
       # - action: replace
       #   sourceLabels:
       #   - exported_namespace
