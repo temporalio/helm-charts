@@ -453,7 +453,7 @@ Here are examples of commands you can use to upgrade the "default" and "visibili
 Upgrade default schema:
 
 ```
-temporal_v1.2.0 $ temporal-cassandra-tool \
+temporal_v1.2.1 $ temporal-cassandra-tool \
    --tls \
    --tls-ca-file ... \
    --user cassandra-user \
@@ -468,7 +468,7 @@ temporal_v1.2.0 $ temporal-cassandra-tool \
 Upgrade visibility schema:
 
 ```
-temporal_v1.2.0 $ temporal-cassandra-tool \
+temporal_v1.2.1 $ temporal-cassandra-tool \
    --tls \
    --tls-ca-file ... \
    --user cassandra-user \
@@ -507,9 +507,9 @@ helm-charts $ helm \
     --set server.config.persistence.visibility.cassandra.tls.enabled=true \
     --set server.config.persistence.visibility.cassandra.replicationFactor=3 \
     --set server.config.persistence.visibility.cassandra.keyspace=temporal_visibility \
-    --set server.image.tag=1.2.0 \
+    --set server.image.tag=1.2.1 \
     --set server.image.repository=temporalio/server \
-    --set admintools.image.tag=1.2.0 \
+    --set admintools.image.tag=1.2.1 \
     --set admintools.image.repository=temporalio/admin-tools \
     --set web.image.tag=1.1.1 \
     --set web.image.repository=temporalio/web \
