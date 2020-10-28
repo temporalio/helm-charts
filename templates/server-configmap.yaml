@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "temporal.fullname" . }}
+  name: "{{ include "temporal.fullname" . }}-config"
   labels:
     app.kubernetes.io/name: {{ include "temporal.name" . }}
     helm.sh/chart: {{ include "temporal.chart" . }}
@@ -180,11 +180,6 @@ data:
       hostPort: "{{ include "temporal.componentname" (list . "frontend") }}:{{ .Values.server.frontend.service.port }}"
 
     dynamicConfigClient:
-      filepath: "/etc/temporal/config/dynamic_config.yaml"
+      filepath: "/etc/temporal/dynamic_config/dynamic_config.yaml"
       pollInterval: "10s"
-
-  dynamic_config.yaml: |-
-  {{- if $.Values.server.dynamicConfig }}
-    {{- toYaml .Values.server.dynamicConfig | nindent 4 }}
-  {{- end }}
 {{- end }}
