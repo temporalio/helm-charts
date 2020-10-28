@@ -111,8 +111,7 @@ spec:
               mountPath: /etc/temporal/config/config_template.yaml
               subPath: config_template.yaml
             - name: dynamic-config
-              mountPath: /etc/temporal/config/dynamic_config.yaml
-              subPath: dynamic_config.yaml
+              mountPath: /etc/temporal/dynamic_config
           resources:
             {{- toYaml (default $.Values.server.resources $serviceValues.resources) | nindent 12 }}
       {{- with $.Values.imagePullSecrets }}
@@ -122,10 +121,13 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "temporal.fullname" $ }}
+            name: "{{ include "temporal.fullname" $ }}-config"
         - name: dynamic-config
           configMap:
-            name: {{ include "temporal.fullname" $ }}
+            name: "{{ include "temporal.fullname" $ }}-dynamic-config"
+            items:
+            - key: dynamic_config.yaml
+              path: dynamic_config.yaml
       {{- with (default $.Values.server.nodeSelector $serviceValues.nodeSelector) }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
