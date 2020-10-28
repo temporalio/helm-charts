@@ -421,12 +421,21 @@ By default dynamic config is empty, if you want to override some properties for 
 ```bash
 $ helm install -f values/values.dynamic_config.yaml temporaltest . --timeout 900s
 ```
-Note that if you already have a running cluster you could use upgrade command to change dynamic config values:
+Note that if you already have a running cluster you can use the "helm upgrade" command to change dynamic config values:
 ```bash
 $ helm upgrade -f values/values.dynamic_config.yaml temporaltest . --timeout 900s
 ```
 
-Note that doing so will trigger a rolling upgrade of your system.
+WARNING: The "helm upgrade" approach will trigger a rolling upgrade of all the pods.
+
+If a rolling upgrade is not desirable, you can also generate the ConfigMap file explicitly and then apply it using the following command:
+
+```bash
+$ kubectl apply -f dynamicconfigmap.yaml
+```
+You can use helm upgrade with the "--dry-run" option to generate the content for the dynamicconfigmap.yaml.
+
+The dynamic-config ConfigMap is referenced as a mounted volume within the Temporal Containers, so any applied change will be automatically picked up by all pods within a few minutes without the need for pod recycling. See k8S documentation (https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically) for more details on how this works.
 
 ## Uninstalling
 
