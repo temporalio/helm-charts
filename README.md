@@ -437,9 +437,6 @@ You can use helm upgrade with the "--dry-run" option to generate the content for
 
 The dynamic-config ConfigMap is referenced as a mounted volume within the Temporal Containers, so any applied change will be automatically picked up by all pods within a few minutes without the need for pod recycling. See k8S documentation (https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically) for more details on how this works.
 
-
-
-
 ## Uninstalling
 
 Note: in this example chart, uninstalling a Temporal instance also removes all the data that might have been created during its  lifetime.
