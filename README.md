@@ -433,7 +433,7 @@ If a rolling upgrade is not desirable, you can also generate the ConfigMap file 
 ```bash
 $ kubectl apply -f dynamicconfigmap.yaml
 ```
-You can use helm upgrade with the "--dry-run" option to generate the template for the dynamicconfigmap.yaml.
+You can use helm upgrade with the "--dry-run" option to generate the content for the dynamicconfigmap.yaml.
 
 The dynamic-config ConfigMap is referenced as a mounted volume within the Temporal Containers, so any applied change will be automatically picked up by all pods within a few minutes without the need for pod recycling. See k8S documentation (https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically) for more details on how this works.
 
