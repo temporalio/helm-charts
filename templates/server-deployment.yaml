@@ -112,6 +112,7 @@ spec:
               subPath: config_template.yaml
             - name: dynamic-config
               mountPath: /etc/temporal/dynamic_config
+            {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12}}  
           resources:
             {{- toYaml (default $.Values.server.resources $serviceValues.resources) | nindent 12 }}
       {{- with $.Values.imagePullSecrets }}
@@ -128,6 +129,7 @@ spec:
             items:
             - key: dynamic_config.yaml
               path: dynamic_config.yaml
+        {{- toYaml $.Values.server.additionalVolumes | nindent 8}}  
       {{- with (default $.Values.server.nodeSelector $serviceValues.nodeSelector) }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
