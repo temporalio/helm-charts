@@ -64,6 +64,8 @@ server:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  additionalVolumes: []
+  additionalVolumeMounts: []
 
   config:
     logLevel: "debug,info"

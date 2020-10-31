@@ -17,7 +17,7 @@ spec:
     - port: {{ .Values.server.frontend.service.port }}
       targetPort: rpc
       protocol: TCP
-      name: rpc
+      name: grpc-rpc
       {{- if hasKey .Values.server.frontend.service "nodePort" }}
       nodePort: {{ .Values.server.frontend.service.nodePort }}
       {{- end }}
@@ -60,7 +60,7 @@ spec:
     - port: {{ $serviceValues.service.port }}
       targetPort: rpc
       protocol: TCP
-      name: rpc
+      name: grpc-rpc
     - port: 9090
       targetPort: metrics
       protocol: TCP
