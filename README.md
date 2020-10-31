@@ -133,6 +133,15 @@ SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/mysql/v57/visibility/versioned
 ```
 
+You can also run the above `temporal-sql-tool` commands from within the `temporalio/server` image. For example:
+
+```
+kubectl run temporal-setup --rm -it --image temporalio/server:<version> -- /bin/bash
+
+# inside the pod
+temporal-sql-tool --version
+```
+
 Once you initialized the two databases, fill in the configuration values in `values/values.mysql.yaml`, and run
 
 ```bash
@@ -178,6 +187,15 @@ SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/postgresql/v
 ./temporal-sql-tool create-database -database temporal_visibility
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/postgresql/v96/visibility/versioned
+```
+
+You can also run the above `temporal-sql-tool` commands from within the `temporalio/server` image. For example:
+
+```
+kubectl run temporal-setup --rm -it --image temporalio/server:<version> -- /bin/bash
+
+# inside the pod
+temporal-sql-tool --version
 ```
 
 Once you initialized the two databases, fill in the configuration values in `values/values.postgresql.yaml`, and run
