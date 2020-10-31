@@ -140,6 +140,7 @@ data:
             timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.worker.metrics.prometheus.timerType }}
             listenAddress: "0.0.0.0:9090"
 
+    {{- if or $.Values.kafka.enabled $.Values.kafka.external }}
     kafka:
         tls:
             enabled: false
@@ -156,7 +157,7 @@ data:
             visibility:
                 topic: temporal-visibility-dev
                 dlq-topic: temporal-visibility-dev-dlq
-
+    {{- end }}
     clusterMetadata:
       enableGlobalDomain: false
       failoverVersionIncrement: 10
