@@ -80,9 +80,9 @@ spec:
             - name: ES_VIS_INDEX
               value: "{{ $.Values.elasticsearch.visibilityIndex }}"
             - name: ES_USER
-            - value: "{{ $.Values.elasticsearch.username }}"
+              value: "{{ $.Values.elasticsearch.username }}"
             - name: ES_PWD
-            - value: "{{ $.Values.elasticsearch.password }}"
+              value: "{{ $.Values.elasticsearch.password }}"
             - name: SERVICES
               value: {{ $service }}
             - name: TEMPORAL_STORE_PASSWORD
