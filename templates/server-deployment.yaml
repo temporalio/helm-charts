@@ -78,7 +78,7 @@ spec:
             - name: ES_SCHEME
               value: "{{ $.Values.elasticsearch.scheme }}"
             - name: ES_VIS_INDEX
-              value: "{{ $.Values.elasticsearch.vsindex }}"
+              value: "{{ $.Values.elasticsearch.visibilityIndex }}"
             - name: ES_USER
             - value: "{{ $.Values.elasticsearch.username }}"
             - name: ES_PWD
