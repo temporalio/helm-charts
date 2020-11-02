@@ -287,6 +287,9 @@ elasticsearch:
   host: elasticsearch-master-headless
   scheme: http
   port: 9200
+  username: ""
+  password: ""
+  visibilityIndex: "temporal-visibility-dev"
 
 prometheus:
   enabled: true
