@@ -138,6 +138,12 @@ server:
 
   frontend:
     # replicaCount: 1
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 80
+      # targetMemoryUtilizationPercentage: 80
     service:
       type: ClusterIP
       port: 7233
@@ -156,6 +162,12 @@ server:
 
   history:
     # replicaCount: 1
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 80
+      # targetMemoryUtilizationPercentage: 80
     service:
       # type: ClusterIP
       port: 7934
@@ -174,6 +186,12 @@ server:
 
   matching:
     # replicaCount: 1
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 80
+      # targetMemoryUtilizationPercentage: 80
     service:
       # type: ClusterIP
       port: 7935
@@ -192,6 +210,12 @@ server:
 
   worker:
     # replicaCount: 1
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 80
+      # targetMemoryUtilizationPercentage: 80
     service:
       # type: ClusterIP
       port: 7239

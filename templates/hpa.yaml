@@ -1,0 +1,34 @@
+{{- if $.Values.server.enabled }}
+{{- range $service := (list "frontend" "history" "matching" "worker") }}
+{{- $serviceValues := index $.Values.server $service -}}
+{{- if $serviceValues.autoscaling}}
+{{- if $serviceValues.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "temporal.componentname" (list $ $service) }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "temporal.componentname" (list $ $service) }}
+  minReplicas: {{ $serviceValues.autoscaling.minReplicas }}
+  maxReplicas: {{ $serviceValues.autoscaling.maxReplicas }}
+  metrics:
+  {{- if $serviceValues.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ $serviceValues.autoscaling.targetCPUUtilizationPercentage }}
+  {{- end }}
+  {{- if $serviceValues.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ $serviceValues.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
