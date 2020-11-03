@@ -12,7 +12,7 @@ server:
           user: _USERNAME_
           password: _PASSWORD_
           maxConns: 20
-          maxConnLifetime: "1h"
+          maxConnLifetime: "4m"
 
       visibility:
         driver: "sql"
@@ -25,7 +25,7 @@ server:
           user: _USERNAME_
           password: _PASSWORD_
           maxConns: 20
-          maxConnLifetime: "1h"
+          maxConnLifetime: "4m"
 
 cassandra:
   enabled: false
