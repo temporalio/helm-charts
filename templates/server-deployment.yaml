@@ -72,11 +72,17 @@ spec:
             - name: ENABLE_ES
               value: "{{ or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}"
             - name: ES_SEEDS
-              value: {{ $.Values.elasticsearch.host }}
+              value: "{{ $.Values.elasticsearch.host }}"
             - name: ES_PORT
               value: "{{ $.Values.elasticsearch.port }}"
             - name: ES_SCHEME
               value: "{{ $.Values.elasticsearch.scheme }}"
+            - name: ES_VIS_INDEX
+              value: "{{ $.Values.elasticsearch.visibilityIndex }}"
+            - name: ES_USER
+              value: "{{ $.Values.elasticsearch.username }}"
+            - name: ES_PWD
+              value: "{{ $.Values.elasticsearch.password }}"
             - name: SERVICES
               value: {{ $service }}
             - name: TEMPORAL_STORE_PASSWORD
@@ -112,7 +118,9 @@ spec:
               subPath: config_template.yaml
             - name: dynamic-config
               mountPath: /etc/temporal/dynamic_config
+            {{- if $.Values.server.additionalVolumeMounts }}
             {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12}}  
+            {{- end }}
           resources:
             {{- toYaml (default $.Values.server.resources $serviceValues.resources) | nindent 12 }}
       {{- with $.Values.imagePullSecrets }}
@@ -129,7 +137,9 @@ spec:
             items:
             - key: dynamic_config.yaml
               path: dynamic_config.yaml
+        {{- if $.Values.server.additionalVolumes }}
         {{- toYaml $.Values.server.additionalVolumes | nindent 8}}  
+        {{- end }}
       {{- with (default $.Values.server.nodeSelector $serviceValues.nodeSelector) }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
