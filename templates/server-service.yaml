@@ -42,6 +42,7 @@ metadata:
     app.kubernetes.io/component: {{ $service }}
     app.kubernetes.io/part-of: {{ $.Chart.Name }}
     app.kubernetes.io/headless: 'true'
+    prometheus.io/job: {{ $.Chart.Name }}-{{ $service }}
     prometheus.io/scrape: 'true'
     prometheus.io/scheme: http
     prometheus.io/port: "9090"
