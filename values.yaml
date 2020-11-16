@@ -104,6 +104,8 @@ server:
           secretName: ""
           maxConns: 20
           maxConnLifetime: "1h"
+          # connectAttributes:
+            # tx_isolation: 'READ-COMMITTED'
 
       visibility:
         driver: "cassandra"
@@ -135,6 +137,8 @@ server:
           secretName: ""
           maxConns: 20
           maxConnLifetime: "1h"
+          # connectAttributes:
+          #   tx_isolation: 'READ-COMMITTED'
 
   frontend:
     # replicaCount: 1

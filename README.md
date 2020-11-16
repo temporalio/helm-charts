@@ -153,7 +153,7 @@ helm install -f values/values.mysql.yaml temporaltest \
   --set server.config.persistence.default.sql.host=mysql_host \
   --set server.config.persistence.visibility.sql.host=mysql_host . --timeout 900s
 ```
-
+*NOTE:* For MYSQL <5.7.20 (e.g AWS Aurora MySQL) use `values/values.aurora-mysql.yaml`
 
 ### Install with your own PostgreSQL
 
