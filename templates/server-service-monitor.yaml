@@ -25,7 +25,7 @@ spec:
   jobLabel: {{ include "temporal.componentname" (list $ $service) }}
   namespaceSelector:
     matchNames:
-    - "{{ $.Release.Namespace }}"
+      - "{{ $.Release.Namespace }}"
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "temporal.name" $ }}
