@@ -1,0 +1,34 @@
+server:
+  config:
+    dcRedirectionPolicy:
+      policy: "selected-apis-forwarding"
+      toDC: ""
+
+    clusterMetadata:
+      enableGlobalNamespace: true
+      replicationConsumer:
+        type: rpc
+      failoverVersionIncrement: 100
+      masterClusterName: cluster_a
+      currentClusterName: # <current cluster name>
+      # clusterInformation:
+      #   <cluster name>:
+      #     enabled: true
+      #     initialFailoverVersion: <cluster initial failover version>
+      #     rpcName: "frontend"
+      #     rpcAddress: <cluster address:cluster port>
+      #   cluster_a:
+      #     enabled: true
+      #     initialFailoverVersion: 1
+      #     rpcName: "frontend"
+      #     rpcAddress: "localhost:7233"
+      #   cluster_b:
+      #     enabled: true
+      #     initialFailoverVersion: 2
+      #     rpcName: "frontend"
+      #     rpcAddress: "localhost:8233"
+      #   cluster_c:
+      #     enabled: false
+      #     initialFailoverVersion: 3
+      #     rpcName: "frontend"
+      #     rpcAddress: "localhost:9233"
