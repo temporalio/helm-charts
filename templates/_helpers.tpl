@@ -54,36 +54,67 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- end }}
 
 {{- define "temporal.frontend.grpcPort" -}}
-7233
+{{- if $.Values.server.frontend.service.port -}}
+{{- $.Values.server.frontend.service.port -}}
+{{- else -}}
+{{- 7233 -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.frontend.membershipPort" -}}
-6933
+{{- if $.Values.server.frontend.service.membershipPort -}}
+{{- $.Values.server.frontend.service.membershipPort -}}
+{{- else -}}
+{{- 6933 -}}
+{{- end -}}
 {{- end -}}
 
-
 {{- define "temporal.history.grpcPort" -}}
-7234
+{{- if $.Values.server.history.service.port -}}
+{{- $.Values.server.history.service.port -}}
+{{- else -}}
+{{- 7234 -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.history.membershipPort" -}}
-6934
+{{- if $.Values.server.history.service.membershipPort -}}
+{{- $.Values.server.history.service.membershipPort -}}
+{{- else -}}
+{{- 6934 -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.matching.grpcPort" -}}
-7235
+{{- if $.Values.server.matching.service.port -}}
+{{- $.Values.server.matching.service.port -}}
+{{- else -}}
+{{- 7235 -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.matching.membershipPort" -}}
-6935
+{{- if $.Values.server.matching.service.membershipPort -}}
+{{- $.Values.server.matching.service.membershipPort -}}
+{{- else -}}
+{{- 6935 -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.worker.grpcPort" -}}
-7239
+{{- if $.Values.server.worker.service.port -}}
+{{- $.Values.server.worker.service.port -}}
+{{- else -}}
+{{- 7239 -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.worker.membershipPort" -}}
-6939
+{{- if $.Values.server.worker.service.membershipPort -}}
+{{- $.Values.server.worker.service.membershipPort -}}
+{{- else -}}
+{{- 6939 -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.persistence.schema" -}}

@@ -161,6 +161,12 @@ data:
                 dlq-topic: temporal-visibility-dev-dlq
     {{- end }}
 
+    {{- if $.Values.server.config.clusterMetadata }}
+    clusterMetadata:
+    {{- with .Values.server.config.clusterMetadata }}
+    {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- else }}
     clusterMetadata:
       enableGlobalDomain: false
       failoverVersionIncrement: 10
@@ -172,6 +178,7 @@ data:
           initialFailoverVersion: 1
           rpcName: "temporal-frontend"
           rpcAddress: "127.0.0.1:7933"
+    {{- end }}
 
     dcRedirectionPolicy:
       policy: "noop"
