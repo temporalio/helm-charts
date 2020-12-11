@@ -9,7 +9,7 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.4.0
+    tag: 1.4.1
     pullPolicy: IfNotPresent
 
   kafka:
@@ -216,7 +216,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.4.0
+    tag: 1.4.1
     pullPolicy: IfNotPresent
 
   service:
