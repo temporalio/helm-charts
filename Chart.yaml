@@ -25,7 +25,7 @@ dependencies:
     enabled: false
     condition: cassandra.enabled
   - name: prometheus
-    repository: https://kubernetes-charts.storage.googleapis.com
+    repository: https://prometheus-community.github.io/helm-charts
     version: 11.0.4
     condition: prometheus.enabled
   - name: elasticsearch
@@ -37,7 +37,7 @@ dependencies:
     version: 7.2.9
     condition: kafka.enabled
   - name: grafana
-    repository: https://kubernetes-charts.storage.googleapis.com
+    repository: https://grafana.github.io/helm-charts
     version: 5.0.10
     condition: grafana.enabled
 
