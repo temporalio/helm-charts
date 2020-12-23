@@ -20,8 +20,8 @@ sources:
 
 dependencies:
   - name: cassandra
-    version: "0.14.3"
-    repository: https://kubernetes-charts-incubator.storage.googleapis.com/
+    version: 7.1.2
+    repository: https://charts.bitnami.com/bitnami
     enabled: false
     condition: cassandra.enabled
   - name: prometheus
