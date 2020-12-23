@@ -322,7 +322,7 @@ All Cassandra hosts.
 */}}
 {{- define "cassandra.hosts" -}}
 {{- range $i := (until (int .Values.cassandra.config.cluster_size)) }}
-{{- $cassandraName := include "call-nested" (list $ "cassandra" "cassandra.fullname") -}}
+{{- $cassandraName := include "call-nested" (list $ "cassandra" "common.names.fullname") -}}
 {{- printf "%s.%s.svc.cluster.local," $cassandraName $.Release.Namespace -}}
 {{- end }}
 {{- end -}}
@@ -331,7 +331,7 @@ All Cassandra hosts.
 The first Cassandra host in the stateful set.
 */}}
 {{- define "cassandra.host" -}}
-{{- $cassandraName := include "call-nested" (list . "cassandra" "cassandra.fullname") -}}
+{{- $cassandraName := include "call-nested" (list . "cassandra" "common.names.fullname") -}}
 {{- printf "%s.%s.svc.cluster.local" $cassandraName .Release.Namespace -}}
 {{- end -}}
 
