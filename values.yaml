@@ -359,17 +359,18 @@ cassandra:
   persistence:
     enabled: false
   image:
-    repo: cassandra
-    tag: 3.11.3
+    repo: bitnami/cassandra
+    tag: 3.11.8
     pullPolicy: IfNotPresent
   config:
     cluster_size: 3
     ports:
       cql: 9042
     num_tokens: 4
-    max_heap_size: 512M
-    heap_new_size: 128M
     seed_size: 0
+  jvm:
+    maxHeapSize: 512M
+    newHeapSize: 128M
   service:
     type: ClusterIP
 
