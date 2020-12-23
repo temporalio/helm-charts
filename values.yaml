@@ -368,6 +368,7 @@ cassandra:
       cql: 9042
     num_tokens: 4
     seed_size: 0
+  fullnameOverride: cassandra
   jvm:
     maxHeapSize: 512M
     newHeapSize: 128M
