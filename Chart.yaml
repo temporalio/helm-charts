@@ -20,7 +20,7 @@ sources:
 
 dependencies:
   - name: cassandra
-    version: 7.1.2
+    version: 5.6.7
     repository: https://charts.bitnami.com/bitnami
     enabled: false
     condition: cassandra.enabled
