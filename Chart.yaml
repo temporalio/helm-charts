@@ -20,8 +20,8 @@ sources:
 
 dependencies:
   - name: cassandra
-    version: 5.6.7
-    repository: https://charts.bitnami.com/bitnami
+    version: "0.14.3"
+    repository: https://charts.helm.sh/incubator
     enabled: false
     condition: cassandra.enabled
   - name: prometheus
