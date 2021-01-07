@@ -74,6 +74,7 @@ data:
         {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
         es-visibility:
             elasticsearch:
+                version: "{{ $.Values.elasticsearch.version }}"
                 url:
                     scheme: "{{ $.Values.elasticsearch.scheme }}"
                     host: "{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}"
