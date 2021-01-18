@@ -17,11 +17,14 @@ metadata:
     {{- with (default $.Values.server.metrics.serviceMonitor.additionalLabels $serviceValues.metrics.serviceMonitor.additionalLabels) }}
     {{- toYaml . | indent 4 }}
     {{- end }}
+  {{- if or $.Values.server.metrics.serviceMonitor.namespaceOverride $serviceValues.metrics.serviceMonitor.namespaceOverride }}
+  namespace: {{ default $.Values.server.metrics.serviceMonitor.namespaceOverride $serviceValues.metrics.serviceMonitor.namespaceOverride }}
+  {{- end }}
 spec:
   endpoints:
   - port: metrics
     interval: {{ default $.Values.server.metrics.serviceMonitor.interval $serviceValues.metrics.serviceMonitor.interval }}
-    metricRelabelings: {{ toYaml (default $.Values.server.metrics.serviceMonitor.metricRelabelings $serviceValues.metrics.serviceMonitor.metricRelabelings) | nindent 4 }}
+    metricRelabelings: {{ toYaml (default $.Values.server.metrics.serviceMonitor.metricRelabelings $serviceValues.metrics.serviceMonitor.metricRelabelings) | nindent 6 }}
   jobLabel: {{ include "temporal.componentname" (list $ $service) }}
   namespaceSelector:
     matchNames:
