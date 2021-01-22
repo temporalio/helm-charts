@@ -3,4 +3,5 @@ elasticsearch:
   external: true
   host: "elasticsearch-master-headless"
   port: "9200"
+  version: "v6"
   scheme: "http"
