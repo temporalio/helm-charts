@@ -76,6 +76,8 @@ spec:
               value: "{{ $.Values.elasticsearch.host }}"
             - name: ES_PORT
               value: "{{ $.Values.elasticsearch.port }}"
+            - name: ES_VERSION
+              value: "{{ $.Values.elasticsearch.version }}"
             - name: ES_SCHEME
               value: "{{ $.Values.elasticsearch.scheme }}"
             - name: ES_VIS_INDEX
