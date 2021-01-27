@@ -5,3 +5,4 @@ elasticsearch:
   port: "9200"
   version: "v7"
   scheme: "http"
+  logLevel: "error"

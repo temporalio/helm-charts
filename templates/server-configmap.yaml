@@ -80,6 +80,7 @@ data:
                     host: "{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}"
                 username: "{{ $.Values.elasticsearch.username }}"
                 password: "{{ $.Values.elasticsearch.password }}"
+                logLevel: "{{ $.Values.elasticsearch.logLevel }}"
                 indices:
                     visibility: "{{ $.Values.elasticsearch.visibilityIndex }}"
         {{- end }}
