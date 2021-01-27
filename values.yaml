@@ -292,6 +292,7 @@ elasticsearch:
   scheme: http
   port: 9200
   version: "v7"
+  logLevel: "error"
   username: ""
   password: ""
   visibilityIndex: "temporal-visibility-dev"
