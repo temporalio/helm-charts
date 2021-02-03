@@ -1,4 +1,9 @@
 {{- if .Values.web.enabled -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $.Chart.Name }}-web
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,6 +34,7 @@ spec:
         app.kubernetes.io/component: web
         app.kubernetes.io/part-of: {{ .Chart.Name }}
     spec:
+      serviceAccountName: {{ $.Chart.Name }}-web
       containers:
         - name: {{ .Chart.Name }}-web
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
