@@ -1,6 +1,11 @@
 {{- if $.Values.server.enabled }}
 {{- range $service := (list "frontend" "history" "matching" "worker") }}
 {{- $serviceValues := index $.Values.server $service -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $.Chart.Name }}-{{ $service }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -41,6 +46,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      serviceAccountName: {{ $.Chart.Name }}-{{ $service }}
       initContainers:
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra-service
