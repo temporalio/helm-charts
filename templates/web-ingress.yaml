@@ -15,10 +15,10 @@ metadata:
     app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
     app.kubernetes.io/component: web
     app.kubernetes.io/part-of: {{ .Chart.Name }}
-  {{- with .Values.web.ingress.annotations }}
+{{- with .Values.web.ingress.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}
-    {{- end }}
+{{- end }}
 spec:
   {{- if .Values.web.ingress.tls }}
   tls:
