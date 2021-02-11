@@ -80,7 +80,7 @@ server:
         cassandra:
           hosts: []
           # port: 9042
-          keyspace: temporal
+          keyspace: "temporal"
           user: "user"
           password: "password"
           existingSecret: ""
@@ -97,7 +97,7 @@ server:
           driver: "mysql"
           host: "mysql"
           port: 3306
-          database: temporal
+          database: "temporal"
           user: "temporal"
           password: "temporal"
           existingSecret: ""
@@ -113,7 +113,7 @@ server:
         cassandra:
           hosts: []
           # port: 9042
-          keyspace: temporal_visibility
+          keyspace: "temporal_visibility"
           user: "user"
           password: "password"
           existingSecret: ""
@@ -130,7 +130,7 @@ server:
           driver: "mysql"
           host: "mysql"
           port: 3306
-          database: temporal_visibility
+          database: "temporal_visibility"
           user: "temporal"
           password: "temporal"
           existingSecret: ""
