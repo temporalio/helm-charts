@@ -143,6 +143,7 @@ server:
   frontend:
     # replicaCount: 1
     service:
+      annotations: {} # Evaluated as template
       type: ClusterIP
       port: 7233
     metrics:
