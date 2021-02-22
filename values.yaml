@@ -163,7 +163,7 @@ server:
     # replicaCount: 1
     service:
       # type: ClusterIP
-      port: 7934
+      port: 7234
     metrics:
       annotations:
         enabled: true
@@ -181,7 +181,7 @@ server:
     # replicaCount: 1
     service:
       # type: ClusterIP
-      port: 7935
+      port: 7235
     metrics:
       annotations:
         enabled: false
