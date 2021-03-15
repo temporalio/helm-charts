@@ -232,7 +232,7 @@ web:
 
   image:
     repository: temporalio/web
-    tag: 1.7.0
+    tag: 1.7.1
     pullPolicy: IfNotPresent
 
   service:
