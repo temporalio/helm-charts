@@ -256,6 +256,7 @@ web:
     #    hosts:
     #      - chart-example.local
 
+  podAnnotations: {}
 
   resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
