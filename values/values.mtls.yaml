@@ -1,0 +1,121 @@
+server:
+  additionalToolEnvVars:
+    - name: TEMPORAL_CLI_TLS_SERVER_NAME
+      value: temporal-rpc.kube.mydomain.com
+    - name: TEMPORAL_CLI_TLS_CA
+      value: /etc/temporal/certs/CA.crt
+    - name: TEMPORAL_CLI_TLS_KEY
+      value: /etc/temporal/certs/temporal-tools.key
+    - name: TEMPORAL_CLI_TLS_CERT
+      value: /etc/temporal/certs/temporal-tools.crt
+    - name: TEMPORAL_CLI_TLS_ENABLE_HOST_VERIFICATION
+      value: 'true'
+    - name: TEMPORAL_CLI_TLS_DISABLE_HOST_VERIFICATION
+      value: 'false'
+      
+  additionalWebEnvVars:
+    - name: TEMPORAL_TLS_SERVER_NAME
+      value: temporal-rpc.kube.mydomain.com
+    - name: TEMPORAL_TLS_CA_PATH
+      value: /etc/temporal/certs/CA.crt
+    - name: TEMPORAL_TLS_KEY_PATH
+      value: /etc/temporal/certs/temporal-web.key
+    - name: TEMPORAL_TLS_CERT_PATH
+      value: /etc/temporal/certs/temporal-web.crt
+    - name: TEMPORAL_TLS_ENABLE_HOST_VERIFICATION
+      value: 'true'
+
+  additionalEnvVars:
+    - name: TEMPORAL_CLI_TLS_SERVER_NAME
+      value: temporal-rpc.kube.mydomain.com
+    - name: TEMPORAL_CLI_TLS_CA
+      value: /etc/temporal/certs/CA.crt
+    - name: TEMPORAL_CLI_TLS_KEY
+      value: /etc/temporal/certs/temporal-server.key
+    - name: TEMPORAL_CLI_TLS_CERT
+      value: /etc/temporal/certs/temporal-server.crt
+    - name: TEMPORAL_CLI_TLS_ENABLE_HOST_VERIFICATION
+      value: 'true'
+    - name: TEMPORAL_TLS_FRONTEND_SERVER_NAME
+      value: temporal-rpc.kube.mydomain.com
+    - name: TEMPORAL_TLS_SERVER_CA_CERT
+      value: /etc/temporal/certs/CA.crt
+    - name: TEMPORAL_TLS_FRONTEND_KEY
+      value: /etc/temporal/certs/temporal-server.key
+    - name: TEMPORAL_TLS_FRONTEND_CERT
+      value: /etc/temporal/certs/temporal-server.crt
+    - name: TEMPORAL_TLS_REQUIRE_CLIENT_AUTH
+      value: 'true'
+    - name: TEMPORAL_TLS_INTERNODE_SERVER_NAME
+      value: temporal-rpc.kube.mydomain.com
+    - name: TEMPORAL_TLS_CLIENT1_CA_CERT
+      value: /etc/temporal/certs/CA.crt
+    - name: TEMPORAL_TLS_CLIENT2_CA_CERT
+      value: /etc/temporal/certs/CA.crt
+    - name: TEMPORAL_TLS_SERVER_KEY
+      value: /etc/temporal/certs/temporal-server.key
+    - name: TEMPORAL_TLS_SERVER_CERT
+      value: /etc/temporal/certs/temporal-server.crt
+    - name: TEMPORAL_TLS_FRONTEND_DISABLE_HOST_VERIFICATION
+      value: 'false'
+    - name: TEMPORAL_TLS_INTERNODE_DISABLE_HOST_VERIFICATION
+      value: 'false'
+
+  additionalVolumes:
+    - name: ca
+      configMap:
+        name: ca
+    - name: cert
+      configMap:
+        name: cert
+    - name: key
+      configMap:
+        name: key
+
+  additionalVolumeMounts:
+    - name: ca
+      mountPath: /etc/temporal/certs/CA.crt
+      subPath: CA.crt
+    - name: cert
+      mountPath: /etc/temporal/certs/temporal-server.crt
+      subPath: temporal-server.crt
+    - name: key
+      mountPath: /etc/temporal/certs/temporal-server.key
+      subPath: temporal-server.key
+    - name: cert
+      mountPath: /etc/temporal/certs/temporal-tools.crt
+      subPath: temporal-tools.crt
+    - name: key
+      mountPath: /etc/temporal/certs/temporal-tools.key
+      subPath: temporal-tools.key
+    - name: cert
+      mountPath: /etc/temporal/certs/temporal-web.crt
+      subPath: temporal-web.crt
+    - name: key
+      mountPath: /etc/temporal/certs/temporal-web.key
+      subPath: temporal-web.key
+
+  tls:
+    tls:
+      internode:
+        server:
+          certFile: /etc/temporal/certs/temporal-server.crt
+          keyFile: /etc/temporal/certs/temporal-server.key
+          requireClientAuth: true
+          clientCaFiles:
+            - /etc/temporal/certs/CA.crt
+        client:
+          serverName: temporal-rpc.kube.mydomain.com
+          rootCaFiles:
+            - /etc/temporal/certs/CA.crt
+      frontend:
+        server:
+          certFile: /etc/temporal/certs/temporal-server.crt
+          keyFile: /etc/temporal/certs/temporal-server.key
+          requireClientAuth: true
+          clientCaFiles:
+            - /etc/temporal/certs/CA.crt
+        client:
+          serverName: temporal-rpc.kube.mydomain.com
+          rootCaFiles:
+            - /etc/temporal/certs/CA.crt

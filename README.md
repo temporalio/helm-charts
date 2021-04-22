@@ -232,6 +232,23 @@ Once you initialized the two keyspaces, fill in the configuration values in `val
 ~/temporal-helm$ helm install -f values/values.cassandra.yaml temporaltest . --timeout 900s
 ```
 
+### Install with mTLS support
+
+If you need to support mTLS for your Temporal environment.
+
+You first need to generate the certificates. You can find some examples here:  [TLS customization](https://github.com/temporalio/customization-samples/tree/master/tls)
+
+You also need to create configMaps for your generated certificats.
+```bash
+~/temporal-helm$ kubectl create configmap ca --from-file=/opt/ca.crt
+```
+
+After that, you can set the mTLS configuration in your deployment like this example:    
+Be sure to set the right configMaps names and the SERVER_NAME variables
+```bash
+~/temporal-helm$ helm install -f values/values.mtls.yaml temporaltest . --timeout 900s
+```
+
 ### Install and configure Temporal
 
 If a live application environment already uses systems that Temporal can use as dependencies, then those systems can continue to be used. This Helm chart can install the minimal pieces of Temporal such that it can then be configured to use those systems as its dependencies.

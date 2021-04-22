@@ -66,6 +66,10 @@ server:
   affinity: {}
   additionalVolumes: []
   additionalVolumeMounts: []
+  additionalEnvVars: []
+  additionalToolsEnvVars: []
+  additionalWebEnvVars: []
+  tls: []
 
   config:
     logLevel: "debug,info"
