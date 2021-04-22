@@ -67,12 +67,13 @@ server:
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnvVars: []
-  additionalToolsEnvVars: []
+  additionalTctlEnvVars: []
   additionalWebEnvVars: []
-  tls: []
 
   config:
     logLevel: "debug,info"
+
+    tls: []
 
     # IMPORTANT: This value cannot be changed, once it's set.
     numHistoryShards: 512

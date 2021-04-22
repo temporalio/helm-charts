@@ -1,5 +1,5 @@
 server:
-  additionalToolEnvVars:
+  additionalTctlEnvVars:
     - name: TEMPORAL_CLI_TLS_SERVER_NAME
       value: temporal-rpc.kube.mydomain.com
     - name: TEMPORAL_CLI_TLS_CA
@@ -95,7 +95,7 @@ server:
       mountPath: /etc/temporal/certs/temporal-web.key
       subPath: temporal-web.key
 
-  tls:
+  config:
     tls:
       internode:
         server:

@@ -39,8 +39,8 @@ spec:
           env:
             - name: TEMPORAL_CLI_ADDRESS
               value: {{ .Release.Name }}-frontend:{{ include "temporal.frontend.grpcPort" . }}
-            {{- if $.Values.server.additionalToolEnvVars }}
-            {{- toYaml $.Values.server.additionalToolEnvVars | nindent 12}}  
+            {{- if $.Values.server.additionalTctlEnvVars }}
+            {{- toYaml $.Values.server.additionalTctlEnvVars | nindent 12}}  
             {{- end }}
           livenessProbe:
               exec:

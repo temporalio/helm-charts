@@ -94,9 +94,9 @@ data:
       pprof:
         port: 7936
 
-      {{- if $.Values.server.tls }}
+      {{- if $.Values.server.config.tls }}
       tls:
-      {{- toYaml $.Values.server.tls | nindent 8}}  
+      {{- toYaml $.Values.server.config.tls | nindent 8}}  
       {{- end }}
 
     services:
