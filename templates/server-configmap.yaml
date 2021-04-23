@@ -196,9 +196,9 @@ data:
       status: "disabled"
     {{- end }}
 
-    {{- if $.Values.server.config.defaultNamespace }}
-    defaultNamespace:
-    {{- toYaml .Values.server.config.defaultNamespace | nindent 8}}
+    {{- if $.Values.server.config.namespaceDefaults }}
+    namespaceDefaults:
+    {{- toYaml .Values.server.config.namespaceDefaults | nindent 8}}
     {{- end }}
 
     publicClient:
