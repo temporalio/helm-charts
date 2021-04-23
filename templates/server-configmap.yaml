@@ -186,8 +186,20 @@ data:
       policy: "noop"
       toDC: ""
 
+    {{- if $.Values.server.config.archival }}
+    archival:
+    {{- with .Values.server.config.archival }}
+    {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- else }}
     archival:
       status: "disabled"
+    {{- end }}
+
+    {{- if $.Values.server.config.defaultNamespace }}
+    defaultNamespace:
+    {{- toYaml .Values.server.config.defaultNamespace | nindent 8}}
+    {{- end }}
 
     publicClient:
       hostPort: "{{ include "temporal.componentname" (list . "frontend") }}:{{ .Values.server.frontend.service.port }}"
