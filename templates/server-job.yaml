@@ -101,6 +101,30 @@ spec:
               value: {{ $storeConfig.cassandra.password }}
             {{- end }}
             {{- end }}
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_HOST
+              value: {{ first (splitList "," (include "temporal.persistence.sql.host" (list $ $store))) }}
+            - name: SQL_PORT
+              value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
+            - name: SQL_PLUGIN
+              value: {{ $storeConfig.sql.driver }}
+            {{- if $storeConfig.sql.user }}
+            - name: SQL_USER
+              value: {{ $storeConfig.sql.user }}
+            {{- end }}
+            {{- if $storeConfig.sql.password }}
+            - name: SQL_PASSWORD
+              value: {{ $storeConfig.sql.password }}
+            {{- end }}
+            {{- if eq $store "default" }}
+            - name: SQL_DATABASE
+              value: temporal
+            {{- end }}
+            {{- if eq $store "visibility" }}
+            - name: SQL_DATABASE
+              value: temporal_visibility
+            {{- end }}
+            {{- end }}
         {{- end }}
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
@@ -166,8 +190,18 @@ spec:
           image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
           imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
-          # args: ["temporal-cassandra-tool", "update-schema", "-d", "/etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned"]
+          # args: ["temporal-sql-tool", "update-schema", "-d", "/etc/temporal/schema/sql/{{ include "temporal.persistence.schema" $store }}/versioned"]
           args: ['sh', '-c', 'temporal-cassandra-tool update-schema -d /etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
+          {{- end }}
+          {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+          {{- if eq (include "temporal.persistence.sql.driver" (list $ $store)) "mysql" }}
+          # args: ["temporal-sql-tool", "update-schema", "-d", "/etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned"]
+          args: ['sh', '-c', 'temporal-sql-tool update-schema -d /etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned']
+          {{- end }}
+          {{- if eq (include "temporal.persistence.sql.driver" (list $ $store)) "postgres" }}
+          # args: ["temporal-sql-tool", "update-schema", "-d", "/etc/temporal/schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned"]
+          args: ['sh', '-c', 'temporal-sql-tool update-schema -d /etc/temporal/schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned']
+          {{- end }}
           {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
@@ -184,6 +218,30 @@ spec:
             {{- if $storeConfig.cassandra.password }}
             - name: CASSANDRA_PASSWORD
               value: {{ $storeConfig.cassandra.password }}
+            {{- end }}
+            {{- end }}
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_HOST
+              value: {{ first (splitList "," (include "temporal.persistence.sql.host" (list $ $store))) }}
+            - name: SQL_PORT
+              value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
+            - name: SQL_PLUGIN
+              value: {{ $storeConfig.sql.driver }}
+            {{- if $storeConfig.sql.user }}
+            - name: SQL_USER
+              value: {{ $storeConfig.sql.user }}
+            {{- end }}
+            {{- if $storeConfig.sql.password }}
+            - name: SQL_PASSWORD
+              value: {{ $storeConfig.sql.password }}
+            {{- end }}
+            {{- if eq $store "default" }}
+            - name: SQL_DATABASE
+              value: temporal
+            {{- end }}
+            {{- if eq $store "visibility" }}
+            - name: SQL_DATABASE
+              value: temporal_visibility
             {{- end }}
             {{- end }}
         {{- end }}
