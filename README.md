@@ -243,7 +243,12 @@ You also need to create configMaps for your generated certificats.
 ~/temporal-helm$ kubectl create configmap ca --from-file=/opt/ca.crt
 ```
 
-After that, you can set the mTLS configuration in your deployment like this example:    
+After that, you can set the mTLS configuration in your deployment like [the example: ](values/values.mtls.yaml)
+
+mTLS configuration can be configured globally or independently for internode or frontend.
+
+By default both will be activated, secure by design, always. (can be disabled unitary)
+
 Be sure to set the right configMaps names and the SERVER_NAME variables
 ```bash
 ~/temporal-helm$ helm install -f values/values.mtls.yaml temporaltest . --timeout 900s

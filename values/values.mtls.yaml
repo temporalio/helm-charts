@@ -95,27 +95,47 @@ server:
       mountPath: /etc/temporal/certs/temporal-web.key
       subPath: temporal-web.key
 
+###### globally
+
   config:
     tls:
-      internode:
-        server:
-          certFile: /etc/temporal/certs/temporal-server.crt
-          keyFile: /etc/temporal/certs/temporal-server.key
-          requireClientAuth: true
-          clientCaFiles:
-            - /etc/temporal/certs/CA.crt
-        client:
-          serverName: temporal-rpc.kube.mydomain.com
-          rootCaFiles:
-            - /etc/temporal/certs/CA.crt
-      frontend:
-        server:
-          certFile: /etc/temporal/certs/temporal-server.crt
-          keyFile: /etc/temporal/certs/temporal-server.key
-          requireClientAuth: true
-          clientCaFiles:
-            - /etc/temporal/certs/CA.crt
-        client:
-          serverName: temporal-rpc.kube.mydomain.com
-          rootCaFiles:
-            - /etc/temporal/certs/CA.crt
+      enabled: true
+      server:
+        certFile: /etc/temporal/certs/temporal-server.crt
+        keyFile: /etc/temporal/certs/temporal-server.key
+        requireClientAuth: true
+        clientCaFiles:
+          - /etc/temporal/certs/CA.crt
+      client:
+        serverName: temporal-rpc.kube.mydomain.com
+        rootCaFiles:
+          - /etc/temporal/certs/CA.crt
+
+
+###### independent
+  #config:
+  #  tls:
+  #    enabled: true
+  #    internode:
+  #      server:
+  #        certFile: /etc/temporal/certs/temporal-server-internode.crt
+  #        keyFile: /etc/temporal/certs/temporal-server-internode.key
+  #        requireClientAuth: true
+  #        clientCaFiles:
+  #          - /etc/temporal/certs/CA.crt
+  #      client:
+  #        serverName: temporal-rpc.kube.mydomain.com
+  #        rootCaFiles:
+  #          - /etc/temporal/certs/CA.crt
+  #    frontend:
+  #      server:
+  #        certFile: /etc/temporal/certs/temporal-server-frontend.crt
+  #        keyFile: /etc/temporal/certs/temporal-server-frontend.key
+  #        requireClientAuth: true
+  #        clientCaFiles:
+  #          - /etc/temporal/certs/CA.crt
+  #      client:
+  #        serverName: temporal-rpc.kube.mydomain.com
+  #        rootCaFiles:
+  #          - /etc/temporal/certs/CA.crt
+  #          - /etc/temporal/certs/CA2.crt

@@ -94,9 +94,46 @@ data:
       pprof:
         port: 7936
 
-      {{- if $.Values.server.config.tls }}
+      {{- if $.Values.server.config.tls.enabled }}
       tls:
-      {{- toYaml $.Values.server.config.tls | nindent 8}}  
+        {{- if $.Values.server.config.tls.internode.enabled }}
+        internode:
+          server:
+            certFile: {{ ternary $.Values.server.config.tls.server.certFile $.Values.server.config.tls.internode.server.certFile (eq $.Values.server.config.tls.internode.server.certFile "")}}
+            keyFile:  {{ ternary $.Values.server.config.tls.server.keyFile $.Values.server.config.tls.internode.server.keyFile (eq $.Values.server.config.tls.internode.server.keyFile "")}}
+            requireClientAuth: {{ ternary $.Values.server.config.tls.server.requireClientAuth $.Values.server.config.tls.internode.server.requireClientAuth (eq $.Values.server.config.tls.internode.server.requireClientAuth false)}}
+            {{ $clientCAFilesInternode := ternary $.Values.server.config.tls.server.clientCaFiles $.Values.server.config.tls.internode.server.clientCaFiles (eq (len $.Values.server.config.tls.internode.server.clientCaFiles) 0) -}}
+            {{- with $clientCAFilesInternode }}
+            clientCaFiles:
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          client:
+            serverName: {{ ternary $.Values.server.config.tls.client.serverName $.Values.server.config.tls.internode.client.serverName (eq $.Values.server.config.tls.internode.client.serverName "")}}
+            {{ $caFilesInternode := ternary $.Values.server.config.tls.client.rootCaFiles $.Values.server.config.tls.internode.client.rootCaFiles (eq (len $.Values.server.config.tls.internode.client.rootCaFiles) 0) -}}
+            {{- with $caFilesInternode }}
+            rootCaFiles:
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- end }}
+        {{- if $.Values.server.config.tls.frontend.enabled }}
+        frontend:
+          server:
+            certFile: {{ ternary $.Values.server.config.tls.server.certFile $.Values.server.config.tls.frontend.server.certFile (eq $.Values.server.config.tls.frontend.server.certFile "")}}
+            keyFile:  {{ ternary $.Values.server.config.tls.server.keyFile $.Values.server.config.tls.frontend.server.keyFile (eq $.Values.server.config.tls.frontend.server.keyFile "")}}
+            requireClientAuth: {{ ternary $.Values.server.config.tls.server.requireClientAuth $.Values.server.config.tls.frontend.server.requireClientAuth (eq $.Values.server.config.tls.frontend.server.requireClientAuth false)}}
+            {{ $clientCAFilesFrontend := ternary $.Values.server.config.tls.server.clientCaFiles $.Values.server.config.tls.frontend.server.clientCaFiles (eq (len $.Values.server.config.tls.frontend.server.clientCaFiles) 0) -}}
+            {{- with $clientCAFilesFrontend }}
+            clientCaFiles:
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          client:
+            serverName: {{ ternary $.Values.server.config.tls.client.serverName $.Values.server.config.tls.frontend.client.serverName (eq $.Values.server.config.tls.frontend.client.serverName "")}}
+            {{ $caFilesFrontend := ternary $.Values.server.config.tls.client.rootCaFiles $.Values.server.config.tls.frontend.client.rootCaFiles (eq (len $.Values.server.config.tls.frontend.client.rootCaFiles) 0) -}}
+            {{- with $caFilesFrontend }}
+            rootCaFiles:
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- end }}
       {{- end }}
 
     services:
