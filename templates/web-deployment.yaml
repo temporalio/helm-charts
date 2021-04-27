@@ -29,6 +29,9 @@ spec:
         app.kubernetes.io/component: web
         app.kubernetes.io/part-of: {{ .Chart.Name }}
     spec:
+      {{- if .Values.web.serviceAccountName }}
+      serviceAccountName: {{ .Values.web.serviceAccountName }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}-web
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
