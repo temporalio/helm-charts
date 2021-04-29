@@ -190,7 +190,7 @@ spec:
           image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
           imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
-          # args: ["temporal-sql-tool", "update-schema", "-d", "/etc/temporal/schema/sql/{{ include "temporal.persistence.schema" $store }}/versioned"]
+          # args: ["temporal-cassandra-tool", "update-schema", "-d", "/etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned"]
           args: ['sh', '-c', 'temporal-cassandra-tool update-schema -d /etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- end }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
