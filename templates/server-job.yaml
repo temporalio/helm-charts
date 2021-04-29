@@ -38,7 +38,6 @@ spec:
     spec:
       restartPolicy: "OnFailure"
       initContainers:
-        {{- if or .Values.cassandra.enabled }}
         {{- if .Values.cassandra.enabled }}
         - name: check-cassandra-service
           image: busybox
@@ -55,6 +54,9 @@ spec:
           imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
           args: ['sh', '-c', 'temporal-cassandra-tool create -k {{ $storeConfig.cassandra.keyspace }} --replication-factor {{ $storeConfig.cassandra.replicationFactor }}']
+          {{- end }}
+          {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+          args: ['sh', '-c', 'temporal-sql-tool create-database -database {{ $storeConfig.sql.database }}']
           {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
@@ -73,9 +75,22 @@ spec:
               value: {{ $storeConfig.cassandra.password }}
             {{- end }}
             {{- end }}
-        {{- end }}
-        {{- else }}
-          []
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_HOST
+              value: {{ include "temporal.persistence.sql.host" (list $ $store) }}
+            - name: SQL_PORT
+              value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
+            - name: SQL_PLUGIN
+              value: {{ $storeConfig.sql.driver }}
+            {{- if $storeConfig.sql.user }}
+            - name: SQL_USER
+              value: {{ $storeConfig.sql.user }}
+            {{- end }}
+            {{- if $storeConfig.sql.password }}
+            - name: SQL_PASSWORD
+              value: {{ $storeConfig.sql.password }}
+            {{- end }}
+            {{- end }}
         {{- end }}
       containers:
         {{- range $store := (list "default" "visibility") }}
@@ -103,7 +118,7 @@ spec:
             {{- end }}
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
             - name: SQL_HOST
-              value: {{ first (splitList "," (include "temporal.persistence.sql.host" (list $ $store))) }}
+              value: {{ include "temporal.persistence.sql.host" (list $ $store) }}
             - name: SQL_PORT
               value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
             - name: SQL_PLUGIN
@@ -222,7 +237,7 @@ spec:
             {{- end }}
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
             - name: SQL_HOST
-              value: {{ first (splitList "," (include "temporal.persistence.sql.host" (list $ $store))) }}
+              value: {{ include "temporal.persistence.sql.host" (list $ $store) }}
             - name: SQL_PORT
               value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
             - name: SQL_PLUGIN
