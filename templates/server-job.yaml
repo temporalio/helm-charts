@@ -187,5 +187,56 @@ spec:
             {{- end }}
             {{- end }}
         {{- end }}
+
+---
+{{- end }}
+{{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "temporal.componentname" (list . "es-index-setup") }}
+  labels:
+    app.kubernetes.io/name: {{ include "temporal.name" . }}
+    helm.sh/chart: {{ include "temporal.chart" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "0"
+    {{- if not .Values.debug }}
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+    {{- end }}
+spec:
+  backoffLimit: {{ .Values.schema.setup.backoffLimit }}
+  template:
+    metadata:
+      name: {{ include "temporal.componentname" (list . "es-index-setup") }}
+      labels:
+        app.kubernetes.io/name: {{ include "temporal.name" . }}
+        helm.sh/chart: {{ include "temporal.chart" . }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: {{ .Chart.Name }}
+    spec:
+      restartPolicy: "OnFailure"
+      initContainers:
+        - name: check-elasticsearch-service
+          image: busybox
+          command: ['sh', '-c', 'until nslookup {{ include "elasticsearch.host" $ }}; do echo waiting for elasticsearch service; sleep 1; done;']
+        - name: check-elasticsearch
+          image: "{{ .Values.admintools.image.repo }}:{{ .Values.admintools.image.tag }}"
+          imagePullPolicy: {{ .Values.cassandra.image.pullPolicy }}
+          command: ['sh', '-c', 'until curl -s {{ .Values.elasticsearch.schema }}://{{ include "elasticsearch.host" $ }}:{{ .Values.elasticsearch.port }} 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
+        - name: create-elasticsearch-index
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
+          args: ['sh', '-c', 'curl -X PUT {{ .Values.elasticsearch.schema }}://{{ include "elasticsearch.host" $ }}:{{ .Values.elasticsearch.port }}/_template/temporal-visibility-template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/{{ .Values.elasticsearch.version }}/visibility/index_template.json"; curl -X PUT {{ .Values.elasticsearch.schema }}://{{ include "elasticsearch.host" $ }}:{{ .Values.elasticsearch.port }}/{{ .Values.elasticsearch.visibilityIndex }};']
+          {{- end }}
 {{- end }}
 {{- end }}
