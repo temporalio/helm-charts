@@ -51,8 +51,8 @@ spec:
         {{- range $store := (list "default" "visibility") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
         - name: create-{{ $store }}-store
-          image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
-          imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
           args: ['sh', '-c', 'temporal-cassandra-tool create -k {{ $storeConfig.cassandra.keyspace }} --replication-factor {{ $storeConfig.cassandra.replicationFactor }}']
           {{- end }}
@@ -81,8 +81,8 @@ spec:
         {{- range $store := (list "default" "visibility") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
         - name: {{ $store }}-schema
-          image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
-          imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           args: ["temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool", "setup-schema", "-v", "0.0"]
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
@@ -163,8 +163,8 @@ spec:
         {{- range $store := (list "default" "visibility") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
         - name: {{ $store }}-schema
-          image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
-          imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
           # args: ["temporal-cassandra-tool", "update-schema", "-d", "/etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned"]
           args: ['sh', '-c', 'temporal-cassandra-tool update-schema -d /etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
