@@ -23,16 +23,6 @@ cassandra:
               values:
               - elasticsearch-master
           topologyKey: kubernetes.io/hostname
-      - weight: 15
-        podAffinityTerm:
-          labelSelector:
-            matchExpressions:
-            - key: app.kubernetes.io/component
-              operator: In
-              values:
-              - kafka
-              - zookeeper                            
-          topologyKey: kubernetes.io/hostname
       - weight: 5
         podAffinityTerm:
           labelSelector:
