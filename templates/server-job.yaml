@@ -227,14 +227,14 @@ spec:
       initContainers:
         - name: check-elasticsearch-service
           image: busybox
-          command: ['sh', '-c', 'until nslookup {{ include "elasticsearch.host" $ }}; do echo waiting for elasticsearch service; sleep 1; done;']
+          command: ['sh', '-c', 'until nslookup {{ .Values.elasticsearch.host }}; do echo waiting for elasticsearch service; sleep 1; done;']
         - name: check-elasticsearch
           image: "{{ .Values.admintools.image.repo }}:{{ .Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl -s {{ .Values.elasticsearch.schema }}://{{ include "elasticsearch.host" $ }}:{{ .Values.elasticsearch.port }} 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
+          command: ['sh', '-c', 'until curl -s {{ .Values.elasticsearch.schema }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }} 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
         - name: create-elasticsearch-index
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'curl -X PUT {{ .Values.elasticsearch.schema }}://{{ include "elasticsearch.host" $ }}:{{ .Values.elasticsearch.port }}/_template/temporal-visibility-template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/{{ .Values.elasticsearch.version }}/visibility/index_template.json"; curl -X PUT {{ .Values.elasticsearch.schema }}://{{ include "elasticsearch.host" $ }}:{{ .Values.elasticsearch.port }}/{{ .Values.elasticsearch.visibilityIndex }};']
+          command: ['sh', '-c', 'curl -X PUT {{ .Values.elasticsearch.schema }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/_template/temporal-visibility-template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/{{ .Values.elasticsearch.version }}/visibility/index_template.json"; curl -X PUT {{ .Values.elasticsearch.schema }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/{{ .Values.elasticsearch.visibilityIndex }};']
 {{- end }}
 {{- end }}
