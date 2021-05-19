@@ -335,14 +335,6 @@ The first Cassandra host in the stateful set.
 {{- printf "%s.%s.svc.cluster.local" $cassandraName .Release.Namespace -}}
 {{- end -}}
 
-{{- define "temporal.kafka.address" -}}
-{{- if .Values.server.kafka.host -}}
-{{- .Values.server.kafka.host -}}
-{{- else -}}
-{{- printf "%s-kafka-headless:9092" .Release.Name -}}
-{{- end -}}
-{{- end -}}
-
 {{/*
 Based on Bitnami charts method
 Renders a value that contains template.

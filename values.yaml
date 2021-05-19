@@ -12,9 +12,6 @@ server:
     tag: 1.9.2
     pullPolicy: IfNotPresent
 
-  kafka:
-    host:
-
   # Global default settings (can be overridden per service)
   replicaCount: 1
   metrics:
@@ -302,9 +299,6 @@ prometheus:
   enabled: true
   nodeExporter:
     enabled: false
-
-kafka:
-  enabled: true
 
 grafana:
   enabled: true
