@@ -13,11 +13,7 @@ metadata:
     app.kubernetes.io/component: database
     app.kubernetes.io/part-of: {{ .Chart.Name }}
   annotations:
-    {{- if .Values.cassandra.enabled }}
-    "helm.sh/hook": post-install
-    {{- else }}
     "helm.sh/hook": pre-install
-    {{- end }}
     "helm.sh/hook-weight": "0"
     {{- if not .Values.debug }}
     "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
@@ -123,11 +119,7 @@ metadata:
     app.kubernetes.io/component: database
     app.kubernetes.io/part-of: {{ .Chart.Name }}
   annotations:
-    {{- if .Values.cassandra.enabled }}
-    "helm.sh/hook": post-install,pre-upgrade
-    {{- else }}
     "helm.sh/hook": pre-install,pre-upgrade
-    {{- end }}
     "helm.sh/hook-weight": "1"
     {{- if not .Values.debug }}
     "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
