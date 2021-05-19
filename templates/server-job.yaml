@@ -1,4 +1,4 @@
-{{- if $.Values.server.enabled }}
+{{- if .Values.server.enabled }}
 {{- if .Values.schema.setup.enabled }}
 apiVersion: batch/v1
 kind: Job
