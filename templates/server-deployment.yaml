@@ -61,6 +61,12 @@ spec:
         {{- else }}
           []
         {{- end }}
+        {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
+        - name: check-elasticsearch-index
+          image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['sh', '-c', 'until curl --silent --fail {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/{{ .Values.elasticsearch.visibilityIndex }} 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
+        {{- end }}
       containers:
         - name: {{ $.Chart.Name }}-{{ $service }}
           image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
