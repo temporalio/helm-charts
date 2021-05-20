@@ -41,6 +41,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      {{- if or (or $.Values.cassandra.enabled $.Values.elasticsearch.enabled) $.Values.elasticsearch.external)}}
       initContainers:
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra-service
@@ -58,8 +59,6 @@ spec:
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
           command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.visibility.cassandra.keyspace }}$; do echo waiting for visibility keyspace to become ready; sleep 1; done;']
-        {{- else }}
-          []
         {{- end }}
         {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
         - name: check-elasticsearch-index
@@ -67,6 +66,7 @@ spec:
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['sh', '-c', 'until curl --silent --fail {{ $.Values.elasticsearch.scheme }}://{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}/{{ $.Values.elasticsearch.visibilityIndex }} 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
         {{- end }}
+      {{- end }}
       containers:
         - name: {{ $.Chart.Name }}-{{ $service }}
           image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
