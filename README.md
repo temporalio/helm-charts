@@ -14,7 +14,6 @@ This Helm Chart code is tested by a dedictated test pipeline. It is also used ex
 This sequence assumes
 * that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), [kind](https://kind.sigs.k8s.io/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and
 * that your machine has
-  - [AWS CLI V2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html),
   - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/), and
   - [Helm v3](https://helm.sh)
   installed and able to access your cluster.
@@ -260,8 +259,7 @@ helm install temporaltest \
    --set server.config.persistence.visibility.cassandra.replicationFactor=3 \
    --set server.config.persistence.visibility.cassandra.keyspace=temporal_visibility \
    . \
-   --timeout 15m \
-   --wait
+   --timeout
 ```
 
 ## Play With It
@@ -517,7 +515,6 @@ helm-charts $ helm \
     --set web.image.tag=1.1.1 \
     --set web.image.repository=temporalio/web \
     . \
-    --wait \
     --timeout 15m
 ```
 
