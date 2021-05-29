@@ -86,7 +86,7 @@ To use your own instance of ElasticSearch, MySQL. PostgreSQL, or Cassandra, plea
 Other components (Prometheus, Grafana) can be omitted from the installation by setting their corresponding `enable` flag to `false`:
 
 ```bash
-~/temporal-helm$ helm install
+~/temporal-helm$ helm install \
     --set prometheus.enabled=false \
     --set grafana.enabled=false \
     temporaltest . --timeout 900s
