@@ -29,6 +29,10 @@ spec:
         app.kubernetes.io/component: web
         app.kubernetes.io/part-of: {{ .Chart.Name }}
     spec:
+      volumes:
+        - name: {{ .Chart.Name }}-web-config
+          configMap:
+            name: {{ include "temporal.componentname" (list . "web") }}
       containers:
         - name: {{ .Chart.Name }}-web
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
@@ -36,7 +40,10 @@ spec:
           env:
             - name: TEMPORAL_GRPC_ENDPOINT
               value: "{{ include "temporal.fullname" . }}-frontend.{{ .Release.Namespace }}.svc:{{ .Values.server.frontend.service.port }}"
-
+          volumeMounts:
+          - name: {{ .Chart.Name }}-web-config
+            mountPath: /usr/app/server/config.yml
+            subPath: config.yml
           ports:
             - name: http
               containerPort: 8088
