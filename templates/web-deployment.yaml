@@ -32,7 +32,7 @@ spec:
       volumes:
         - name: {{ .Chart.Name }}-web-config
           configMap:
-            name: {{ include "temporal.componentname" (list . "web") }}
+            name: {{ include "temporal.componentname" (list . "web") }}-config
       containers:
         - name: {{ .Chart.Name }}-web
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"

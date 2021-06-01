@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "temporal.componentname" (list . "web") }}
+  name: {{ include "temporal.componentname" (list . "web") }}-config
   labels:
     app.kubernetes.io/name: {{ include "temporal.name" . }}
     helm.sh/chart: {{ include "temporal.chart" . }}
@@ -13,22 +13,6 @@ metadata:
     app.kubernetes.io/part-of: {{ .Chart.Name }}
 data:
   config.yml: |
-    auth:
-      enabled: false
-      providers:
-          # # example provider
-          # - label: 'google oidc'                        # for internal use; in future may expose as button text
-          #   type: oidc                                  # for futureproofing; only oidc is supported today
-          #   issuer: https://accounts.google.com
-          #   client_id: xxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com
-          #   client_secret: xxxxxxxxxxxxxxxxxxxxxxx
-          #   scope: openid profile email
-          #   callback_base_uri: http://localhost:8088
-          #   pass_id_token: false
-    # for more info see docs: https://github.com/temporalio/web#configuring-authentication-optional
-
-    routing:
-      default_to_namespace: # internal use only
-      issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
+    {{- toYaml .Values.web.config | nindent 4  }}
 
 {{- end }}

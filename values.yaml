@@ -224,6 +224,14 @@ admintools:
 
 web:
   enabled: true
+  config:
+    # server/config.yml file content
+    auth:
+      enabled: false
+    routing:
+      default_to_namespace: # internal use only
+      issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
+
 
   replicaCount: 1
 
@@ -260,8 +268,8 @@ web:
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   # limits:
-  #  cpu: 100m
-  #  memory: 128Mi
+  #  cpu: 300m
+  #  memory: 512Mi
   # requests:
   #  cpu: 100m
   #  memory: 128Mi
