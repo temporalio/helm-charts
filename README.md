@@ -237,6 +237,7 @@ The example below demonstrates a few things:
 1. How to set values via the command line rather than the environment.
 2. How to configure a database (shows Cassandra, but MySQL works the same way)
 3. How to enable TLS for the database connection.
+4. How to enable Auth for the Web UI
 
 ```bash
 helm install temporaltest \
@@ -430,6 +431,9 @@ $ kubectl apply -f dynamicconfigmap.yaml
 You can use helm upgrade with the "--dry-run" option to generate the content for the dynamicconfigmap.yaml.
 
 The dynamic-config ConfigMap is referenced as a mounted volume within the Temporal Containers, so any applied change will be automatically picked up by all pods within a few minutes without the need for pod recycling. See k8S documentation (https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically) for more details on how this works.
+
+### Updating Temporal Web Config
+the config file `server/config.yml` for the temporal web ui is referenced as a mounted volume within the Temporal Web UI Container and can be populated by inserting values in the `web.config` section in the `values.yml` for possible config check (https://github.com/temporalio/web#configuring-authentication-optional)
 
 ## Uninstalling
 
