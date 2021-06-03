@@ -72,7 +72,10 @@ spec:
             {{- end }}
             {{- if $storeConfig.cassandra.password }}
             - name: CASSANDRA_PASSWORD
-              value: {{ $storeConfig.cassandra.password }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
             {{- end }}
             {{- end }}
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
@@ -88,7 +91,10 @@ spec:
             {{- end }}
             {{- if $storeConfig.sql.password }}
             - name: SQL_PASSWORD
-              value: {{ $storeConfig.sql.password }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
             {{- end }}
             {{- end }}
         {{- end }}
@@ -113,7 +119,10 @@ spec:
             {{- end }}
             {{- if $storeConfig.cassandra.password }}
             - name: CASSANDRA_PASSWORD
-              value: {{ $storeConfig.cassandra.password }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
             {{- end }}
             {{- end }}
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
@@ -129,7 +138,10 @@ spec:
             {{- end }}
             {{- if $storeConfig.sql.password }}
             - name: SQL_PASSWORD
-              value: {{ $storeConfig.sql.password }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
             {{- end }}
             {{- if eq $store "default" }}
             - name: SQL_DATABASE
@@ -231,7 +243,10 @@ spec:
             {{- end }}
             {{- if $storeConfig.cassandra.password }}
             - name: CASSANDRA_PASSWORD
-              value: {{ $storeConfig.cassandra.password }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
             {{- end }}
             {{- end }}
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
@@ -247,7 +262,10 @@ spec:
             {{- end }}
             {{- if $storeConfig.sql.password }}
             - name: SQL_PASSWORD
-              value: {{ $storeConfig.sql.password }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
             {{- end }}
             {{- if eq $store "default" }}
             - name: SQL_DATABASE
