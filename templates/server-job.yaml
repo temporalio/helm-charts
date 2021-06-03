@@ -56,7 +56,7 @@ spec:
           command: ['sh', '-c', 'temporal-cassandra-tool create -k {{ $storeConfig.cassandra.keyspace }} --replication-factor {{ $storeConfig.cassandra.replicationFactor }}']
           {{- end }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
-          args: ['sh', '-c', 'temporal-sql-tool create-database -database {{ $storeConfig.sql.database }}']
+          command: ['sh', '-c', 'temporal-sql-tool create-database -database {{ $storeConfig.sql.database }}']
           {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
@@ -217,16 +217,17 @@ spec:
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
+          # command: ["temporal-cassandra-tool", "update-schema", "-d", "/etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned"]
           command: ['sh', '-c', 'temporal-cassandra-tool update-schema -d /etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- end }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
           {{- if eq (include "temporal.persistence.sql.driver" (list $ $store)) "mysql" }}
-          # args: ["temporal-sql-tool", "update-schema", "-d", "/etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned"]
-          args: ['sh', '-c', 'temporal-sql-tool update-schema -d /etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned']
+          # command: ["temporal-sql-tool", "update-schema", "-d", "/etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned"]
+          command: ['sh', '-c', 'temporal-sql-tool update-schema -d /etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- end }}
           {{- if eq (include "temporal.persistence.sql.driver" (list $ $store)) "postgres" }}
-          # args: ["temporal-sql-tool", "update-schema", "-d", "/etc/temporal/schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned"]
-          args: ['sh', '-c', 'temporal-sql-tool update-schema -d /etc/temporal/schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned']
+          # command: ["temporal-sql-tool", "update-schema", "-d", "/etc/temporal/schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned"]
+          command: ['sh', '-c', 'temporal-sql-tool update-schema -d /etc/temporal/schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- end }}
           {{- end }}
           env:
