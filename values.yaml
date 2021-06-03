@@ -9,11 +9,8 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.8.2
+    tag: 1.9.2
     pullPolicy: IfNotPresent
-
-  kafka:
-    host:
 
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -217,7 +214,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.8.2
+    tag: 1.9.2
     pullPolicy: IfNotPresent
 
   service:
@@ -232,7 +229,7 @@ web:
 
   image:
     repository: temporalio/web
-    tag: 1.8.1
+    tag: 1.9.2
     pullPolicy: IfNotPresent
 
   service:
@@ -302,9 +299,6 @@ prometheus:
   enabled: true
   nodeExporter:
     enabled: false
-
-kafka:
-  enabled: true
 
 grafana:
   enabled: true

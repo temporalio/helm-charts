@@ -33,7 +33,6 @@ Temporal can be configured to run with various dependencies. The default "Batter
 
 * Cassandra
 * ElasticSearch
-* Kafka (with Zookeeper)
 * Promethueus
 * Grafana
 
@@ -50,7 +49,6 @@ To install Temporal in a limited but working and self-contained configuration (o
     --set prometheus.enabled=false \
     --set grafana.enabled=false \
     --set elasticsearch.enabled=false \
-    --set kafka.enabled=false \
     temporaltest . --timeout 15m
 ```
 
@@ -75,7 +73,7 @@ temporaltest-worker-7c9d68f4cf-8tzfw           1/1     Running   2          11m
 
 This method requires a three node kubernetes cluster to successfully bring up all the dependencies.
 
-By default, Temporal Helm Chart configures Temporal to run with a three node Cassandra cluster (for persistence) and ElasticSearch/Kafka (for "visibility" features), Prometheus, and Grafana. Kafka also depends on Zookeeper. By default, Temporal Helm Chart installs all dependencies, out of the box.
+By default, Temporal Helm Chart configures Temporal to run with a three node Cassandra cluster (for persistence) and Elasticsearch (for "visibility" features), Prometheus, and Grafana. By default, Temporal Helm Chart installs all dependencies, out of the box.
 
 To install Temporal with all of its dependencies run this command:
 
@@ -85,14 +83,12 @@ To install Temporal with all of its dependencies run this command:
 
 To use your own instance of ElasticSearch, MySQL. PostgreSQL, or Cassandra, please read the "Bring Your Own" sections below.
 
-Other components (Prometheus, Kafka, Grafana) can be omitted from the installation by setting their corresponding 'enable' flag to `false` (and by pointing `server.kafka.host` to your existing instance of Kafka):
+Other components (Prometheus, Grafana) can be omitted from the installation by setting their corresponding `enable` flag to `false`:
 
 ```bash
 ~/temporal-helm$ helm install
     --set prometheus.enabled=false \
     --set grafana.enabled=false \
-    --set kafka.enabled=false \
-    --set server.kafka.host=mykafka-headless:9092
     temporaltest . --timeout 900s
 ```
 
@@ -246,11 +242,9 @@ The example below demonstrates a few things:
 helm install temporaltest \
    -f values/values.cassandra.yaml \
    -f values/values.elasticsearch.yaml \
-   --set kafka.enabled=false \
    --set grafana.enabled=false \
    --set prometheus.enabled=false \
    --set server.replicaCount=5 \
-   --set server.kafka.host=kafkat-headless:9092 \
    --set server.config.persistence.default.cassandra.hosts=cassandra.data.host.example \
    --set server.config.persistence.default.cassandra.user=cassandra_user \
    --set server.config.persistence.default.cassandra.password=cassandra_user_password \

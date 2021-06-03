@@ -32,10 +32,6 @@ dependencies:
     repository: https://helm.elastic.co
     version: 7.6.2
     condition: elasticsearch.enabled
-  - name: kafka
-    repository: https://charts.bitnami.com/bitnami
-    version: 7.2.9
-    condition: kafka.enabled
   - name: grafana
     repository: https://grafana.github.io/helm-charts
     version: 5.0.10
@@ -53,8 +49,8 @@ type: application
 
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 0.2.3
+version: 0.9.4
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
-appVersion: 1.8.4
+appVersion: 1.9.4
