@@ -22,6 +22,9 @@ spec:
   - port: metrics
     interval: {{ default $.Values.server.metrics.serviceMonitor.interval $serviceValues.metrics.serviceMonitor.interval }}
     metricRelabelings: {{ toYaml (default $.Values.server.metrics.serviceMonitor.metricRelabelings $serviceValues.metrics.serviceMonitor.metricRelabelings) | nindent 4 }}
+  - port: metricsSDK
+    interval: {{ default $.Values.server.metrics.serviceMonitor.interval $serviceValues.metrics.serviceMonitor.interval }}
+    metricRelabelings: {{ toYaml (default $.Values.server.metrics.serviceMonitor.metricRelabelings $serviceValues.metrics.serviceMonitor.metricRelabelings) | nindent 4 }}
   jobLabel: {{ include "temporal.componentname" (list $ $service) }}
   namespaceSelector:
     matchNames:
