@@ -105,8 +105,13 @@ data:
           tags:
             type: frontend
           prometheus:
+            framework: "opentelemetry"
             timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.frontend.metrics.prometheus.timerType }}
             listenAddress: "0.0.0.0:9090"
+          prometheusSDK:
+            framework: "tally"
+            timerType: "histogram"
+            listenAddress: "0.0.0.0:9091"
 
       history:
         rpc:
@@ -117,8 +122,13 @@ data:
           tags:
             type: history
           prometheus:
-            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.history.metrics.prometheus.timerType }}
+            framework: "opentelemetry"
+            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.frontend.metrics.prometheus.timerType }}
             listenAddress: "0.0.0.0:9090"
+          prometheusSDK:
+            framework: "tally"
+            timerType: "histogram"
+            listenAddress: "0.0.0.0:9091"
 
       matching:
         rpc:
@@ -129,8 +139,13 @@ data:
           tags:
             type: matching
           prometheus:
-            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.matching.metrics.prometheus.timerType }}
+            framework: "opentelemetry"
+            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.frontend.metrics.prometheus.timerType }}
             listenAddress: "0.0.0.0:9090"
+          prometheusSDK:
+            framework: "tally"
+            timerType: "histogram"
+            listenAddress: "0.0.0.0:9091"
 
       worker:
         rpc:
@@ -141,8 +156,13 @@ data:
           tags:
             type: worker
           prometheus:
-            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.worker.metrics.prometheus.timerType }}
+            framework: "opentelemetry"
+            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.frontend.metrics.prometheus.timerType }}
             listenAddress: "0.0.0.0:9090"
+          prometheusSDK:
+            framework: "tally"
+            timerType: "histogram"
+            listenAddress: "0.0.0.0:9091"
 
     {{- if $.Values.server.config.clusterMetadata }}
     clusterMetadata:
