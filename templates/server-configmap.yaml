@@ -105,7 +105,7 @@ data:
           tags:
             type: frontend
           prometheus:
-            framework: "tally"
+            framework: "opentelemetry"
             timerType: "histogram"
             listenAddress: "0.0.0.0:9090"
           prometheusSDK:
@@ -122,7 +122,7 @@ data:
           tags:
             type: history
           prometheus:
-            framework: "tally"
+            framework: "opentelemetry"
             timerType: "histogram"
             listenAddress: "0.0.0.0:9090"
           prometheusSDK:
@@ -139,7 +139,7 @@ data:
           tags:
             type: matching
           prometheus:
-            framework: "tally"
+            framework: "opentelemetry"
             timerType: "histogram"
             listenAddress: "0.0.0.0:9090"
           prometheusSDK:
@@ -156,7 +156,7 @@ data:
           tags:
             type: worker
           prometheus:
-            framework: "tally"
+            framework: "opentelemetry"
             timerType: "histogram"
             listenAddress: "0.0.0.0:9090"
           prometheusSDK:
