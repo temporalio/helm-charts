@@ -118,6 +118,9 @@ spec:
             - name: metricssdk
               containerPort: 9091
               protocol: TCP
+            - name: metricsbugged
+              containerPort: 8080
+              protocol: TCP
           {{- if ne $service "worker"}}
           livenessProbe:
              initialDelaySeconds: 150
