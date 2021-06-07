@@ -105,9 +105,13 @@ data:
           tags:
             type: frontend
           prometheus:
-            framework: "tally"
+            framework: "opentelemetry"
             timerType: "histogram"
             listenAddress: "0.0.0.0:9090"
+          prometheusSDK:
+            framework: "tally"
+            timerType: "histogram"
+            listenAddress: "0.0.0.0:9091"
 
       history:
         rpc:
@@ -118,9 +122,13 @@ data:
           tags:
             type: history
           prometheus:
-            framework: "tally"
+            framework: "opentelemetry"
             timerType: "histogram"
             listenAddress: "0.0.0.0:9090"
+          prometheusSDK:
+            framework: "tally"
+            timerType: "histogram"
+            listenAddress: "0.0.0.0:9091"
 
       matching:
         rpc:
@@ -131,9 +139,13 @@ data:
           tags:
             type: matching
           prometheus:
-            framework: "tally"
+            framework: "opentelemetry"
             timerType: "histogram"
             listenAddress: "0.0.0.0:9090"
+          prometheusSDK:
+            framework: "tally"
+            timerType: "histogram"
+            listenAddress: "0.0.0.0:9091"
 
       worker:
         rpc:
@@ -144,9 +156,13 @@ data:
           tags:
             type: worker
           prometheus:
-            framework: "tally"
+            framework: "opentelemetry"
             timerType: "histogram"
             listenAddress: "0.0.0.0:9090"
+          prometheusSDK:
+            framework: "tally"
+            timerType: "histogram"
+            listenAddress: "0.0.0.0:9091"
 
     {{- if $.Values.server.config.clusterMetadata }}
     clusterMetadata:
