@@ -105,6 +105,7 @@ data:
           tags:
             type: frontend
           prometheus:
+            framework: "tally"
             timerType: "histogram"
             listenAddress: "0.0.0.0:9090"
 
@@ -117,6 +118,7 @@ data:
           tags:
             type: history
           prometheus:
+            framework: "tally"
             timerType: "histogram"
             listenAddress: "0.0.0.0:9090"
 
@@ -129,6 +131,7 @@ data:
           tags:
             type: matching
           prometheus:
+            framework: "tally"
             timerType: "histogram"
             listenAddress: "0.0.0.0:9090"
 
