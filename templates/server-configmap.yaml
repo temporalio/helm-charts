@@ -105,13 +105,8 @@ data:
           tags:
             type: frontend
           prometheus:
-            framework: "opentelemetry"
-            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.frontend.metrics.prometheus.timerType }}
-            listenAddress: "0.0.0.0:9090"
-          prometheusSDK:
-            framework: "tally"
             timerType: "histogram"
-            listenAddress: "0.0.0.0:9091"
+            listenAddress: "0.0.0.0:9090"
 
       history:
         rpc:
@@ -122,13 +117,8 @@ data:
           tags:
             type: history
           prometheus:
-            framework: "opentelemetry"
-            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.frontend.metrics.prometheus.timerType }}
-            listenAddress: "0.0.0.0:9090"
-          prometheusSDK:
-            framework: "tally"
             timerType: "histogram"
-            listenAddress: "0.0.0.0:9091"
+            listenAddress: "0.0.0.0:9090"
 
       matching:
         rpc:
@@ -139,13 +129,8 @@ data:
           tags:
             type: matching
           prometheus:
-            framework: "opentelemetry"
-            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.frontend.metrics.prometheus.timerType }}
-            listenAddress: "0.0.0.0:9090"
-          prometheusSDK:
-            framework: "tally"
             timerType: "histogram"
-            listenAddress: "0.0.0.0:9091"
+            listenAddress: "0.0.0.0:9090"
 
       worker:
         rpc:
@@ -156,13 +141,9 @@ data:
           tags:
             type: worker
           prometheus:
-            framework: "opentelemetry"
-            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.frontend.metrics.prometheus.timerType }}
-            listenAddress: "0.0.0.0:9090"
-          prometheusSDK:
             framework: "tally"
             timerType: "histogram"
-            listenAddress: "0.0.0.0:9091"
+            listenAddress: "0.0.0.0:9090"
 
     {{- if $.Values.server.config.clusterMetadata }}
     clusterMetadata:
