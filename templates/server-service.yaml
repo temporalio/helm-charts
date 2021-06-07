@@ -72,7 +72,7 @@ spec:
     - port: 9091
       targetPort: metricssdk
       protocol: TCP
-      name: metrics
+      name: metricssdk
   selector:
     app.kubernetes.io/name: {{ include "temporal.name" $ }}
     app.kubernetes.io/instance: {{ $.Release.Name }}
