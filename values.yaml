@@ -293,7 +293,7 @@ elasticsearch:
   logLevel: "error"
   username: ""
   password: ""
-  visibilityIndex: "temporal-visibility-v1-dev"
+  visibilityIndex: "temporal_visibility_v1_dev"
 
 prometheus:
   enabled: true
