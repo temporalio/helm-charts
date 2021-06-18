@@ -291,6 +291,8 @@ elasticsearch:
   port: 9200
   version: "v7"
   logLevel: "error"
+  authentication:
+    enabled: true
   username: ""
   password: ""
   visibilityIndex: "temporal_visibility_v1_dev"

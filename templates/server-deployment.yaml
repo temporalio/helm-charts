@@ -64,7 +64,11 @@ spec:
         - name: check-elasticsearch-index
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          {{- if $.Values.elasticsearch.authentication.enabled }}
           command: ['sh', '-c', 'until curl --silent --fail --user {{ $.Values.elasticsearch.username }}:{{ $.Values.elasticsearch.password }} {{ $.Values.elasticsearch.scheme }}://{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}/{{ $.Values.elasticsearch.visibilityIndex }} 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
+          {{ else }}
+          command: ['sh', '-c', 'until curl --silent --fail {{ $.Values.elasticsearch.scheme }}://{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}/{{ $.Values.elasticsearch.visibilityIndex }} 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
+          {{ end }}
         {{- end }}
       {{- end }}
       containers:
