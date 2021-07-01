@@ -276,8 +276,8 @@ NAME                                   TYPE        CLUSTER-IP       EXTERNAL-IP 
 ...
 temporaltest-admintools                ClusterIP   172.20.237.59    <none>        22/TCP                                         15m
 temporaltest-frontend-headless         ClusterIP   None             <none>        7233/TCP,9090/TCP                              15m
-temporaltest-history-headless          ClusterIP   None             <none>        7934/TCP,9090/TCP                              15m
-temporaltest-matching-headless         ClusterIP   None             <none>        7935/TCP,9090/TCP                              15m
+temporaltest-history-headless          ClusterIP   None             <none>        7234/TCP,9090/TCP                              15m
+temporaltest-matching-headless         ClusterIP   None             <none>        7235/TCP,9090/TCP                              15m
 temporaltest-worker-headless           ClusterIP   None             <none>        7239/TCP,9090/TCP                              15m
 ...
 ```
