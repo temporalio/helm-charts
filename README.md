@@ -3,9 +3,9 @@
 
 Temporal is a distributed, scalable, durable, and highly available orchestration engine designed to execute asynchronous long-running business logic in a resilient way.
 
-This repo contains a basic V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. The dependencies that are bundled with this solution by default offer an easy way to experiment with Temporal software. This Helm chart can also be used to install just the Temporal server, configured to connect to dependencies (such as a Cassandra, MySQL database or PostgreSQL database) that you may already have available in your environment.
+This repo contains a basic V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. The dependencies that are bundled with this solution by default offer an easy way to experiment with Temporal software. This Helm chart can also be used to install just the Temporal server, configured to connect to dependencies (such as a Cassandra, MySQL, or PostgreSQL database) that you may already have available in your environment.
 
-This Helm Chart code is tested by a dedictated test pipeline. It is also used extensively by other Temporal pipelines for testing various aspects of Temporal systems. Our test pipeline currently use Helm 3.1.1.
+This Helm Chart code is tested by a dedicated test pipeline. It is also used extensively by other Temporal pipelines for testing various aspects of Temporal systems. Our test pipeline currently uses Helm 3.1.1.
 
 # Install Temporal service on a Kubernetes cluster
 
@@ -33,14 +33,14 @@ Temporal can be configured to run with various dependencies. The default "Batter
 
 * Cassandra
 * ElasticSearch
-* Promethueus
+* Prometheus
 * Grafana
 
 The sections that follow describe various deployment configurations, from a minimal one-replica installation using included dependencies, to a replicated deployment on existing infrastructure.
 
 ### Minimal installation with required dependencies only
 
-To install Temporal in a limited but working and self-contained configuration (one replica of Cassandra and each of Temporal's services, no metrics or Elastic Search), you can run the following command
+To install Temporal in a limited but working and self-contained configuration (one replica of Cassandra and each of Temporal's services, no metrics or ElasticSearch), you can run the following command
 
 ```
 ~/temporal-helm$ helm install \
@@ -54,7 +54,7 @@ To install Temporal in a limited but working and self-contained configuration (o
 
 This configuration consumes limited resources and it is useful for small scale tests (such as using minikube).
 
-Below is an example of an enviroment installed in this configuration:
+Below is an example of an environment installed in this configuration:
 
 ```
 $ kubectl get pods
@@ -81,12 +81,12 @@ To install Temporal with all of its dependencies run this command:
 ~/temporal-helm$ helm install temporaltest . --timeout 900s
 ```
 
-To use your own instance of ElasticSearch, MySQL. PostgreSQL, or Cassandra, please read the "Bring Your Own" sections below.
+To use your own instance of ElasticSearch, MySQL, PostgreSQL, or Cassandra, please read the "Bring Your Own" sections below.
 
 Other components (Prometheus, Grafana) can be omitted from the installation by setting their corresponding `enable` flag to `false`:
 
 ```bash
-~/temporal-helm$ helm install
+~/temporal-helm$ helm install \
     --set prometheus.enabled=false \
     --set grafana.enabled=false \
     temporaltest . --timeout 900s
@@ -277,8 +277,8 @@ NAME                                   TYPE        CLUSTER-IP       EXTERNAL-IP 
 ...
 temporaltest-admintools                ClusterIP   172.20.237.59    <none>        22/TCP                                         15m
 temporaltest-frontend-headless         ClusterIP   None             <none>        7233/TCP,9090/TCP                              15m
-temporaltest-history-headless          ClusterIP   None             <none>        7934/TCP,9090/TCP                              15m
-temporaltest-matching-headless         ClusterIP   None             <none>        7935/TCP,9090/TCP                              15m
+temporaltest-history-headless          ClusterIP   None             <none>        7234/TCP,9090/TCP                              15m
+temporaltest-matching-headless         ClusterIP   None             <none>        7235/TCP,9090/TCP                              15m
 temporaltest-worker-headless           ClusterIP   None             <none>        7239/TCP,9090/TCP                              15m
 ...
 ```
