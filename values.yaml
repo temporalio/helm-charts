@@ -22,8 +22,12 @@ server:
     # Enable Prometheus ServiceMonitor
     # Use this if you installed the Prometheus Operator (https://github.com/coreos/prometheus-operator).
     serviceMonitor:
-      enabled: false
+      enabled: true
       interval: 30s
+      # Set additional lables to all the ServiceMonitor resources
+      additionalLabels: {}
+      #  label1: value1
+      #  label2: value2
       # Set Prometheus metric_relabel_configs via ServiceMonitor
       # Use metricRelabelings to adjust metric and label names as needed
       metricRelabelings: []
