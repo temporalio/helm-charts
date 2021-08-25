@@ -34,10 +34,10 @@ data:
             {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
-          {{- if $.Values.server.config.persistence.visibility.faultinjection}}
-          {{- if $.Values.server.config.persistence.visibility.faultinjection.rate }}
+          {{- if $.Values.server.config.persistence.faultinjection}}
+          {{- if $.Values.server.config.persistence.faultinjection.rate }}
           faultInjection:
-            rate: {{ $.Values.server.config.persistence.visibility.faultinjection.rate }}
+            rate: {{ $.Values.server.config.persistence.faultinjection.rate }}
           {{- end }}
           {{- end }}
           {{- if eq (include "temporal.persistence.driver" (list . "default")) "sql" }}
