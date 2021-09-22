@@ -15,7 +15,7 @@ metadata:
     app.kubernetes.io/component: {{ $service }}
     app.kubernetes.io/part-of: {{ $.Chart.Name }}
     {{- with (default $.Values.server.metrics.serviceMonitor.additionalLabels $serviceValues.metrics.serviceMonitor.additionalLabels) }}
-    {{- toYaml . | indent 4 }}
+    {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
   endpoints:
