@@ -142,7 +142,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: "{{ include "temporal.fullname" $ }}-config"
+            name: "{{ include "temporal.componentname" (list $ $service) }}-config"
         - name: dynamic-config
           configMap:
             name: "{{ include "temporal.fullname" $ }}-dynamic-config"
