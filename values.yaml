@@ -228,6 +228,14 @@ admintools:
 
 web:
   enabled: true
+  config:
+    # server/config.yml file content
+    auth:
+      enabled: false
+    routing:
+      default_to_namespace: # internal use only
+      issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
+
 
   replicaCount: 1
 
