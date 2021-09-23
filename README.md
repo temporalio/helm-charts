@@ -92,6 +92,18 @@ Other components (Prometheus, Grafana) can be omitted from the installation by s
     temporaltest . --timeout 900s
 ```
 
+### Install with sidecar containers
+
+You may need to provide your own sidecar containers. 
+
+To do so, you may look at the example for Google's `cloud sql proxy` in the `values/values.cloudsqlproxy.yaml` and pass that file to `helm install`. 
+
+Example:
+
+```bash
+~/temporal-helm$ helm install -f values/values.cloudsqlproxy.yaml temporaltest . --timeout 900s
+```
+
 ### Install with your own ElasticSearch
 
 You might already be operating an instance of ElasticSearch that you want to use with Temporal.

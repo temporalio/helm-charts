@@ -1,0 +1,20 @@
+server:
+  sidecarContainers:
+    - name: cloud-sql-proxy
+      image: gcr.io/cloudsql-docker/gce-proxy:1.17
+      command:
+        - "/cloud_sql_proxy"
+        - "-ip_address_types=PRIVATE"
+        - "-instances=_PROJECTNAME_:_REGION_:_INSTANCENAME_=tcp:5432"
+        - "-credential_file=/etc/google-cloud-key/key.json"
+      securityContext:
+        runAsNonRoot: true
+      volumeMounts:
+        - name: google-cloud-key
+          mountPath: /etc/google-cloud-key
+          readOnly: true
+
+  additionalVolumes:
+    - name: google-cloud-key
+      secret:
+        secretName: cloud-sql-proxy-sa
