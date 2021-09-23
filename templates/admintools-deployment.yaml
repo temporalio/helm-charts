@@ -38,7 +38,7 @@ spec:
               protocol: TCP
           env:
             - name: TEMPORAL_CLI_ADDRESS
-              value: {{ .Release.Name }}-frontend:{{ include "temporal.frontend.grpcPort" . }}
+              value: {{ include "temporal.fullname" . }}-frontend:{{ include "temporal.frontend.grpcPort" . }}
           livenessProbe:
               exec:
                 command:
