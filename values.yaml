@@ -76,6 +76,9 @@ server:
     numHistoryShards: 512
 
     persistence:
+      defaultStore: default
+      additionalStores: {}
+
       default:
         driver: "cassandra"
 
