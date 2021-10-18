@@ -17,13 +17,16 @@ data:
       level: {{ .Values.server.config.logLevel | quote }}
 
     persistence:
-      defaultStore: default
+      defaultStore: {{ .Values.server.config.persistence.defaultStore }}
       visibilityStore: visibility
     {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
       advancedVisibilityStore: es-visibility
     {{- end }}
       numHistoryShards: {{ .Values.server.config.numHistoryShards }}
       datastores:
+        {{- with .Values.server.config.persistence.additionalStores }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
         default:
           {{- if eq (include "temporal.persistence.driver" (list . "default")) "cassandra" }}
           cassandra:
