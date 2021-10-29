@@ -229,6 +229,9 @@ admintools:
     type: ClusterIP
     port: 22
     annotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
 
 web:
   enabled: true
