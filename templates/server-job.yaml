@@ -106,7 +106,18 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-
+      {{- with (default $.Values.server.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.server.affinity }}
+      affinity:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.server.tolerations }}
+      tolerations:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
 ---
 {{- end }}
 {{- if .Values.schema.update.enabled }}
@@ -186,7 +197,18 @@ spec:
             {{- end }}
             {{- end }}
         {{- end }}
-
+      {{- with (default $.Values.admintools.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.admintools.affinity }}
+      affinity:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.admintools.tolerations }}
+      tolerations:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
 ---
 {{- end }}
 {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
@@ -243,5 +265,17 @@ spec:
           args:
             - 'curl -X PUT --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_{{ .Values.elasticsearch.version }}.json" 2>&1;
               curl -X PUT --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/{{ .Values.elasticsearch.visibilityIndex }} 2>&1;'
+      {{- with (default $.Values.admintools.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.admintools.affinity }}
+      affinity:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.admintools.tolerations }}
+      tolerations:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
 {{- end }}
 {{- end }}
