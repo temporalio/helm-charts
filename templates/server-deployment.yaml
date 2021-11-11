@@ -127,6 +127,8 @@ spec:
                port: rpc
           {{- end }}
           volumeMounts:
+            - name: config-store
+              mountPath: /etc/temporal/config
             - name: config
               mountPath: /etc/temporal/config/config_template.yaml
               subPath: config_template.yaml
@@ -146,6 +148,8 @@ spec:
       {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+        - name: config-store
+          emptyDir: {}
         - name: config
           configMap:
             name: "{{ include "temporal.fullname" $ }}-config"
