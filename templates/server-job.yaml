@@ -210,6 +210,47 @@ spec:
       {{- toYaml . | nindent 8 }}
       {{- end }}
 ---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "temporal.componentname" (list . "create-namespaces") }}
+  labels:
+    app.kubernetes.io/name: {{ include "temporal.name" . }}
+    helm.sh/chart: {{ include "temporal.chart" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "1"
+    {{- if not .Values.debug }}
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+    {{- end }}
+spec:
+  backoffLimit: {{ .Values.schema.update.backoffLimit }}
+  template:
+    metadata:
+      name: {{ include "temporal.componentname" (list . "create-namespaces") }}
+      labels:
+        app.kubernetes.io/name: {{ include "temporal.name" . }}
+        helm.sh/chart: {{ include "temporal.chart" . }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+        app.kubernetes.io/component: frontend
+        app.kubernetes.io/part-of: {{ .Chart.Name }}
+    spec:
+      restartPolicy: "OnFailure"
+      containers:
+        {{- range $namespace := .Values.schema.update.namespaces }}
+        - name: create-{{ $namespace }}-namespace
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['sh', '-c', "tctl --address temporal-frontend:{{ $.Values.server.frontend.service.port }} --namespace {{ $namespace }} namespace register"]
+        {{- end }}
+---
 {{- end }}
 {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
 apiVersion: batch/v1

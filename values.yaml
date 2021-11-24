@@ -299,6 +299,8 @@ schema:
   update:
     enabled: true
     backoffLimit: 100
+    namespaces:
+      - default
 
 elasticsearch:
   enabled: true
