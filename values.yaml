@@ -299,6 +299,9 @@ schema:
   update:
     enabled: true
     backoffLimit: 100
+  create_namespaces:
+    enabled: true
+    backoffLimit: 100
     namespaces:
       - default
 

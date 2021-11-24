@@ -210,6 +210,8 @@ spec:
       {{- toYaml . | nindent 8 }}
       {{- end }}
 ---
+{{- end }}
+{{- if .Values.schema.create_namespaces.enabled }}
 {{- $frontend := include "temporal.componentname" (list . "frontend") }}
 apiVersion: batch/v1
 kind: Job
@@ -230,7 +232,7 @@ metadata:
     "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
     {{- end }}
 spec:
-  backoffLimit: {{ .Values.schema.update.backoffLimit }}
+  backoffLimit: {{ .Values.schema.create_namespaces.backoffLimit }}
   template:
     metadata:
       name: {{ include "temporal.componentname" (list . "create-namespaces") }}
@@ -245,7 +247,7 @@ spec:
     spec:
       restartPolicy: "OnFailure"
       containers:
-        {{- range $namespace := .Values.schema.update.namespaces }}
+        {{- range $namespace := .Values.schema.create_namespaces.namespaces }}
         - name: create-{{ $namespace }}-namespace
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
