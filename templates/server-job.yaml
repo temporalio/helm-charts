@@ -210,6 +210,7 @@ spec:
       {{- toYaml . | nindent 8 }}
       {{- end }}
 ---
+{{- $frontend := include "temporal.componentname" (list . "frontend") }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -248,7 +249,7 @@ spec:
         - name: create-{{ $namespace }}-namespace
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', "tctl --address temporal-frontend:{{ $.Values.server.frontend.service.port }} --namespace {{ $namespace }} namespace register"]
+          command: ['sh', '-c', "tctl --address {{ $frontend }}:{{ $.Values.server.frontend.service.port }} --namespace {{ $namespace }} namespace register"]
         {{- end }}
 ---
 {{- end }}
