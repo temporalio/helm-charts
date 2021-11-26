@@ -205,6 +205,17 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- end -}}
 {{- end -}}
 
+{{- define "temporal.persistence.sql.database" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if $storeConfig.sql.database -}}
+{{- $storeConfig.sql.database -}}
+{{- else -}}
+{{- print "temporal" -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "temporal.persistence.sql.host" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}

@@ -391,4 +391,7 @@ cassandra:
     type: ClusterIP
 
 mysql:
+  enabled: true
+
+postgres:
   enabled: false

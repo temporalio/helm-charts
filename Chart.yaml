@@ -36,6 +36,10 @@ dependencies:
     repository: https://grafana.github.io/helm-charts
     version: 5.0.10
     condition: grafana.enabled
+  - name: mysql
+    version: '8.8.1'
+    repository: https://charts.bitnami.com/bitnami
+    condition: mysql.enabled
 
 # A chart can be either an 'application' or a 'library' chart.
 #

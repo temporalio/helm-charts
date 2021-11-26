@@ -15,6 +15,8 @@ metadata:
   annotations:
     {{- if .Values.cassandra.enabled }}
     "helm.sh/hook": post-install
+    {{- else if .Values.mysql.enabled }}
+    "helm.sh/hook": post-install
     {{- else }}
     "helm.sh/hook": pre-install
     {{- end }}
@@ -75,7 +77,35 @@ spec:
             {{- end }}
         {{- end }}
         {{- else }}
-          []
+        {{- if .Values.mysql.enabled }}
+        - name: check-mysql-service
+          image: busybox
+          command: ['sh', '-c', 'until nslookup {{ include "temporal.persistence.sql.host" (list . "default") }}; do echo waiting for mysql service; sleep 1; done;']
+          {{- range $store := (list "default" "visibility") }}
+          {{- $storeConfig := index $.Values.server.config.persistence $store }}
+        - name: create-{{ $store }}-store
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['sh', '-c', 'temporal-sql-tool create-database --db {{ include "temporal.persistence.sql.database" (list $ $store) | quote }}']
+          env:
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_HOST
+              value: {{ include "temporal.persistence.sql.host" (list $ $store) | quote }}
+            - name: SQL_PORT
+              value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
+            - name: SQL_USER
+              value: {{ include "temporal.persistence.sql.user" (list $ $store) | quote }}
+            - name: SQL_PASSWORD
+              value: {{ include "temporal.persistence.sql.password" (list $ $store) | quote }}
+            - name: SQL_DATABASE
+              value: {{ include "temporal.persistence.sql.database" (list $ $store) | quote }}
+            - name: SQL_PLUGIN
+              value: {{ include "temporal.persistence.sql.driver" (list $ $store) | quote }}
+          {{- end }}
+
+          {{- end }}
+
+        {{- end }}
         {{- end }}
       containers:
         {{- range $store := (list "default" "visibility") }}
@@ -83,9 +113,23 @@ spec:
         - name: {{ $store }}-schema
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ["temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool", "setup-schema", "-v", "0.0"]
+          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', "setup-schema", "-v", "0.0"]
           env:
-            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_HOST
+              value: {{ include "temporal.persistence.sql.host" (list $ $store) | quote }}
+            - name: SQL_PORT
+              value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
+            - name: SQL_USER
+              value: {{ include "temporal.persistence.sql.user" (list $ $store) | quote }}
+            - name: SQL_PASSWORD
+              value: {{ include "temporal.persistence.sql.password" (list $ $store) | quote }}
+            - name: SQL_DATABASE
+              value: {{ include "temporal.persistence.sql.database" (list $ $store) | quote }}
+            - name: SQL_PLUGIN
+              value: {{ include "temporal.persistence.sql.driver" (list $ $store) | quote }}
+
+            {{- else if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
             - name: CASSANDRA_HOST
               value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $ $store))) }}
             - name: CASSANDRA_PORT
@@ -136,6 +180,8 @@ metadata:
   annotations:
     {{- if .Values.cassandra.enabled }}
     "helm.sh/hook": post-install,pre-upgrade
+    {{- else if .Values.mysql.enabled }}
+    "helm.sh/hook": post-install,pre-upgrade
     {{- else }}
     "helm.sh/hook": pre-install,pre-upgrade
     {{- end }}
@@ -167,6 +213,14 @@ spec:
           image: "{{ .Values.cassandra.image.repo }}:{{ .Values.cassandra.image.tag }}"
           imagePullPolicy: {{ .Values.cassandra.image.pullPolicy }}
           command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ .Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+        {{- else if .Values.postgres.enabled }}
+        - name: check-postgres-service
+          image: busybox
+          command: ['sh', '-c', 'until nslookup {{ include "temporal.persistence.sql.host" (list . "default") }}; do echo waiting for postgres service; sleep 1; done;']
+        {{- else if .Values.mysql.enabled }}
+        - name: check-mysql-service
+          image: busybox
+          command: ['sh', '-c', 'until nslookup {{ include "temporal.persistence.sql.host" (list . "default") }}; do echo waiting for mysql service; sleep 1; done;']
         {{- else }}
           []
         {{- end }}
@@ -178,9 +232,25 @@ spec:
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
           command: ['sh', '-c', 'temporal-cassandra-tool update-schema -d /etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
+          {{- else if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+          command: ['sh', '-c', 'temporal-sql-tool update-schema -d /etc/temporal/schema/{{ include "temporal.persistence.sql.driver" (list $ $store) }}/v57/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- end }}
           env:
-            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_HOST
+              value: {{ include "temporal.persistence.sql.host" (list $ $store) | quote }}
+            - name: SQL_PORT
+              value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
+            - name: SQL_USER
+              value: {{ include "temporal.persistence.sql.user" (list $ $store) | quote }}
+            - name: SQL_PASSWORD
+              value: {{ include "temporal.persistence.sql.password" (list $ $store) | quote }}
+            - name: SQL_DATABASE
+              value: {{ include "temporal.persistence.sql.database" (list $ $store) | quote }}
+            - name: SQL_PLUGIN
+              value: {{ include "temporal.persistence.sql.driver" (list $ $store) | quote }}
+
+            {{- else if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
             - name: CASSANDRA_HOST
               value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $ $store))) }}
             - name: CASSANDRA_PORT
