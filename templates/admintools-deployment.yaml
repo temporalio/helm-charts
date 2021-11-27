@@ -28,6 +28,7 @@ spec:
         app.kubernetes.io/component: admintools
         app.kubernetes.io/part-of: {{ .Chart.Name }}
     spec:
+      {{ include "temporal.serviceAccount" . }}
       containers:
         - name: admin-tools
           image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"

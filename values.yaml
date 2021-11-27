@@ -5,6 +5,17 @@ fullnameOverride: ""
 # (eg. disable helm hook delete policy)
 debug: false
 
+# Custom Service account management
+serviceAccount:
+  # Whether to create service account or not
+  create: false
+
+  # Name of the service account, default: temporal.fullname
+  name:
+
+  # extraAnnotations would let users add additional annotations
+  extraAnnotations:
+
 server:
   enabled: true
   sidecarContainers:
