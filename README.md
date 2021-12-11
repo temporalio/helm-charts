@@ -120,6 +120,37 @@ Example:
 
 You might already be operating a MySQL instance that you want to use with Temporal.
 
+#### Configuring using the chart
+
+In this case, create your database host and user with a permissions grant that allows the user to create databases and execute database schema changes.
+
+Once you initialized the database server, fill in the configuration values in `values/values.mysql.yaml`, change `schema.setup.enabled: true`, change `schema.update.enabled: true`
+
+*NOTE:* For MYSQL <5.7.20 (e.g AWS Aurora MySQL) use `values/values.aurora-mysql.yaml`
+
+```bash
+# in https://github.com/temporalio/helm-charts git repo dir
+helm install -f values/values.mysql.yaml temporaltest . --timeout 900s
+```
+
+Alternatively, instead of modifying `values/values.mysql.yaml`, you can supply those values in your command line:
+
+```bash
+# in https://github.com/temporalio/helm-charts git repo dir
+helm install -f values/values.mysql.yaml temporaltest \
+  --set elasticsearch.enabled=false \
+  --set schema.setup.enabled=true \
+  --set schema.update.enabled=true \
+  --set server.config.persistence.default.sql.user=mysql_user \
+  --set server.config.persistence.default.sql.password=mysql_password \
+  --set server.config.persistence.visibility.sql.user=mysql_user \
+  --set server.config.persistence.visibility.sql.password=mysql_password \
+  --set server.config.persistence.default.sql.host=mysql_host \
+  --set server.config.persistence.visibility.sql.host=mysql_host . --timeout 900s
+```
+
+#### Configuring outside the context of the chart
+
 In this case, create and configure temporal databases on your MySQL host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
 
 Here are examples of commands you can use to create and initialize the databases:
@@ -143,6 +174,8 @@ SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/m
 
 Once you initialized the two databases, fill in the configuration values in `values/values.mysql.yaml`, and run
 
+*NOTE:* For MYSQL <5.7.20 (e.g AWS Aurora MySQL) use `values/values.aurora-mysql.yaml`
+
 ```bash
 # in https://github.com/temporalio/helm-charts git repo dir
 helm install -f values/values.mysql.yaml temporaltest . --timeout 900s
@@ -161,7 +194,6 @@ helm install -f values/values.mysql.yaml temporaltest \
   --set server.config.persistence.default.sql.host=mysql_host \
   --set server.config.persistence.visibility.sql.host=mysql_host . --timeout 900s
 ```
-*NOTE:* For MYSQL <5.7.20 (e.g AWS Aurora MySQL) use `values/values.aurora-mysql.yaml`
 
 ### Install with your own PostgreSQL
 

@@ -38,7 +38,6 @@ spec:
     spec:
       restartPolicy: "OnFailure"
       initContainers:
-        {{- if or .Values.cassandra.enabled }}
         {{- if .Values.cassandra.enabled }}
         - name: check-cassandra-service
           image: busybox
@@ -55,6 +54,9 @@ spec:
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
           command: ['sh', '-c', 'temporal-cassandra-tool create -k {{ $storeConfig.cassandra.keyspace }} --replication-factor {{ $storeConfig.cassandra.replicationFactor }}']
+          {{- end }}
+          {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+          command: ['sh', '-c', 'temporal-sql-tool create-database --db {{ $storeConfig.sql.database }}']
           {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
@@ -73,9 +75,20 @@ spec:
               value: {{ $storeConfig.cassandra.password }}
             {{- end }}
             {{- end }}
-        {{- end }}
-        {{- else }}
-          []
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_PLUGIN
+              value: {{ $storeConfig.sql.driver }}
+            - name: SQL_HOST
+              value: {{ $storeConfig.sql.host }}
+            - name: SQL_PORT
+              value: "{{ $storeConfig.sql.port }}"
+            - name: SQL_USER
+              value: {{ $storeConfig.sql.user }}
+            - name: SQL_PASSWORD
+              value: {{ $storeConfig.sql.password }}
+            - name: SQL_DATABASE
+              value: {{ $storeConfig.sql.database }}
+            {{- end }}
         {{- end }}
       containers:
         {{- range $store := (list "default" "visibility") }}
@@ -100,6 +113,20 @@ spec:
             - name: CASSANDRA_PASSWORD
               value: {{ $storeConfig.cassandra.password }}
             {{- end }}
+            {{- end }}
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_PLUGIN
+              value: {{ $storeConfig.sql.driver }}
+            - name: SQL_HOST
+              value: {{ $storeConfig.sql.host }}
+            - name: SQL_PORT
+              value: "{{ $storeConfig.sql.port }}"
+            - name: SQL_USER
+              value: {{ $storeConfig.sql.user }}
+            - name: SQL_PASSWORD
+              value: {{ $storeConfig.sql.password }}
+            - name: SQL_DATABASE
+              value: {{ $storeConfig.sql.database }}
             {{- end }}
         {{- end }}
       {{- with $.Values.imagePullSecrets }}
@@ -179,6 +206,14 @@ spec:
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
           command: ['sh', '-c', 'temporal-cassandra-tool update-schema -d /etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- end }}
+          {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+          {{- if eq $store "default" }}
+          command: ['sh', '-c', 'temporal-sql-tool update-schema -d /etc/temporal/schema/{{ $storeConfig.sql.driver }}/**/temporal/versioned']
+          {{- end }}
+          {{- if eq $store "visibility" }}
+          command: ['sh', '-c', 'temporal-sql-tool update-schema -d /etc/temporal/schema/{{ $storeConfig.sql.driver }}/**/visibility/versioned']
+          {{- end }}
+          {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
             - name: CASSANDRA_HOST
@@ -195,6 +230,20 @@ spec:
             - name: CASSANDRA_PASSWORD
               value: {{ $storeConfig.cassandra.password }}
             {{- end }}
+            {{- end }}
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_PLUGIN
+              value: {{ $storeConfig.sql.driver }}
+            - name: SQL_HOST
+              value: {{ $storeConfig.sql.host }}
+            - name: SQL_PORT
+              value: "{{ $storeConfig.sql.port }}"
+            - name: SQL_USER
+              value: {{ $storeConfig.sql.user }}
+            - name: SQL_PASSWORD
+              value: {{ $storeConfig.sql.password }}
+            - name: SQL_DATABASE
+              value: {{ $storeConfig.sql.database }}
             {{- end }}
         {{- end }}
       {{- with (default $.Values.admintools.nodeSelector) }}
