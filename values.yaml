@@ -74,7 +74,7 @@ server:
 
     # IMPORTANT: This value cannot be changed, once it's set.
     numHistoryShards: 512
-
+    global:
     persistence:
       defaultStore: default
       additionalStores: {}
