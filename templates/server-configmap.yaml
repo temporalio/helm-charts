@@ -1,39 +1,40 @@
 {{- if $.Values.server.enabled }}
+{{- range $service := (list "frontend" "history" "matching" "worker") }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: "{{ include "temporal.fullname" . }}-config"
+  name: "{{ include "temporal.componentname" (list $ $service) }}-config"
   labels:
-    app.kubernetes.io/name: {{ include "temporal.name" . }}
-    helm.sh/chart: {{ include "temporal.chart" . }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
-    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    app.kubernetes.io/name: {{ include "temporal.name" $ }}
+    helm.sh/chart: {{ include "temporal.chart" $ }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/part-of: {{ $.Chart.Name }}
 data:
   config_template.yaml: |-
     log:
       stdout: true
-      level: {{ .Values.server.config.logLevel | quote }}
+      level: {{ $.Values.server.config.logLevel | quote }}
 
     persistence:
-      defaultStore: {{ .Values.server.config.persistence.defaultStore }}
+      defaultStore: {{ $.Values.server.config.persistence.defaultStore }}
       visibilityStore: visibility
     {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
       advancedVisibilityStore: es-visibility
     {{- end }}
-      numHistoryShards: {{ .Values.server.config.numHistoryShards }}
+      numHistoryShards: {{ $.Values.server.config.numHistoryShards }}
       datastores:
-        {{- with .Values.server.config.persistence.additionalStores }}
+        {{- with $.Values.server.config.persistence.additionalStores }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
         default:
-          {{- if eq (include "temporal.persistence.driver" (list . "default")) "cassandra" }}
+          {{- if eq (include "temporal.persistence.driver" (list $ "default")) "cassandra" }}
           cassandra:
-            hosts: "{{ include "temporal.persistence.cassandra.hosts" (list . "default") }}"
-            port: {{ include "temporal.persistence.cassandra.port" (list . "default") }}
+            hosts: "{{ include "temporal.persistence.cassandra.hosts" (list $ "default") }}"
+            port: {{ include "temporal.persistence.cassandra.port" (list $ "default") }}
             password: "{{ `{{ .Env.TEMPORAL_STORE_PASSWORD }}` }}"
-            {{- with (omit .Values.server.config.persistence.default.cassandra "hosts" "port" "password" "existingSecret") }}
+            {{- with (omit $.Values.server.config.persistence.default.cassandra "hosts" "port" "password" "existingSecret") }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
@@ -43,7 +44,7 @@ data:
             rate: {{ $.Values.server.config.persistence.faultinjection.rate }}
           {{- end }}
           {{- end }}
-          {{- if eq (include "temporal.persistence.driver" (list . "default")) "sql" }}
+          {{- if eq (include "temporal.persistence.driver" (list $ "default")) "sql" }}
           sql:
             pluginName: "{{ include "temporal.persistence.sql.driver" (list . "default") }}"
             driverName: "{{ include "temporal.persistence.sql.driver" (list . "default") }}"
@@ -57,16 +58,16 @@ data:
             {{- end }}
           {{- end }}
         visibility:
-          {{- if eq (include "temporal.persistence.driver" (list . "visibility")) "cassandra" }}
+          {{- if eq (include "temporal.persistence.driver" (list $ "visibility")) "cassandra" }}
           cassandra:
-            hosts: "{{ include "temporal.persistence.cassandra.hosts" (list . "visibility") }}"
-            port: {{ include "temporal.persistence.cassandra.port" (list . "visibility") }}
+            hosts: "{{ include "temporal.persistence.cassandra.hosts" (list $ "visibility") }}"
+            port: {{ include "temporal.persistence.cassandra.port" (list $ "visibility") }}
             password: "{{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD }}` }}"
-            {{- with (omit .Values.server.config.persistence.visibility.cassandra "hosts" "port" "password" "existingSecret") }}
+            {{- with (omit $.Values.server.config.persistence.visibility.cassandra "hosts" "port" "password" "existingSecret") }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
-          {{- if eq (include "temporal.persistence.driver" (list . "default")) "sql" }}
+          {{- if eq (include "temporal.persistence.driver" (list $ "default")) "sql" }}
           sql:
             pluginName: "{{ include "temporal.persistence.sql.driver" (list . "visibility") }}"
             driverName: "{{ include "temporal.persistence.sql.driver" (list . "visibility") }}"
@@ -102,56 +103,39 @@ data:
 
       pprof:
         port: 7936
+        
+      metrics:
+        tags:
+          type: {{ $service }}
+        prometheus:
+          timerType: histogram
+          listenAddress: "0.0.0.0:9090"
 
 
     services:
       frontend:
         rpc:
-          grpcPort: {{ include "temporal.frontend.grpcPort" . }}
-          membershipPort: {{ include "temporal.frontend.membershipPort" . }}
+          grpcPort: {{ include "temporal.frontend.grpcPort" $ }}
+          membershipPort: {{ include "temporal.frontend.membershipPort" $ }}
           bindOnIP: "0.0.0.0"
-        metrics:
-          tags:
-            type: frontend
-          prometheus:
-            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.frontend.metrics.prometheus.timerType }}
-            listenAddress: "0.0.0.0:9090"
 
       history:
         rpc:
-          grpcPort: {{ include "temporal.history.grpcPort" . }}
-          membershipPort: {{ include "temporal.history.membershipPort" . }}
+          grpcPort: {{ include "temporal.history.grpcPort" $ }}
+          membershipPort: {{ include "temporal.history.membershipPort" $ }}
           bindOnIP: "0.0.0.0"
-        metrics:
-          tags:
-            type: history
-          prometheus:
-            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.history.metrics.prometheus.timerType }}
-            listenAddress: "0.0.0.0:9090"
 
       matching:
         rpc:
-          grpcPort: {{ include "temporal.matching.grpcPort" . }}
-          membershipPort: {{ include "temporal.matching.membershipPort" . }}
+          grpcPort: {{ include "temporal.matching.grpcPort" $ }}
+          membershipPort: {{ include "temporal.matching.membershipPort" $ }}
           bindOnIP: "0.0.0.0"
-        metrics:
-          tags:
-            type: matching
-          prometheus:
-            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.matching.metrics.prometheus.timerType }}
-            listenAddress: "0.0.0.0:9090"
 
       worker:
         rpc:
-          grpcPort: {{ include "temporal.worker.grpcPort" . }}
-          membershipPort: {{ include "temporal.worker.membershipPort" . }}
+          grpcPort: {{ include "temporal.worker.grpcPort" $ }}
+          membershipPort: {{ include "temporal.worker.membershipPort" $ }}
           bindOnIP: "0.0.0.0"
-        metrics:
-          tags:
-            type: worker
-          prometheus:
-            timerType: {{ default .Values.server.metrics.prometheus.timerType .Values.server.worker.metrics.prometheus.timerType }}
-            listenAddress: "0.0.0.0:9090"
 
     {{- if $.Values.server.config.clusterMetadata }}
     clusterMetadata:
@@ -180,9 +164,12 @@ data:
       status: "disabled"
 
     publicClient:
-      hostPort: "{{ include "temporal.componentname" (list . "frontend") }}:{{ .Values.server.frontend.service.port }}"
+      hostPort: "{{ include "temporal.componentname" (list $ "frontend") }}:{{ $.Values.server.frontend.service.port }}"
 
     dynamicConfigClient:
       filepath: "/etc/temporal/dynamic_config/dynamic_config.yaml"
       pollInterval: "10s"
+---
+
+{{- end }}
 {{- end }}
