@@ -104,7 +104,7 @@ data:
         port: 7936
 
       {{- with (omit .Values.server.config.global "membership" "pprof") }}
-      {{- toYaml . | nindent 2 }}
+      {{- toYaml . | nindent 6 }}
       {{- end }}
 
     services:
