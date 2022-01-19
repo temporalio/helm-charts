@@ -21,7 +21,7 @@ spec:
   endpoints:
   - port: metrics
     interval: {{ default $.Values.server.metrics.serviceMonitor.interval $serviceValues.metrics.serviceMonitor.interval }}
-    {{- with (default $.Values.server.metrics.serviceMonitor.metricRelabelings $serviceValues.metrics.serviceMonitor.interval) }}
+    {{- with (default $.Values.server.metrics.serviceMonitor.metricRelabelings $serviceValues.metrics.serviceMonitor.metricRelabelings) }}
     metricRelabelings:
       {{- toYaml . | nindent 4 }}
     {{- end }}
