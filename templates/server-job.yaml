@@ -39,7 +39,9 @@ spec:
       {{ include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
       initContainers:
-        {{- if or .Values.cassandra.enabled }}
+        {{- if or .Values.cassandra.enabled
+                  (eq (include "temporal.persistence.driver" (list $ "default")) "cassandra")
+                  (eq (include "temporal.persistence.driver" (list $ "visibility")) "cassandra") }}
         {{- if .Values.cassandra.enabled }}
         - name: check-cassandra-service
           image: busybox
@@ -51,14 +53,12 @@ spec:
         {{- end }}
         {{- range $store := (list "default" "visibility") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
+        {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
         - name: create-{{ $store }}-store
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
           command: ['sh', '-c', 'temporal-cassandra-tool create -k {{ $storeConfig.cassandra.keyspace }} --replication-factor {{ $storeConfig.cassandra.replicationFactor }}']
-          {{- end }}
           env:
-            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
             - name: CASSANDRA_HOST
               value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $ $store))) }}
             - name: CASSANDRA_PORT
@@ -80,7 +80,7 @@ spec:
               value: {{ $storeConfig.cassandra.password }}
               {{- end }}
             {{- end }}
-            {{- end }}
+        {{- end }}
         {{- end }}
         {{- else }}
           []
