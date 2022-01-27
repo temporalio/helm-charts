@@ -39,9 +39,7 @@ spec:
       {{ include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
       initContainers:
-        {{- if or .Values.cassandra.enabled
-                  (eq (include "temporal.persistence.driver" (list $ "default")) "cassandra")
-                  (eq (include "temporal.persistence.driver" (list $ "visibility")) "cassandra") }}
+        {{- if or .Values.cassandra.enabled (eq (include "temporal.persistence.driver" (list $ "default")) "cassandra") (eq (include "temporal.persistence.driver" (list $ "visibility")) "cassandra") }}
         {{- if .Values.cassandra.enabled }}
         - name: check-cassandra-service
           image: busybox
