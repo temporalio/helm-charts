@@ -100,6 +100,7 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
+          existingSecretKey: "password"
           replicationFactor: 1
           consistency:
             default:
@@ -117,6 +118,7 @@ server:
           user: "temporal"
           password: "temporal"
           existingSecret: ""
+          existingSecretKey: "password"
           secretName: ""
           maxConns: 20
           maxConnLifetime: "1h"
@@ -133,6 +135,7 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
+          existingSecretKey: "password"
           # datacenter: "us-east-1a"
           # maxQPS: 1000
           # maxConns: 2
@@ -150,6 +153,7 @@ server:
           user: "temporal"
           password: "temporal"
           existingSecret: ""
+          existingSecretKey: "password"
           secretName: ""
           maxConns: 20
           maxConnLifetime: "1h"
