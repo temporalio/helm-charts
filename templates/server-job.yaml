@@ -114,6 +114,23 @@ spec:
               {{- end }}
             {{- end }}
             {{- end }}
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
+            - name: SQL_USER
+              value: {{ include "temporal.persistence.sql.user" (list $ $store) }}
+            - name: SQL_HOST
+              value: {{ include "temporal.persistence.sql.host" (list $ $store) }}
+            - name: SQL_PORT
+              value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
+            - name: SQL_DATABASE
+              value: {{ include "temporal.persistence.sql.database" (list $ $store) }}
+            - name: SQL_PLUGIN
+              value: {{ include "temporal.persistence.sql.driver" (list $ $store) }}
+            {{- end }}
         {{- end }}
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
@@ -192,6 +209,10 @@ spec:
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
           command: ['sh', '-c', 'temporal-cassandra-tool update-schema -d /etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
+          {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "mysql" }}
+          command: ["temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool", "update", "-schema-dir", "/etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned"]
+          {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "postgres" }}
+          command: ["temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool", "update", "-schema-dir", "/etc/temporal/schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned"]
           {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
@@ -216,6 +237,23 @@ spec:
               value: {{ $storeConfig.cassandra.password }}
               {{- end }}
             {{- end }}
+            {{- end }}
+            {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
+            - name: SQL_USER
+              value: {{ include "temporal.persistence.sql.user" (list $ $store) }}
+            - name: SQL_HOST
+              value: {{ include "temporal.persistence.sql.host" (list $ $store) }}
+            - name: SQL_PORT
+              value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
+            - name: SQL_DATABASE
+              value: {{ include "temporal.persistence.sql.database" (list $ $store) }}
+            - name: SQL_PLUGIN
+              value: {{ include "temporal.persistence.sql.driver" (list $ $store) }}
             {{- end }}
         {{- end }}
       {{- with (default $.Values.admintools.nodeSelector) }}

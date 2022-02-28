@@ -236,6 +236,21 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- end -}}
 {{- end -}}
 
+{{- define "temporal.persistence.sql.database" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if $storeConfig.sql.database -}}
+{{- $storeConfig.sql.database -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- include "mysql.database" $global -}}
+{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres")) -}}
+{{- include "postgresql.database" $global -}}
+{{- else -}}
+{{- required (printf "Please specify sql database for %s store" $store) $storeConfig.sql.database -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "temporal.persistence.sql.port" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
