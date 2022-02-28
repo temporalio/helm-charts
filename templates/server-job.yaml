@@ -301,3 +301,64 @@ spec:
       {{- end }}
 {{- end }}
 {{- end }}
+
+{{- if .Values.defaultnamespace.setup.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "temporal.componentname" (list . "default-ns-setup") }}
+  labels:
+    app.kubernetes.io/name: {{ include "temporal.name" . }}
+    helm.sh/chart: {{ include "temporal.chart" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/component: auto-setup
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "2"
+    {{- if not .Values.debug }}
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+    {{- end }}
+spec:
+  backoffLimit: {{ .Values.defaultnamespace.setup.backoffLimit }}
+  template:
+    metadata:
+      name: {{ include "temporal.componentname" (list . "default-ns-setup") }}
+      labels:
+        app.kubernetes.io/name: {{ include "temporal.name" . }}
+        helm.sh/chart: {{ include "temporal.chart" . }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+        app.kubernetes.io/component: auto-setup
+        app.kubernetes.io/part-of: {{ .Chart.Name }}
+    spec:
+      {{ include "temporal.serviceAccount" . }}
+      restartPolicy: "OnFailure"
+      containers:
+        - name: create-default-namespace
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['sh', '-c', 'tctl --ns $(DEFAULT_NAMESPACE) namespace describe || tctl --ns $(DEFAULT_NAMESPACE) namespace register --rd $(DEFAULT_NAMESPACE_RETENTION) --desc "Default namespace for Temporal Server."']
+          env:
+            - name: DEFAULT_NAMESPACE
+              value: "{{ .Values.defaultnamespace.setup.name }}"
+            - name: DEFAULT_NAMESPACE_RETENTION
+              value: "{{ .Values.defaultnamespace.setup.retention }}"
+            - name: TEMPORAL_CLI_ADDRESS
+              value: {{ include "temporal.fullname" . }}-frontend:{{ include "temporal.frontend.grpcPort" . }}
+      {{- with (default $.Values.admintools.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.admintools.affinity }}
+      affinity:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.admintools.tolerations }}
+      tolerations:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

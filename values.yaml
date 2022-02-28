@@ -405,3 +405,10 @@ cassandra:
 
 mysql:
   enabled: false
+
+defaultnamespace:
+  setup:
+    enabled: false
+    name: default
+    backoffLimit: 100
+    retention: 1
