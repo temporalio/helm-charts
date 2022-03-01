@@ -364,3 +364,23 @@ Usage:
         {{- tpl (.value | toYaml) .context }}
     {{- end }}
 {{- end -}}
+
+{{/*
+Return the appropriate apiVersion for ingress
+*/}}
+{{- define "temporal.ingress.apiVersion" -}}
+{{- if semverCompare "<1.14-0" (include "temporal.kubeVersion" $) -}}
+{{- print "extensions/v1beta1" -}}
+{{- else if semverCompare "<1.19-0" (include "temporal.kubeVersion" $) -}}
+{{- print "networking.k8s.io/v1beta1" -}}
+{{- else -}}
+{{- print "networking.k8s.io/v1" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the target Kubernetes version
+*/}}
+{{- define "temporal.kubeVersion" -}}
+  {{- default .Capabilities.KubeVersion.Version }}
+{{- end -}}
