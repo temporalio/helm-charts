@@ -30,6 +30,9 @@ spec:
         app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
         app.kubernetes.io/component: {{ $service }}
         app.kubernetes.io/part-of: {{ $.Chart.Name }}
+        {{- with (default $.Values.server.podLabels $serviceValues.podLabels) }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/server-configmap.yaml") $ | sha256sum }}
         {{- if (default $.Values.server.metrics.annotations.enabled $serviceValues.metrics.annotations.enabled) }}

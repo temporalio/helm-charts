@@ -28,6 +28,9 @@ spec:
         app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
         app.kubernetes.io/component: admintools
         app.kubernetes.io/part-of: {{ .Chart.Name }}
+        {{- with $.Values.admintools.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       {{ include "temporal.serviceAccount" . }}
       containers:

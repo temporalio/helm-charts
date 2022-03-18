@@ -28,6 +28,9 @@ spec:
         app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
         app.kubernetes.io/component: web
         app.kubernetes.io/part-of: {{ .Chart.Name }}
+        {{- with .Values.web.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- with .Values.web.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}

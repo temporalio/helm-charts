@@ -62,6 +62,7 @@ server:
     prometheus:
       timerType: histogram
   podAnnotations: {}
+  podLabels: {}
   resources:
     {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -170,6 +171,7 @@ server:
       prometheus: {}
       # timerType: histogram
     podAnnotations: {}
+    podLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -188,6 +190,7 @@ server:
       prometheus: {}
       # timerType: histogram
     podAnnotations: {}
+    podLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -206,6 +209,7 @@ server:
       prometheus: {}
       # timerType: histogram
     podAnnotations: {}
+    podLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -224,6 +228,7 @@ server:
       prometheus: {}
       # timerType: histogram
     podAnnotations: {}
+    podLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -240,6 +245,7 @@ admintools:
     type: ClusterIP
     port: 22
     annotations: {}
+  podLabels: {}
   nodeSelector: {}
   tolerations: []
   affinity: {}
@@ -286,6 +292,7 @@ web:
     #      - chart-example.local
 
   podAnnotations: {}
+  podLabels: {}
 
   resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
