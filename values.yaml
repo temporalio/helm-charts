@@ -265,7 +265,7 @@ web:
 
   image:
     repository: temporalio/web
-    tag: 1.14.0
+    tag: 1.15.0
     pullPolicy: IfNotPresent
 
   service:
