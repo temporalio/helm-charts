@@ -389,12 +389,12 @@ Similarly to how you accessed Temporal front end via kubernetes port forwarding,
 To do so, forward your machine's local port to the Web service in your Temporal installation
 
 ```
-$ kubectl port-forward services/temporaltest-web 8088:8088
-Forwarding from 127.0.0.1:8088 -> 8088
-Forwarding from [::1]:8088 -> 8088
+$ kubectl port-forward services/temporaltest-web 8080:8080
+Forwarding from 127.0.0.1:8080 -> 8080
+Forwarding from [::1]:8080 -> 8080
 ```
 
-and navigate to http://127.0.0.1:8088 in your browser.
+and navigate to http://127.0.0.1:8080 in your browser.
 
 
 ### Exploring Metrics via Grafana

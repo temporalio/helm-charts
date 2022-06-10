@@ -264,15 +264,15 @@ web:
   replicaCount: 1
 
   image:
-    repository: temporalio/web
-    tag: 1.15.0
+    repository: temporalio/ui
+    tag: latest
     pullPolicy: IfNotPresent
 
   service:
     # set type to NodePort if access to web needs access from outside the cluster
     # for more info see https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
     type: ClusterIP
-    port: 8088
+    port: 8080
     annotations: {}
     # loadBalancerIP:
 
