@@ -48,10 +48,6 @@ spec:
           env:
             - name: TEMPORAL_ADDRESS
               value: "{{ include "temporal.fullname" . }}-frontend.{{ .Release.Namespace }}.svc:{{ .Values.server.frontend.service.port }}"
-          volumeMounts:
-            - name: {{ .Chart.Name }}-web-config
-              mountPath: /usr/app/server/config.yml
-              subPath: config.yml
           ports:
             - name: http
               containerPort: 8080
