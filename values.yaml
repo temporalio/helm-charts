@@ -372,23 +372,29 @@ grafana:
        isDefault: true
   dashboards:
      default:
-       frontend-github:
-         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/frontend.json
+       server-general-github:
+         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/server/server-general.json
          datasource: TemporalMetrics
-       temporal-github:
-         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/temporal.json
+       sdk-general-github:
+         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/sdk/sdk-general.json
          datasource: TemporalMetrics
-       history-github:
-         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/history.json
+       misc-advanced-visibility-specific-github:
+         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/advanced-visibility-specific.json
          datasource: TemporalMetrics
-       matching-github:
-         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/matching.json
+       misc-clustermonitoring-kubernetes-github:
+         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/clustermonitoring-kubernetes.json
          datasource: TemporalMetrics
-       clusteroverview-github:
-         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/10000.json
+       misc-frontend-service-specific-github:
+         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/frontend-service-specific.json
          datasource: TemporalMetrics
-       common-github:
-         url: https://raw.githubusercontent.com/temporalio/temporal-dashboards/master/dashboards/common.json
+       misc-history-service-specific-github:
+         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/history-service-specific.json
+         datasource: TemporalMetrics
+       misc-matching-service-specific-github:
+         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/matching-service-specific.json
+         datasource: TemporalMetrics
+       misc-worker-service-specific-github:
+         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json
          datasource: TemporalMetrics
 
 cassandra:
