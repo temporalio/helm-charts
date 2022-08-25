@@ -278,6 +278,7 @@ web:
 
   ingress:
     enabled: false
+    # className:
     annotations: {}
     # kubernetes.io/ingress.class: traefik
     # ingress.kubernetes.io/ssl-redirect: "false"
