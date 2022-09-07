@@ -246,6 +246,7 @@ admintools:
     port: 22
     annotations: {}
   podLabels: {}
+  podAnnotations: {}
   nodeSelector: {}
   tolerations: []
   affinity: {}
