@@ -134,11 +134,11 @@ export SQL_PORT=3306
 export SQL_USER=mysql_user
 export SQL_PASSWORD=mysql_password
 
-./temporal-sql-tool create-database -database temporal
+./temporal-sql-tool create-database temporal
 SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
 SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/mysql/v57/temporal/versioned
 
-./temporal-sql-tool create-database -database temporal_visibility
+./temporal-sql-tool create-database temporal_visibility
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/mysql/v57/visibility/versioned
 ```
@@ -171,6 +171,14 @@ You might already be operating a PostgreSQL instance that you want to use with T
 
 In this case, create and configure temporal databases on your PostgreSQL host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
 
+If the user temporal will connect with does not have permissions to create the databases, create them and skip the
+`create-database` commands.  For example, with PostgreSQL, one could:
+
+```bash
+psql createdb --owner temporal temporal
+psql createdb --owner temporal temporal_visibility
+```
+
 Here are examples of commands you can use to create and initialize the databases:
 
 ```bash
@@ -181,11 +189,11 @@ export SQL_PORT=5432
 export SQL_USER=postgresql_user
 export SQL_PASSWORD=postgresql_password
 
-./temporal-sql-tool create-database -database temporal
+./temporal-sql-tool create-database temporal
 SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
 SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/postgresql/v96/temporal/versioned
 
-./temporal-sql-tool create-database -database temporal_visibility
+./temporal-sql-tool create-database temporal_visibility
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/postgresql/v96/visibility/versioned
 ```
