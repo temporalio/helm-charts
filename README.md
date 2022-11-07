@@ -262,7 +262,7 @@ helm install -f values/values.archival.filestore.yaml \
 ```
 
 Note that if archival is enabled, it is also enabled for all newly created namespaces.
-Make sure to update the specific archival provider file to set your configs. 
+Make sure to update the specific archival provider values file to set your configs. 
 
 ### Install and configure Temporal
 
