@@ -242,6 +242,28 @@ Once you initialized the two keyspaces, fill in the configuration values in `val
 ~/temporal-helm$ helm install -f values/values.cassandra.yaml temporaltest . --timeout 900s
 ```
 
+### Enable Archival
+
+By default archival is disabled. You can enable it by picking one of the three provider options:
+
+* File Store, values file `values/values.archival.filestore.yaml`
+* S3, values file `values/values.archival.s3.yaml`
+* GCloud, values file `values/values.archival.gcloud.yaml`
+
+So to use the minimal command again and to enable archival with file store provider:
+```bash
+helm install -f values/values.archival.filestore.yaml \
+    --set server.replicaCount=1 \
+    --set cassandra.config.cluster_size=1 \
+    --set prometheus.enabled=false \
+    --set grafana.enabled=false \
+    --set elasticsearch.enabled=false \
+    temporaltest . --timeout 15m
+```
+
+Note that if archival is enabled, it is also enabled for all newly created namespaces.
+Make sure to update the specific archival provider values file to set your configs. 
+
 ### Install and configure Temporal
 
 If a live application environment already uses systems that Temporal can use as dependencies, then those systems can continue to be used. This Helm chart can install the minimal pieces of Temporal such that it can then be configured to use those systems as its dependencies.

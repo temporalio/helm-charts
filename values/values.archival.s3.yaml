@@ -1,0 +1,23 @@
+server:
+  archival:
+    history:
+      state: "enabled"
+      enableRead: true
+      provider:
+        s3store:
+          region: "us-east-1"
+    visibility:
+      state: "enabled"
+      enableRead: true
+      provider:
+        s3store:
+          region: "us-east-1"
+
+  namespaceDefaults:
+    archival:
+      history:
+        state: "enabled"
+        URI: "s3://archival-bucket-name"
+      visibility:
+        state: "enabled"
+        URI: "s3://visibility-archival-bucket-name"
