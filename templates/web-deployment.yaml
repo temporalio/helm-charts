@@ -37,10 +37,6 @@ spec:
       {{- end }}
     spec:
       {{ include "temporal.serviceAccount" . }}
-      volumes:
-        - name: {{ .Chart.Name }}-web-config
-          configMap:
-            name: {{ include "temporal.componentname" (list . "web") }}-config
       containers:
         - name: {{ .Chart.Name }}-web
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
@@ -48,6 +44,9 @@ spec:
           env:
             - name: TEMPORAL_ADDRESS
               value: "{{ include "temporal.fullname" . }}-frontend.{{ .Release.Namespace }}.svc:{{ .Values.server.frontend.service.port }}"
+            {{- with .Values.web.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           ports:
             - name: http
               containerPort: 8080
