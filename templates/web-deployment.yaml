@@ -48,6 +48,9 @@ spec:
           env:
             - name: TEMPORAL_ADDRESS
               value: "{{ include "temporal.fullname" . }}-frontend.{{ .Release.Namespace }}.svc:{{ .Values.server.frontend.service.port }}"
+          {{- if .Values.web.additionalEnv }}
+          {{- toYaml .Values.web.additionalEnv | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: 8080
