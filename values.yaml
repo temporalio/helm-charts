@@ -327,7 +327,7 @@ elasticsearch:
   replicas: 3
   persistence:
     enabled: false
-  imageTag: 7.16.2
+  imageTag: 7.17.3
   host: elasticsearch-master-headless
   scheme: http
   port: 9200
