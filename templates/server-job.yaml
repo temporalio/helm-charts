@@ -272,9 +272,6 @@ spec:
       {{ include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
       initContainers:
-        - name: check-elasticsearch-service
-          image: busybox
-          command: ['sh', '-c', 'until nslookup {{ .Values.elasticsearch.host }}; do echo waiting for elasticsearch service; sleep 1; done;']
         - name: check-elasticsearch
           image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
