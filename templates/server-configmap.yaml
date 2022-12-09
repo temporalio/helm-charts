@@ -156,9 +156,16 @@ data:
           rpcAddress: "127.0.0.1:7933"
     {{- end }}
 
+    {{- if $.Values.server.config.dcRedirectionPolicy }}
+    dcRedirectionPolicy:
+    {{- with $.Values.server.config.dcRedirectionPolicy }}
+    {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- else }}
     dcRedirectionPolicy:
       policy: "noop"
       toDC: ""
+    {{- end }}
 
     {{- if $.Values.server.archival }}
     archival:
