@@ -45,8 +45,8 @@ spec:
         {{- end }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
-      {{- if or $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external)}}
-      {{- if semverCompare ">=1.13.0" $.Chart.AppVersion}}
+      {{- if or $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external) }}
+      {{- if semverCompare ">=1.13.0" $.Chart.AppVersion }}
       securityContext:
         fsGroup: 1000 #temporal group
         runAsUser: 1000 #temporal user
@@ -73,7 +73,7 @@ spec:
         - name: check-elasticsearch-index
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail --user {{ $.Values.elasticsearch.username }}:{{ $.Values.elasticsearch.password }} {{ $.Values.elasticsearch.scheme }}://{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}/{{ $.Values.elasticsearch.visibilityIndex }} 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
+          command: ['sh', '-c', 'until curl --silent --fail{{- if or .Values.elasticsearch.username .Values.elasticsearch.password -}} --user {{ $.Values.elasticsearch.username }}:{{ $.Values.elasticsearch.password }}{{- end -}} {{ $.Values.elasticsearch.scheme }}://{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}/{{ $.Values.elasticsearch.visibilityIndex }} 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
         {{- end }}
       {{- end }}
       containers:
@@ -97,10 +97,14 @@ spec:
               value: "{{ $.Values.elasticsearch.scheme }}"
             - name: ES_VIS_INDEX
               value: "{{ $.Values.elasticsearch.visibilityIndex }}"
+            {{- if .Values.elasticsearch.username }}
             - name: ES_USER
               value: "{{ $.Values.elasticsearch.username }}"
+            {{- end }}
+            {{- if .Values.elasticsearch.username }}
             - name: ES_PWD
               value: "{{ $.Values.elasticsearch.password }}"
+            {{- end }}
             - name: SERVICES
               value: {{ $service }}
             - name: TEMPORAL_STORE_PASSWORD
@@ -137,7 +141,7 @@ spec:
             - name: dynamic-config
               mountPath: /etc/temporal/dynamic_config
             {{- if $.Values.server.additionalVolumeMounts }}
-            {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12}}  
+            {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12 }}
             {{- end }}
           resources:
             {{- toYaml (default $.Values.server.resources $serviceValues.resources) | nindent 12 }}
@@ -160,7 +164,7 @@ spec:
             - key: dynamic_config.yaml
               path: dynamic_config.yaml
         {{- if $.Values.server.additionalVolumes }}
-        {{- toYaml $.Values.server.additionalVolumes | nindent 8}}  
+        {{- toYaml $.Values.server.additionalVolumes | nindent 8 }}
         {{- end }}
       {{- with (default $.Values.server.nodeSelector $serviceValues.nodeSelector) }}
       nodeSelector:
