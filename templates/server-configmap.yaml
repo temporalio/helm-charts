@@ -88,10 +88,10 @@ data:
                 url:
                     scheme: "{{ $.Values.elasticsearch.scheme }}"
                     host: "{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}"
-                {{- if .Values.elasticsearch.username }}
+                {{- if $.Values.elasticsearch.username }}
                 username: "{{ $.Values.elasticsearch.username }}"
                 {{- end }}
-                {{- if .Values.elasticsearch.password }}
+                {{- if $.Values.elasticsearch.password }}
                 password: "{{ $.Values.elasticsearch.password }}"
                 {{- end }}
                 logLevel: "{{ $.Values.elasticsearch.logLevel }}"
