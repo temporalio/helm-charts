@@ -35,9 +35,13 @@ mysql:
 
 postgresql:
   enabled: true
+  image:
+    repo: postgres
+    tag: 15.1
+    pullPolicy: IfNotPresent
 
 schema:
   setup:
-    enabled: false
+    enabled: true
   update:
-    enabled: false
+    enabled: true
