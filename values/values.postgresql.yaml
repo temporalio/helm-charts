@@ -49,6 +49,10 @@ mysql:
 
 postgresql:
   enabled: true
+  image:
+    repo: postgres
+    tag: 15.1
+    pullPolicy: IfNotPresent
 
 prometheus:
   enabled: true
@@ -61,6 +65,6 @@ elasticsearch:
 
 schema:
   setup:
-    enabled: false
+    enabled: true
   update:
-    enabled: false
+    enabled: true
