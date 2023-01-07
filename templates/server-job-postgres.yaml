@@ -64,7 +64,7 @@ spec:
               value: {{ $.Values.server.config.persistence.default.sql.password }}
         {{- end }}
       containers:
-        {{- range $store := (list "temporal" "visibility") }}
+        {{- range $store := (list "temporal" "temporal_visibility") }}
         - name: {{ $store }}-schema
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
@@ -149,7 +149,12 @@ spec:
         - name: {{ $store }}-schema
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+        - name: {{ $store }}-schema
+          {{ if eq $store "temporal" }}
           command: ['sh', '-c', 'temporal-sql-tool --ep $SQL_HOST -p $SQL_PORT -u $SQL_USER --pw $SQL_PASSWORD --db {{ $store }} --plugin postgres update-schema -d ./schema/postgresql/v96/temporal/versioned']
+          {{ else }}
+          command: ['sh', '-c', 'temporal-sql-tool --ep $SQL_HOST -p $SQL_PORT -u $SQL_USER --pw $SQL_PASSWORD --db {{ $store }} --plugin postgres update-schema -d ./schema/postgresql/v96/visibility/versioned']
+          {{ end }}
           env:
             - name: SQL_HOST
               value: {{ $.Values.server.config.persistence.default.sql.host }}
