@@ -139,7 +139,7 @@ spec:
       initContainers:
         - name: check-postgresql-service
           image: busybox
-          command: ['sh', '-c', 'until nslookup {{ $.Values.server.config.persistence.default.sql.host }}; do echo waiting for postgresql domain; sleep 1; done;']
+          command: ['sh', '-c', 'until nslookup {{ .Values.server.config.persistence.default.sql.host }}; do echo waiting for postgresql domain; sleep 1; done;']
         - name: check-postgresql
           image: "{{ $.Values.postgresql.image.repo }}:{{ $.Values.postgresql.image.tag }}"
           imagePullPolicy: {{ $.Values.postgresql.image.pullPolicy }}
