@@ -6,7 +6,7 @@ server:
 
         sql:
           driver: "postgres"
-          host: _HOST_
+          host: "rokerage-dev-db-temporal.cluster-cy2utjok3e0t.eu-central-1.rds.amazonaws.com"
           port: 5432
           database: temporal
           user: _USERNAME_
@@ -26,7 +26,7 @@ server:
 
         sql:
           driver: "postgres"
-          host: _HOST_
+          host: "rokerage-dev-db-temporal.cluster-cy2utjok3e0t.eu-central-1.rds.amazonaws.com"
           port: 5432
           database: temporal_visibility
           user: _USERNAME_
