@@ -35,4 +35,4 @@ jobs:
         uses: helm/kind-action@v1.4.0
 
       - name: Run chart-testing (install)
-        run: ct install --all
+        run: ct install --charts ./
