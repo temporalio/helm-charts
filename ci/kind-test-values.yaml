@@ -1,0 +1,14 @@
+elasticsearch:
+  replicas: 1
+  minimumMasterNodes: 1
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "100m"
+    limits:
+      cpu: "100m"
+      memory: "100m"
+cassandra:
+  config:
+    cluster_size: 
+    seed_size: 1
