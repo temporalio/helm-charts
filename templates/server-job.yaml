@@ -215,11 +215,11 @@ spec:
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
           command: ['sh', '-c', 'temporal-cassandra-tool update-schema -d /etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
-          {{- end }}
           {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "mysql" }}
           command: [ 'temporal-sql-tool', 'update', '-schema-dir', 'schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned' ]
           {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "postgres"}}
           command: [ 'temporal-sql-tool', 'update', '-schema-dir', 'schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned' ]
+          {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
             - name: CASSANDRA_HOST
