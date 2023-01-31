@@ -1,5 +1,6 @@
-chart-repos:
-  - cassandra=https://charts.helm.sh/incubator
-  - prometheus=https://prometheus-community.github.io/helm-charts
-  - elasticsearch=https://helm.elastic.co
-  - grafana=https://grafana.github.io/helm-charts 
+# chart-repos:
+#   - cassandra=https://charts.helm.sh/incubator
+#   - prometheus=https://prometheus-community.github.io/helm-charts
+#   - elasticsearch=https://helm.elastic.co
+#   - grafana=https://grafana.github.io/helm-charts 
+validate-maintainers: false
