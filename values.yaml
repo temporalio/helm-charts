@@ -444,3 +444,5 @@ networkPolicies:
     #         ports:
     #           - protocol: TCP
     #             port: 9090
+    #     policyTypes:
+    #     - Ingress

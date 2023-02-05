@@ -7,14 +7,14 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "temporal.name" $ }}
-      app.kubernetes.io/instance: {{ $.Release.Name }}
+      app.kubernetes.io/name: {{ include "temporal.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
   ingress:
     - from:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "temporal.name" $ }}
-              app.kubernetes.io/instance: {{ $.Release.Name }}
+              app.kubernetes.io/name: {{ include "temporal.name" . }}
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         {{- range $service := (list "frontend" "history" "matching" "worker") }}
         {{- $serviceValues := index $.Values.server $service -}}
@@ -23,13 +23,13 @@ spec:
         {{- end }}
   policyTypes:
     - Ingress
-# {{- range $np := .Values.networkPolicies.raws }}
-# ---
-# apiVersion: networking.k8s.io/v1
-# kind: NetworkPolicy
-# metadata:
-#   name: {{ $np.name }}
-# spec:
-#   {{- $np.spec | toYaml | nindent 4 }}
-# {{- end }}
+{{- range $np := .Values.networkPolicies.raws }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $np.name }}
+spec:
+  {{- $np.spec | toYaml | nindent 4 }}
+{{- end }}
 {{- end }}
