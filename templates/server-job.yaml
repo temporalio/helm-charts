@@ -44,10 +44,18 @@ spec:
         - name: check-cassandra-service
           image: busybox
           command: ['sh', '-c', 'until nslookup {{ include "cassandra.host" $ }}; do echo waiting for cassandra service; sleep 1; done;']
+          {{- with .Values.admintools.resources }}
+          resources:
+          {{- toYaml . | nindent 8 }}
+          {{- end }}
         - name: check-cassandra
           image: "{{ .Values.cassandra.image.repo }}:{{ .Values.cassandra.image.tag }}"
           imagePullPolicy: {{ .Values.cassandra.image.pullPolicy }}
           command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ .Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+          {{- with .Values.admintools.resources }}
+          resources:
+          {{- toYaml . | nindent 8 }}
+          {{- end }}
         {{- end }}
         {{- range $store := (list "default" "visibility") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
@@ -56,6 +64,10 @@ spec:
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['sh', '-c', 'temporal-cassandra-tool create -k {{ $storeConfig.cassandra.keyspace }} --replication-factor {{ $storeConfig.cassandra.replicationFactor }}']
+          {{- with .Values.admintools.resources }}
+          resources:
+          {{- toYaml . | nindent 8 }}
+          {{- end }}
           env:
             - name: CASSANDRA_HOST
               value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $ $store))) }}
@@ -90,6 +102,10 @@ spec:
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ["temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool", "setup-schema", "-v", "0.0"]
+          {{- with .Values.admintools.resources }}
+          resources:
+          {{- toYaml . | nindent 8 }}
+          {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
             - name: CASSANDRA_HOST
@@ -181,6 +197,10 @@ spec:
           image: "{{ .Values.cassandra.image.repo }}:{{ .Values.cassandra.image.tag }}"
           imagePullPolicy: {{ .Values.cassandra.image.pullPolicy }}
           command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ .Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+          {{- with .Values.admintools.resources }}
+          resources:
+          {{- toYaml . | nindent 8 }}
+          {{- end }}
         {{- else }}
           []
         {{- end }}
@@ -192,6 +212,10 @@ spec:
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
           command: ['sh', '-c', 'temporal-cassandra-tool update-schema -d /etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
+          {{- end }}
+          {{- with .Values.admintools.resources }}
+          resources:
+          {{- toYaml . | nindent 8 }}
           {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
@@ -276,11 +300,19 @@ spec:
           image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['sh', '-c', 'until curl --silent --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }} 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
+          {{- with .Values.admintools.resources }}
+          resources:
+          {{- toYaml . | nindent 8 }}
+          {{- end }}
       containers:
         - name: create-elasticsearch-index
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['sh', '-c']
+          {{- with .Values.admintools.resources }}
+          resources:
+          {{- toYaml . | nindent 8 }}
+          {{- end }}
           args:
             - 'curl -X PUT --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_{{ .Values.elasticsearch.version }}.json" 2>&1 &&
               curl -X PUT --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/{{ .Values.elasticsearch.visibilityIndex }} 2>&1'
