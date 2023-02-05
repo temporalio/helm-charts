@@ -430,19 +430,19 @@ mysql:
 
 networkPolicies:
   enabled: false
-  raws: []
-    # - name: allow-metrics
-    #   spec:
-    #     podSelector:
-    #       matchLabels:
-    #         app.kubernetes.io/name: app-name
-    #     ingress:
-    #       - from:
-    #         - podSelector:
-    #             matchLabels:
-    #               app.kubernetes.io/name: app-name
-    #         ports:
-    #           - protocol: TCP
-    #             port: 9090
-    #     policyTypes:
-    #     - Ingress
+  raws:
+    - name: allow-metrics
+      spec:
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: app-name
+        ingress:
+          - from:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: app-name
+            ports:
+              - protocol: TCP
+                port: 9090
+        policyTypes:
+        - Ingress
