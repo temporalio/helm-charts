@@ -420,3 +420,7 @@ cassandra:
 
 mysql:
   enabled: false
+
+networkPolicies:
+  enabled: false
+  raws: []
