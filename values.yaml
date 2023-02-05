@@ -427,3 +427,22 @@ cassandra:
 
 mysql:
   enabled: false
+
+networkPolicies:
+  enabled: false
+  raws: []
+    - name: allow-metrics
+      spec:
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: {{ include "temporal.name" $ }}
+            app.kubernetes.io/instance: {{ $.Release.Name }}
+        ingress:
+          - from:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: {{ include "temporal.name" $ }}
+                  app.kubernetes.io/instance: {{ $.Release.Name }}
+          ports:
+            - protocol: TCP
+              port: 9090
