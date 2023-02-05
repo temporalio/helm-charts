@@ -17,19 +17,19 @@ spec:
               app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         {{- range $service := (list "frontend" "history" "matching" "worker") }}
-        {{- $serviceValues := index $.Values.server $service -}}
+        {{- $serviceValues := index $.Values.server $service }}
         - protocol: TCP
           port: {{ $serviceValues.service.port }}
         {{- end }}
   policyTypes:
     - Ingress
-# {{- range $np := .Values.networkPolicies.raws }}
-# ---
-# apiVersion: networking.k8s.io/v1
-# kind: NetworkPolicy
-# metadata:
-#   name: {{ $np.name }}
-# spec:
-#   {{- $np.spec | toYaml | nindent 4 }}
-# {{- end }}
+{{- range $np := .Values.networkPolicies.raws }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $np.name }}
+spec:
+  {{- $np.spec | toYaml | nindent 4 }}
+{{- end }}
 {{- end }}
