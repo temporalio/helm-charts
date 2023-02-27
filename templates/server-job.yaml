@@ -36,7 +36,7 @@ spec:
         app.kubernetes.io/component: database
         app.kubernetes.io/part-of: {{ .Chart.Name }}
     spec:
-      {{ include "temporal.serviceAccount" . }}
+      {{- include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
       initContainers:
         {{- if or .Values.cassandra.enabled (eq (include "temporal.persistence.driver" (list $ "default")) "cassandra") (eq (include "temporal.persistence.driver" (list $ "visibility")) "cassandra") }}
@@ -115,6 +115,18 @@ spec:
             {{- end }}
             {{- end }}
         {{- end }}
+          {{- with .Values.schema.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.schema.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.schema.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -170,7 +182,7 @@ spec:
         app.kubernetes.io/component: database
         app.kubernetes.io/part-of: {{ .Chart.Name }}
     spec:
-      {{ include "temporal.serviceAccount" . }}
+      {{- include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
       initContainers:
         {{- if .Values.cassandra.enabled }}
@@ -218,6 +230,18 @@ spec:
             {{- end }}
             {{- end }}
         {{- end }}
+          {{- with .Values.schema.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.schema.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.schema.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with (default $.Values.admintools.nodeSelector) }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -269,7 +293,7 @@ spec:
         app.kubernetes.io/component: database
         app.kubernetes.io/part-of: {{ .Chart.Name }}
     spec:
-      {{ include "temporal.serviceAccount" . }}
+      {{- include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
       initContainers:
         - name: check-elasticsearch
@@ -284,6 +308,18 @@ spec:
           args:
             - 'curl -X PUT --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_{{ .Values.elasticsearch.version }}.json" 2>&1 &&
               curl -X PUT --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/{{ .Values.elasticsearch.visibilityIndex }} 2>&1'
+          {{- with .Values.schema.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.schema.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.schema.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with (default $.Values.admintools.nodeSelector) }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
