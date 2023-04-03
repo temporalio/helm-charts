@@ -1,6 +1,6 @@
 {{- if $.Values.server.enabled }}
-{{- if .Values.schema.setup.enabled }}
 {{- if and (eq .Values.server.config.persistence.default.driver "sql") (eq .Values.server.config.persistence.default.sql.driver "postgres")}}
+{{- if .Values.schema.setup.enabled }}
 
 apiVersion: batch/v1
 kind: Job
@@ -57,23 +57,24 @@ spec:
             - name: SQL_HOST
               value: {{ $.Values.server.config.persistence.default.sql.host }}
             - name: SQL_PORT
-              value: {{ $.Values.server.config.persistence.default.sql.port }}
+              value: {{ $.Values.server.config.persistence.default.sql.port | quote }}
             - name: SQL_USER
               value: {{ $.Values.server.config.persistence.default.sql.user }}
             - name: SQL_PASSWORD
               value: {{ $.Values.server.config.persistence.default.sql.password }}
         {{- end }}
       containers:
-        {{- range $store := (list "temporal" "temporal_visibility") }}
+        {{- range $store := (list "default" "visibility") }}
+        {{- $storeConfig := index $.Values.server.config.persistence $store }}
         - name: {{ $store | replace "_" "-"}}-schema
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'temporal-sql-tool --ep $SQL_HOST -p $SQL_PORT -u $SQL_USER --pw $SQL_PASSWORD --db {{ $store }} --plugin postgres setup-schema -v 0.0']
+          command: ['sh', '-c', 'temporal-sql-tool --ep $SQL_HOST -p $SQL_PORT -u $SQL_USER --pw $SQL_PASSWORD --db {{ $storeConfig.sql.database }} --plugin postgres setup-schema -v 0.0']
           env:
             - name: SQL_HOST
               value: {{ $.Values.server.config.persistence.default.sql.host }}
             - name: SQL_PORT
-              value: {{ $.Values.server.config.persistence.default.sql.port }}
+              value: {{ $.Values.server.config.persistence.default.sql.port | quote }}
             - name: SQL_USER
               value: {{ $.Values.server.config.persistence.default.sql.user }}
             - name: SQL_PASSWORD
@@ -143,22 +144,19 @@ spec:
         - name: check-postgresql
           image: "{{ $.Values.postgresql.image.repo }}:{{ $.Values.postgresql.image.tag }}"
           imagePullPolicy: {{ $.Values.postgresql.image.pullPolicy }}
-          command: ['sh', '-c', 'until pg_isready --host={{ $.Values.server.config.persistence.default.sql.host }} --port={{ $.Values.server.config.persistence.default.sql.port }}; do echo waiting for postgres to start; sleep 1; done;']
+          command: ['sh', '-c', 'until pg_isready --host={{ $.Values.server.config.persistence.default.sql.host }} --port={{ $.Values.server.config.persistence.default.sql.port }} --dbname={{ $.Values.server.config.persistence.default.sql.database }}; do echo waiting for postgres to start; sleep 1; done;']
       containers:
-        {{- range $store := (list "temporal" "temporal_visibility") }}
+        {{- range $store := (list "default" "visibility") }}
+        {{- $storeConfig := index $.Values.server.config.persistence $store }}
         - name: {{ $store | replace "_" "-" }}-schema-update
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          {{ if eq $store "temporal" }}
-          command: ['sh', '-c', 'temporal-sql-tool --ep $SQL_HOST -p $SQL_PORT -u $SQL_USER --pw $SQL_PASSWORD --db {{ $store }} --plugin postgres update-schema -d ./schema/postgresql/v96/temporal/versioned']
-          {{ else }}
-          command: ['sh', '-c', 'temporal-sql-tool --ep $SQL_HOST -p $SQL_PORT -u $SQL_USER --pw $SQL_PASSWORD --db {{ $store | replace "_" "-" }} --plugin postgres update-schema -d ./schema/postgresql/v96/visibility/versioned']
-          {{ end }}
+          command: ['sh', '-c', 'temporal-sql-tool --ep $SQL_HOST -p $SQL_PORT -u $SQL_USER --pw $SQL_PASSWORD --db {{ $storeConfig.sql.database }} --plugin postgres update-schema -d ./schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned']
           env:
             - name: SQL_HOST
               value: {{ $.Values.server.config.persistence.default.sql.host }}
             - name: SQL_PORT
-              value: {{ $.Values.server.config.persistence.default.sql.port }}
+              value: {{ $.Values.server.config.persistence.default.sql.port | quote }}
             - name: SQL_USER
               value: {{ $.Values.server.config.persistence.default.sql.user }}
             - name: SQL_PASSWORD
