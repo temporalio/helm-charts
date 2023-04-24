@@ -134,6 +134,8 @@ export SQL_PORT=3306
 export SQL_USER=mysql_user
 export SQL_PASSWORD=mysql_password
 
+make temporal-sql-tool
+
 ./temporal-sql-tool create-database -database temporal
 SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
 SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/mysql/v57/temporal/versioned
@@ -180,6 +182,8 @@ export SQL_HOST=postgresql_host
 export SQL_PORT=5432
 export SQL_USER=postgresql_user
 export SQL_PASSWORD=postgresql_password
+
+make temporal-sql-tool
 
 ./temporal-sql-tool create-database -database temporal
 SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
