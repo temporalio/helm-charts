@@ -236,7 +236,7 @@ CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool setup-schema -v 0.0
 CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool update -schema-dir schema/cassandra/temporal/versioned
 
 ./temporal-cassandra-tool create-Keyspace -k temporal_visibility
-CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool setup-schema  -v 0.0
+CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool setup-schema -v 0.0
 CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool update -schema-dir schema/cassandra/visibility/versioned
 ```
 
