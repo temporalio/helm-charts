@@ -5,7 +5,7 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 
 This repo contains a basic V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. The dependencies that are bundled with this solution by default offer an easy way to experiment with Temporal software. This Helm chart can also be used to install just the Temporal server, configured to connect to dependencies (such as a Cassandra, MySQL, or PostgreSQL database) that you may already have available in your environment.
 
-**We do not recommend using Helm for managing Temporal deployments in production**. Rather, we recommend it for templating/generating manifests for Temporal's internal services only. [See our recent discussion on this topic](https://temporal.io/blog/temporal-and-kubernetes).
+The only portions of the helm chart that are production ready are the parts that configure and manage Temporal Server itself—not Cassandra, Elasticsearch, Prometheus, or Grafana.
 
 This Helm Chart code is tested by a dedicated test pipeline. It is also used extensively by other Temporal pipelines for testing various aspects of Temporal systems. Our test pipeline currently uses Helm 3.1.1.
 
