@@ -18,7 +18,7 @@ serviceAccount:
 
 server:
   enabled: true
-  sidecarContainers:
+  sidecarContainers: {}
   image:
     repository: temporalio/server
     tag: 1.20.2
@@ -65,8 +65,7 @@ server:
       timerType: histogram
   podAnnotations: {}
   podLabels: {}
-  resources:
-    {}
+  resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -82,6 +81,10 @@ server:
   affinity: {}
   additionalVolumes: []
   additionalVolumeMounts: []
+  additionalEnv: []
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
 
   config:
     logLevel: "debug,info"
@@ -124,7 +127,7 @@ server:
           maxConns: 20
           maxConnLifetime: "1h"
           # connectAttributes:
-            # tx_isolation: 'READ-COMMITTED'
+          # tx_isolation: 'READ-COMMITTED'
 
       visibility:
         driver: "cassandra"
@@ -160,7 +163,7 @@ server:
           #   tx_isolation: 'READ-COMMITTED'
 
   frontend:
-    # replicaCount: 1
+    replicaCount: 1
     service:
       annotations: {} # Evaluated as template
       type: ClusterIP
@@ -178,9 +181,13 @@ server:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+    additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: {}
+    podDisruptionBudget: {}
 
   history:
-    # replicaCount: 1
+    replicaCount: 1
     service:
       # type: ClusterIP
       port: 7234
@@ -197,9 +204,13 @@ server:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+    additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: {}
+    podDisruptionBudget: {}
 
   matching:
-    # replicaCount: 1
+    replicaCount: 1
     service:
       # type: ClusterIP
       port: 7235
@@ -216,9 +227,13 @@ server:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+    additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: {}
+    podDisruptionBudget: {}
 
   worker:
-    # replicaCount: 1
+    replicaCount: 1
     service:
       # type: ClusterIP
       port: 7239
@@ -235,6 +250,10 @@ server:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+    additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: {}
+    podDisruptionBudget: {}
 
 admintools:
   enabled: true
@@ -252,6 +271,11 @@ admintools:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  additionalEnv: []
+  resources: {}
+  containerSecurityContext: {}
+  securityContext: {}
+  podDisruptionBudget: {}
 
 web:
   enabled: true
@@ -262,7 +286,6 @@ web:
     routing:
       default_to_namespace: # internal use only
       issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
-
 
   replicaCount: 1
 
@@ -316,6 +339,12 @@ web:
 
   affinity: {}
 
+  additionalEnv: []
+
+  containerSecurityContext: {}
+  
+  securityContext: {}
+
 schema:
   setup:
     enabled: true
@@ -323,6 +352,9 @@ schema:
   update:
     enabled: true
     backoffLimit: 100
+  resources: {}
+  containerSecurityContext: {}
+  securityContext: {}
 
 elasticsearch:
   enabled: true
@@ -357,49 +389,49 @@ grafana:
     dashboardproviders.yaml:
       apiVersion: 1
       providers:
-      - name: 'default'
-        orgId: 1
-        folder: ''
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/default
+        - name: "default"
+          orgId: 1
+          folder: ""
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
   datasources:
-   datasources.yaml:
-     apiVersion: 1
-     datasources:
-     - name: TemporalMetrics
-       type: prometheus
-       url: http://{{ .Release.Name }}-prometheus-server
-       access: proxy
-       isDefault: true
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: TemporalMetrics
+          type: prometheus
+          url: http://{{ .Release.Name }}-prometheus-server
+          access: proxy
+          isDefault: true
   dashboards:
-     default:
-       server-general-github:
-         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/server/server-general.json
-         datasource: TemporalMetrics
-       sdk-general-github:
-         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/sdk/sdk-general.json
-         datasource: TemporalMetrics
-       misc-advanced-visibility-specific-github:
-         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/advanced-visibility-specific.json
-         datasource: TemporalMetrics
-       misc-clustermonitoring-kubernetes-github:
-         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/clustermonitoring-kubernetes.json
-         datasource: TemporalMetrics
-       misc-frontend-service-specific-github:
-         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/frontend-service-specific.json
-         datasource: TemporalMetrics
-       misc-history-service-specific-github:
-         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/history-service-specific.json
-         datasource: TemporalMetrics
-       misc-matching-service-specific-github:
-         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/matching-service-specific.json
-         datasource: TemporalMetrics
-       misc-worker-service-specific-github:
-         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json
-         datasource: TemporalMetrics
+    default:
+      server-general-github:
+        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/server/server-general.json
+        datasource: TemporalMetrics
+      sdk-general-github:
+        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/sdk/sdk-general.json
+        datasource: TemporalMetrics
+      misc-advanced-visibility-specific-github:
+        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/advanced-visibility-specific.json
+        datasource: TemporalMetrics
+      misc-clustermonitoring-kubernetes-github:
+        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/clustermonitoring-kubernetes.json
+        datasource: TemporalMetrics
+      misc-frontend-service-specific-github:
+        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/frontend-service-specific.json
+        datasource: TemporalMetrics
+      misc-history-service-specific-github:
+        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/history-service-specific.json
+        datasource: TemporalMetrics
+      misc-matching-service-specific-github:
+        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/matching-service-specific.json
+        datasource: TemporalMetrics
+      misc-worker-service-specific-github:
+        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json
+        datasource: TemporalMetrics
 
 cassandra:
   enabled: true
