@@ -19,9 +19,10 @@ data:
 
     persistence:
       defaultStore: {{ $.Values.server.config.persistence.defaultStore }}
-      visibilityStore: visibility
     {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
       advancedVisibilityStore: es-visibility
+    {{- else }}
+      visibilityStore: visibility
     {{- end }}
       numHistoryShards: {{ $.Values.server.config.numHistoryShards }}
       datastores:
