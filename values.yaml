@@ -18,7 +18,7 @@ serviceAccount:
 
 server:
   enabled: true
-  sidecarContainers:
+  sidecarContainers: {}
   image:
     repository: temporalio/server
     tag: 1.20.2
@@ -80,6 +80,9 @@ server:
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
 
   config:
     logLevel: "debug,info"
@@ -158,7 +161,7 @@ server:
           #   tx_isolation: 'READ-COMMITTED'
 
   frontend:
-    # replicaCount: 1
+    replicaCount: 1
     service:
       annotations: {} # Evaluated as template
       type: ClusterIP
@@ -177,9 +180,12 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: {}
+    podDisruptionBudget: {}
 
   history:
-    # replicaCount: 1
+    replicaCount: 1
     service:
       # type: ClusterIP
       port: 7234
@@ -197,9 +203,12 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: {}
+    podDisruptionBudget: {}
 
   matching:
-    # replicaCount: 1
+    replicaCount: 1
     service:
       # type: ClusterIP
       port: 7235
@@ -217,9 +226,12 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: {}
+    podDisruptionBudget: {}
 
   worker:
-    # replicaCount: 1
+    replicaCount: 1
     service:
       # type: ClusterIP
       port: 7239
@@ -237,6 +249,9 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: {}
+    podDisruptionBudget: {}
 
 admintools:
   enabled: true
@@ -255,6 +270,10 @@ admintools:
   tolerations: []
   affinity: {}
   additionalEnv: []
+  resources: {}
+  containerSecurityContext: {}
+  securityContext: {}
+  podDisruptionBudget: {}
 
 web:
   enabled: true
@@ -320,6 +339,10 @@ web:
 
   additionalEnv: []
 
+  containerSecurityContext: {}
+  
+  securityContext: {}
+
 schema:
   setup:
     enabled: true
@@ -327,6 +350,9 @@ schema:
   update:
     enabled: true
     backoffLimit: 100
+  resources: {}
+  containerSecurityContext: {}
+  securityContext: {}
 
 elasticsearch:
   enabled: true
