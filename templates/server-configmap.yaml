@@ -108,6 +108,9 @@ data:
       metrics:
         tags:
           type: {{ $service }}
+          {{- with $.Values.server.metrics.tags }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
         prometheus:
           timerType: histogram
           listenAddress: "0.0.0.0:9090"
