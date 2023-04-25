@@ -163,7 +163,6 @@ server:
           #   tx_isolation: 'READ-COMMITTED'
 
   frontend:
-    replicaCount: 1
     service:
       annotations: {} # Evaluated as template
       type: ClusterIP
@@ -187,7 +186,6 @@ server:
     podDisruptionBudget: {}
 
   history:
-    replicaCount: 1
     service:
       # type: ClusterIP
       port: 7234
@@ -210,7 +208,6 @@ server:
     podDisruptionBudget: {}
 
   matching:
-    replicaCount: 1
     service:
       # type: ClusterIP
       port: 7235
@@ -233,7 +230,6 @@ server:
     podDisruptionBudget: {}
 
   worker:
-    replicaCount: 1
     service:
       # type: ClusterIP
       port: 7239
