@@ -44,12 +44,13 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      {{ include "temporal.serviceAccount" $ }}
-      {{- if or $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external) }}
-      {{- if semverCompare ">=1.13.0" $.Chart.AppVersion }}
+      {{- include "temporal.serviceAccount" $ }}
+      {{- if or $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external)}}
+      {{- if semverCompare ">=1.13.0" $.Chart.AppVersion}}
+      {{- with $.Values.server.securityContext }}
       securityContext:
-        fsGroup: 1000 #temporal group
-        runAsUser: 1000 #temporal user
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- end }}
       initContainers:
         {{- if $.Values.cassandra.enabled }}
@@ -121,6 +122,9 @@ spec:
             - name: TEMPORAL_VERSION_CHECK_DISABLED
               value: "1"
           {{- end }}
+          {{- if or $.Values.server.additionalEnv $serviceValues.additionalEnv }}
+          {{- toYaml (default $.Values.server.additionalEnv $serviceValues.additionalEnv) | nindent 12 }}
+          {{- end }}
           ports:
             - name: rpc
               containerPort: {{ include (printf "temporal.%s.grpcPort" $service) $ }}
@@ -145,10 +149,13 @@ spec:
             {{- end }}
           resources:
             {{- toYaml (default $.Values.server.resources $serviceValues.resources) | nindent 12 }}
+          {{- with $serviceValues.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         {{- if $.Values.server.sidecarContainers }}
         {{- toYaml $.Values.server.sidecarContainers | nindent 8 }}
         {{- end }}
-
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
       {{- toYaml . | nindent 8 }}
@@ -176,6 +183,10 @@ spec:
     {{- end }}
     {{- with (default $.Values.server.tolerations $serviceValues.tolerations) }}
       tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with $serviceValues.topologySpreadConstraints }}
+      topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
     {{- end }}
 ---
