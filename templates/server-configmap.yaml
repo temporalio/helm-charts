@@ -19,9 +19,10 @@ data:
 
     persistence:
       defaultStore: {{ $.Values.server.config.persistence.defaultStore }}
-      visibilityStore: visibility
     {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
       advancedVisibilityStore: es-visibility
+    {{- else }}
+      visibilityStore: visibility
     {{- end }}
       numHistoryShards: {{ $.Values.server.config.numHistoryShards }}
       datastores:
@@ -107,6 +108,9 @@ data:
       metrics:
         tags:
           type: {{ $service }}
+          {{- with $.Values.server.metrics.tags }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
         prometheus:
           timerType: histogram
           listenAddress: "0.0.0.0:9090"
@@ -156,12 +160,35 @@ data:
           rpcAddress: "127.0.0.1:7933"
     {{- end }}
 
+    {{- if $.Values.server.config.dcRedirectionPolicy }}
+    dcRedirectionPolicy:
+    {{- with $.Values.server.config.dcRedirectionPolicy }}
+    {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- else }}
     dcRedirectionPolicy:
       policy: "noop"
       toDC: ""
+    {{- end }}
 
+    {{- if $.Values.server.archival }}
+    archival:
+    {{- with $.Values.server.archival }}
+    {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- else }}
     archival:
       status: "disabled"
+    {{- end }}
+
+    {{- if $.Values.server.namespaceDefaults }}
+    namespaceDefaults:
+    {{- with $.Values.server.namespaceDefaults }}
+    {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- else }}
+
+    {{- end }}
 
     publicClient:
       hostPort: "{{ include "temporal.componentname" (list $ "frontend") }}:{{ $.Values.server.frontend.service.port }}"

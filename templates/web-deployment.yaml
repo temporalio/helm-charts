@@ -46,18 +46,25 @@ spec:
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
           imagePullPolicy: {{ .Values.web.image.pullPolicy }}
           env:
-            - name: TEMPORAL_GRPC_ENDPOINT
+            - name: TEMPORAL_ADDRESS
               value: "{{ include "temporal.fullname" . }}-frontend.{{ .Release.Namespace }}.svc:{{ .Values.server.frontend.service.port }}"
-          volumeMounts:
-            - name: {{ .Chart.Name }}-web-config
-              mountPath: /usr/app/server/config.yml
-              subPath: config.yml
+          {{- if .Values.web.additionalEnv }}
+          {{- toYaml .Values.web.additionalEnv | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
-              containerPort: 8088
+              containerPort: 8080
               protocol: TCP
           resources:
             {{- toYaml .Values.web.resources | nindent 12 }}
+          {{- with .Values.web.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.web.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.web.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
