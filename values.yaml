@@ -166,7 +166,7 @@ server:
 
   frontend:
     service:
-      annotations: {} # Evaluated as template
+      annotations: {}  # Evaluated as template
       type: ClusterIP
       port: 7233
     metrics:
@@ -282,8 +282,8 @@ web:
     auth:
       enabled: false
     routing:
-      default_to_namespace: # internal use only
-      issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
+      default_to_namespace:  # internal use only
+      issue_report_link: https://github.com/temporalio/web/issues/new/choose  # set this field if you need to direct people to internal support forums
 
   replicaCount: 1
 
@@ -340,7 +340,7 @@ web:
   additionalEnv: []
 
   containerSecurityContext: {}
-  
+
   securityContext: {}
 
 schema:
