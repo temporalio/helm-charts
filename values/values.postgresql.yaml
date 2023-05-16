@@ -48,7 +48,7 @@ mysql:
   enabled: false
 
 postgresql:
-  enabled: true
+  enabled: false
   image:
     repo: postgres
     tag: 15.1
