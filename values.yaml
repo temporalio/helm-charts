@@ -264,6 +264,13 @@ admintools:
     type: ClusterIP
     port: 22
     annotations: {}
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
   podLabels: {}
   podAnnotations: {}
   nodeSelector: {}
@@ -452,3 +459,22 @@ cassandra:
 
 mysql:
   enabled: false
+
+networkPolicies:
+  enabled: false
+  raws: []
+    # - name: allow-metrics
+    #   spec:
+    #     podSelector:
+    #       matchLabels:
+    #         app.kubernetes.io/name: app-name
+    #     ingress:
+    #       - from:
+    #         - podSelector:
+    #             matchLabels:
+    #               app.kubernetes.io/name: app-name
+    #         ports:
+    #           - protocol: TCP
+    #             port: 9090
+    #     policyTypes:
+    #     - Ingress
