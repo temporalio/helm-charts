@@ -299,15 +299,15 @@ spec:
         - name: check-elasticsearch
           image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }} 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
+          command: ['sh', '-c', 'until curl --silent --fail {{- if and .Values.elasticsearch.username .Values.elasticsearch.password }} --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{- end }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }} 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
       containers:
         - name: create-elasticsearch-index
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['sh', '-c']
           args:
-            - 'curl -X PUT --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_{{ .Values.elasticsearch.version }}.json" 2>&1 &&
-              curl -X PUT --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/{{ .Values.elasticsearch.visibilityIndex }} 2>&1'
+            - 'curl -X PUT --fail {{- if and .Values.elasticsearch.username .Values.elasticsearch.password }} --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{- end }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_{{ .Values.elasticsearch.version }}.json" 2>&1 &&
+              curl -X PUT --fail {{- if and .Values.elasticsearch.username .Values.elasticsearch.password }} --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{- end }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/{{ .Values.elasticsearch.visibilityIndex }} 2>&1'
           {{- with .Values.schema.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
