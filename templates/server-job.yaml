@@ -36,7 +36,7 @@ spec:
         app.kubernetes.io/component: database
         app.kubernetes.io/part-of: {{ .Chart.Name }}
     spec:
-      {{- include "temporal.serviceAccount" . }}
+      {{ include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
       initContainers:
         {{- if or .Values.cassandra.enabled (eq (include "temporal.persistence.driver" (list $ "default")) "cassandra") (eq (include "temporal.persistence.driver" (list $ "visibility")) "cassandra") }}
@@ -182,7 +182,7 @@ spec:
         app.kubernetes.io/component: database
         app.kubernetes.io/part-of: {{ .Chart.Name }}
     spec:
-      {{- include "temporal.serviceAccount" . }}
+      {{ include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
       initContainers:
         {{- if .Values.cassandra.enabled }}
@@ -293,7 +293,7 @@ spec:
         app.kubernetes.io/component: database
         app.kubernetes.io/part-of: {{ .Chart.Name }}
     spec:
-      {{- include "temporal.serviceAccount" . }}
+      {{ include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
       initContainers:
         - name: check-elasticsearch
