@@ -38,9 +38,6 @@ spec:
     spec:
       {{ include "temporal.serviceAccount" . }}
       volumes:
-        - name: {{ .Chart.Name }}-web-config
-          configMap:
-            name: {{ include "temporal.componentname" (list . "web") }}-config
       {{- if .Values.web.additionalVolumes }}
       {{- toYaml .Values.web.additionalVolumes | nindent 8 }}
       {{- end }}
