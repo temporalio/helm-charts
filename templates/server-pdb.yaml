@@ -5,7 +5,7 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: 
+  name: {{ include "temporal.componentname" (list $ $service) }}-pdb
   labels:
     app.kubernetes.io/name: {{ include "temporal.name" $ }}
     helm.sh/chart: {{ include "temporal.chart" $ }}
