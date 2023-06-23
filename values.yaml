@@ -84,6 +84,8 @@ server:
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
+  additionalEnvCM: ""
+  additionalEnvSecret: ""
   securityContext:
     fsGroup: 1000
     runAsUser: 1000
@@ -183,6 +185,8 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
+    additionalEnvCM: ""
+    additionalEnvSecret: ""
     containerSecurityContext: {}
     topologySpreadConstraints: {}
     podDisruptionBudget: {}
@@ -205,6 +209,8 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
+    additionalEnvCM: ""
+    additionalEnvSecret: ""
     containerSecurityContext: {}
     topologySpreadConstraints: {}
     podDisruptionBudget: {}
@@ -227,6 +233,8 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
+    additionalEnvCM: ""
+    additionalEnvSecret: ""
     containerSecurityContext: {}
     topologySpreadConstraints: {}
     podDisruptionBudget: {}
@@ -249,6 +257,8 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
+    additionalEnvCM: ""
+    additionalEnvSecret: ""
     containerSecurityContext: {}
     topologySpreadConstraints: {}
     podDisruptionBudget: {}
@@ -270,6 +280,8 @@ admintools:
   tolerations: []
   affinity: {}
   additionalEnv: []
+  additionalEnvCM: ""
+  additionalEnvSecret: ""
   resources: {}
   containerSecurityContext: {}
   securityContext: {}

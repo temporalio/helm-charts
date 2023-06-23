@@ -51,6 +51,17 @@ spec:
           {{- if .Values.web.additionalEnv }}
           {{- toYaml .Values.web.additionalEnv | nindent 12 }}
           {{- end }}
+          {{- if or .Values.web.additionalEnvCM .Values.web.additionalEnvSecret }}
+          envFrom:
+            {{- if .Values.web.additionalEnvCM }}
+            - configMapRef:
+                name: {{ .Values.web.additionalEnvCM }}
+            {{- end }}
+            {{- if .Values.web.additionalEnvSecret }}
+            - secretRef:
+                name: {{ .Values.web.additionalEnvSecret }}
+            {{- end }}
+          {{- end }}
           ports:
             - name: http
               containerPort: 8080
