@@ -36,7 +36,9 @@ spec:
         app.kubernetes.io/component: database
         app.kubernetes.io/part-of: {{ .Chart.Name }}
       annotations:
-        sidecar.istio.io/inject: "false"
+        {{- with .Values.serviceJob.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       {{ include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
@@ -172,7 +174,9 @@ spec:
         app.kubernetes.io/component: database
         app.kubernetes.io/part-of: {{ .Chart.Name }}
       annotations:
-        sidecar.istio.io/inject: "false"
+        {{- with .Values.serviceJob.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       {{ include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
