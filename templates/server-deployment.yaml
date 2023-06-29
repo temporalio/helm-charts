@@ -47,9 +47,10 @@ spec:
       {{ include "temporal.serviceAccount" $ }}
       {{- if or $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external)}}
       {{- if semverCompare ">=1.13.0" $.Chart.AppVersion}}
+      {{- with $.Values.server.securityContext }}
       securityContext:
-        fsGroup: 1000 #temporal group
-        runAsUser: 1000 #temporal user
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- end }}
       initContainers:
         {{- if $.Values.cassandra.enabled }}
@@ -73,7 +74,7 @@ spec:
         - name: check-elasticsearch-index
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail --user {{ $.Values.elasticsearch.username }}:{{ $.Values.elasticsearch.password }} {{ $.Values.elasticsearch.scheme }}://{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}/{{ $.Values.elasticsearch.visibilityIndex }} 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
+          command: ['sh', '-c', 'until curl --silent --fail {{- if and $.Values.elasticsearch.username $.Values.elasticsearch.password }} --user {{ $.Values.elasticsearch.username }}:{{ $.Values.elasticsearch.password }} {{- end }} {{ $.Values.elasticsearch.scheme }}://{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}/{{ $.Values.elasticsearch.visibilityIndex }} 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
         {{- end }}
       {{- end }}
       containers:
@@ -117,6 +118,9 @@ spec:
             - name: TEMPORAL_VERSION_CHECK_DISABLED
               value: "1"
           {{- end }}
+          {{- if or $.Values.server.additionalEnv $serviceValues.additionalEnv }}
+          {{- toYaml (default $.Values.server.additionalEnv $serviceValues.additionalEnv) | nindent 12 }}
+          {{- end }}
           ports:
             - name: rpc
               containerPort: {{ include (printf "temporal.%s.grpcPort" $service) $ }}
@@ -137,14 +141,17 @@ spec:
             - name: dynamic-config
               mountPath: /etc/temporal/dynamic_config
             {{- if $.Values.server.additionalVolumeMounts }}
-            {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12}}  
+            {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12}}
             {{- end }}
           resources:
             {{- toYaml (default $.Values.server.resources $serviceValues.resources) | nindent 12 }}
+          {{- with $serviceValues.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         {{- if $.Values.server.sidecarContainers }}
         {{- toYaml $.Values.server.sidecarContainers | nindent 8 }}
         {{- end }}
-
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
       {{- toYaml . | nindent 8 }}
@@ -160,7 +167,7 @@ spec:
             - key: dynamic_config.yaml
               path: dynamic_config.yaml
         {{- if $.Values.server.additionalVolumes }}
-        {{- toYaml $.Values.server.additionalVolumes | nindent 8}}  
+        {{- toYaml $.Values.server.additionalVolumes | nindent 8}}
         {{- end }}
       {{- with (default $.Values.server.nodeSelector $serviceValues.nodeSelector) }}
       nodeSelector:
@@ -172,6 +179,10 @@ spec:
     {{- end }}
     {{- with (default $.Values.server.tolerations $serviceValues.tolerations) }}
       tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with $serviceValues.topologySpreadConstraints }}
+      topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
     {{- end }}
 ---

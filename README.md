@@ -5,7 +5,7 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 
 This repo contains a basic V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. The dependencies that are bundled with this solution by default offer an easy way to experiment with Temporal software. This Helm chart can also be used to install just the Temporal server, configured to connect to dependencies (such as a Cassandra, MySQL, or PostgreSQL database) that you may already have available in your environment.
 
-**We do not recommend using Helm for managing Temporal deployments in production**. Rather, we recommend it for templating/generating manifests for Temporal's internal services only. [See our recent discussion on this topic](https://temporal.io/blog/temporal-and-kubernetes).
+The only portions of the helm chart that are production ready are the parts that configure and manage Temporal Server itself—not Cassandra, Elasticsearch, Prometheus, or Grafana.
 
 This Helm Chart code is tested by a dedicated test pipeline. It is also used extensively by other Temporal pipelines for testing various aspects of Temporal systems. Our test pipeline currently uses Helm 3.1.1.
 
@@ -134,11 +134,13 @@ export SQL_PORT=3306
 export SQL_USER=mysql_user
 export SQL_PASSWORD=mysql_password
 
-./temporal-sql-tool create-database -database temporal
+make temporal-sql-tool
+
+./temporal-sql-tool --database temporal create-database
 SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
 SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/mysql/v57/temporal/versioned
 
-./temporal-sql-tool create-database -database temporal_visibility
+./temporal-sql-tool --database temporal_visibility create-database
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/mysql/v57/visibility/versioned
 ```
@@ -181,11 +183,13 @@ export SQL_PORT=5432
 export SQL_USER=postgresql_user
 export SQL_PASSWORD=postgresql_password
 
-./temporal-sql-tool create-database -database temporal
+make temporal-sql-tool
+
+./temporal-sql-tool --database temporal create-database
 SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
 SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/postgresql/v96/temporal/versioned
 
-./temporal-sql-tool create-database -database temporal_visibility
+./temporal-sql-tool --database temporal_visibility create-database
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/postgresql/v96/visibility/versioned
 ```
@@ -232,7 +236,7 @@ CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool setup-schema -v 0.0
 CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool update -schema-dir schema/cassandra/temporal/versioned
 
 ./temporal-cassandra-tool create-Keyspace -k temporal_visibility
-CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool setup-schema  -v 0.0
+CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool setup-schema -v 0.0
 CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool update -schema-dir schema/cassandra/visibility/versioned
 ```
 

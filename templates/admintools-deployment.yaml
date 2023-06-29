@@ -46,8 +46,14 @@ spec:
               containerPort: 22
               protocol: TCP
           env:
+            # TEMPORAL_CLI_ADDRESS is deprecated, use TEMPORAL_ADDRESS instead
             - name: TEMPORAL_CLI_ADDRESS
               value: {{ include "temporal.fullname" . }}-frontend:{{ include "temporal.frontend.grpcPort" . }}
+            - name: TEMPORAL_ADDRESS
+              value: {{ include "temporal.fullname" . }}-frontend:{{ include "temporal.frontend.grpcPort" . }}
+          {{- if .Values.admintools.additionalEnv }}
+          {{- toYaml .Values.admintools.additionalEnv | nindent 12 }}
+          {{- end }}
           livenessProbe:
               exec:
                 command:
@@ -55,6 +61,18 @@ spec:
                 - /
               initialDelaySeconds: 5
               periodSeconds: 5
+          {{- with .Values.admintools.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.admintools.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.admintools.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
