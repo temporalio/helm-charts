@@ -256,7 +256,7 @@ spec:
       {{- end }}
 ---
 {{- end }}
-{{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
+{{- if and (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external) .Values.schema.setup.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
