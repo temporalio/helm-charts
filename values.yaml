@@ -343,6 +343,12 @@ web:
   
   securityContext: {}
 
+  # comma-separated string
+  corsOrigins: ""
+
+  # disables csrf secure cookies
+  csrfCookieInsecure: false
+
 schema:
   setup:
     enabled: true

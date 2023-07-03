@@ -48,6 +48,14 @@ spec:
           env:
             - name: TEMPORAL_ADDRESS
               value: "{{ include "temporal.fullname" . }}-frontend.{{ .Release.Namespace }}.svc:{{ .Values.server.frontend.service.port }}"
+            {{- if .Values.web.corsOrigins }}
+            - name: TEMPORAL_CORS_ORIGINS
+              value: "{{ .Values.web.corsOrigins }}"
+            {{- end }}
+            {{- if .Values.web.corsOrigins }}
+            - name: TEMPORAL_CSRF_COOKIE_INSECURE
+              value: "{{ .Values.web.csrfCookieInsecure }}"
+            {{- end }}
           {{- if .Values.web.additionalEnv }}
           {{- toYaml .Values.web.additionalEnv | nindent 12 }}
           {{- end }}
