@@ -121,15 +121,33 @@ spec:
           {{- if or $.Values.server.additionalEnv $serviceValues.additionalEnv }}
           {{- toYaml (default $.Values.server.additionalEnv $serviceValues.additionalEnv) | nindent 12 }}
           {{- end }}
-          {{- if or $serviceValues.additionalEnvCM $serviceValues.additionalEnvSecret }}
+          {{- if or $.Values.server.additionalEnvCM $.Values.server.additionalEnvSecret }}
+          envFrom:
+            {{- if $.Values.server.additionalEnvCM }}
+            {{- range $.Values.server.additionalEnvCM }}
+            - configMapRef:
+                name: {{ . }}
+            {{- end }}
+            {{- end }}
+            {{- if $.Values.server.additionalEnvSecret }}
+            {{- range $.Values.server.additionalEnvSecret }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+            {{- end }}
+          {{- else if or $serviceValues.additionalEnvCM $serviceValues.additionalEnvSecret }}
           envFrom:
             {{- if $serviceValues.additionalEnvCM }}
+            {{- range $serviceValues.additionalEnvCM }}
             - configMapRef:
-                name: {{ $serviceValues.additionalEnvCM }}
+                name: {{ . }}
+            {{- end }}
             {{- end }}
             {{- if $serviceValues.additionalEnvSecret }}
+            {{- range $serviceValues.additionalEnvSecret }}
             - secretRef:
-                name: {{ $serviceValues.additionalEnvSecret }}
+                name: {{ . }}
+            {{- end }}
             {{- end }}
           {{- end }}
           ports:

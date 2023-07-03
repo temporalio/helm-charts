@@ -54,12 +54,16 @@ spec:
           {{- if or .Values.web.additionalEnvCM .Values.web.additionalEnvSecret }}
           envFrom:
             {{- if .Values.web.additionalEnvCM }}
+            {{- range .Values.web.additionalEnvCM }}
             - configMapRef:
-                name: {{ .Values.web.additionalEnvCM }}
+                name: {{ . }}
+            {{- end }}
             {{- end }}
             {{- if .Values.web.additionalEnvSecret }}
+            {{- range .Values.web.additionalEnvSecret }}
             - secretRef:
-                name: {{ .Values.web.additionalEnvSecret }}
+                name: {{ . }}
+            {{- end }}
             {{- end }}
           {{- end }}
           ports:
