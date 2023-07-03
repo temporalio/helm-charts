@@ -52,7 +52,7 @@ spec:
             - name: TEMPORAL_CORS_ORIGINS
               value: "{{ .Values.web.corsOrigins }}"
             {{- end }}
-            {{- if .Values.web.corsOrigins }}
+            {{- if .Values.web.csrfCookieInsecure }}
             - name: TEMPORAL_CSRF_COOKIE_INSECURE
               value: "{{ .Values.web.csrfCookieInsecure }}"
             {{- end }}
