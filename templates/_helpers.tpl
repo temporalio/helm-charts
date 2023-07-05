@@ -206,6 +206,17 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- print "password" -}}
 {{- end -}}
 
+{{- define "temporal.persistence.sql.database" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if $storeConfig.sql.database -}}
+{{- $storeConfig.sql.database -}}
+{{- else -}}
+{{- required (printf "Please specify database for %s store" $store) -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "temporal.persistence.sql.driver" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
