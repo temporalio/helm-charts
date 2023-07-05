@@ -55,7 +55,7 @@ spec:
         - name: create-{{ $store }}-store
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'temporal-cassandra-tool create -k {{ $storeConfig.cassandra.keyspace }} --replication-factor {{ $storeConfig.cassandra.replicationFactor }}']
+          command: ['temporal-cassandra-tool', 'create', '-k', '{{ $storeConfig.cassandra.keyspace }}', '--replication-factor', '{{ $storeConfig.cassandra.replicationFactor }}']
           env:
             - name: CASSANDRA_HOST
               value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $ $store))) }}
@@ -87,7 +87,7 @@ spec:
         - name: create-{{ $store }}-store
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'temporal-sql-tool create-database -database {{ include "temporal.persistence.sql.database" (list $ $store) }}']
+          command: ['temporal-sql-tool', '--database', '{{ include "temporal.persistence.sql.database" (list $ $store) }}', 'create-database']
           env:
             - name: SQL_PLUGIN
               value: {{ include "temporal.persistence.sql.driver" (list $ $store) }}
@@ -121,7 +121,7 @@ spec:
         - name: {{ $store }}-schema
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ["temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool", "setup-schema", "-v", "0.0"]
+          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'setup-schema', '-v', '0.0']
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
             - name: CASSANDRA_HOST
@@ -259,11 +259,11 @@ spec:
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
-          command: ['sh', '-c', 'temporal-cassandra-tool update-schema -d /etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
+          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "mysql" }}
-          command: ["temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool", "update", "-schema-dir", "/etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned"]
+          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "postgres" }}
-          command: ["temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool", "update", "-schema-dir", "/etc/temporal/schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned"]
+          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
