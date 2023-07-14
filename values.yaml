@@ -343,6 +343,9 @@ web:
   
   securityContext: {}
 
+  topologySpreadConstraints: {}
+  podDisruptionBudget: {}
+
 schema:
   setup:
     enabled: true
