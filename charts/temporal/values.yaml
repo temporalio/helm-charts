@@ -335,6 +335,8 @@ web:
   additionalEnv: []
   containerSecurityContext: {}
   securityContext: {}
+  topologySpreadConstraints: {}
+  podDisruptionBudget: {}
 schema:
   createDatabase:
     enabled: true
