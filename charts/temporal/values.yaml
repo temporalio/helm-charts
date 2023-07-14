@@ -197,7 +197,7 @@ server:
     affinity: {}
     additionalEnv: []
     containerSecurityContext: {}
-    topologySpreadConstraints: {}
+    topologySpreadConstraints: []
     podDisruptionBudget: {}
   history:
     service:
@@ -218,7 +218,7 @@ server:
     affinity: {}
     additionalEnv: []
     containerSecurityContext: {}
-    topologySpreadConstraints: {}
+    topologySpreadConstraints: []
     podDisruptionBudget: {}
   matching:
     service:
@@ -239,7 +239,7 @@ server:
     affinity: {}
     additionalEnv: []
     containerSecurityContext: {}
-    topologySpreadConstraints: {}
+    topologySpreadConstraints: []
     podDisruptionBudget: {}
   worker:
     service:
@@ -260,7 +260,7 @@ server:
     affinity: {}
     additionalEnv: []
     containerSecurityContext: {}
-    topologySpreadConstraints: {}
+    topologySpreadConstraints: []
     podDisruptionBudget: {}
 admintools:
   enabled: true
@@ -335,7 +335,7 @@ web:
   additionalEnv: []
   containerSecurityContext: {}
   securityContext: {}
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   podDisruptionBudget: {}
 schema:
   createDatabase:
