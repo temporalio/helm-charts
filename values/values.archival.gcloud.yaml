@@ -1,0 +1,23 @@
+server:
+  archival:
+    history:
+      state: "enabled"
+      enableRead: true
+      provider:
+        gstorage:
+          credentialsPath: "/tmp/keyfile.json"
+    visibility:
+      state: "enabled"
+      enableRead: true
+      provider:
+        gstorage:
+          credentialsPath: "/tmp/keyfile.json"
+
+  namespaceDefaults:
+    archival:
+      history:
+        state: "enabled"
+        URI: "gs://my-bucket-cad/temporal_archival/development"
+      visibility:
+        state: "enabled"
+        URI: "gs://my-bucket-cad/temporal_archival/visibility"

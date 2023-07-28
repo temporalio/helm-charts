@@ -22,6 +22,9 @@ metadata:
 {{ toYaml . | indent 4 }}
 {{- end }}
 spec:
+  {{- with .Values.web.ingress.className }}
+  ingressClassName: {{ . | quote }}
+  {{- end }}
   {{- if .Values.web.ingress.tls }}
   tls:
     {{- range .Values.web.ingress.tls }}

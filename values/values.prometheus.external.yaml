@@ -1,0 +1,28 @@
+prometheus: 
+  alertmanager:
+    enabled: false
+  alertmanagerFiles:
+    alertmanager.yml: {}
+  kubeStateMetrics:
+    enabled: false
+  nodeExporter:
+    enabled: false
+  pushgateway:
+    enabled: false
+  server:
+    persistentVolume:
+      enabled: false
+    extraArgs:
+      # minimal possible values
+      storage.tsdb.retention: 6h
+      storage.tsdb.min-block-duration: 2h
+      storage.tsdb.max-block-duration: 2h
+  serverFiles:
+    alerts: {}
+    prometheus.yml:
+      remote_write:
+        - url: _URL_
+          basic_auth:
+            password: _PASSWORD_
+            username: _USERNAME_
+    rules: {}

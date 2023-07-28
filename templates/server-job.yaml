@@ -55,7 +55,7 @@ spec:
         - name: create-{{ $store }}-store
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'temporal-cassandra-tool create -k {{ $storeConfig.cassandra.keyspace }} --replication-factor {{ $storeConfig.cassandra.replicationFactor }}']
+          command: ['temporal-cassandra-tool', 'create', '-k', '{{ $storeConfig.cassandra.keyspace }}', '--replication-factor', '{{ $storeConfig.cassandra.replicationFactor }}']
           env:
             - name: CASSANDRA_HOST
               value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $ $store))) }}
@@ -80,6 +80,38 @@ spec:
             {{- end }}
         {{- end }}
         {{- end }}
+        {{- else if or (eq (include "temporal.persistence.driver" (list $ "default")) "sql") (eq (include "temporal.persistence.driver" (list $ "visibility")) "sql") }}
+        {{- range $store := (list "default" "visibility") }}
+        {{- $storeConfig := index $.Values.server.config.persistence $store }}
+        {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+        - name: create-{{ $store }}-store
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['temporal-sql-tool', '--database', '{{ include "temporal.persistence.sql.database" (list $ $store) }}', 'create-database']
+          env:
+            - name: SQL_PLUGIN
+              value: {{ include "temporal.persistence.sql.driver" (list $ $store) }}
+            - name: SQL_HOST
+              value: {{ include "temporal.persistence.sql.host" (list $ $store) }}
+            - name: SQL_PORT
+              value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
+            {{- if $storeConfig.sql.user }}
+            - name: SQL_USER
+              value: {{ $storeConfig.sql.user }}
+            {{- end }}
+            {{- if (or $storeConfig.sql.password $storeConfig.sql.existingSecret) }}
+            - name: SQL_PASSWORD
+              {{- if $storeConfig.sql.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
+              {{- else }}
+              value: {{ $storeConfig.sql.password }}
+              {{- end }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
         {{- else }}
           []
         {{- end }}
@@ -89,7 +121,7 @@ spec:
         - name: {{ $store }}-schema
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ["temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool", "setup-schema", "-v", "0.0"]
+          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'setup-schema', '-v', '0.0']
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
             - name: CASSANDRA_HOST
@@ -111,6 +143,30 @@ spec:
                   key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
               {{- else }}
               value: {{ $storeConfig.cassandra.password }}
+              {{- end }}
+            {{- end }}
+            {{- else if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_PLUGIN
+              value: {{ include "temporal.persistence.sql.driver" (list $ $store) }}
+            - name: SQL_HOST
+              value: {{ include "temporal.persistence.sql.host" (list $ $store) }}
+            - name: SQL_PORT
+              value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
+            - name: SQL_DATABASE
+              value: {{ include "temporal.persistence.sql.database" (list $ $store) }}
+            {{- if $storeConfig.sql.user }}
+            - name: SQL_USER
+              value: {{ $storeConfig.sql.user }}
+            {{- end }}
+            {{- if (or $storeConfig.sql.password $storeConfig.sql.existingSecret) }}
+            - name: SQL_PASSWORD
+              {{- if $storeConfig.sql.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
+              {{- else }}
+              value: {{ $storeConfig.sql.password }}
               {{- end }}
             {{- end }}
             {{- end }}
@@ -138,6 +194,18 @@ spec:
               {{- end }}
             {{- end }}
         {{- end }}
+          {{- with .Values.schema.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.schema.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.schema.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -214,11 +282,15 @@ spec:
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
-          command: ['sh', '-c', 'temporal-cassandra-tool update-schema -d /etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
+          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "mysql" }}
-          command: [ 'temporal-sql-tool', 'update', '-schema-dir', 'schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned' ]
-          {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "postgres"}}
-          command: [ 'temporal-sql-tool', 'update', '-schema-dir', 'schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned' ]
+          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned']
+          {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "mysql8" }}
+          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v8/{{ include "temporal.persistence.schema" $store }}/versioned']
+          {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "postgres" }}
+          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned']
+          {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "postgres12" }}
+          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v12/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
@@ -241,6 +313,30 @@ spec:
                   key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
               {{- else }}
               value: {{ $storeConfig.cassandra.password }}
+              {{- end }}
+            {{- end }}
+            {{- else if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+            - name: SQL_PLUGIN
+              value: {{ include "temporal.persistence.sql.driver" (list $ $store) }}
+            - name: SQL_HOST
+              value: {{ include "temporal.persistence.sql.host" (list $ $store) }}
+            - name: SQL_PORT
+              value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
+            - name: SQL_DATABASE
+              value: {{ include "temporal.persistence.sql.database" (list $ $store) }}
+            {{- if $storeConfig.sql.user }}
+            - name: SQL_USER
+              value: {{ $storeConfig.sql.user }}
+            {{- end }}
+            {{- if (or $storeConfig.sql.password $storeConfig.sql.existingSecret) }}
+            - name: SQL_PASSWORD
+              {{- if $storeConfig.sql.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
+              {{- else }}
+              value: {{ $storeConfig.sql.password }}
               {{- end }}
             {{- end }}
             {{- end }}
@@ -268,6 +364,18 @@ spec:
               {{- end }}
             {{- end }}
         {{- end }}
+          {{- with .Values.schema.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.schema.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.schema.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with (default $.Values.admintools.nodeSelector) }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -282,7 +390,7 @@ spec:
       {{- end }}
 ---
 {{- end }}
-{{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
+{{- if and (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external) .Values.schema.setup.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -322,21 +430,30 @@ spec:
       {{ include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
       initContainers:
-        - name: check-elasticsearch-service
-          image: busybox
-          command: ['sh', '-c', 'until nslookup {{ .Values.elasticsearch.host }}; do echo waiting for elasticsearch service; sleep 1; done;']
         - name: check-elasticsearch
           image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }} 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
+          command: ['sh', '-c', 'until curl --silent --fail {{- if and .Values.elasticsearch.username .Values.elasticsearch.password }} --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{- end }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }} 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
       containers:
         - name: create-elasticsearch-index
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['sh', '-c']
           args:
-            - 'curl -X PUT --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_{{ .Values.elasticsearch.version }}.json" 2>&1 &&
-              curl -X PUT --fail --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/{{ .Values.elasticsearch.visibilityIndex }} 2>&1'
+            - 'curl -X PUT --fail {{- if and .Values.elasticsearch.username .Values.elasticsearch.password }} --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{- end }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_{{ .Values.elasticsearch.version }}.json" 2>&1 &&
+              curl -X PUT --fail {{- if and .Values.elasticsearch.username .Values.elasticsearch.password }} --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{- end }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }}/{{ .Values.elasticsearch.visibilityIndex }} 2>&1'
+          {{- with .Values.schema.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.schema.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.schema.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with (default $.Values.admintools.nodeSelector) }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -11,8 +11,15 @@ server:
           database: temporal
           user: _USERNAME_
           password: _PASSWORD_
+          # for a production deployment use this instead of `password` and provision the secret beforehand e.g. with a sealed secret
+          # it has a single key called `password`
+          # existingSecret: temporal-default-store
           maxConns: 20
           maxConnLifetime: "1h"
+          # tls:
+          #  enabled: true
+          #  enableHostVerification: true
+          #  serverName: _HOST_ # this is strictly required when using serverless CRDB offerings
 
       visibility:
         driver: "sql"
@@ -24,8 +31,15 @@ server:
           database: temporal_visibility
           user: _USERNAME_
           password: _PASSWORD_
+          # for a production deployment use this instead of `password` and provision the secret beforehand e.g. with a sealed secret
+          # it has a single key called `password`
+          # existingSecret: temporal-visibility-store
           maxConns: 20
           maxConnLifetime: "1h"
+          # tls:
+          #  enabled: true
+          #  enableHostVerification: true
+          #  serverName: _HOST_ # this is strictly required when using serverless CRDB offerings
 
 cassandra:
   enabled: false
@@ -34,6 +48,15 @@ mysql:
   enabled: false
 
 postgresql:
+  enabled: true
+
+prometheus:
+  enabled: true
+
+grafana:
+  enabled: true
+  
+elasticsearch:
   enabled: true
 
 schema:
