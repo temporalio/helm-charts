@@ -8,6 +8,24 @@ server:
       default:
         driver: "cassandra"
 
+#        faultInjection:
+#          targets:
+#            dataStores:
+#              ExecutionStore:
+#                methods:
+#                  GetCurrentExecution:
+#                    errors:
+#                      ResourceExhausted: 0.1
+#                  AppendHistoryNodes:
+#                    errors:
+#                      ResourceExhausted: 0.05
+#                  UpdateWorkflowExecution:
+#                    errors:
+#                      ResourceExhausted: 0.15
+#                  GetWorkflowExecution:
+#                    errors:
+#                      ResourceExhausted: 0.15
+
         cassandra:
           hosts: ["cassandra.default.svc.cluster.local"]
           port: 9042
