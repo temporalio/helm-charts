@@ -55,7 +55,7 @@ prometheus:
 
 grafana:
   enabled: true
-  
+
 elasticsearch:
   enabled: true
   replicas: 1
