@@ -1,8 +1,0 @@
-elasticsearch:
-  replicas: 1
-  minimumMasterNodes: 1
-
-cassandra:
-  config:
-    cluster_size: 1
-    seed_size: 1
