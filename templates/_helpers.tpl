@@ -203,7 +203,11 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
 {{/* Cassandra password is optional, but we will create an empty secret for it */}}
+{{- if $storeConfig.cassandra.secretKey -}}
+{{- $storeConfig.cassandra.secretKey -}}
+{{- else -}}
 {{- print "password" -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.persistence.sql.database" -}}
