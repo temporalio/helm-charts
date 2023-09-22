@@ -337,6 +337,9 @@ web:
 
   affinity: {}
 
+  additionalVolumes: []
+  additionalVolumeMounts: []
+
   additionalEnv: []
 
   containerSecurityContext: {}
