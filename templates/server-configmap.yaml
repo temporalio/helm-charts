@@ -120,6 +120,11 @@ data:
           listenAddress: "0.0.0.0:9090"
         {{- end }}
 
+      tls:
+        {{- with $.Values.server.config.tls }}
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+
     services:
       frontend:
         rpc:
