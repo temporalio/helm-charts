@@ -55,10 +55,12 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+          {{- if .Values.web.command }}
           command:
             {{- range .Values.web.command }}
             - {{ . | quote }}
             {{- end }}
+          {{- end }}
           resources:
             {{- toYaml .Values.web.resources | nindent 12 }}
           {{- with .Values.web.containerSecurityContext }}
