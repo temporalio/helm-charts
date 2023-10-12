@@ -94,6 +94,35 @@ server:
     # IMPORTANT: This value cannot be changed, once it's set.
     numHistoryShards: 512
 
+    # Define your TLS configuration here. See https://docs.temporal.io/references/configuration#tls
+    # for configuration options. You must also use `server.additionalVolumeMounts` and `server.additionalVolumes`
+    # to mount certificates (from Secret or ConfigMap etc) to the path you use below.
+    # tls:
+    #   internode:
+    #     server:
+    #       certFile: /path/to/internode/cert/file
+    #       keyFile: /path/to/internode/key/file
+    #       requireClientAuth: true
+    #       clientCaFiles:
+    #         - /path/to/internode/serverCa
+    #     client:
+    #       serverName: dnsSanInInternodeCertificate
+    #       rootCaFiles:
+    #         - /path/to/internode/serverCa
+    #   frontend:
+    #     server:
+    #       certFile: /path/to/frontend/cert/file
+    #       keyFile: /path/to/frontend/key/file
+    #       requireClientAuth: true
+    #       clientCaFiles:
+    #         - /path/to/internode/serverCa
+    #         - /path/to/sdkClientPool1/ca
+    #         - /path/to/sdkClientPool2/ca
+    #     client:
+    #       serverName: dnsSanInFrontendCertificate
+    #       rootCaFiles:
+    #         - /path/to/frontend/serverCa
+
     persistence:
       defaultStore: default
       additionalStores: {}
