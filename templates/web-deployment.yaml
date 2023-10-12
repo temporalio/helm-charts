@@ -41,6 +41,9 @@ spec:
         - name: {{ .Chart.Name }}-web-config
           configMap:
             name: {{ include "temporal.componentname" (list . "web") }}-config
+      {{- if .Values.web.additionalVolumes }}
+      {{- toYaml .Values.web.additionalVolumes | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}-web
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
@@ -59,6 +62,10 @@ spec:
             {{- toYaml .Values.web.resources | nindent 12 }}
           {{- with .Values.web.containerSecurityContext }}
           securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.web.additionalVolumeMounts }}
+          volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
       {{- with .Values.web.securityContext }}
