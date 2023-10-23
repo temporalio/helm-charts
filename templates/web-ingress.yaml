@@ -54,5 +54,5 @@ spec:
                 serviceName: {{ include "temporal.fullname" $ }}-web
                 servicePort: {{ $.Values.web.service.port }}
               {{- end }}
-      {{- end}}
-    {{- end }}
+    {{- end}}
+{{- end }}
