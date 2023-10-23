@@ -1,4 +1,4 @@
-{{- if .Values.server.ingress.enabled -}}
+{{- if .Values.server.frontend.ingress.enabled -}}
   {{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1" }}
 apiVersion: networking.k8s.io/v1
   {{- else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" }}
