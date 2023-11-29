@@ -37,6 +37,10 @@ spec:
       {{- end }}
     spec:
       {{ include "temporal.serviceAccount" . }}
+      initContainers:
+        {{- if $.Values.admintools.additionalInitContainers }}
+        {{- toYaml $.Values.admintools.additionalInitContainers | nindent 8}}
+        {{- end }}
       containers:
         - name: admin-tools
           image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
@@ -61,6 +65,10 @@ spec:
                 - /
               initialDelaySeconds: 5
               periodSeconds: 5
+          volumeMounts:
+            {{- if $.Values.admintools.additionalVolumeMounts }}
+            {{- toYaml $.Values.admintools.additionalVolumeMounts | nindent 12}}
+            {{- end }}
           {{- with .Values.admintools.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -77,6 +85,10 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        {{- if $.Values.admintools.additionalVolumes }}
+        {{- toYaml $.Values.admintools.additionalVolumes | nindent 8}}
+        {{- end }}
       {{- with .Values.admintools.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
