@@ -1,0 +1,87 @@
+server:
+  config:
+    persistence:
+      default:
+        driver: "sql"
+
+        sql:
+          driver: "postgres"
+          host: _HOST_ # will be injected from env
+          port: 5432
+          database: temporal
+          user: _USERNAME_ # will be injected from env
+          password: _PASSWORD_ # will be injected from env
+          maxConns: 20
+          maxConnLifetime: "1h"
+          tls:
+            enabled: true
+
+      visibility:
+        driver: "sql"
+
+        sql:
+          driver: "postgres"
+          host: _HOST_ # will be injected from env
+          port: 5432
+          database: temporal_visibility
+          user: _USERNAME_ # will be injected from env
+          password: _PASSWORD_ # will be injected from env
+          maxConns: 20
+          maxConnLifetime: "1h"
+          tls:
+            enabled: true
+
+  frontend:
+    service:
+      type: LoadBalancer
+      port: 7233
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: internal
+        # or "internal" for internal NLB
+        service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+        service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+        service.beta.kubernetes.io/aws-load-balancer-name: pre-bee-temporal-frontend
+        # Requires external DNS
+        external-dns.alpha.kubernetes.io/hostname: pre-bee-temporal.getbee.info
+  replicaCount: 2
+
+cassandra:
+  enabled: false
+
+mysql:
+  enabled: false
+
+postgresql:
+  enabled: true
+
+prometheus:
+  enabled: true
+
+grafana:
+  enabled: false
+
+elasticsearch:
+  enabled: false
+
+schema:
+  setup:
+    enabled: false
+  update:
+    enabled: false
+
+web:
+  service:
+    port: 80
+    type: NodePort
+  ingress:
+    enabled: true
+    hosts:
+      - "/"
+      - pre-bee-temporal-web.getbee.info
+    annotations:
+      kubernetes.io/ingress.class: "alb"
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+      alb.ingress.kubernetes.io/subnets: subnet-04ab65750c4461660, subnet-06572f16ee4eddb44
+
+    ingressClassName: alb
