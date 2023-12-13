@@ -41,8 +41,10 @@ server:
         service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
         service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
         service.beta.kubernetes.io/aws-load-balancer-name: pre-bee-temporal-frontend
+        service.beta.kubernetes.io/aws-load-balancer-subnets: subnet-04ab65750c4461660, subnet-06572f16ee4eddb44
         # Requires external DNS
         external-dns.alpha.kubernetes.io/hostname: pre-bee-temporal.getbee.info
+        
   replicaCount: 2
 
 cassandra:
