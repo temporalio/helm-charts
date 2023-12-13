@@ -25,6 +25,7 @@ def get_variables_for_env(current_env){
         current_env: current_env,
         s3_env_secrets: true,
         prj_name: prj_name,
+        service_name: "${current_env}-${prj_name",
         region: 'eu-west-1',
         profile: profile,
         eks_cluster: eks_cluster,
