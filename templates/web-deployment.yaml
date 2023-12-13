@@ -12,7 +12,9 @@ metadata:
     app.kubernetes.io/component: web
     app.kubernetes.io/part-of: {{ .Chart.Name }}
 spec:
+  {{- if not .Values.web.autoscaling.enabled }}
   replicas: {{ .Values.web.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "temporal.name" . }}
