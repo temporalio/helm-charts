@@ -37,6 +37,9 @@ def get_variables_for_env(current_env){
         eks_cluster: eks_cluster,
         launch_type: "FARGATE",
         replica_count: replica_count,
+        subnets: subnets,
+        nlb_name: nlb_name,
+        dns_domain: dns_domain,
         slack_enabled: true,
         slack_prj_emoji: ':temporalio:'
     ]
