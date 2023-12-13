@@ -6,11 +6,11 @@ server:
 
         sql:
           driver: "postgres"
-          host: _HOST_ # will be injected from env
+          host: TEMPORAL_DEFAULT_DB_HOST # will be injected from env
           port: 5432
           database: temporal
-          user: _USERNAME_ # will be injected from env
-          password: _PASSWORD_ # will be injected from env
+          user: TEMPORAL_DEFAULT_DB_USER # will be injected from env
+          password: TEMPORAL_DEFAULT_DB_PASSWORD # will be injected from env
           maxConns: 20
           maxConnLifetime: "1h"
           tls:
@@ -21,11 +21,11 @@ server:
 
         sql:
           driver: "postgres"
-          host: _HOST_ # will be injected from env
+          host: TEMPORAL_VISIBILITY_DB_HOST # will be injected from env
           port: 5432
           database: temporal_visibility
-          user: _USERNAME_ # will be injected from env
-          password: _PASSWORD_ # will be injected from env
+          user: TEMPORAL_VISIBILITY_DB_USER # will be injected from env
+          password: TEMPORAL_VISIBILITY_DB_PASSWORD # will be injected from env
           maxConns: 20
           maxConnLifetime: "1h"
           tls:
@@ -40,10 +40,10 @@ server:
         # or "internal" for internal NLB
         service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
         service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
-        service.beta.kubernetes.io/aws-load-balancer-name: pre-bee-temporal-frontend
-        service.beta.kubernetes.io/aws-load-balancer-subnets: subnet-04ab65750c4461660, subnet-06572f16ee4eddb44
+        service.beta.kubernetes.io/aws-load-balancer-name: _NLB_NAME_ # will be injected from env
+        service.beta.kubernetes.io/aws-load-balancer-subnets: _SUBNETS_ # will be injected from env
         # Requires external DNS
-        external-dns.alpha.kubernetes.io/hostname: pre-bee-temporal.getbee.info
+        external-dns.alpha.kubernetes.io/hostname: _DNS_DOMAIN_ # will be injected from env
         
   replicaCount: 2
 
@@ -77,11 +77,13 @@ web:
     type: NodePort
   ingress:
     enabled: true
-    hosts: /, pre-bee-temporal-web.getbee.info
+    hosts:
+      - "/"
+      - _DNS_DOMAIN_ # will be injected from env
     annotations:
       kubernetes.io/ingress.class: "alb"
       alb.ingress.kubernetes.io/target-type: ip
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
-      alb.ingress.kubernetes.io/subnets: subnet-04ab65750c4461660, subnet-06572f16ee4eddb44
+      alb.ingress.kubernetes.io/subnets: _SUBNETS_ # will be injected from env subnet-04ab65750c4461660, subnet-06572f16ee4eddb44
 
     ingressClassName: alb

@@ -3,10 +3,16 @@ def get_variables_for_env(current_env){
     def prj_name = 'bee-temporal'
     def eks_cluster = ""
     def replica_count = 1
+    def subnets = []
+    def nlb_name = ""
+    def dns_domain = ""
 
     if ( current_env == "pre" ) {
         eks_cluster = "pre-bee-temporal"
         profile = "pre-inc_super_provisioning"
+        subnets = ["subnet-04ab65750c4461660", "subnet-06572f16ee4eddb44"]
+        nlb_name = "pre-bee-temporal-frontend"
+        dns_domain = "pre-bee-temporal.getbee.info"
 
     } else if ( current_env == "qa" ) {
         eks_cluster = "qa-bee-temporal"
