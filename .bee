@@ -1,0 +1,16 @@
+[PROJECT]
+name=bee-temporal
+
+[ENDPOINTS]
+pre=http://pre-bee-temporal-web.getbee.info/
+qa=http://qa-bee-temporal-web.getbee.io/
+pro=http://bee-temporal-web.getbee.io/
+
+[BRANCHES]
+master="Main branch"
+
+[ENV]
+files="pre qa pro"
+
+[JENKINS]
+URL=https://bruno.getbee.io/job/BEE%%20Temporal/job/deploy-bee-temporal/
