@@ -21,7 +21,7 @@ def get_variables_for_env(current_env){
     } else if ( current_env == "qa" ) {
         eks_cluster = "qa-bee-temporal"
         profile = "mailupinc_super_provisioning"
-        subnets = ["subnet-0ebccf74230ba3dde", "subnet-020f999825bd6eac2"]
+        subnets = ["subnet-059dd5aaf9852af7a", "subnet-060f9c92a69a41142"]
         nlb_name = "qa-bee-temporal-frontend"
         frontend_dns_domain = "qa-bee-temporal.getbee.io"
         web_dns_domain = "qa-bee-temporal-web.getbee.io"
