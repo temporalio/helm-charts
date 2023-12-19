@@ -30,6 +30,10 @@ def get_variables_for_env(current_env){
         eks_cluster = "bee-temporal"
         profile = "mailupinc_super_provisioning"
         replica_count = 2
+        subnets =["subnet-03391f66", "subnet-37266840"]
+        nlb_name = "pro-bee-temporal-frontend"
+        frontend_dns_domain = "bee-temporal.getbee.io"
+        web_dns_domain = "bee-temporal-web.getbee.io"
 
     } else {
         error("Invalid env (${current_env})")
