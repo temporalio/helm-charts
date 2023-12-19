@@ -57,7 +57,7 @@ postgresql:
   enabled: true
 
 prometheus:
-  enabled: true
+  enabled: false
 
 grafana:
   enabled: false
