@@ -109,11 +109,13 @@ spec:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "default") }}
                   key: {{ include "temporal.persistence.secretKey" (list $ "default") }}
+          {{- if ne (include "temporal.persistence.driver" (list $ "visibility")) "elasticsearch" }}
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
                   key: {{ include "temporal.persistence.secretKey" (list $ "visibility") }}
+          {{- end }}
           {{- if $.Values.server.versionCheckDisabled }}
             - name: TEMPORAL_VERSION_CHECK_DISABLED
               value: "1"

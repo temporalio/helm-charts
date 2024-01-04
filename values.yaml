@@ -162,6 +162,7 @@ server:
 
       visibility:
         driver: "cassandra"
+        # driver: "elasticsearch"
 
         cassandra:
           hosts: []
