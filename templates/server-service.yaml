@@ -16,6 +16,9 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.server.frontend.service.type }}
+  {{- with .Values.server.frontend.service.loadBalancerIP }}
+  loadBalancerIP: {{.}}
+  {{- end }}
   ports:
     - port: {{ .Values.server.frontend.service.port }}
       targetPort: rpc
