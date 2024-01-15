@@ -44,7 +44,7 @@ server:
         service.beta.kubernetes.io/aws-load-balancer-subnets: _SUBNETS_ # will be injected from env
         # Requires external DNS
         external-dns.alpha.kubernetes.io/hostname: _FRONTEND_DNS_DOMAIN_ # will be injected from env
-        
+
   replicaCount: 2
 
 cassandra:
@@ -87,3 +87,6 @@ web:
       alb.ingress.kubernetes.io/subnets: _SUBNETS_ # will be injected from env subnet-04ab65750c4461660, subnet-06572f16ee4eddb44
 
     ingressClassName: alb
+  additionalEnv:
+    - name: TEMPORAL_CSRF_COOKIE_INSECURE
+      value: true
