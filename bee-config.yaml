@@ -89,4 +89,4 @@ web:
     ingressClassName: alb
   additionalEnv:
     - name: TEMPORAL_CSRF_COOKIE_INSECURE
-      value: true
+      value: 'true'
