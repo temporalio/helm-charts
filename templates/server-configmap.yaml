@@ -20,7 +20,7 @@ data:
     persistence:
       defaultStore: {{ $.Values.server.config.persistence.defaultStore }}
     {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
-      advancedVisibilityStore: es-visibility
+      visibilityStore: es-visibility
     {{- else }}
       visibilityStore: visibility
     {{- end }}
