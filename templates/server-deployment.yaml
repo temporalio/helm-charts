@@ -121,6 +121,35 @@ spec:
           {{- if or $.Values.server.additionalEnv $serviceValues.additionalEnv }}
           {{- toYaml (default $.Values.server.additionalEnv $serviceValues.additionalEnv) | nindent 12 }}
           {{- end }}
+          {{- if or $.Values.server.additionalEnvCM $.Values.server.additionalEnvSecret }}
+          envFrom:
+            {{- if $.Values.server.additionalEnvCM }}
+            {{- range $.Values.server.additionalEnvCM }}
+            - configMapRef:
+                name: {{ . }}
+            {{- end }}
+            {{- end }}
+            {{- if $.Values.server.additionalEnvSecret }}
+            {{- range $.Values.server.additionalEnvSecret }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+            {{- end }}
+          {{- else if or $serviceValues.additionalEnvCM $serviceValues.additionalEnvSecret }}
+          envFrom:
+            {{- if $serviceValues.additionalEnvCM }}
+            {{- range $serviceValues.additionalEnvCM }}
+            - configMapRef:
+                name: {{ . }}
+            {{- end }}
+            {{- end }}
+            {{- if $serviceValues.additionalEnvSecret }}
+            {{- range $serviceValues.additionalEnvSecret }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+            {{- end }}
+          {{- end }}
           ports:
             - name: rpc
               containerPort: {{ include (printf "temporal.%s.grpcPort" $service) $ }}
