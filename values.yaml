@@ -200,7 +200,7 @@ server:
       port: 7233
     metrics:
       annotations:
-        enabled: true
+        enabled: false
       serviceMonitor: {}
       # enabled: false
       prometheus: {}
@@ -222,7 +222,7 @@ server:
       port: 7234
     metrics:
       annotations:
-        enabled: true
+        enabled: false
       serviceMonitor: {}
       # enabled: false
       prometheus: {}
@@ -266,7 +266,7 @@ server:
       port: 7239
     metrics:
       annotations:
-        enabled: true
+        enabled: false
       serviceMonitor: {}
       # enabled: false
       prometheus: {}
