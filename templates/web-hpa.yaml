@@ -1,0 +1,46 @@
+{{- if .Values.web.enabled -}}
+apiVersion: {{ include "common.capabilities.hpa.apiVersion" ( dict "context" . ) }}
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "temporal.componentname" (list . "web") }}
+  labels:
+    app.kubernetes.io/name: {{ include "temporal.name" . }}
+    helm.sh/chart: {{ include "temporal.chart" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "temporal.componentname" (list . "web") }}
+  minReplicas: {{ .Values.web.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.web.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.web.autoscaling.targetCPU }}
+    - type: Resource
+      resource:
+        name: cpu
+        {{- if semverCompare "<1.23-0" (include "common.capabilities.kubeVersion" .) }}
+        targetAverageUtilization: {{ .Values.web.autoscaling.targetCPU }}
+        {{- else }}
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.web.autoscaling.targetCPU }}
+        {{- end }}
+    {{- end }}
+    {{- if .Values.web.autoscaling.targetMemory }}
+    - type: Resource
+      resource:
+        name: memory
+        {{- if semverCompare "<1.23-0" (include "common.capabilities.kubeVersion" .) }}
+        targetAverageUtilization: {{ .Values.web.autoscaling.targetMemory }}
+        {{- else }}
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.web.autoscaling.targetMemory }}
+        {{- end }}
+    {{- end }}
+{{- end }}

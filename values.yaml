@@ -205,6 +205,12 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    autoscaling:
+      enabled: false
+      minReplicas: 2
+      maxReplicas: 3
+      targetCPU: 90
+      targetMemory: 90
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -227,6 +233,12 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    autoscaling:
+      enabled: false
+      minReplicas: 2
+      maxReplicas: 3
+      targetCPU: 90
+      targetMemory: 90
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -249,6 +261,12 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    autoscaling:
+      enabled: false
+      minReplicas: 2
+      maxReplicas: 3
+      targetCPU: 90
+      targetMemory: 90
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -271,6 +289,12 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    autoscaling:
+      enabled: false
+      minReplicas: 2
+      maxReplicas: 3
+      targetCPU: 90
+      targetMemory: 90
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -315,6 +339,12 @@ web:
       issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
 
   replicaCount: 1
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPU: 90
+    targetMemory: 90
 
   image:
     repository: temporalio/ui
@@ -372,7 +402,7 @@ web:
   additionalEnv: []
 
   containerSecurityContext: {}
-  
+
   securityContext: {}
 
 schema:

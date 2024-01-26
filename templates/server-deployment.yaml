@@ -14,7 +14,9 @@ metadata:
     app.kubernetes.io/component: {{ $service }}
     app.kubernetes.io/part-of: {{ $.Chart.Name }}
 spec:
+  {{- if not $serviceValues.autoscaling.enabled }}
   replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "temporal.name" $ }}
