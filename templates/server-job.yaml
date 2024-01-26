@@ -95,6 +95,10 @@ spec:
               value: {{ include "temporal.persistence.sql.host" (list $ $store) }}
             - name: SQL_PORT
               value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
+            {{- if $storeConfig.sql.tls.enabled }}
+            - name: SQL_TLS
+              value: "true"
+            {{- end }}
             {{- if $storeConfig.sql.user }}
             - name: SQL_USER
               value: {{ $storeConfig.sql.user }}
@@ -154,6 +158,10 @@ spec:
               value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
             - name: SQL_DATABASE
               value: {{ include "temporal.persistence.sql.database" (list $ $store) }}
+            {{- if $storeConfig.sql.tls.enabled }}
+            - name: SQL_TLS
+              value: "true"
+            {{- end }}
             {{- if $storeConfig.sql.user }}
             - name: SQL_USER
               value: {{ $storeConfig.sql.user }}
@@ -301,6 +309,10 @@ spec:
               value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
             - name: SQL_DATABASE
               value: {{ include "temporal.persistence.sql.database" (list $ $store) }}
+            {{- if $storeConfig.sql.tls.enabled }}
+            - name: SQL_TLS
+              value: "true"
+            {{- end }}
             {{- if $storeConfig.sql.user }}
             - name: SQL_USER
               value: {{ $storeConfig.sql.user }}
