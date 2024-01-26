@@ -117,6 +117,7 @@ spec:
         {{- end }}
       containers:
         {{- range $store := (list "default" "visibility") }}
+        {{- if ne (include "temporal.persistence.driver" (list $ $store)) "elasticsearch" }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
         - name: {{ $store }}-schema
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
@@ -170,6 +171,7 @@ spec:
               {{- end }}
             {{- end }}
             {{- end }}
+        {{- end }}
         {{- end }}
           {{- with .Values.schema.resources }}
           resources:
@@ -254,6 +256,7 @@ spec:
         {{- end }}
       containers:
         {{- range $store := (list "default" "visibility") }}
+        {{- if ne (include "temporal.persistence.driver" (list $ $store)) "elasticsearch" }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
         - name: {{ $store }}-schema
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
@@ -317,6 +320,7 @@ spec:
               {{- end }}
             {{- end }}
             {{- end }}
+        {{- end }}
         {{- end }}
           {{- with .Values.schema.resources }}
           resources:
