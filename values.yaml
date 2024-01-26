@@ -372,7 +372,7 @@ web:
   additionalEnv: []
 
   containerSecurityContext: {}
-  
+
   securityContext: {}
 
 schema:
@@ -385,6 +385,7 @@ schema:
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
+  additionalEnv: []
 
 elasticsearch:
   enabled: true

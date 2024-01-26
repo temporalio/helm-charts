@@ -78,6 +78,9 @@ spec:
               value: {{ $storeConfig.cassandra.password }}
               {{- end }}
             {{- end }}
+            {{- if $.Values.schema.additionalEnv }}
+              {{- toYaml $.Values.schema.additionalEnv | nindent 12 }}
+            {{- end }}
         {{- end }}
         {{- end }}
         {{- else if or (eq (include "temporal.persistence.driver" (list $ "default")) "sql") (eq (include "temporal.persistence.driver" (list $ "visibility")) "sql") }}
@@ -109,6 +112,9 @@ spec:
               {{- else }}
               value: {{ $storeConfig.sql.password }}
               {{- end }}
+            {{- end }}
+            {{- if $.Values.schema.additionalEnv }}
+              {{- toYaml $.Values.schema.additionalEnv | nindent 12 }}
             {{- end }}
         {{- end }}
         {{- end }}
@@ -169,6 +175,9 @@ spec:
               value: {{ $storeConfig.sql.password }}
               {{- end }}
             {{- end }}
+            {{- end }}
+            {{- if $.Values.schema.additionalEnv }}
+              {{- toYaml $.Values.schema.additionalEnv | nindent 12 }}
             {{- end }}
         {{- end }}
           {{- with .Values.schema.resources }}
@@ -316,6 +325,9 @@ spec:
               value: {{ $storeConfig.sql.password }}
               {{- end }}
             {{- end }}
+            {{- end }}
+            {{- if $.Values.schema.additionalEnv }}
+              {{- toYaml $.Values.schema.additionalEnv | nindent 12 }}
             {{- end }}
         {{- end }}
           {{- with .Values.schema.resources }}
