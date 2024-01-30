@@ -16,17 +16,18 @@ This Helm Chart code is tested by a dedicated test pipeline. It is also used ext
 This sequence assumes
 * that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), [kind](https://kind.sigs.k8s.io/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and
 * that your machine has
-  - [AWS CLI V2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html),
   - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/), and
   - [Helm v3](https://helm.sh)
   installed and able to access your cluster.
+
+This repo only contains one chart currently, but is structured in the standard helm repo way. This means you will find the chart in the `charts/temporal` directory. All example `helm` commands below should be run from that directory.
 
 ## Download Helm Chart Dependencies
 
 Download Helm dependencies:
 
 ```bash
-~/temporal-helm$ helm dependencies update
+helm dependencies update
 ```
 
 ## Install Temporal with Helm Chart
@@ -44,8 +45,8 @@ The sections that follow describe various deployment configurations, from a mini
 
 To install Temporal in a limited but working and self-contained configuration (one replica of Cassandra and each of Temporal's services, no metrics or ElasticSearch), you can run the following command
 
-```
-~/temporal-helm$ helm install \
+```bash
+helm install \
     --set server.replicaCount=1 \
     --set cassandra.config.cluster_size=1 \
     --set prometheus.enabled=false \
@@ -80,7 +81,7 @@ By default, Temporal Helm Chart configures Temporal to run with a three node Cas
 To install Temporal with all of its dependencies run this command:
 
 ```bash
-~/temporal-helm$ helm install temporaltest . --timeout 900s
+helm install temporaltest . --timeout 900s
 ```
 
 To use your own instance of ElasticSearch, MySQL, PostgreSQL, or Cassandra, please read the "Bring Your Own" sections below.
@@ -88,7 +89,7 @@ To use your own instance of ElasticSearch, MySQL, PostgreSQL, or Cassandra, plea
 Other components (Prometheus, Grafana) can be omitted from the installation by setting their corresponding `enable` flag to `false`:
 
 ```bash
-~/temporal-helm$ helm install \
+helm install \
     --set prometheus.enabled=false \
     --set grafana.enabled=false \
     temporaltest . --timeout 900s
@@ -103,7 +104,7 @@ To do so, you may look at the example for Google's `cloud sql proxy` in the `val
 Example:
 
 ```bash
-~/temporal-helm$ helm install -f values/values.cloudsqlproxy.yaml temporaltest . --timeout 900s
+helm install -f values/values.cloudsqlproxy.yaml temporaltest . --timeout 900s
 ```
 
 ### Install with your own ElasticSearch
@@ -115,7 +116,7 @@ To do so, fill in the relevant configuration values in `values.elasticsearch.yam
 Example:
 
 ```bash
-~/temporal-helm$ helm install -f values/values.elasticsearch.yaml temporaltest . --timeout 900s
+helm install -f values/values.elasticsearch.yaml temporaltest . --timeout 900s
 ```
 
 ### Install with your own MySQL
@@ -243,7 +244,7 @@ CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool update -schema-
 Once you initialized the two keyspaces, fill in the configuration values in `values/values.cassandra.yaml`, and run
 
 ```bash
-~/temporal-helm$ helm install -f values/values.cassandra.yaml temporaltest . --timeout 900s
+helm install -f values/values.cassandra.yaml temporaltest . --timeout 900s
 ```
 
 ### Enable Archival
@@ -454,11 +455,11 @@ By default dynamic config is empty, if you want to override some properties for 
 2. Populate it with some values under server.dynamicConfig prefix (use the sample provided at `values/values.dynamic_config.yaml` as a starting point)
 3. Install your helm configuration:
 ```bash
-$ helm install -f values/values.dynamic_config.yaml temporaltest . --timeout 900s
+helm install -f values/values.dynamic_config.yaml temporaltest . --timeout 900s
 ```
 Note that if you already have a running cluster you can use the "helm upgrade" command to change dynamic config values:
 ```bash
-$ helm upgrade -f values/values.dynamic_config.yaml temporaltest . --timeout 900s
+helm upgrade -f values/values.dynamic_config.yaml temporaltest . --timeout 900s
 ```
 
 WARNING: The "helm upgrade" approach will trigger a rolling upgrade of all the pods.
@@ -466,7 +467,7 @@ WARNING: The "helm upgrade" approach will trigger a rolling upgrade of all the p
 If a rolling upgrade is not desirable, you can also generate the ConfigMap file explicitly and then apply it using the following command:
 
 ```bash
-$ kubectl apply -f dynamicconfigmap.yaml
+kubectl apply -f dynamicconfigmap.yaml
 ```
 You can use helm upgrade with the "--dry-run" option to generate the content for the dynamicconfigmap.yaml.
 
@@ -480,7 +481,7 @@ the config file `server/config.yml` for the temporal web ui is referenced as a m
 Note: in this example chart, uninstalling a Temporal instance also removes all the data that might have been created during its  lifetime.
 
 ```bash
-~/temporal-helm $ helm uninstall temporaltest
+helm uninstall temporaltest
 ```
 
 ## Upgrading
@@ -533,8 +534,8 @@ To upgrade your MySQL database, please use `temporal-sql-tool` tool instead of `
 
 Here is an example of a `helm upgrade` command that can be used to upgrade a cluster:
 
-```
-helm-charts $ helm \
+```bash
+helm \
     upgrade \
     temporaltest \
     -f values/values.cassandra.yaml \
