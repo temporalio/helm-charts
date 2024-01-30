@@ -66,9 +66,6 @@ jobs:
 
           git commit -m "Update Chart to $NEW_VERSION, Temporal v${{ github.event.inputs.version }}" Chart.yaml
           git push origin
-          
-          git tag "$NEW_VERSION"
-          git push origin "$NEW_VERSION"
 
       - name: Install Helm
         uses: azure/setup-helm@v3
