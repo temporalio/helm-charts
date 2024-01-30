@@ -51,9 +51,7 @@ jobs:
 
           git commit -m "Update Chart to $NEW_VERSION" Chart.yaml
           git push origin
-
-      - name: Create tag
-        run: |
+          
           git tag "$NEW_VERSION"
           git push origin "$NEW_VERSION"
 
