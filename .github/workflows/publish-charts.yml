@@ -44,8 +44,6 @@ jobs:
       - name: Update Temporal chart version
         working-directory: charts/temporal
         run: |
-          set -x
-          
           RE='([0-9]+)\.([0-9]+)\.([0-9]+)'
 
           current="$(grep -m 1 '^version:' Chart.yaml | awk '{print $2}')"
@@ -55,10 +53,10 @@ jobs:
           PATCH=`echo $current | sed -E "s#$RE#\3#"`
 
           if [ "${{ github.event.inputs.bump }}" == "minor" ]; then
-            let MINOR+=1
-            let PATCH=0
+            MINOR=$((MINOR+1))
+            PATCH=0
           else
-            let PATCH+=1
+            PATCH=$((PATCH+1))
           fi
           NEW_VERSION="$MAJOR.$MINOR.$PATCH"
 
