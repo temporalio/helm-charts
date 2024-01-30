@@ -33,7 +33,6 @@ jobs:
         with:
           persist-credentials: true
           token: ${{ steps.generate_token.outputs.token }}
-          ref: rh-chart-publish
           fetch-depth: 0
           fetch-tags: true
 
