@@ -198,6 +198,7 @@ server:
       annotations: {} # Evaluated as template
       type: ClusterIP
       port: 7233
+      loadBalancerIP: ""
     metrics:
       annotations:
         enabled: true
