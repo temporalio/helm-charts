@@ -65,10 +65,6 @@ spec:
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
           command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$; do echo waiting for default keyspace to become ready; sleep 1; done;']
-        - name: check-cassandra-visibility-schema
-          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
-          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.visibility.cassandra.keyspace }}$; do echo waiting for visibility keyspace to become ready; sleep 1; done;']
         {{- end }}
         {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
         - name: check-elasticsearch-index

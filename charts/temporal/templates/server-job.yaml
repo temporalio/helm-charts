@@ -39,7 +39,7 @@ spec:
       {{ include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
       initContainers:
-        {{- if or .Values.cassandra.enabled (eq (include "temporal.persistence.driver" (list $ "default")) "cassandra") (eq (include "temporal.persistence.driver" (list $ "visibility")) "cassandra") }}
+        {{- if or .Values.cassandra.enabled (eq (include "temporal.persistence.driver" (list $ "default")) "cassandra") }}
         {{- if .Values.cassandra.enabled }}
         - name: check-cassandra-service
           image: busybox
@@ -258,7 +258,7 @@ spec:
         - name: {{ $store }}-schema
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
+          {{- if and (eq (include "temporal.persistence.driver" (list $ $store)) "cassandra") (ne (include "temporal.persistence.schema" $store) "visibility") }}
           command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "mysql" }}
           command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned']

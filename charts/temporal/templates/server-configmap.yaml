@@ -57,15 +57,6 @@ data:
             {{- end }}
           {{- end }}
         visibility:
-          {{- if eq (include "temporal.persistence.driver" (list $ "visibility")) "cassandra" }}
-          cassandra:
-            hosts: "{{ include "temporal.persistence.cassandra.hosts" (list $ "visibility") }}"
-            port: {{ include "temporal.persistence.cassandra.port" (list $ "visibility") }}
-            password: "{{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD }}` }}"
-            {{- with (omit $.Values.server.config.persistence.visibility.cassandra "hosts" "port" "password" "existingSecret") }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-          {{- end }}
           {{- if eq (include "temporal.persistence.driver" (list $ "default")) "sql" }}
           sql:
             pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"
