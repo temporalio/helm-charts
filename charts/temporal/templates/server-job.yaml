@@ -254,11 +254,12 @@ spec:
         {{- end }}
       containers:
         {{- range $store := (list "default" "visibility") }}
+        {{- if or (eq $store "default") (eq (include "temporal.persistence.driver" (list $ $store)) "sql") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
         - name: {{ $store }}-schema
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          {{- if and (eq (include "temporal.persistence.driver" (list $ $store)) "cassandra") (ne (include "temporal.persistence.schema" $store) "visibility") }}
+          {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
           command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "mysql" }}
           command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned']
@@ -317,6 +318,7 @@ spec:
               {{- end }}
             {{- end }}
             {{- end }}
+        {{- end }}
         {{- end }}
           {{- with .Values.schema.resources }}
           resources:
