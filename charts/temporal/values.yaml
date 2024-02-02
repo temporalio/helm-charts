@@ -161,23 +161,7 @@ server:
           # tx_isolation: 'READ-COMMITTED'
 
       visibility:
-        driver: "cassandra"
-
-        cassandra:
-          hosts: []
-          # port: 9042
-          keyspace: "temporal_visibility"
-          user: "user"
-          password: "password"
-          existingSecret: ""
-          # datacenter: "us-east-1a"
-          # maxQPS: 1000
-          # maxConns: 2
-          replicationFactor: 1
-          consistency:
-            default:
-              consistency: "local_quorum"
-              serialConsistency: "local_serial"
+        driver: ""
 
         sql:
           driver: "mysql"
