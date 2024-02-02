@@ -129,7 +129,7 @@ Here are examples of commands you can use to create and initialize the databases
 
 ```bash
 # in https://github.com/temporalio/temporal git repo dir
-export SQL_PLUGIN=mysql
+export SQL_PLUGIN=mysql8
 export SQL_HOST=mysql_host
 export SQL_PORT=3306
 export SQL_USER=mysql_user
@@ -139,11 +139,11 @@ make temporal-sql-tool
 
 ./temporal-sql-tool --database temporal create-database
 SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
-SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/mysql/v57/temporal/versioned
+SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/mysql/v8/temporal/versioned
 
 ./temporal-sql-tool --database temporal_visibility create-database
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
-SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/mysql/v57/visibility/versioned
+SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/mysql/v8/visibility/versioned
 ```
 
 Once you initialized the two databases, fill in the configuration values in `values/values.mysql.yaml`, and run
@@ -166,7 +166,7 @@ helm install -f values/values.mysql.yaml temporaltest \
   --set server.config.persistence.default.sql.host=mysql_host \
   --set server.config.persistence.visibility.sql.host=mysql_host . --timeout 900s
 ```
-*NOTE:* For MYSQL <5.7.20 (e.g AWS Aurora MySQL) use `values/values.aurora-mysql.yaml`
+*NOTE:* Requires MySQL 8.0.17+, older versions are not supported.
 
 ### Install with your own PostgreSQL
 
@@ -178,7 +178,7 @@ Here are examples of commands you can use to create and initialize the databases
 
 ```bash
 # in https://github.com/temporalio/temporal git repo dir
-export SQL_PLUGIN=postgres
+export SQL_PLUGIN=postgres12
 export SQL_HOST=postgresql_host
 export SQL_PORT=5432
 export SQL_USER=postgresql_user
@@ -188,11 +188,11 @@ make temporal-sql-tool
 
 ./temporal-sql-tool --database temporal create-database
 SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
-SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/postgresql/v96/temporal/versioned
+SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/postgresql/v12/temporal/versioned
 
 ./temporal-sql-tool --database temporal_visibility create-database
 SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
-SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/postgresql/v96/visibility/versioned
+SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/postgresql/v12/visibility/versioned
 ```
 
 Once you initialized the two databases, fill in the configuration values in `values/values.postgresql.yaml`, and run
@@ -215,6 +215,8 @@ helm install -f values/values.postgresql.yaml temporaltest \
   --set server.config.persistence.default.sql.host=postgresql_host \
   --set server.config.persistence.visibility.sql.host=postgresql_host . --timeout 900s
 ```
+
+*NOTE:* Requires PostgreSQL 12+, older versions are not supported.
 
 ### Install with your own Cassandra
 
