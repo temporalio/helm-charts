@@ -22,7 +22,4 @@ prometheus:
     prometheus.yml:
       remote_write:
         - url: _URL_
-          basic_auth:
-            password: _PASSWORD_
-            username: _USERNAME_
     rules: {}
