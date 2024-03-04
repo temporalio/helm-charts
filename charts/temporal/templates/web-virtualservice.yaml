@@ -8,7 +8,7 @@ spec:
   gateways:
     - "{{ $.Release.Namespace }}-gateway-internal"
   hosts:
-    - temporal.build.flodplains.com
+    - "temporal.{{ .Values.envName }}.flodplains.com"
   http:
     - match:
         - uri:
@@ -17,6 +17,6 @@ spec:
         uri: /
       route:
         - destination:
-            host: temporalio-web
+            host: {{ include "temporal.componentname" (list . "web") }}
             port:
               number: 8080
