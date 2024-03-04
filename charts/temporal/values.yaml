@@ -309,7 +309,7 @@ web:
   config:
     # server/config.yml file content
     auth:
-      enabled: true
+      enabled: false
     routing:
       default_to_namespace: # internal use only
       issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
@@ -318,7 +318,7 @@ web:
 
   image:
     repository: temporalio/ui
-    tag: 2.16.2
+    tag: 2.22.3
     pullPolicy: IfNotPresent
 
   service:
