@@ -309,7 +309,7 @@ web:
   config:
     # server/config.yml file content
     auth:
-      enabled: false
+      enabled: true
     routing:
       default_to_namespace: # internal use only
       issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
