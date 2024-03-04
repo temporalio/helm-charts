@@ -1,0 +1,22 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  annotations:
+    external-dns.alpha.kubernetes.io/target: api-internal-cname.build.flodplains.com
+  name: "{{ include "temporal.componentname" (list . "web") }}-internal-8080"
+spec:
+  gateways:
+    - "{{ $.Release.Namespace }}-gateway-internal"
+  hosts:
+    - temporal.build.flodplains.com
+  http:
+    - match:
+        - uri:
+            prefix: /
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: temporalio-web
+            port:
+              number: 8080
