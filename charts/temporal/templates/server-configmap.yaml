@@ -57,7 +57,7 @@ data:
             {{- end }}
           {{- end }}
         visibility:
-          {{- if eq (include "temporal.persistence.driver" (list $ "default")) "sql" }}
+          {{- if eq (include "temporal.persistence.driver" (list $ "visibility")) "sql" }}
           sql:
             pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"
             driverName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"
