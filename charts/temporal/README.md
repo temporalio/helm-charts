@@ -1,1 +1,1 @@
-This is a Temporal helm-chart.
+#This is a helm-chart for deploying Temporal
