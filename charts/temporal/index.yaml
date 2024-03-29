@@ -3,7 +3,7 @@ entries:
   temporal:
   - apiVersion: v2
     appVersion: 1.23.0
-    created: "2024-03-28T17:08:28.330968+02:00"
+    created: "2024-03-29T10:51:20.278552+02:00"
     dependencies:
     - condition: cassandra.enabled
       name: cassandra
@@ -24,7 +24,7 @@ entries:
     description: Temporal is a distributed, scalable, durable, and highly available
       orchestration engine to execute asynchronous long-running business logic in
       a scalable and resilient way.
-    digest: 1840425bc35269e30395c2faa76fbc43931b55bd9fb5f7d372a0b54953b9ece8
+    digest: e7d8ba0b1c475f28cbda1f7e3036b7cb452fb6c02d6fe56497d7d5471e5f0b9e
     home: https://temporal.io/
     keywords:
     - temporal
@@ -40,4 +40,4 @@ entries:
     urls:
     - https://fairmoney.github.io/temporal-helm-charts/temporal-0.36.0.tgz
     version: 0.36.0
-generated: "2024-03-28T17:08:28.321782+02:00"
+generated: "2024-03-29T10:51:20.26643+02:00"
