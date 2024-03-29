@@ -13,14 +13,8 @@ metadata:
     app.kubernetes.io/component: database
     app.kubernetes.io/part-of: {{ .Chart.Name }}
   annotations:
-    {{- if .Values.cassandra.enabled }}
-    "helm.sh/hook": post-install
-    {{- else }}
-    "helm.sh/hook": pre-install
-    {{- end }}
-    "helm.sh/hook-weight": "0"
-    {{- if not .Values.debug }}
-    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+    {{- with .Values.schema.extraAnnotations.setup }}
+      {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
   backoffLimit: {{ .Values.schema.setup.backoffLimit }}
@@ -215,14 +209,8 @@ metadata:
     app.kubernetes.io/component: database
     app.kubernetes.io/part-of: {{ .Chart.Name }}
   annotations:
-    {{- if .Values.cassandra.enabled }}
-    "helm.sh/hook": post-install,pre-upgrade
-    {{- else }}
-    "helm.sh/hook": pre-install,pre-upgrade
-    {{- end }}
-    "helm.sh/hook-weight": "1"
-    {{- if not .Values.debug }}
-    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+    {{- with .Values.schema.extraAnnotations.update }}
+      {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
   backoffLimit: {{ .Values.schema.update.backoffLimit }}
@@ -356,14 +344,8 @@ metadata:
     app.kubernetes.io/component: database
     app.kubernetes.io/part-of: {{ .Chart.Name }}
   annotations:
-    {{- if .Values.elasticsearch.external }}
-    "helm.sh/hook": pre-install
-    {{- else }}
-    "helm.sh/hook": post-install
-    {{- end }}
-    "helm.sh/hook-weight": "0"
-    {{- if not .Values.debug }}
-    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+    {{- with .Values.schema.extraAnnotations.es-index-setup }}
+      {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
   backoffLimit: {{ .Values.schema.setup.backoffLimit }}
