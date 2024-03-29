@@ -344,7 +344,7 @@ metadata:
     app.kubernetes.io/component: database
     app.kubernetes.io/part-of: {{ .Chart.Name }}
   annotations:
-    {{- with .Values.schema.extraAnnotations.es-index-setup }}
+    {{- with .Values.schema.extraAnnotations.es_index_setup }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
