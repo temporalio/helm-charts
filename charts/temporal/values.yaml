@@ -26,6 +26,8 @@ server:
 
   # Global default settings (can be overridden per service)
   replicaCount: 1
+  deploymentStrategy:
+    type: RollingUpdate
   metrics:
     # Annotate pods directly with Prometheus annotations.
     # Use this if you installed Prometheus from a Helm chart.

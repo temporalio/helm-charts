@@ -13,8 +13,19 @@ metadata:
     app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
     app.kubernetes.io/component: {{ $service }}
     app.kubernetes.io/part-of: {{ $.Chart.Name }}
+  annotations:
+    {{- with $.Values.server.deploymentAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
+  strategy:
+    type: {{ $.Values.server.deploymentStrategy.type }}
+    {{- if eq $.Values.server.deploymentStrategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxSurge: {{ default "25%" $.Values.server.deploymentStrategy.maxSurge  }}
+      maxUnavailable: {{ default "25%" $.Values.server.deploymentStrategy.maxUnavailable }}
+    {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "temporal.name" $ }}
