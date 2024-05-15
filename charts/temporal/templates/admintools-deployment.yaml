@@ -39,7 +39,7 @@ spec:
       {{ include "temporal.serviceAccount" . }}
       containers:
         - name: admin-tools
-          image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
+          image: "{{ .Values.admintools.image.repository }}:{{ .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.admintools.image.pullPolicy }}
           ports:
             - name: http
