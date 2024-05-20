@@ -1,5 +1,5 @@
 {{- if $.Values.server.enabled }}
-{{- range $service := (list "frontend" "history" "matching" "worker") }}
+{{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -34,8 +34,9 @@ data:
           cassandra:
             hosts: "{{ include "temporal.persistence.cassandra.hosts" (list $ "default") }}"
             port: {{ include "temporal.persistence.cassandra.port" (list $ "default") }}
+            user: "{{ `{{ .Env.TEMPORAL_STORE_USER }}` }}"
             password: "{{ `{{ .Env.TEMPORAL_STORE_PASSWORD }}` }}"
-            {{- with (omit $.Values.server.config.persistence.default.cassandra "hosts" "port" "password" "existingSecret") }}
+            {{- with (omit $.Values.server.config.persistence.default.cassandra "hosts" "port" "user" "password" "existingSecret") }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
@@ -50,7 +51,7 @@ data:
             databaseName: "{{ $.Values.server.config.persistence.default.sql.database }}"
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "default") }}:{{ include "temporal.persistence.sql.port" (list $ "default") }}"
             connectProtocol: "tcp"
-            user: {{ include "temporal.persistence.sql.user" (list $ "default") }}
+            user: "{{ `{{ .Env.TEMPORAL_STORE_USER }}` }}"
             password: "{{ `{{ .Env.TEMPORAL_STORE_PASSWORD }}` }}"
             {{- with (omit $.Values.server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
             {{- toYaml . | nindent 12 }}
@@ -64,7 +65,7 @@ data:
             databaseName: "{{ $.Values.server.config.persistence.visibility.sql.database }}"
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "visibility") }}:{{ include "temporal.persistence.sql.port" (list $ "visibility") }}"
             connectProtocol: "tcp"
-            user: "{{ include "temporal.persistence.sql.user" (list $ "visibility") }}"
+            user: "{{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_USER }}` }}"
             password: "{{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD }}` }}"
             {{- with (omit $.Values.server.config.persistence.visibility.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
             {{- toYaml . | nindent 12 }}
@@ -111,6 +112,21 @@ data:
           listenAddress: "0.0.0.0:9090"
         {{- end }}
 
+      {{- if $.Values.server.config.auth.enabled }}
+      authorization:
+        authorizer: "{{ $.Values.server.config.auth.authorizer }}"
+        claimMapper: "{{ $.Values.server.config.auth.claimMapper }}"
+        permissionsClaimName: "{{ $.Values.server.config.auth.permissionsClaimName }}"
+        jwtKeyProvider:
+          keySourceURIs:
+          {{- with $.Values.server.config.auth.jwtKeyProvider.keySourceURIs }}
+          {{- range . }}
+            - {{ . | quote }}
+          {{- end }}
+          {{- end }}
+          refreshInterval: "{{ $.Values.server.config.auth.jwtKeyProvider.refreshInterval }}"
+      {{- end }}
+
       {{- if $.Values.server.config.tls }}
       tls:
         {{- with $.Values.server.config.tls }}
@@ -124,6 +140,14 @@ data:
           grpcPort: {{ include "temporal.frontend.grpcPort" $ }}
           membershipPort: {{ include "temporal.frontend.membershipPort" $ }}
           bindOnIP: "0.0.0.0"
+
+      {{- if index $.Values.server "internal-frontend" "enabled" }}
+      internal-frontend:
+        rpc:
+          grpcPort: {{ include "temporal.internal-frontend.grpcPort" $ }}
+          membershipPort: {{ include "temporal.internal-frontend.membershipPort" $ }}
+          bindOnIP: "0.0.0.0"
+      {{- end }}
 
       history:
         rpc:
@@ -192,8 +216,10 @@ data:
 
     {{- end }}
 
+    {{- if not (index $.Values.server "internal-frontend" "enabled") }}
     publicClient:
       hostPort: "{{ include "temporal.componentname" (list $ "frontend") }}:{{ $.Values.server.frontend.service.port }}"
+    {{- end }}
 
     dynamicConfigClient:
       filepath: "/etc/temporal/dynamic_config/dynamic_config.yaml"

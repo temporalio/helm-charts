@@ -30,7 +30,7 @@ spec:
     app.kubernetes.io/component: frontend
 
 ---
-{{- range $service := (list "frontend" "matching" "history" "worker") }}
+{{- range $service := (list "frontend" "internal-frontend" "matching" "history" "worker") }}
 {{- $serviceValues := index $.Values.server $service -}}
 apiVersion: v1
 kind: Service

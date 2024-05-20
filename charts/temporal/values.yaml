@@ -192,12 +192,46 @@ server:
           maxConnLifetime: "1h"
           # connectAttributes:
           #   tx_isolation: 'READ-COMMITTED'
+    auth:
+      enabled: false
+      # authorizer: default
+      # claimMapper: default
+      # permissionsClaimName: roles
+      # jwtKeyProvider:
+      #   keySourceURIs:
+      #   - "https://login.microsoftonline.com/<tenant id>/discovery/v2.0/keys"
+      #   refreshInterval: 30m
+
 
   frontend:
     service:
       annotations: {} # Evaluated as template
       type: ClusterIP
       port: 7233
+    metrics:
+      annotations:
+        enabled: true
+      serviceMonitor: {}
+      # enabled: false
+      prometheus: {}
+      # timerType: histogram
+    podAnnotations: {}
+    podLabels: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: {}
+    podDisruptionBudget: {}
+
+  internal-frontend:
+    enabled: false
+    service:
+      annotations: {} # Evaluated as template
+      type: ClusterIP
+      port: 7236
     metrics:
       annotations:
         enabled: true
@@ -310,6 +344,18 @@ web:
     # server/config.yml file content
     auth:
       enabled: false
+      # Use below settings for azure ad oidc
+      # enabled: true
+      # providers:
+      # - label: "Azure AD OIDC"
+      #   type: oidc
+      #   providerUrl: "https://login.microsoftonline.com/<tenant id>/v2.0"
+      #   issuerUrl: "https://login.microsoftonline.com/<tenant id>/v2.0"
+      #   clientId: "<service principal client id>"
+      #   clientSecret: "<service principal client secret>"
+      #   callbackUrl: "https://<temporal url>/auth/sso/callback"
+      #   scopes: "openid,profile,email,api://<app uri>/default"
+
     routing:
       default_to_namespace: # internal use only
       issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums

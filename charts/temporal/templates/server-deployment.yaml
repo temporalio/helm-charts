@@ -1,5 +1,5 @@
 {{- if $.Values.server.enabled }}
-{{- range $service := (list "frontend" "history" "matching" "worker") }}
+{{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
 {{- $serviceValues := index $.Values.server $service -}}
 apiVersion: apps/v1
 kind: Deployment
@@ -100,16 +100,30 @@ spec:
               value: "{{ $.Values.elasticsearch.password }}"
             - name: SERVICES
               value: {{ $service }}
+            - name: TEMPORAL_STORE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ "default") }}
+                  key: {{ include "temporal.persistence.secretKeyUser" (list $ "default") }}
             - name: TEMPORAL_STORE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "default") }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ "default") }}
+                  key: {{ include "temporal.persistence.secretKeyPassword" (list $ "default") }}
+            - name: TEMPORAL_VISIBILITY_STORE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
+                  key: {{ include "temporal.persistence.secretKeyUser" (list $ "visibility") }}
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ "visibility") }}
+                  key: {{ include "temporal.persistence.secretKeyPassword" (list $ "visibility") }}
+          {{- if index $.Values.server "internal-frontend" "enabled" }}
+            - name: USE_INTERNAL_FRONTEND
+              value: "1"
+          {{- end }}
           {{- if $.Values.server.versionCheckDisabled }}
             - name: TEMPORAL_VERSION_CHECK_DISABLED
               value: "1"

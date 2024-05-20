@@ -65,7 +65,14 @@ spec:
               value: {{ $storeConfig.cassandra.keyspace }}
             {{- if $storeConfig.cassandra.user }}
             - name: CASSANDRA_USER
+              {{- if $storeConfig.cassandra.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKeyUser" (list $ $store) }}
+              {{- else }}
               value: {{ $storeConfig.cassandra.user }}
+              {{- end }}
             {{- end }}
             {{- if (or $storeConfig.cassandra.password $storeConfig.cassandra.existingSecret) }}
             - name: CASSANDRA_PASSWORD
@@ -73,7 +80,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ $store) }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKeyPassword" (list $ $store) }}
               {{- else }}
               value: {{ $storeConfig.cassandra.password }}
               {{- end }}
@@ -97,7 +104,14 @@ spec:
               value: {{ include "temporal.persistence.sql.port" (list $ $store) | quote }}
             {{- if $storeConfig.sql.user }}
             - name: SQL_USER
+              {{- if $storeConfig.sql.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKeyUser" (list $ $store) }}
+              {{- else }}
               value: {{ $storeConfig.sql.user }}
+              {{- end }}
             {{- end }}
             {{- if (or $storeConfig.sql.password $storeConfig.sql.existingSecret) }}
             - name: SQL_PASSWORD
@@ -105,7 +119,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ $store) }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKeyPassword" (list $ $store) }}
               {{- else }}
               value: {{ $storeConfig.sql.password }}
               {{- end }}
@@ -132,7 +146,14 @@ spec:
               value: {{ $storeConfig.cassandra.keyspace }}
             {{- if $storeConfig.cassandra.user }}
             - name: CASSANDRA_USER
+              {{- if $storeConfig.cassandra.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKeyUser" (list $ $store) }}
+              {{- else }}
               value: {{ $storeConfig.cassandra.user }}
+              {{- end }}
             {{- end }}
             {{- if (or $storeConfig.cassandra.password $storeConfig.cassandra.existingSecret) }}
             - name: CASSANDRA_PASSWORD
@@ -140,7 +161,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ $store) }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKeyPassword" (list $ $store) }}
               {{- else }}
               value: {{ $storeConfig.cassandra.password }}
               {{- end }}
@@ -156,7 +177,14 @@ spec:
               value: {{ include "temporal.persistence.sql.database" (list $ $store) }}
             {{- if $storeConfig.sql.user }}
             - name: SQL_USER
+              {{- if $storeConfig.sql.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKeyUser" (list $ $store) }}
+              {{- else }}
               value: {{ $storeConfig.sql.user }}
+              {{- end }}
             {{- end }}
             {{- if (or $storeConfig.sql.password $storeConfig.sql.existingSecret) }}
             - name: SQL_PASSWORD
@@ -164,7 +192,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ $store) }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKeyPassword" (list $ $store) }}
               {{- else }}
               value: {{ $storeConfig.sql.password }}
               {{- end }}
@@ -276,7 +304,14 @@ spec:
               value: {{ $storeConfig.cassandra.keyspace }}
             {{- if $storeConfig.cassandra.user }}
             - name: CASSANDRA_USER
+              {{- if $storeConfig.cassandra.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKeyUser" (list $ $store) }}
+              {{- else }}
               value: {{ $storeConfig.cassandra.user }}
+              {{- end }}
             {{- end }}
             {{- if (or $storeConfig.cassandra.password $storeConfig.cassandra.existingSecret) }}
             - name: CASSANDRA_PASSWORD
@@ -284,7 +319,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ $store) }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKeyPassword" (list $ $store) }}
               {{- else }}
               value: {{ $storeConfig.cassandra.password }}
               {{- end }}
@@ -300,7 +335,14 @@ spec:
               value: {{ include "temporal.persistence.sql.database" (list $ $store) }}
             {{- if $storeConfig.sql.user }}
             - name: SQL_USER
+              {{- if $storeConfig.sql.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKeyUser" (list $ $store) }}
+              {{- else }}
               value: {{ $storeConfig.sql.user }}
+              {{- end }}
             {{- end }}
             {{- if (or $storeConfig.sql.password $storeConfig.sql.existingSecret) }}
             - name: SQL_PASSWORD
@@ -308,7 +350,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ $store) }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ $store) }}
+                  key: {{ include "temporal.persistence.secretKeyPassword" (list $ $store) }}
               {{- else }}
               value: {{ $storeConfig.sql.password }}
               {{- end }}

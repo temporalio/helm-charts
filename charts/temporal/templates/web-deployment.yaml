@@ -51,6 +51,28 @@ spec:
           env:
             - name: TEMPORAL_ADDRESS
               value: "{{ include "temporal.fullname" . }}-frontend.{{ .Release.Namespace }}.svc:{{ .Values.server.frontend.service.port }}"
+            {{- if .Values.web.auth.enabled }}
+            - name: TEMPORAL_AUTH_ENABLED
+              value: "{{ .Values.web.auth.enabled }}"
+            {{- if .Values.web.auth.providers }}
+            - name: TEMPORAL_AUTH_LABEL
+              value: "{{ (index .Values.web.auth.providers 0).label }}"
+            - name: TEMPORAL_AUTH_TYPE
+              value: "{{ (index .Values.web.auth.providers 0).type }}"
+            - name: TEMPORAL_AUTH_PROVIDER_URL
+              value: "{{ (index .Values.web.auth.providers 0).providerUrl }}"
+            - name: TEMPORAL_AUTH_ISSUER_URL
+              value: "{{ (index .Values.web.auth.providers 0).issuerUrl }}"
+            - name: TEMPORAL_AUTH_CLIENT_ID
+              value: "{{ (index .Values.web.auth.providers 0).clientId }}"
+            - name: TEMPORAL_AUTH_CLIENT_SECRET
+              value: "{{ (index .Values.web.auth.providers 0).clientSecret }}"
+            - name: TEMPORAL_AUTH_CALLBACK_URL
+              value: "{{ (index .Values.web.auth.providers 0).callbackUrl }}"
+            - name: TEMPORAL_AUTH_SCOPES
+              value: "{{ (index .Values.web.auth.providers 0).scopes }}"
+          {{- end }}
+          {{- end }}
           {{- if .Values.web.additionalEnv }}
           {{- toYaml .Values.web.additionalEnv | nindent 12 }}
           {{- end }}

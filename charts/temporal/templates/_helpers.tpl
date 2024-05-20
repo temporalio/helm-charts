@@ -85,6 +85,22 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- end -}}
 {{- end -}}
 
+{{- define "temporal.internal-frontend.grpcPort" -}}
+{{- if index $.Values.server "internal-frontend" "service" "port" -}}
+{{- index $.Values.server "internal-frontend" "service" "port" -}}
+{{- else -}}
+{{- 7236 -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.internal-frontend.membershipPort" -}}
+{{- if index $.Values.server "internal-frontend" "service" "membershipPort" -}}
+{{- index $.Values.server "internal-frontend" "service" "membershipPort" -}}
+{{- else -}}
+{{- 6936 -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "temporal.history.grpcPort" -}}
 {{- if $.Values.server.history.service.port -}}
 {{- $.Values.server.history.service.port -}}
@@ -198,7 +214,7 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- end -}}
 {{- end -}}
 
-{{- define "temporal.persistence.cassandra.secretKey" -}}
+{{- define "temporal.persistence.cassandra.secretKeyPassword" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
@@ -317,7 +333,22 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- end -}}
 {{- end -}}
 
-{{- define "temporal.persistence.sql.secretKey" -}}
+{{- define "temporal.persistence.sql.secretKeyUser" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- if or $storeConfig.sql.existingSecret $storeConfig.sql.user -}}
+{{- print "username" -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
+{{- print "mysql-username" -}}
+{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres12")) -}}
+{{- print "postgresql-username" -}}
+{{- else -}}
+{{- fail (printf "Please specify sql username or existing secret for %s store" $store) -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.secretKeyPassword" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
@@ -338,10 +369,16 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- include (printf "temporal.persistence.%s.secretName" (include "temporal.persistence.driver" (list $global $store))) (list $global $store) -}}
 {{- end -}}
 
-{{- define "temporal.persistence.secretKey" -}}
+{{- define "temporal.persistence.secretKeyUser" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
-{{- include (printf "temporal.persistence.%s.secretKey" (include "temporal.persistence.driver" (list $global $store))) (list $global $store) -}}
+{{- include (printf "temporal.persistence.%s.secretKeyUser" (include "temporal.persistence.driver" (list $global $store))) (list $global $store) -}}
+{{- end -}}
+
+{{- define "temporal.persistence.secretKeyPassword" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- include (printf "temporal.persistence.%s.secretKeyPassword" (include "temporal.persistence.driver" (list $global $store))) (list $global $store) -}}
 {{- end -}}
 
 {{/*
