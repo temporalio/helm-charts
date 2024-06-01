@@ -35,7 +35,7 @@ helm dependencies update
 Temporal can be configured to run with various dependencies. The default "Batteries Included" Helm Chart configuration deploys and configures the following components:
 
 * Cassandra
-* ElasticSearch
+* Elasticsearch
 * Prometheus
 * Grafana
 
