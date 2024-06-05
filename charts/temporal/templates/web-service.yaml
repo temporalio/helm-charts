@@ -11,10 +11,9 @@ metadata:
     app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
     app.kubernetes.io/component: web
     app.kubernetes.io/part-of: {{ .Chart.Name }}
-{{- with .Values.web.service.annotations }}
-  annotations:
-{{ toYaml . | indent 4 }}
-{{- end }}
+  {{- if .Values.web.service.annotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.web.service.annotations "context" $) | nindent 4 }}
+  {{- end }}
 spec:
   {{- with .Values.web.service.loadBalancerIP }}
   loadBalancerIP: {{.}}
