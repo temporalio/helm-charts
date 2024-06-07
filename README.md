@@ -14,11 +14,10 @@ This Helm Chart code is tested by a dedicated test pipeline. It is also used ext
 ## Prerequisites
 
 This sequence assumes
-* that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), [kind](https://kind.sigs.k8s.io/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)), and
-* that your machine has
-  - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/), and
+* that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), [kind](https://kind.sigs.k8s.io/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/))
+* that your machine has the following installed and able to access your cluster:
+  - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
   - [Helm v3](https://helm.sh)
-  installed and able to access your cluster.
 
 This repo only contains one chart currently, but is structured in the standard helm repo way. This means you will find the chart in the `charts/temporal` directory. All example `helm` commands below should be run from that directory.
 
@@ -415,7 +414,6 @@ Forwarding from [::1]:8080 -> 8080
 
 and navigate to http://127.0.0.1:8080 in your browser.
 
-
 ### Exploring Metrics via Grafana
 
 By default, the full "Batteries Included" configuration comes with a few Grafana dashboards.
@@ -442,6 +440,7 @@ Forwarding from [::1]:8081 -> 3000
 3. Navigate to the forwarded Grafana port in your browser (http://localhost:8081/), login as `admin` (using the password from step 1), and click on the "Home" button (upper left corner) to see available dashboards.
 
 ### Updating Dynamic Configs
+
 By default dynamic config is empty, if you want to override some properties for your cluster, you should:
 1. Create a yaml file with your config (for example dc.yaml).
 2. Populate it with some values under server.dynamicConfig prefix (use the sample provided at `values/values.dynamic_config.yaml` as a starting point)
@@ -502,8 +501,8 @@ Here are examples of commands you can use to upgrade the "default" schema in you
 
 Upgrade default schema:
 
-```
-temporal_v1.2.1 $ temporal-cassandra-tool \
+```bash
+temporal-cassandra-tool \
    --tls \
    --tls-ca-file ... \
    --user cassandra-user \
@@ -536,11 +535,11 @@ helm \
     --set server.config.persistence.default.cassandra.tls.enabled=true \
     --set server.config.persistence.default.cassandra.replicationFactor=3 \
     --set server.config.persistence.default.cassandra.keyspace=temporal \
-    --set server.image.tag=1.2.1 \
+    --set server.image.tag=1.24.1 \
     --set server.image.repository=temporalio/server \
-    --set admintools.image.tag=1.2.1 \
+    --set admintools.image.tag=1.24.1-tctl-1.18.1-cli-0.12.0 \
     --set admintools.image.repository=temporalio/admin-tools \
-    --set web.image.tag=1.1.1 \
+    --set web.image.tag=2.27.2 \
     --set web.image.repository=temporalio/web \
     . \
     --wait \
