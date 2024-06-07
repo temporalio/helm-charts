@@ -3,8 +3,14 @@ name: Release Charts
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "Temporal version to use for release (for example 1.22.4)"
+      server_version:
+        description: "Temporal Server version to use for release (for example 1.24.1)"
+        required: true
+      admintools_version:
+        description: "Temporal Admin Tools version to use for release (for example 1.24.1-tctl-1.18.1-cli-0.12.0)"
+        required: true
+      ui_version:
+        description: "Temporal UI version to use for release (for example 2.27.2)"
         required: true
       bump:
         description: "Chart version bump level"
@@ -46,16 +52,17 @@ jobs:
         run: |
           git config --local user.name 'Temporal Data'
           git config --local user.email 'commander-data@temporal.io'
-      
-      - name: Update Temporal chart version
+        
+      - name: Bump Temporal chart version
+        id: chart-version
         working-directory: charts/temporal
         run: |
-          RE='([0-9]+)\.([0-9]+)\.([0-9]+)'
+          CHART_VERSION="${{ github.event.inputs.force_version }}"
 
-          NEW_VERSION="${{ github.event.inputs.force_version }}"
-
-          if [ -z "${NEW_VERSION}" ]; then
+          if [ -z "${CHART_VERSION}" ]; then
             current="$(grep -m 1 '^version:' Chart.yaml | awk '{print $2}')"
+
+            RE='([0-9]+)\.([0-9]+)\.([0-9]+)'
 
             MAJOR=`echo $current | sed -E "s#$RE#\1#"`
             MINOR=`echo $current | sed -E "s#$RE#\2#"`
@@ -67,14 +74,31 @@ jobs:
             else
               PATCH=$((PATCH+1))
             fi
-            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+            CHART_VERSION="$MAJOR.$MINOR.$PATCH"
           fi
+          
+          echo "chart_version=$CHART_VERSION" >> "$GITHUB_OUTPUT"
+  
+      - name: Update image tags
+        uses: mikefarah/yq@v4
+        with:
+          cmd: |
+            yq -i '.server.image.tag = "${{ github.event.inputs.server_version }}"' charts/temporal/values.yaml
+            yq -i '.admintools.image.tag = "${{ github.event.inputs.admintools_version }}"' charts/temporal/values.yaml
+            yq -i '.web.image.tag = "${{ github.event.inputs.ui_version }}"' charts/temporal/values.yaml
 
-          sed -i -e "s/^version: .*/version: $NEW_VERSION/" Chart.yaml
-          sed -i -e "s/^appVersion: .*/appVersion: ${{ github.event.inputs.version }}/" Chart.yaml
-
-          git commit -m "Update Chart to $NEW_VERSION, Temporal v${{ github.event.inputs.version }}" Chart.yaml
-          git tag -a "temporal-${NEW_VERSION}" -m "Release Chart: $NEW_VERSION. Temporal ${{ github.event.inputs.version }}"
+      - name: Update chart
+        uses: mikefarah/yq@v4
+        with:
+          cmd: |
+            yq -i '.appVersion = "${{ github.event.inputs.server_version }}"' charts/temporal/Chart.yaml
+            yq -i '.version = "${{ steps.chart-version.outputs.chart_version }}"' charts/temporal/Chart.yaml
+    
+      - name: Commit changes
+        working-directory: charts/temporal
+        run: |
+          git commit -m "Update Chart to ${{ steps.chart-version.outputs.chart_version }}." Chart.yaml values.yaml
+          git tag -a "temporal-${{ steps.chart-version.outputs.chart_version }}" -m "Release Chart: ${{ steps.chart-version.outputs.chart_version }}"
 
           git push --tags origin master
 

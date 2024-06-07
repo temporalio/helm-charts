@@ -21,7 +21,7 @@ server:
   sidecarContainers: {}
   image:
     repository: temporalio/server
-    tag: ""
+    tag: 1.24.1
     pullPolicy: IfNotPresent
 
   # Global default settings (can be overridden per service)
@@ -138,13 +138,13 @@ server:
           password: "password"
           existingSecret: ""
           replicationFactor: 1
+          # datacenter: "us-east-1a"
+          # maxQPS: 1000
+          # maxConns: 2
           consistency:
             default:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
-          # datacenter: "us-east-1a"
-          # maxQPS: 1000
-          # maxConns: 2
 
         sql:
           driver: "mysql"
@@ -286,7 +286,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: ""
+    tag: 1.24.1-tctl-1.18.1-cli-0.12.0
     pullPolicy: IfNotPresent
 
   service:
@@ -311,7 +311,7 @@ web:
 
   image:
     repository: temporalio/ui
-    tag: 2.25.0
+    tag: 2.27.2
     pullPolicy: IfNotPresent
 
   service:
