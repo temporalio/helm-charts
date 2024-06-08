@@ -39,7 +39,7 @@ spec:
       {{ include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
       initContainers:
-        {{- if or .Values.cassandra.enabled (eq (include "temporal.persistence.driver" (list $ "default")) "cassandra") (eq (include "temporal.persistence.driver" (list $ "visibility")) "cassandra") }}
+        {{- if or .Values.cassandra.enabled (eq (include "temporal.persistence.driver" (list $ "default")) "cassandra") }}
         {{- if .Values.cassandra.enabled }}
         - name: check-cassandra-service
           image: busybox
@@ -254,18 +254,15 @@ spec:
         {{- end }}
       containers:
         {{- range $store := (list "default" "visibility") }}
+        {{- if or (eq $store "default") (eq (include "temporal.persistence.driver" (list $ $store)) "sql") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
         - name: {{ $store }}-schema
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
           command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/cassandra/{{ include "temporal.persistence.schema" $store }}/versioned']
-          {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "mysql" }}
-          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v57/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "mysql8" }}
           command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v8/{{ include "temporal.persistence.schema" $store }}/versioned']
-          {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "postgres" }}
-          command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v96/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "postgres12" }}
           command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v12/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- end }}
@@ -317,6 +314,7 @@ spec:
               {{- end }}
             {{- end }}
             {{- end }}
+        {{- end }}
         {{- end }}
           {{- with .Values.schema.resources }}
           resources:
@@ -385,7 +383,7 @@ spec:
       restartPolicy: "OnFailure"
       initContainers:
         - name: check-elasticsearch
-          image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
+          image: "{{ .Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['sh', '-c', 'until curl --silent --fail {{- if and .Values.elasticsearch.username .Values.elasticsearch.password }} --user {{ .Values.elasticsearch.username }}:{{ .Values.elasticsearch.password }} {{- end }} {{ .Values.elasticsearch.scheme }}://{{ .Values.elasticsearch.host }}:{{ .Values.elasticsearch.port }} 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
       containers:
