@@ -14,7 +14,7 @@ serviceAccount:
   extraAnnotations:
 server:
   enabled: true
-  sidecarContainers: {}
+  sidecarContainers: []
   image:
     repository: temporalio/server
     tag: 1.24.1
