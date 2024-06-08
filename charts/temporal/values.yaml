@@ -23,7 +23,7 @@ server:
   sidecarContainers: {}
   image:
     repository: temporalio/server
-    tag: 1.22.4
+    tag: ""
     pullPolicy: IfNotPresent
 
   # Global default settings (can be overridden per service)
@@ -288,7 +288,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.22.4
+    tag: ""
     pullPolicy: IfNotPresent
 
   service:
@@ -308,13 +308,6 @@ admintools:
 
 web:
   enabled: true
-  config:
-    # server/config.yml file content
-    auth:
-      enabled: false
-    routing:
-      default_to_namespace: # internal use only
-      issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
 
   replicaCount: 1
 
@@ -371,6 +364,8 @@ web:
   additionalVolumes: []
   additionalVolumeMounts: []
 
+  # Adjust Web UI config with environment variables:
+  # https://docs.temporal.io/references/web-ui-environment-variables
   additionalEnv: []
 
   containerSecurityContext: {}

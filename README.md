@@ -35,7 +35,7 @@ helm dependencies update
 Temporal can be configured to run with various dependencies. The default "Batteries Included" Helm Chart configuration deploys and configures the following components:
 
 * Cassandra
-* ElasticSearch
+* Elasticsearch
 * Prometheus
 * Grafana
 
@@ -277,7 +277,6 @@ The example below demonstrates a few things:
 1. How to set values via the command line rather than the environment.
 2. How to configure a database (shows Cassandra, but MySQL works the same way)
 3. How to enable TLS for the database connection.
-4. How to enable Auth for the Web UI
 
 ```bash
 helm install temporaltest \
@@ -466,8 +465,18 @@ You can use helm upgrade with the "--dry-run" option to generate the content for
 
 The dynamic-config ConfigMap is referenced as a mounted volume within the Temporal Containers, so any applied change will be automatically picked up by all pods within a few minutes without the need for pod recycling. See k8S documentation (https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically) for more details on how this works.
 
-### Updating Temporal Web Config
-the config file `server/config.yml` for the temporal web ui is referenced as a mounted volume within the Temporal Web UI Container and can be populated by inserting values in the `web.config` section in the `values.yml` for possible config check (https://github.com/temporalio/web#configuring-authentication-optional)
+### Updating Temporal Web UI Config
+
+The default web UI configuration is shown here (https://docs.temporal.io/references/web-ui-configuration). To override the default config, you need to provide environment variables in `web.additionalEnv` in the `values.yml` file. You can refer to the available environment variables here (https://docs.temporal.io/references/web-ui-environment-variables).
+
+For example, to serve the UI from a subpath:
+
+```
+web:
+  additionalEnv:
+    - name: TEMPORAL_UI_PUBLIC_PATH
+      value: /custom-path
+```
 
 ## Uninstalling
 
