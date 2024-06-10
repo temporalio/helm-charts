@@ -45,13 +45,13 @@ spec:
         {{- end }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
-      {{- if or $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external)}}
       {{- if semverCompare ">=1.13.0" $.Chart.AppVersion}}
       {{- with $.Values.server.securityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- end }}
+      {{- if or $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external)}}
       initContainers:
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra-service
