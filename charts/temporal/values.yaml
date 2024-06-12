@@ -376,6 +376,8 @@ web:
   securityContext: {}
 
 schema:
+  createDatabase:
+    enabled: true
   setup:
     enabled: true
     backoffLimit: 100
