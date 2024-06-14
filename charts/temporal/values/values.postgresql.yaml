@@ -47,13 +47,13 @@ server:
           #  certFile: /path/to/certs/<client-cert-file>
           #  keyFile: /path/to/certs/<client-key-file>
 
-# additionalVolumes:
-#   - name: secret-with-certs
-#     secret:
-#       secretName: secret-with-certs
-# additionalVolumeMounts:
-#   - name: secret-with-certs
-#     mountPath: /path/to/certs/
+  # additionalVolumes:
+  #   - name: secret-with-certs
+  #     secret:
+  #       secretName: secret-with-certs
+  # additionalVolumeMounts:
+  #   - name: secret-with-certs
+  #     mountPath: /path/to/certs/
 
 cassandra:
   enabled: false
