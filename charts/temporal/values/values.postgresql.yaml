@@ -60,6 +60,8 @@ elasticsearch:
   enabled: true
 
 schema:
+  createDatabase:
+    enabled: true
   setup:
     enabled: false
   update:

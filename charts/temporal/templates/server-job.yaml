@@ -49,6 +49,7 @@ spec:
           imagePullPolicy: {{ .Values.cassandra.image.pullPolicy }}
           command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ .Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
         {{- end }}
+        {{- if .Values.schema.createDatabase.enabled }}
         {{- range $store := (list "default" "visibility") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
         {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
@@ -110,6 +111,7 @@ spec:
               value: {{ $storeConfig.sql.password }}
               {{- end }}
             {{- end }}
+        {{- end }}
         {{- end }}
         {{- end }}
         {{- else }}
