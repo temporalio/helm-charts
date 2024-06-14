@@ -27,7 +27,7 @@ server:
 #                      ResourceExhausted: 0.15
 
         cassandra:
-          hosts: ["cassandra.default.svc.cluster.local"]
+          hosts: ["cassandra.default.svc"]
           port: 9042
           keyspace: temporal
           user: "user"
