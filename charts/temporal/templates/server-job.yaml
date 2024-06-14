@@ -89,6 +89,10 @@ spec:
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['temporal-sql-tool', '--database', '{{ include "temporal.persistence.sql.database" (list $ $store) }}', 'create-database']
+          {{- if $.Values.server.additionalVolumeMounts }}
+          volumeMounts:
+            {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12 }}
+          {{- end }}
           env:
             - name: SQL_PLUGIN
               value: {{ include "temporal.persistence.sql.driver" (list $ $store) }}
@@ -111,6 +115,28 @@ spec:
               value: {{ $storeConfig.sql.password }}
               {{- end }}
             {{- end }}
+            {{- with $storeConfig.sql.tls }}
+            - name: SQL_TLS
+              value: {{ .enabled | quote }}
+            {{- if .caFile }}
+            - name: SQL_TLS_CA_FILE
+              value: {{ .caFile }}
+            {{- end }}
+            {{- if and .certFile .keyFile }}
+            - name: SQL_TLS_CERT_FILE
+              value: {{ .certFile }}
+            - name: SQL_TLS_KEY_FILE
+              value: {{ .keyFile }}
+            {{- end }}
+            {{- if .serverName }}
+            - name: SQL_TLS_SERVER_NAME
+              value: {{ .serverName }}
+            {{- end }}
+            {{- if hasKey . "enableHostVerification" }}
+            - name: SQL_TLS_DISABLE_HOST_VERIFICATION
+              value: {{ not .enableHostVerification | quote }}
+            {{- end }}
+            {{- end }}
         {{- end }}
         {{- end }}
         {{- end }}
@@ -124,6 +150,10 @@ spec:
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'setup-schema', '-v', '0.0']
+          {{- if $.Values.server.additionalVolumeMounts }}
+          volumeMounts:
+            {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12 }}
+          {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
             - name: CASSANDRA_HOST
@@ -171,6 +201,28 @@ spec:
               value: {{ $storeConfig.sql.password }}
               {{- end }}
             {{- end }}
+            {{- with $storeConfig.sql.tls }}
+            - name: SQL_TLS
+              value: {{ .enabled | quote }}
+            {{- if .caFile }}
+            - name: SQL_TLS_CA_FILE
+              value: {{ .caFile }}
+            {{- end }}
+            {{- if and .certFile .keyFile }}
+            - name: SQL_TLS_CERT_FILE
+              value: {{ .certFile }}
+            - name: SQL_TLS_KEY_FILE
+              value: {{ .keyFile }}
+            {{- end }}
+            {{- if .serverName }}
+            - name: SQL_TLS_SERVER_NAME
+              value: {{ .serverName }}
+            {{- end }}
+            {{- if hasKey . "enableHostVerification" }}
+            - name: SQL_TLS_DISABLE_HOST_VERIFICATION
+              value: {{ not .enableHostVerification | quote }}
+            {{- end }}
+            {{- end }}
             {{- end }}
         {{- end }}
           {{- with .Values.schema.resources }}
@@ -200,6 +252,10 @@ spec:
       {{- with .Values.server.tolerations }}
       tolerations:
       {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if $.Values.server.additionalVolumes }}
+      volumes:
+        {{- toYaml $.Values.server.additionalVolumes | nindent 8 }}
       {{- end }}
 ---
 {{- end }}
@@ -268,6 +324,10 @@ spec:
           {{- else if eq (include "temporal.persistence.sql.driver" (list $ $store)) "postgres12" }}
           command: ['temporal-{{ include "temporal.persistence.driver" (list $ $store) }}-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v12/{{ include "temporal.persistence.schema" $store }}/versioned']
           {{- end }}
+          {{- if $.Values.server.additionalVolumeMounts }}
+          volumeMounts:
+            {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12 }}
+          {{- end }}
           env:
             {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
             - name: CASSANDRA_HOST
@@ -315,6 +375,28 @@ spec:
               value: {{ $storeConfig.sql.password }}
               {{- end }}
             {{- end }}
+            {{- with $storeConfig.sql.tls }}
+            - name: SQL_TLS
+              value: {{ .enabled | quote }}
+            {{- if .caFile }}
+            - name: SQL_TLS_CA_FILE
+              value: {{ .caFile }}
+            {{- end }}
+            {{- if and .certFile .keyFile }}
+            - name: SQL_TLS_CERT_FILE
+              value: {{ .certFile }}
+            - name: SQL_TLS_KEY_FILE
+              value: {{ .keyFile }}
+            {{- end }}
+            {{- if .serverName }}
+            - name: SQL_TLS_SERVER_NAME
+              value: {{ .serverName }}
+            {{- end }}
+            {{- if hasKey . "enableHostVerification" }}
+            - name: SQL_TLS_DISABLE_HOST_VERIFICATION
+              value: {{ not .enableHostVerification | quote }}
+            {{- end }}
+            {{- end }}
             {{- end }}
         {{- end }}
         {{- end }}
@@ -341,6 +423,10 @@ spec:
       {{- with .Values.admintools.tolerations }}
       tolerations:
       {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if $.Values.server.additionalVolumes }}
+      volumes:
+        {{- toYaml $.Values.server.additionalVolumes | nindent 8 }}
       {{- end }}
 ---
 {{- end }}
