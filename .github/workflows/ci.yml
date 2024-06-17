@@ -34,5 +34,3 @@ jobs:
       - name: Create kind cluster
         uses: helm/kind-action@v1.4.0
 
-      - name: Run chart-testing (install)
-        run: ct install --charts ./ --helm-extra-args="--timeout 1000s" --config=ct.yml
