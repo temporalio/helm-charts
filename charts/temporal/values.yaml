@@ -334,7 +334,6 @@ web:
   # https://docs.temporal.io/references/web-ui-environment-variables
   additionalEnv: []
   containerSecurityContext: {}
-
   securityContext: {}
   topologySpreadConstraints: []
   podDisruptionBudget: {}
