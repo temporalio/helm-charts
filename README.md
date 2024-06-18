@@ -42,19 +42,21 @@ The sections that follow describe various deployment configurations, from a mini
 
 ### Minimal installation with required dependencies only
 
-To install Temporal in a limited but working and self-contained configuration (one replica of Cassandra and each of Temporal's services, no metrics or ElasticSearch), you can run the following command
+To install Temporal in a limited but working and self-contained configuration (one replica of Cassandra, ElasticSearch and each of Temporal's services, no metrics), you can run the following command
 
 ```bash
 helm install \
     --set server.replicaCount=1 \
     --set cassandra.config.cluster_size=1 \
+    --set elasticsearch.replicas=1 \
     --set prometheus.enabled=false \
     --set grafana.enabled=false \
-    --set elasticsearch.enabled=false \
     temporaltest . --timeout 15m
 ```
 
 This configuration consumes limited resources and it is useful for small scale tests (such as using minikube).
+
+Note: It used to be possible to install Temporal with just Cassandra. Since Temporal 1.21, this is no longer supported. Cassandra is not supported as a visibility store, so ElasticSearch or an SQL store must be enabled.
 
 Below is an example of an environment installed in this configuration:
 
