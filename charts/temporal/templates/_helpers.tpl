@@ -42,7 +42,7 @@ Create the name of the service account
 Define the service account as needed
 */}}
 {{- define "temporal.serviceAccount" -}}
-{{- if .Values.serviceAccount.create -}}
+{{- if .Values.serviceAccount.name -}}
 serviceAccountName: {{ include "temporal.serviceAccountName" . }}
 {{- end -}}
 {{- end -}}
