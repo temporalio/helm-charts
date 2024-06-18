@@ -42,7 +42,7 @@ The sections that follow describe various deployment configurations, from a mini
 
 ### Minimal installation with required dependencies only
 
-To install Temporal in a limited but working and self-contained configuration (one replica of Cassandra, ElasticSearch and each of Temporal's services, no metrics), you can run the following command
+To install Temporal in a limited but working and self-contained configuration (one replica of Cassandra, Elasticsearch and each of Temporal's services, no metrics), you can run the following command
 
 ```bash
 helm install \
@@ -56,7 +56,7 @@ helm install \
 
 This configuration consumes limited resources and it is useful for small scale tests (such as using minikube).
 
-Note: It used to be possible to install Temporal with just Cassandra. Since Temporal 1.21, this is no longer supported. Cassandra is not supported as a visibility store, so ElasticSearch or an SQL store must be enabled.
+Note: It used to be possible to install Temporal with just Cassandra. Since Temporal 1.21, this is no longer supported. Cassandra is not supported as a visibility store, so Elasticsearch or an SQL store must be enabled.
 
 Below is an example of an environment installed in this configuration:
 
@@ -85,7 +85,7 @@ To install Temporal with all of its dependencies run this command:
 helm install temporaltest . --timeout 900s
 ```
 
-To use your own instance of ElasticSearch, MySQL, PostgreSQL, or Cassandra, please read the "Bring Your Own" sections below.
+To use your own instance of Elasticsearch, MySQL, PostgreSQL, or Cassandra, please read the "Bring Your Own" sections below.
 
 Other components (Prometheus, Grafana) can be omitted from the installation by setting their corresponding `enable` flag to `false`:
 
@@ -108,9 +108,9 @@ Example:
 helm install -f values/values.cloudsqlproxy.yaml temporaltest . --timeout 900s
 ```
 
-### Install with your own ElasticSearch
+### Install with your own Elasticsearch
 
-You might already be operating an instance of ElasticSearch that you want to use with Temporal.
+You might already be operating an instance of Elasticsearch that you want to use with Temporal.
 
 To do so, fill in the relevant configuration values in `values.elasticsearch.yaml`, and pass the file to 'helm install'.
 
