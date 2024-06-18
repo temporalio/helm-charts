@@ -79,6 +79,7 @@ spec:
               value: {{ $storeConfig.cassandra.password }}
               {{- end }}
             {{- end }}
+        {{- end }}
         {{- else if or (eq (include "temporal.persistence.driver" (list $ "default")) "sql") (eq (include "temporal.persistence.driver" (list $ "visibility")) "sql") }}
         {{- range $store := (list "default" "visibility") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
@@ -135,7 +136,6 @@ spec:
               value: {{ not .enableHostVerification | quote }}
             {{- end }}
             {{- end }}
-        {{- end }}
         {{- end }}
         {{- end }}
         {{- end }}
