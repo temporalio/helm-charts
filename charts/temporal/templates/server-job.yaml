@@ -79,8 +79,6 @@ spec:
               value: {{ $storeConfig.cassandra.password }}
               {{- end }}
             {{- end }}
-        {{- end }}
-        {{- end }}
         {{- else if or (eq (include "temporal.persistence.driver" (list $ "default")) "sql") (eq (include "temporal.persistence.driver" (list $ "visibility")) "sql") }}
         {{- range $store := (list "default" "visibility") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
@@ -140,8 +138,7 @@ spec:
         {{- end }}
         {{- end }}
         {{- end }}
-        {{- else }}
-          []
+        {{- end }}
         {{- end }}
       containers:
         {{- range $store := (list "default" "visibility") }}
