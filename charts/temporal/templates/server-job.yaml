@@ -80,10 +80,12 @@ spec:
               {{- end }}
             {{- end }}
         {{- end }}
+        {{- end }}
+        {{- end }}
         {{- else if or (eq (include "temporal.persistence.driver" (list $ "default")) "sql") (eq (include "temporal.persistence.driver" (list $ "visibility")) "sql") }}
         {{- range $store := (list "default" "visibility") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
-        {{- if eq (include "temporal.persistence.driver" (list $ $store)) "sql" }}
+        {{- if and (eq (include "temporal.persistence.driver" (list $ $store)) "sql") .Values.schema.createDatabase.enabled }}
         - name: create-{{ $store }}-store
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
@@ -138,7 +140,8 @@ spec:
             {{- end }}
         {{- end }}
         {{- end }}
-        {{- end }}
+        {{- else }}
+          []
         {{- end }}
       containers:
         {{- range $store := (list "default" "visibility") }}
