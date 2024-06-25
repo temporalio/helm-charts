@@ -24,6 +24,11 @@ spec:
       {{- if hasKey .Values.server.frontend.service "nodePort" }}
       nodePort: {{ .Values.server.frontend.service.nodePort }}
       {{- end }}
+    - port: {{ .Values.server.frontend.service.httpPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+      # TODO: Also expose HTTP port
   selector:
     app.kubernetes.io/name: {{ include "temporal.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
