@@ -28,7 +28,7 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
-      # TODO: Also expose HTTP port
+      # TODO: Allow customizing the node HTTP port
   selector:
     app.kubernetes.io/name: {{ include "temporal.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
