@@ -182,6 +182,7 @@ server:
       annotations: {} # Evaluated as template
       type: ClusterIP
       port: 7233
+      httpPort: 7243
     metrics:
       annotations:
         enabled: true

@@ -122,6 +122,7 @@ data:
       frontend:
         rpc:
           grpcPort: {{ include "temporal.frontend.grpcPort" $ }}
+          httpPort: {{ include "temporal.frontend.httpPort" $ }}
           membershipPort: {{ include "temporal.frontend.membershipPort" $ }}
           bindOnIP: "0.0.0.0"
 
@@ -159,7 +160,8 @@ data:
           enabled: true
           initialFailoverVersion: 1
           rpcName: "temporal-frontend"
-          rpcAddress: "127.0.0.1:7933"
+          rpcAddress: "127.0.0.1:7233"
+          httpAddress: "127.0.0.1:7243"
     {{- end }}
 
     {{- if $.Values.server.config.dcRedirectionPolicy }}
