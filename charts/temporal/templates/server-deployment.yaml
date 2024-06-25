@@ -121,6 +121,11 @@ spec:
             - name: rpc
               containerPort: {{ include (printf "temporal.%s.grpcPort" $service) $ }}
               protocol: TCP
+          {{- if eq $service "frontend" }}
+            - name: http
+              containerPort: {{ include (printf "temporal.%s.httpPort" $service) $ }}
+              protocol: TCP
+          {{- end }}
             - name: metrics
               containerPort: 9090
               protocol: TCP

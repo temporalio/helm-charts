@@ -77,6 +77,14 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- end -}}
 {{- end -}}
 
+{{- define "temporal.frontend.httpPort" -}}
+{{- if $.Values.server.frontend.service.httpPort -}}
+{{- $.Values.server.frontend.service.httpPort -}}
+{{- else -}}
+{{- 7243 -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "temporal.frontend.membershipPort" -}}
 {{- if $.Values.server.frontend.service.membershipPort -}}
 {{- $.Values.server.frontend.service.membershipPort -}}
