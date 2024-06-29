@@ -5,7 +5,7 @@ server:
         driver: "sql"
 
         sql:
-          driver: "postgres"
+          driver: "postgres12"
           host: _HOST_
           port: 5432
           database: temporal
@@ -20,12 +20,15 @@ server:
           #  enabled: true
           #  enableHostVerification: true
           #  serverName: _HOST_ # this is strictly required when using serverless CRDB offerings
+          #  caFile: /path/to/certs/<CA-file> # Here we assumed that caFile, certFile, keyFile are stored in one secret mounted as 'secret-with-certs' (see: server.additionalVolumes and server.additionalVolumeMounts sections).
+          #  certFile: /path/to/certs/<client-cert-file>
+          #  keyFile: /path/to/certs/<client-key-file>
 
       visibility:
         driver: "sql"
 
         sql:
-          driver: "postgres"
+          driver: "postgres12"
           host: _HOST_
           port: 5432
           database: temporal_visibility
@@ -40,6 +43,17 @@ server:
           #  enabled: true
           #  enableHostVerification: true
           #  serverName: _HOST_ # this is strictly required when using serverless CRDB offerings
+          #  caFile: /path/to/certs/<CA-file> # Here we assumed that caFile, certFile, keyFile are stored in one secret mounted as 'secret-with-certs' (see: server.additionalVolumes and server.additionalVolumeMounts sections).
+          #  certFile: /path/to/certs/<client-cert-file>
+          #  keyFile: /path/to/certs/<client-key-file>
+
+  # additionalVolumes:
+  #   - name: secret-with-certs
+  #     secret:
+  #       secretName: secret-with-certs
+  # additionalVolumeMounts:
+  #   - name: secret-with-certs
+  #     mountPath: /path/to/certs/
 
 cassandra:
   enabled: false
@@ -60,6 +74,8 @@ elasticsearch:
   enabled: true
 
 schema:
+  createDatabase:
+    enabled: true
   setup:
     enabled: false
   update:

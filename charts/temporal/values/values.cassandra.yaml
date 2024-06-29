@@ -39,22 +39,6 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
 
-      visibility:
-        driver: "cassandra"
-
-        cassandra:
-          hosts: ["cassandra.default.svc.cluster.local"]
-          port: 9042
-          keyspace: temporal_visibility
-          user: "user"
-          password: "password"
-          existingSecret: ""
-          replicationFactor: 1
-          consistency:
-            default:
-              consistency: "local_quorum"
-              serialConsistency: "local_serial"
-
 cassandra:
   enabled: false
 
@@ -65,6 +49,8 @@ postgresql:
   enabled: false
 
 schema:
+  createDatabase:
+    enabled: true
   setup:
     enabled: false
   update:

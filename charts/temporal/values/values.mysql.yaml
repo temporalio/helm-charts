@@ -5,7 +5,7 @@ server:
         driver: "sql"
 
         sql:
-          driver: "mysql"
+          driver: "mysql8"
           host: _HOST_
           port: 3306
           database: temporal
@@ -18,7 +18,7 @@ server:
         driver: "sql"
 
         sql:
-          driver: "mysql"
+          driver: "mysql8"
           host: _HOST_
           port: 3306
           database: temporal_visibility
@@ -37,6 +37,8 @@ postgresql:
   enabled: false
 
 schema:
+  createDatabase:
+    enabled: true
   setup:
     enabled: false
   update:

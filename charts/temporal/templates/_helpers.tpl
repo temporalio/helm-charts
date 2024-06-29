@@ -42,7 +42,7 @@ Create the name of the service account
 Define the service account as needed
 */}}
 {{- define "temporal.serviceAccount" -}}
-{{- if .Values.serviceAccount.create -}}
+{{- if .Values.serviceAccount.name -}}
 serviceAccountName: {{ include "temporal.serviceAccountName" . }}
 {{- end -}}
 {{- end -}}
@@ -74,6 +74,14 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $.Values.server.frontend.service.port -}}
 {{- else -}}
 {{- 7233 -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.frontend.httpPort" -}}
+{{- if $.Values.server.frontend.service.httpPort -}}
+{{- $.Values.server.frontend.service.httpPort -}}
+{{- else -}}
+{{- 7243 -}}
 {{- end -}}
 {{- end -}}
 
@@ -238,9 +246,9 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
 {{- if $storeConfig.sql.host -}}
 {{- $storeConfig.sql.host -}}
-{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
 {{- include "mysql.host" $global -}}
-{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres")) -}}
+{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres12")) -}}
 {{- include "postgresql.host" $global -}}
 {{- else -}}
 {{- required (printf "Please specify sql host for %s store" $store) $storeConfig.sql.host -}}
@@ -253,9 +261,9 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
 {{- if $storeConfig.sql.port -}}
 {{- $storeConfig.sql.port -}}
-{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
 {{- $global.Values.mysql.service.port -}}
-{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres")) -}}
+{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres12")) -}}
 {{- $global.Values.postgresql.service.port -}}
 {{- else -}}
 {{- required (printf "Please specify sql port for %s store" $store) $storeConfig.sql.port -}}
@@ -268,9 +276,9 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
 {{- if $storeConfig.sql.user -}}
 {{- $storeConfig.sql.user -}}
-{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
 {{- $global.Values.mysql.mysqlUser -}}
-{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres")) -}}
+{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres12")) -}}
 {{- $global.Values.postgresql.postgresqlUser -}}
 {{- else -}}
 {{- required (printf "Please specify sql user for %s store" $store) $storeConfig.sql.user -}}
@@ -283,13 +291,13 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
 {{- if $storeConfig.sql.password -}}
 {{- $storeConfig.sql.password -}}
-{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
 {{- if or $global.Values.schema.setup.enabled $global.Values.schema.update.enabled -}}
 {{- required "Please specify password for MySQL chart" $global.Values.mysql.mysqlPassword -}}
 {{- else -}}
 {{- $global.Values.mysql.mysqlPassword -}}
 {{- end -}}
-{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres")) -}}
+{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres12")) -}}
 {{- if or $global.Values.schema.setup.enabled $global.Values.schema.update.enabled -}}
 {{- required "Please specify password for PostgreSQL chart" $global.Values.postgresql.postgresqlPassword -}}
 {{- else -}}
@@ -308,9 +316,9 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $storeConfig.sql.existingSecret -}}
 {{- else if $storeConfig.sql.password -}}
 {{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
-{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
 {{- include "call-nested" (list $global "mysql" "mysql.secretName") -}}
-{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres")) -}}
+{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres12")) -}}
 {{- include "call-nested" (list $global "postgresql" "postgresql.secretName") -}}
 {{- else -}}
 {{- required (printf "Please specify sql password or existing secret for %s store" $store) $storeConfig.sql.existingSecret -}}
@@ -323,9 +331,9 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
 {{- if or $storeConfig.sql.existingSecret $storeConfig.sql.password -}}
 {{- print "password" -}}
-{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql")) -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
 {{- print "mysql-password" -}}
-{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres")) -}}
+{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres12")) -}}
 {{- print "postgresql-password" -}}
 {{- else -}}
 {{- fail (printf "Please specify sql password or existing secret for %s store" $store) -}}
@@ -350,7 +358,7 @@ All Cassandra hosts.
 {{- define "cassandra.hosts" -}}
 {{- range $i := (until (int .Values.cassandra.config.cluster_size)) }}
 {{- $cassandraName := include "call-nested" (list $ "cassandra" "cassandra.fullname") -}}
-{{- printf "%s.%s.svc.cluster.local," $cassandraName $.Release.Namespace -}}
+{{- printf "%s.%s," $cassandraName $.Release.Namespace -}}
 {{- end }}
 {{- end -}}
 
@@ -359,7 +367,7 @@ The first Cassandra host in the stateful set.
 */}}
 {{- define "cassandra.host" -}}
 {{- $cassandraName := include "call-nested" (list . "cassandra" "cassandra.fullname") -}}
-{{- printf "%s.%s.svc.cluster.local" $cassandraName .Release.Namespace -}}
+{{- printf "%s.%s" $cassandraName .Release.Namespace -}}
 {{- end -}}
 
 {{/*
