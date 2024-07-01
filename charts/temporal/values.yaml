@@ -183,6 +183,23 @@ server:
       type: ClusterIP
       port: 7233
       httpPort: 7243
+    
+    ingress:
+      enabled: false
+      # className:
+      annotations: {}
+      # kubernetes.io/ingress.class: traefik
+      # ingress.kubernetes.io/ssl-redirect: "false"
+      # traefik.frontend.rule.type: PathPrefix
+      hosts:
+        - "/"
+        # - "domain.com/xyz"
+        # - "domain.com"
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+
     metrics:
       annotations:
         enabled: true
