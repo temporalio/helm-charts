@@ -50,7 +50,7 @@ data:
             databaseName: "{{ $.Values.server.config.persistence.default.sql.database }}"
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "default") }}:{{ include "temporal.persistence.sql.port" (list $ "default") }}"
             connectProtocol: "tcp"
-            user: {{ include "temporal.persistence.sql.user" (list $ "default") }}
+            user: "{{ `{{ .Env.TEMPORAL_STORE_USER }}` }}"
             password: "{{ `{{ .Env.TEMPORAL_STORE_PASSWORD }}` }}"
             {{- with (omit $.Values.server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
             {{- toYaml . | nindent 12 }}
@@ -64,7 +64,7 @@ data:
             databaseName: "{{ $.Values.server.config.persistence.visibility.sql.database }}"
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "visibility") }}:{{ include "temporal.persistence.sql.port" (list $ "visibility") }}"
             connectProtocol: "tcp"
-            user: "{{ include "temporal.persistence.sql.user" (list $ "visibility") }}"
+            user: "{{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_USER }}` }}"
             password: "{{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD }}` }}"
             {{- with (omit $.Values.server.config.persistence.visibility.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
             {{- toYaml . | nindent 12 }}

@@ -100,11 +100,21 @@ spec:
               value: "{{ $.Values.elasticsearch.password }}"
             - name: SERVICES
               value: {{ $service }}
+            - name: TEMPORAL_STORE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ "default") }}
+                  key: user
             - name: TEMPORAL_STORE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "default") }}
                   key: {{ include "temporal.persistence.secretKey" (list $ "default") }}
+            - name: TEMPORAL_VISIBILITY_STORE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
+                  key: user
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
               valueFrom:
                 secretKeyRef:
