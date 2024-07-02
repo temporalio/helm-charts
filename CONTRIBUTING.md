@@ -20,6 +20,10 @@ Please include in your PR description a note of how you tested your changes.
 
 Releases for the Helm Charts are not triggered automatically, the Temporal team will periodically do releases.
 
+### Getting help
+
+If you would like help getting your PR ready, please feel free to come and chat to us on [Temporal's public Slack](https://t.mp/slack). The Temporal team that works on the charts and the contributor community hang out in the #helm-charts channel.
+
 ### Community Requirements
 
 By participating in this project you agree to abide by its terms.
