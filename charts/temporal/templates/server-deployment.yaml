@@ -82,22 +82,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            - name: ENABLE_ES
-              value: "{{ or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}"
-            - name: ES_SEEDS
-              value: "{{ $.Values.elasticsearch.host }}"
-            - name: ES_PORT
-              value: "{{ $.Values.elasticsearch.port }}"
-            - name: ES_VERSION
-              value: "{{ $.Values.elasticsearch.version }}"
-            - name: ES_SCHEME
-              value: "{{ $.Values.elasticsearch.scheme }}"
-            - name: ES_VIS_INDEX
-              value: "{{ $.Values.elasticsearch.visibilityIndex }}"
-            - name: ES_USER
-              value: "{{ $.Values.elasticsearch.username }}"
-            - name: ES_PWD
-              value: "{{ $.Values.elasticsearch.password }}"
             - name: SERVICES
               value: {{ $service }}
             - name: TEMPORAL_STORE_PASSWORD
@@ -118,18 +102,20 @@ spec:
           {{- toYaml (default $.Values.server.additionalEnv $serviceValues.additionalEnv) | nindent 12 }}
           {{- end }}
           ports:
+          {{- if ne $service "worker" }}
             - name: rpc
-              containerPort: {{ include (printf "temporal.%s.grpcPort" $service) $ }}
+              containerPort: {{ $serviceValues.service.port }}
               protocol: TCP
+          {{- end }}
           {{- if eq $service "frontend" }}
             - name: http
-              containerPort: {{ include (printf "temporal.%s.httpPort" $service) $ }}
+              containerPort: {{ $serviceValues.service.httpPort }}
               protocol: TCP
           {{- end }}
             - name: metrics
               containerPort: 9090
               protocol: TCP
-          {{- if ne $service "worker"}}
+          {{- if ne $service "worker" }}
           livenessProbe:
              initialDelaySeconds: 150
              tcpSocket:
@@ -160,7 +146,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: "{{ include "temporal.componentname" (list $ $service) }}-config"
+            name: "{{ include "temporal.fullname" $ }}-config"
         - name: dynamic-config
           configMap:
             name: "{{ include "temporal.fullname" $ }}-dynamic-config"
