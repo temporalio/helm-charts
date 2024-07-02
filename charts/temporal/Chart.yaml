@@ -7,7 +7,7 @@ keywords:
   - workflow
   - orchestration
 maintainers:
-  - name: Temporal Technologies Inc.
+  - name: temporalio
     url: https://temporal.io/
 sources:
   - https://github.com/temporalio/temporal
