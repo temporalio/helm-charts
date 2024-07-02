@@ -548,6 +548,9 @@ helm \
     --timeout 15m
 ```
 
+# Contributing
+
+Please see our [CONTRIBUTING guide](CONTRIBUTING.md).
 
 # Acknowledgements
 
