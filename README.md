@@ -425,28 +425,16 @@ and navigate to http://127.0.0.1:8080 in your browser.
 
 ### Exploring Metrics via Grafana
 
-By default, the full "Batteries Included" configuration comes with a few Grafana dashboards.
+There are a number of preconfigured dashboards that you may import into your Grafana installation.
 
-To access those dashboards, follow the following steps:
-
-1. Extract Grafana's `admin` password from your installation:
-
-```
-$ kubectl get secret --namespace default temporaltest-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
-
-t7EqZQpiB6BztZV321dEDppXbeisdpiEAMgnu6yy%
-```
-
-2. Set up port forwarding, so you can access Grafana from your host:
-
-```
-$ kubectl port-forward services/temporaltest-grafana 8081:80
-Forwarding from 127.0.0.1:8081 -> 3000
-Forwarding from [::1]:8081 -> 3000
-...
-```
-
-3. Navigate to the forwarded Grafana port in your browser (http://localhost:8081/), login as `admin` (using the password from step 1), and click on the "Home" button (upper left corner) to see available dashboards.
+* [Server-General](https://raw.githubusercontent.com/temporalio/dashboards/helm/server/server-general.json)
+* [SDK-General](https://raw.githubusercontent.com/temporalio/dashboards/helm/sdk/sdk-general.json)
+* [Misc - Advanced Visibility Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/advanced-visibility-specific.json)
+* [Misc - Cluster Monitoring Kubernetes](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/clustermonitoring-kubernetes.json)
+* [Misc - Frontend Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/frontend-service-specific.json)
+* [Misc - History Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/history-service-specific.json)
+* [Misc - Matching Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/matching-service-specific.json)
+* [Misc - Worker Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json)
 
 ### Updating Dynamic Configs
 
