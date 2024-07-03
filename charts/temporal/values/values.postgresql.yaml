@@ -64,9 +64,6 @@ mysql:
 postgresql:
   enabled: true
 
-grafana:
-  enabled: true
-  
 elasticsearch:
   enabled: true
 
