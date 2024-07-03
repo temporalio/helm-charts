@@ -408,24 +408,6 @@ elasticsearch:
   username: ""
   password: ""
   visibilityIndex: "temporal_visibility_v1_dev"
-grafana:
-  enabled: true
-  replicas: 1
-  testFramework:
-    enabled: false
-  rbac:
-    create: false
-    pspEnabled: false
-    namespaced: true
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      datasources:
-        - name: TemporalMetrics
-          type: prometheus
-          url: http://{{ .Release.Name }}-prometheus-server
-          access: proxy
-          isDefault: true
 cassandra:
   enabled: true
   persistence:
