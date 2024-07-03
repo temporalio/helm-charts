@@ -38,6 +38,7 @@ spec:
     spec:
       {{ include "temporal.serviceAccount" . }}
       restartPolicy: "OnFailure"
+      {{- if .Values.schema.createDatabase.enabled }}
       initContainers:
         {{- if or .Values.cassandra.enabled (eq (include "temporal.persistence.driver" (list $ "default")) "cassandra") }}
         {{- if .Values.cassandra.enabled }}
@@ -49,7 +50,6 @@ spec:
           imagePullPolicy: {{ .Values.cassandra.image.pullPolicy }}
           command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ .Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
         {{- end }}
-        {{- if .Values.schema.createDatabase.enabled }}
         {{- range $store := (list "default" "visibility") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
         {{- if eq (include "temporal.persistence.driver" (list $ $store)) "cassandra" }}
@@ -139,10 +139,10 @@ spec:
             {{- end }}
         {{- end }}
         {{- end }}
-        {{- end }}
         {{- else }}
           []
         {{- end }}
+      {{- end }}
       containers:
         {{- range $store := (list "default" "visibility") }}
         {{- $storeConfig := index $.Values.server.config.persistence $store }}
