@@ -185,7 +185,6 @@ server:
       port: 7233
       membershipPort: 6933
       httpPort: 7243
-
     ingress:
       enabled: false
       # className:
@@ -201,7 +200,6 @@ server:
       #  - secretName: chart-example-tls
       #    hosts:
       #      - chart-example.local
-
     metrics:
       annotations:
         enabled: true
@@ -310,7 +308,7 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.27.3
+    tag: 2.28.0
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
