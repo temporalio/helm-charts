@@ -1,0 +1,81 @@
+{{- define "temporal.admintools-env" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store }}
+{{- $driver := include "temporal.persistence.driver" (list $global $store) -}}
+{{- $driverConfig := index $storeConfig $driver }}
+{{- if eq $driver "elasticsearch" -}}
+{{- $driverConfig = $global.Values.elasticsearch -}}
+{{- end -}}
+{{- if eq $driver "cassandra" }}
+- name: CASSANDRA_HOST
+  value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $global $store))) }}
+- name: CASSANDRA_PORT
+  value: {{ include "temporal.persistence.cassandra.port" (list $global $store) | quote }}
+- name: CASSANDRA_KEYSPACE
+  value: {{ $driverConfig.keyspace }}
+- name: CASSANDRA_USER
+  value: {{ $driverConfig.user }}
+- name: CASSANDRA_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "temporal.persistence.secretName" (list $global $store) }}
+      key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
+{{- else if eq $driver "sql" }}
+- name: SQL_PLUGIN
+  value: {{ include "temporal.persistence.sql.driver" (list $global $store) }}
+- name: SQL_HOST
+  value: {{ include "temporal.persistence.sql.host" (list $global $store) }}
+- name: SQL_PORT
+  value: {{ include "temporal.persistence.sql.port" (list $global $store) | quote }}
+- name: SQL_DATABASE
+  value: {{ include "temporal.persistence.sql.database" (list $global $store) }}
+- name: SQL_USER
+  value: {{ $driverConfig.user }}
+- name: SQL_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "temporal.persistence.secretName" (list $global $store) }}
+      key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
+  {{- with $driverConfig.tls }}
+- name: SQL_TLS
+  value: {{ .enabled | quote }}
+    {{- with .caFile }}
+- name: SQL_TLS_CA_FILE
+  value: {{ . }}
+    {{- end }}
+    {{- if and .certFile .keyFile }}
+- name: SQL_TLS_CERT_FILE
+  value: {{ .certFile }}
+- name: SQL_TLS_KEY_FILE
+  value: {{ .keyFile }}
+    {{- end }}
+    {{- with .serverName }}
+- name: SQL_TLS_SERVER_NAME
+  value: {{ . }}
+    {{- end }}
+    {{- if hasKey . "enableHostVerification" }}
+- name: SQL_TLS_DISABLE_HOST_VERIFICATION
+  value: {{ not .enableHostVerification | quote }}
+    {{- end }}
+  {{- end }}
+{{- else if eq $driver "elasticsearch" }}
+- name: ES_SCHEME
+  value: {{ $driverConfig.scheme }}
+- name: ES_HOST
+  value: {{ $driverConfig.host }}
+- name: ES_PORT
+  value: {{ $driverConfig.port | quote }}
+- name: ES_USER
+  value: {{ $driverConfig.username | quote }}
+- name: ES_PWD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "temporal.persistence.secretName" (list $global $store) }}
+      key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
+- name: ES_VERSION
+  value: {{ $driverConfig.version }}
+- name: ES_VISIBILITY_INDEX
+  value: {{ $driverConfig.visibilityIndex }}
+{{- end }}
+{{- end -}}

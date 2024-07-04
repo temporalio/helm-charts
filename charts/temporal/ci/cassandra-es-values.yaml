@@ -1,0 +1,13 @@
+server:
+  replicaCount: 1
+cassandra:
+  enabled: true
+  config:
+    cluster_size: 1
+elasticsearch:
+  enabled: true
+  replicas: 1
+prometheus:
+  enabled: false
+grafana:
+  enabled: false

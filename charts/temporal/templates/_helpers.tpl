@@ -81,10 +81,12 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.driver -}}
-{{- $storeConfig.driver -}}
-{{- else if $global.Values.cassandra.enabled -}}
+{{- if and (eq $store "default") $global.Values.cassandra.enabled -}}
 {{- print "cassandra" -}}
+{{- else if and (eq $store "visibility") (or $global.Values.elasticsearch.enabled $global.Values.elasticsearch.external) -}}
+{{- print "elasticsearch" -}}
+{{- else if $storeConfig.driver -}}
+{{- $storeConfig.driver -}}
 {{- else if $global.Values.mysql.enabled -}}
 {{- print "sql" -}}
 {{- else if $global.Values.postgresql.enabled -}}
@@ -124,9 +126,10 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.cassandra.existingSecret -}}
-{{- $storeConfig.cassandra.existingSecret -}}
-{{- else if $storeConfig.cassandra.password -}}
+{{- $driverConfig := $storeConfig.cassandra -}}
+{{- if $driverConfig.existingSecret -}}
+{{- $driverConfig.existingSecret -}}
+{{- else if $driverConfig.password -}}
 {{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
 {{- else -}}
 {{/* Cassandra password is optional, but we will create an empty secret for it */}}
@@ -138,8 +141,13 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.cassandra -}}
+{{- with $driverConfig.secretKey -}}
+{{- print . -}}
+{{- else -}}
 {{/* Cassandra password is optional, but we will create an empty secret for it */}}
 {{- print "password" -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.persistence.sql.database" -}}
@@ -240,8 +248,11 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.sql.existingSecret -}}
-{{- $storeConfig.sql.existingSecret -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if $driverConfig.existingSecret -}}
+{{- $driverConfig.existingSecret -}}
+{{- else if $driverConfig.secretName -}}
+{{- print $driverConfig.secretName -}}
 {{- else if $storeConfig.sql.password -}}
 {{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
 {{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
@@ -257,7 +268,10 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if or $storeConfig.sql.existingSecret $storeConfig.sql.password -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if $driverConfig.secretKey -}}
+{{- print $driverConfig.secretKey -}}
+{{- else if or $driverConfig.existingSecret $driverConfig.password -}}
 {{- print "password" -}}
 {{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
 {{- print "mysql-password" -}}
@@ -265,6 +279,30 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- print "postgresql-password" -}}
 {{- else -}}
 {{- fail (printf "Please specify sql password or existing secret for %s store" $store) -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.elasticsearch.secretName" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $driverConfig := $global.Values.elasticsearch -}}
+{{- if $driverConfig.existingSecret -}}
+{{- print $driverConfig.existingSecret -}}
+{{- else if $driverConfig.secretName -}}
+{{- print $driverConfig.secretName -}}
+{{- else -}}
+{{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.elasticsearch.secretKey" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $driverConfig := $global.Values.elasticsearch -}}
+{{- if $driverConfig.secretKey -}}
+{{- print $driverConfig.secretKey -}}
+{{- else -}}
+{{- "password" -}}
 {{- end -}}
 {{- end -}}
 
