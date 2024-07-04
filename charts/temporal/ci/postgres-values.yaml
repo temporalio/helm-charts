@@ -1,0 +1,35 @@
+server:
+  replicaCount: 1
+  config:
+    persistence:
+      defaultStore: default
+      default:
+        driver: "sql"
+        sql:
+          driver: "postgres12"
+          host: "postgres-postgresql.postgres"
+          port: 5432
+          database: "temporal"
+          user: "temporal"
+          password: "temporal"
+          maxConns: 20
+          maxConnLifetime: "1h"
+      visibility:
+        driver: "sql"
+        sql:
+          driver: "postgres12"
+          host: "postgres-postgresql.postgres"
+          port: 5432
+          database: "temporal"
+          user: "temporal"
+          password: "temporal"
+          maxConns: 20
+          maxConnLifetime: "1h"
+cassandra:
+  enabled: false
+elasticsearch:
+  enabled: false
+prometheus:
+  enabled: false
+grafana:
+  enabled: false

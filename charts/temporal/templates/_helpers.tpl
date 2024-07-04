@@ -126,9 +126,10 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.cassandra.existingSecret -}}
-{{- $storeConfig.cassandra.existingSecret -}}
-{{- else if $storeConfig.cassandra.password -}}
+{{- $driverConfig := $storeConfig.cassandra -}}
+{{- if $driverConfig.existingSecret -}}
+{{- $driverConfig.existingSecret -}}
+{{- else if $driverConfig.password -}}
 {{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
 {{- else -}}
 {{/* Cassandra password is optional, but we will create an empty secret for it */}}
@@ -140,8 +141,13 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.cassandra -}}
+{{- with $driverConfig.secretKey -}}
+{{- print . -}}
+{{- else -}}
 {{/* Cassandra password is optional, but we will create an empty secret for it */}}
 {{- print "password" -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.persistence.sql.database" -}}
@@ -262,7 +268,10 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if or $storeConfig.sql.existingSecret $storeConfig.sql.password -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if $driverConfig.secretKey -}}
+{{- print $driverConfig.secretKey -}}
+{{- else if or $driverConfig.existingSecret $driverConfig.password -}}
 {{- print "password" -}}
 {{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
 {{- print "mysql-password" -}}
