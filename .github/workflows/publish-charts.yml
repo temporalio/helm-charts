@@ -100,7 +100,7 @@ jobs:
           git commit -m "Update Chart to ${{ steps.chart-version.outputs.chart_version }}." Chart.yaml values.yaml
           git tag -a "temporal-${{ steps.chart-version.outputs.chart_version }}" -m "Release Chart: ${{ steps.chart-version.outputs.chart_version }}"
 
-          git push --tags origin master
+          git push --tags origin main
 
       - name: Install Helm
         uses: azure/setup-helm@v3
