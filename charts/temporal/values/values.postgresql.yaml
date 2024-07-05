@@ -67,9 +67,6 @@ postgresql:
 prometheus:
   enabled: true
 
-grafana:
-  enabled: true
-  
 elasticsearch:
   enabled: true
 
