@@ -347,7 +347,7 @@ temporaltest-worker-769b996fd-qmvbw                     1/1     Running   2     
 
 ### Running Temporal CLI From the Admin Tools Container
 
-You can also shell into `admin-tools` container via [k9s](https://github.com/derailed/k9s) or by running `kubectl exec -it`:
+You can also shell into `admin-tools` container via [k9s](https://github.com/derailed/k9s) or by running `kubectl exec`:
 
 ```
 $ kubectl exec -it services/temporaltest-admintools /bin/bash
