@@ -21,9 +21,17 @@ This sequence assumes
 
 This repo only contains one chart currently, but is structured in the standard helm repo way. This means you will find the chart in the `charts/temporal` directory. All example `helm` commands below should be run from that directory.
 
-## Download Helm Chart Dependencies
+## Methods for installing
 
-Download Helm dependencies:
+There are two ways to install the Temporal chart, via our helm repo, or using a local git clone of this repo.
+
+Using the repo is the preferred method of installing the chart as it avoids the need for you to clone the repo locally, and also ensures you are using a release which has been tested. All of the examples in this README will use the repo (https://go.temporal.io/helm-charts) to install the chart.
+
+Note: Where we refer to values files in the examples, you will need to download these from this repo to your local machine if you would like to use them while installing the chart from our repo.
+
+The second way of installing the Temporal chart is to clone this git repo and install from there. This method is useful if you are testing changes to the helm chart, but is otherwise not recommended. If you would like to use this method, rather than passing `--repo https://go.temporal.io/helm-charts <options> temporal` as in the examples below, you would simply do `helm install <options> .`, to tell helm to use the local directory (`.`) for the chart.
+
+If you are using a git clone, you will need to download the Helm dependncies before you install the chart:
 
 ```bash
 helm dependencies update
@@ -46,12 +54,14 @@ To install Temporal in a limited but working and self-contained configuration (o
 
 ```bash
 helm install \
+    --repo https://go.temporal.io/helm-charts \
     --set server.replicaCount=1 \
     --set cassandra.config.cluster_size=1 \
     --set elasticsearch.replicas=1 \
     --set prometheus.enabled=false \
     --set grafana.enabled=false \
-    temporaltest . --timeout 15m
+    temporaltest temporal \
+    --timeout 15m
 ```
 
 This configuration consumes limited resources and it is useful for small scale tests (such as using minikube).
@@ -82,7 +92,7 @@ By default, Temporal Helm Chart configures Temporal to run with a three node Cas
 To install Temporal with all of its dependencies run this command:
 
 ```bash
-helm install temporaltest . --timeout 900s
+helm install --repo https://go.temporal.io/helm-charts temporaltest temporal --timeout 900s
 ```
 
 To use your own instance of Elasticsearch, MySQL, PostgreSQL, or Cassandra, please read the "Bring Your Own" sections below.
@@ -91,9 +101,11 @@ Other components (Prometheus, Grafana) can be omitted from the installation by s
 
 ```bash
 helm install \
+    --repo https://go.temporal.io/helm-charts \
     --set prometheus.enabled=false \
     --set grafana.enabled=false \
-    temporaltest . --timeout 900s
+    temporaltest temporal \
+    --timeout 900s
 ```
 
 ### Install with sidecar containers
@@ -105,7 +117,7 @@ To do so, you may look at the example for Google's `cloud sql proxy` in the `val
 Example:
 
 ```bash
-helm install -f values/values.cloudsqlproxy.yaml temporaltest . --timeout 900s
+helm install --repo https://go.temporal.io/helm-charts -f values/values.cloudsqlproxy.yaml temporaltest temporal --timeout 900s
 ```
 
 ### Install with your own Elasticsearch
@@ -117,7 +129,7 @@ To do so, fill in the relevant configuration values in `values.elasticsearch.yam
 Example:
 
 ```bash
-helm install -f values/values.elasticsearch.yaml temporaltest . --timeout 900s
+helm install --repo https://go.temporal.io/helm-charts -f values/values.elasticsearch.yaml temporaltest temporal --timeout 900s
 ```
 
 ### Install with your own MySQL
@@ -150,22 +162,24 @@ SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/m
 Once you initialized the two databases, fill in the configuration values in `values/values.mysql.yaml`, and run
 
 ```bash
-# in https://github.com/temporalio/helm-charts git repo dir
-helm install -f values/values.mysql.yaml temporaltest . --timeout 900s
+helm install --repo https://go.temporal.io/helm-charts -f values/values.mysql.yaml temporaltest temporal --timeout 900s
 ```
 
 Alternatively, instead of modifying `values/values.mysql.yaml`, you can supply those values in your command line:
 
 ```bash
-# in https://github.com/temporalio/helm-charts git repo dir
-helm install -f values/values.mysql.yaml temporaltest \
+helm install \
+  --repo https://go.temporal.io/helm-charts \
+  -f values/values.mysql.yaml \
   --set elasticsearch.enabled=false \
   --set server.config.persistence.default.sql.user=mysql_user \
   --set server.config.persistence.default.sql.password=mysql_password \
   --set server.config.persistence.visibility.sql.user=mysql_user \
   --set server.config.persistence.visibility.sql.password=mysql_password \
   --set server.config.persistence.default.sql.host=mysql_host \
-  --set server.config.persistence.visibility.sql.host=mysql_host . --timeout 900s
+  --set server.config.persistence.visibility.sql.host=mysql_host \
+  temporaltest temporal \
+  --timeout 900s
 ```
 *NOTE:* Requires MySQL 8.0.17+, older versions are not supported.
 
@@ -199,22 +213,23 @@ SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/p
 Once you initialized the two databases, fill in the configuration values in `values/values.postgresql.yaml`, and run
 
 ```bash
-# in https://github.com/temporalio/helm-charts git repo dir
-helm install -f values/values.postgresql.yaml temporaltest . --timeout 900s
+helm install --repo https://go.temporal.io/helm-charts -f values/values.postgresql.yaml temporaltest temporal --timeout 900s
 ```
 
 Alternatively, instead of modifying `values/values.postgresql.yaml`, you can supply those values in your command line:
 
 ```bash
-# in https://github.com/temporalio/helm-charts git repo dir
-helm install -f values/values.postgresql.yaml temporaltest \
+helm install \
+  --repo https://go.temporal.io/helm-charts \
+  -f values/values.postgresql.yaml \
   --set elasticsearch.enabled=false \
   --set server.config.persistence.default.sql.user=postgresql_user \
   --set server.config.persistence.default.sql.password=postgresql_password \
   --set server.config.persistence.visibility.sql.user=postgresql_user \
   --set server.config.persistence.visibility.sql.password=postgresql_password \
   --set server.config.persistence.default.sql.host=postgresql_host \
-  --set server.config.persistence.visibility.sql.host=postgresql_host . --timeout 900s
+  --set server.config.persistence.visibility.sql.host=postgresql_host \
+  temporaltest temporal --timeout 900s
 ```
 
 *NOTE:* Requires PostgreSQL 12+, older versions are not supported.
@@ -242,7 +257,7 @@ CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool update -schema-dir schema/
 Once you initialized the two keyspaces, fill in the configuration values in `values/values.cassandra.yaml`, and run
 
 ```bash
-helm install -f values/values.cassandra.yaml temporaltest . --timeout 900s
+helm install --repo https://go.temporal.io/helm-charts -f values/values.cassandra.yaml temporaltest temporal --timeout 900s
 ```
 
 Note that Temporal cannot run without setting up a store for Visibility, and Cassandra is not a supported database for Visibility. We recommend using Elasticsearch in this case (see below how to setup).
@@ -257,13 +272,16 @@ By default archival is disabled. You can enable it by picking one of the three p
 
 So to use the minimal command again and to enable archival with file store provider:
 ```bash
-helm install -f values/values.archival.filestore.yaml \
-    --set server.replicaCount=1 \
-    --set cassandra.config.cluster_size=1 \
-    --set prometheus.enabled=false \
-    --set grafana.enabled=false \
-    --set elasticsearch.enabled=false \
-    temporaltest . --timeout 15m
+helm install \
+  --repo https://go.temporal.io/helm-charts \
+  -f values/values.archival.filestore.yaml \
+  --set server.replicaCount=1 \
+  --set cassandra.config.cluster_size=1 \
+  --set prometheus.enabled=false \
+  --set grafana.enabled=false \
+  --set elasticsearch.enabled=false \
+  temporaltest temporal \
+  --timeout 15m
 ```
 
 Note that if archival is enabled, it is also enabled for all newly created namespaces.
@@ -280,23 +298,24 @@ The example below demonstrates a few things:
 3. How to enable TLS for the database connection.
 
 ```bash
-helm install temporaltest \
-    -f values/values.cassandra.yaml \
-    -f values/values.elasticsearch.yaml \
-    --set elasticsearch.enabled=true \
-    --set grafana.enabled=false \
-    --set prometheus.enabled=false \
-    --set server.replicaCount=5 \
-    --set server.config.persistence.default.cassandra.hosts=cassandra.data.host.example \
-    --set server.config.persistence.default.cassandra.user=cassandra_user \
-    --set server.config.persistence.default.cassandra.password=cassandra_user_password \
-    --set server.config.persistence.default.cassandra.tls.caData=$(base64 --wrap=0 cassandra.ca.pem) \
-    --set server.config.persistence.default.cassandra.tls.enabled=true \
-    --set server.config.persistence.default.cassandra.replicationFactor=3 \
-    --set server.config.persistence.default.cassandra.keyspace=temporal \
-    . \
-    --timeout 15m \
-    --wait
+helm install \
+  --repo https://go.temporal.io/helm-charts \
+  -f values/values.cassandra.yaml \
+  -f values/values.elasticsearch.yaml \
+  --set elasticsearch.enabled=true \
+  --set grafana.enabled=false \
+  --set prometheus.enabled=false \
+  --set server.replicaCount=5 \
+  --set server.config.persistence.default.cassandra.hosts=cassandra.data.host.example \
+  --set server.config.persistence.default.cassandra.user=cassandra_user \
+  --set server.config.persistence.default.cassandra.password=cassandra_user_password \
+  --set server.config.persistence.default.cassandra.tls.caData=$(base64 --wrap=0 cassandra.ca.pem) \
+  --set server.config.persistence.default.cassandra.tls.enabled=true \
+  --set server.config.persistence.default.cassandra.replicationFactor=3 \
+  --set server.config.persistence.default.cassandra.keyspace=temporal \
+  temporaltest temporal \
+  --timeout 15m \
+  --wait
 ```
 
 ## Play With It
@@ -448,11 +467,11 @@ By default dynamic config is empty, if you want to override some properties for 
 2. Populate it with some values under server.dynamicConfig prefix (use the sample provided at `values/values.dynamic_config.yaml` as a starting point)
 3. Install your helm configuration:
 ```bash
-helm install -f values/values.dynamic_config.yaml temporaltest . --timeout 900s
+helm install --repo https://go.temporal.io/helm-charts -f values/values.dynamic_config.yaml temporaltest temporal --timeout 900s
 ```
 Note that if you already have a running cluster you can use the "helm upgrade" command to change dynamic config values:
 ```bash
-helm upgrade -f values/values.dynamic_config.yaml temporaltest . --timeout 900s
+helm upgrade --repo https://go.temporal.io/helm-charts -f values/values.dynamic_config.yaml temporaltest temporal --timeout 900s
 ```
 
 WARNING: The "helm upgrade" approach will trigger a rolling upgrade of all the pods.
@@ -523,29 +542,28 @@ To upgrade your MySQL database, please use `temporal-sql-tool` tool instead of `
 Here is an example of a `helm upgrade` command that can be used to upgrade a cluster:
 
 ```bash
-helm \
-    upgrade \
-    temporaltest \
-    -f values/values.cassandra.yaml \
-    -f values/values.elasticsearch.yaml \
-    --set elasticsearch.enabled=true \
-    --set server.replicaCount=8 \
-    --set server.config.persistence.default.cassandra.hosts='{c1.example.com,c2.example.com,c3.example.com}' \
-    --set server.config.persistence.default.cassandra.user=cassandra-user \
-    --set server.config.persistence.default.cassandra.password=cassandra-password \
-    --set server.config.persistence.default.cassandra.tls.caData=... \
-    --set server.config.persistence.default.cassandra.tls.enabled=true \
-    --set server.config.persistence.default.cassandra.replicationFactor=3 \
-    --set server.config.persistence.default.cassandra.keyspace=temporal \
-    --set server.image.tag=1.24.1 \
-    --set server.image.repository=temporalio/server \
-    --set admintools.image.tag=1.24.1-tctl-1.18.1-cli-0.12.0 \
-    --set admintools.image.repository=temporalio/admin-tools \
-    --set web.image.tag=2.27.2 \
-    --set web.image.repository=temporalio/web \
-    . \
-    --wait \
-    --timeout 15m
+helm upgrade \
+  --repo https://go.temporal.io/helm-charts \
+  -f values/values.cassandra.yaml \
+  -f values/values.elasticsearch.yaml \
+  --set elasticsearch.enabled=true \
+  --set server.replicaCount=8 \
+  --set server.config.persistence.default.cassandra.hosts='{c1.example.com,c2.example.com,c3.example.com}' \
+  --set server.config.persistence.default.cassandra.user=cassandra-user \
+  --set server.config.persistence.default.cassandra.password=cassandra-password \
+  --set server.config.persistence.default.cassandra.tls.caData=... \
+  --set server.config.persistence.default.cassandra.tls.enabled=true \
+  --set server.config.persistence.default.cassandra.replicationFactor=3 \
+  --set server.config.persistence.default.cassandra.keyspace=temporal \
+  --set server.image.tag=1.24.1 \
+  --set server.image.repository=temporalio/server \
+  --set admintools.image.tag=1.24.1-tctl-1.18.1-cli-0.12.0 \
+  --set admintools.image.repository=temporalio/admin-tools \
+  --set web.image.tag=2.27.2 \
+  --set web.image.repository=temporalio/web \
+  temporaltest temporal \
+  --wait \
+  --timeout 15m
 ```
 
 # Contributing
