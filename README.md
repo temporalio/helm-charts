@@ -238,7 +238,7 @@ You might already be operating a Cassandra instance that you want to use with Te
 
 In this case, create and setup keyspaces in your Cassandra instance with `temporal-cassandra-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
 
-Here are examples commands: you can use to create and initialize the keyspaces:
+Here are example commands you can use to create and initialize the keyspaces:
 
 ```bash
 # in https://github.com/temporalio/temporal git repo dir
