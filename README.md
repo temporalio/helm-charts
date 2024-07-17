@@ -5,8 +5,6 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 
 This repo contains a basic V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. The dependencies that are bundled with this solution by default offer an easy way to experiment with Temporal software. This Helm chart can also be used to install just the Temporal server, configured to connect to dependencies (such as a Cassandra, MySQL, or PostgreSQL database) that you may already have available in your environment.
 
-The only portions of the helm chart that are production ready are the parts that configure and manage Temporal Server itself—not Cassandra, Elasticsearch, Prometheus, or Grafana.
-
 This Helm Chart code is tested by a dedicated test pipeline. It is also used extensively by other Temporal pipelines for testing various aspects of Temporal systems. Our test pipeline currently uses Helm 3.1.1.
 
 # Install Temporal service on a Kubernetes cluster
@@ -33,7 +31,7 @@ Download Helm dependencies:
 
 Temporal can be configured to run with various dependencies. The default "Batteries Included" Helm Chart configuration deploys and configures the following components:
 
-* Cassandra
+* PostgreSQL
 * ElasticSearch
 * Prometheus
 * Grafana
@@ -106,67 +104,6 @@ Example:
 ~/temporal-helm$ helm install -f values/values.cloudsqlproxy.yaml temporaltest . --timeout 900s
 ```
 
-### Install with your own ElasticSearch
-
-You might already be operating an instance of ElasticSearch that you want to use with Temporal.
-
-To do so, fill in the relevant configuration values in `values.elasticsearch.yaml`, and pass the file to 'helm install'.
-
-Example:
-
-```bash
-~/temporal-helm$ helm install -f values/values.elasticsearch.yaml temporaltest . --timeout 900s
-```
-
-### Install with your own MySQL
-
-You might already be operating a MySQL instance that you want to use with Temporal.
-
-In this case, create and configure temporal databases on your MySQL host with `temporal-sql-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
-
-Here are examples of commands you can use to create and initialize the databases:
-
-```bash
-# in https://github.com/temporalio/temporal git repo dir
-export SQL_PLUGIN=mysql
-export SQL_HOST=mysql_host
-export SQL_PORT=3306
-export SQL_USER=mysql_user
-export SQL_PASSWORD=mysql_password
-
-make temporal-sql-tool
-
-./temporal-sql-tool --database temporal create-database
-SQL_DATABASE=temporal ./temporal-sql-tool setup-schema -v 0.0
-SQL_DATABASE=temporal ./temporal-sql-tool update -schema-dir schema/mysql/v57/temporal/versioned
-
-./temporal-sql-tool --database temporal_visibility create-database
-SQL_DATABASE=temporal_visibility ./temporal-sql-tool setup-schema -v 0.0
-SQL_DATABASE=temporal_visibility ./temporal-sql-tool update -schema-dir schema/mysql/v57/visibility/versioned
-```
-
-Once you initialized the two databases, fill in the configuration values in `values/values.mysql.yaml`, and run
-
-```bash
-# in https://github.com/temporalio/helm-charts git repo dir
-helm install -f values/values.mysql.yaml temporaltest . --timeout 900s
-```
-
-Alternatively, instead of modifying `values/values.mysql.yaml`, you can supply those values in your command line:
-
-```bash
-# in https://github.com/temporalio/helm-charts git repo dir
-helm install -f values/values.mysql.yaml temporaltest \
-  --set elasticsearch.enabled=false \
-  --set server.config.persistence.default.sql.user=mysql_user \
-  --set server.config.persistence.default.sql.password=mysql_password \
-  --set server.config.persistence.visibility.sql.user=mysql_user \
-  --set server.config.persistence.visibility.sql.password=mysql_password \
-  --set server.config.persistence.default.sql.host=mysql_host \
-  --set server.config.persistence.visibility.sql.host=mysql_host . --timeout 900s
-```
-*NOTE:* For MYSQL <5.7.20 (e.g AWS Aurora MySQL) use `values/values.aurora-mysql.yaml`
-
 ### Install with your own PostgreSQL
 
 You might already be operating a PostgreSQL instance that you want to use with Temporal.
@@ -205,104 +142,18 @@ Alternatively, instead of modifying `values/values.postgresql.yaml`, you can sup
 
 ```bash
 # in https://github.com/temporalio/helm-charts git repo dir
-helm install -f values/values.postgresql.yaml temporaltest \
+helm install -n temporal -f values/values.postgresql.yaml temporaltest \
+  --set prometheus.enabled=true \
+  --set grafana.enabled=false \
   --set elasticsearch.enabled=false \
-  --set server.config.persistence.default.sql.user=postgresql_user \
-  --set server.config.persistence.default.sql.password=postgresql_password \
-  --set server.config.persistence.visibility.sql.user=postgresql_user \
-  --set server.config.persistence.visibility.sql.password=postgresql_password \
-  --set server.config.persistence.default.sql.host=postgresql_host \
-  --set server.config.persistence.visibility.sql.host=postgresql_host . --timeout 900s
-```
-
-### Install with your own Cassandra
-
-You might already be operating a Cassandra instance that you want to use with Temporal.
-
-In this case, create and setup keyspaces in your Cassandra instance with `temporal-cassandra-tool`. The tool is part of [temporal repo](https://github.com/temporalio/temporal), and it relies on the schema definition, in the same repo.
-
-
-Here are examples of commands you can use to create and initialize the keyspaces:
-
-```bash
-# in https://github.com/temporalio/temporal git repo dir
-export CASSANDRA_HOST=cassandra_host
-export CASSANDRA_PORT=9042
-export CASSANDRA_USER=cassandra_user
-export CASSANDRA_PASSWORD=cassandra_user_password
-
-./temporal-cassandra-tool create-Keyspace -k temporal
-CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool setup-schema -v 0.0
-CASSANDRA_KEYSPACE=temporal ./temporal-cassandra-tool update -schema-dir schema/cassandra/temporal/versioned
-
-./temporal-cassandra-tool create-Keyspace -k temporal_visibility
-CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool setup-schema -v 0.0
-CASSANDRA_KEYSPACE=temporal_visibility ./temporal-cassandra-tool update -schema-dir schema/cassandra/visibility/versioned
-```
-
-Once you initialized the two keyspaces, fill in the configuration values in `values/values.cassandra.yaml`, and run
-
-```bash
-~/temporal-helm$ helm install -f values/values.cassandra.yaml temporaltest . --timeout 900s
-```
-
-### Enable Archival
-
-By default archival is disabled. You can enable it by picking one of the three provider options:
-
-* File Store, values file `values/values.archival.filestore.yaml`
-* S3, values file `values/values.archival.s3.yaml`
-* GCloud, values file `values/values.archival.gcloud.yaml`
-
-So to use the minimal command again and to enable archival with file store provider:
-```bash
-helm install -f values/values.archival.filestore.yaml \
-    --set server.replicaCount=1 \
-    --set cassandra.config.cluster_size=1 \
-    --set prometheus.enabled=false \
-    --set grafana.enabled=false \
-    --set elasticsearch.enabled=false \
-    temporaltest . --timeout 15m
-```
-
-Note that if archival is enabled, it is also enabled for all newly created namespaces.
-Make sure to update the specific archival provider values file to set your configs. 
-
-### Install and configure Temporal
-
-If a live application environment already uses systems that Temporal can use as dependencies, then those systems can continue to be used. This Helm chart can install the minimal pieces of Temporal such that it can then be configured to use those systems as its dependencies.
-
-The example below demonstrates a few things:
-
-1. How to set values via the command line rather than the environment.
-2. How to configure a database (shows Cassandra, but MySQL works the same way)
-3. How to enable TLS for the database connection.
-4. How to enable Auth for the Web UI
-
-```bash
-helm install temporaltest \
-   -f values/values.cassandra.yaml \
-   -f values/values.elasticsearch.yaml \
-   --set grafana.enabled=false \
-   --set prometheus.enabled=false \
-   --set server.replicaCount=5 \
-   --set server.config.persistence.default.cassandra.hosts=cassandra.data.host.example \
-   --set server.config.persistence.default.cassandra.user=cassandra_user \
-   --set server.config.persistence.default.cassandra.password=cassandra_user_password \
-   --set server.config.persistence.default.cassandra.tls.caData=$(base64 --wrap=0 cassandra.ca.pem) \
-   --set server.config.persistence.default.cassandra.tls.enabled=true \
-   --set server.config.persistence.default.cassandra.replicationFactor=3 \
-   --set server.config.persistence.default.cassandra.keyspace=temporal \
-   --set server.config.persistence.visibility.cassandra.hosts=cassandra.vis.host.example \
-   --set server.config.persistence.visibility.cassandra.user=cassandra_user_vis \
-   --set server.config.persistence.visibility.cassandra.password=cassandra_user_vis_password \
-   --set server.config.persistence.visibility.cassandra.tls.caData=$(base64 --wrap=0 cassandra.ca.pem) \
-   --set server.config.persistence.visibility.cassandra.tls.enabled=true \
-   --set server.config.persistence.visibility.cassandra.replicationFactor=3 \
-   --set server.config.persistence.visibility.cassandra.keyspace=temporal_visibility \
-   . \
-   --timeout 15m \
-   --wait
+  --set server.replicaCount=3 \
+  --set server.config.numHistoryShards=1024 \
+  --set server.config.persistence.default.sql.user=$USER \
+  --set server.config.persistence.default.sql.password=$PASSWORD \
+  --set server.config.persistence.visibility.sql.user=$USER \
+  --set server.config.persistence.visibility.sql.password=$PASSWORD \
+  --set server.config.persistence.default.sql.host=$HOST \
+  --set server.config.persistence.visibility.sql.host=$HOST . --timeout 900s
 ```
 
 ## Play With It

@@ -1,8 +1,8 @@
 server:
   dynamicConfig:
     matching.numTaskqueueReadPartitions:
-    - value: 5
+    - value: 8
       constraints: {}
     matching.numTaskqueueWritePartitions:
-    - value: 5
+    - value: 8
       constraints: {}

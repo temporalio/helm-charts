@@ -1,8 +1,0 @@
-elasticsearch:
-  enabled: false
-  external: true
-  host: "elasticsearch-master-headless"
-  port: "9200"
-  version: "v7"
-  scheme: "http"
-  logLevel: "error"
