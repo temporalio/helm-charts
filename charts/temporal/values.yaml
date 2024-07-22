@@ -22,8 +22,11 @@ server:
   # Global default settings (can be overridden per service)
   replicaCount: 1
   metrics:
-    # Annotate pods directly with Prometheus annotations.
-    # Use this if you installed Prometheus from a Helm chart.
+    # Annotate pods and services directly with the following Prometheus annotations.
+    # prometheus.io/job
+    # prometheus.io/port
+    # prometheus.io/scheme
+    # prometheus.io/scrape
     annotations:
       enabled: true
     # Additional tags to be added to Prometheus metrics
