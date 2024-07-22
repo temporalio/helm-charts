@@ -64,9 +64,6 @@ mysql:
 postgresql:
   enabled: true
 
-prometheus:
-  enabled: true
-
 grafana:
   enabled: true
   
