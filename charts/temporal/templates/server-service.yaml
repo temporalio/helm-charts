@@ -50,10 +50,12 @@ metadata:
     app.kubernetes.io/component: {{ $service }}
     app.kubernetes.io/part-of: {{ $.Chart.Name }}
     app.kubernetes.io/headless: 'true'
+    {{- if (default $.Values.server.metrics.annotations.enabled $serviceValues.metrics.annotations.enabled) }}
     prometheus.io/job: {{ $.Chart.Name }}-{{ $service }}
     prometheus.io/scrape: 'true'
     prometheus.io/scheme: http
     prometheus.io/port: "9090"
+    {{- end }}
 
   annotations:
     # Use this annotation in addition to the actual field below because the
