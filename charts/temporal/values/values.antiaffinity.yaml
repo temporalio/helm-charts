@@ -23,15 +23,6 @@ cassandra:
               values:
               - elasticsearch-master
           topologyKey: kubernetes.io/hostname
-      - weight: 5
-        podAffinityTerm:
-          labelSelector:
-            matchExpressions:
-            - key: app
-              operator: In
-              values:
-              - prometheus
-          topologyKey: kubernetes.io/hostname
       - weight: 1
         podAffinityTerm:
           labelSelector:

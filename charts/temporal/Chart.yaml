@@ -16,10 +16,6 @@ dependencies:
     version: "0.14.3"
     repository: https://charts.helm.sh/incubator
     condition: cassandra.enabled
-  - name: prometheus
-    repository: https://prometheus-community.github.io/helm-charts
-    version: 25.22.0
-    condition: prometheus.enabled
   - name: elasticsearch
     repository: https://helm.elastic.co
     version: 7.17.3
