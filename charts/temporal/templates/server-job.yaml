@@ -11,10 +11,16 @@ spec:
     metadata:
       name: {{ include "temporal.componentname" (list . "schema") }}
       labels:
-        # Currently there are no labels for job type
         {{- include "temporal.resourceLabels" (list . "database" "") | nindent 8 }}
+        {{- with $.Values.schema.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with $.Values.schema.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
-      {{ include "temporal.serviceAccount" . }}
+      {{- include "temporal.serviceAccount" . }}
       restartPolicy: OnFailure
       initContainers:
         {{- if $.Values.cassandra.enabled }}
