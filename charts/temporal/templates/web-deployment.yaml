@@ -11,6 +11,13 @@ metadata:
     app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
     app.kubernetes.io/component: web
     app.kubernetes.io/part-of: {{ .Chart.Name }}
+    {{- with $.Values.web.deploymentLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $.Values.web.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.web.replicaCount }}
   selector:

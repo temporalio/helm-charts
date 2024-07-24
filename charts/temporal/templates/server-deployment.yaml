@@ -13,6 +13,13 @@ metadata:
     app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
     app.kubernetes.io/component: {{ $service }}
     app.kubernetes.io/part-of: {{ $.Chart.Name }}
+    {{- with (default $.Values.server.deploymentLabels $serviceValues.deploymentLabels) }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with (default $.Values.server.deploymentAnnotations $serviceValues.deploymentAnnotations) }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
   selector:
