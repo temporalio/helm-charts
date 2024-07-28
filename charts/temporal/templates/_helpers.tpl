@@ -59,6 +59,38 @@ and we want to make sure that the component is included in the name.
 {{- end -}}
 
 {{/*
+Define the AppVersion
+*/}}
+{{- define "temporal.appVersion" -}}
+{{- if .Chart.AppVersion -}}
+{{ .Chart.AppVersion | replace "+" "_" | quote }}
+{{- else -}}
+{{ include "temporal.chart" $ }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create the labels for all resources
+*/}}
+{{- define "temporal.resourceLabels" -}}
+app.kubernetes.io/name: {{ include "temporal.name" $ }}
+helm.sh/chart: {{ include "temporal.chart" $ }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/version: {{ include "temporal.appVersion" $ }}
+{{ include "temporal.additionalResourceLabels" $ }}
+{{- end -}}
+
+{{/*
+Additonal user specified labels for all resources
+*/}}
+{{- define "temporal.additionalResourceLabels" -}}
+{{- range $label_name, $label_value := .Values.addtionalLabels }}
+{{ $label_name }}: {{ $label_value }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Call nested templates.
 Source: https://stackoverflow.com/a/52024583/3027614
 */}}

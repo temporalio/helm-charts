@@ -12,6 +12,7 @@ serviceAccount:
   name:
   # extraAnnotations would let users add additional annotations
   extraAnnotations:
+additionalLabels: {}
 server:
   enabled: true
   sidecarContainers: []

@@ -10,13 +10,8 @@ kind: Ingress
 metadata:
   name: {{ include "temporal.componentname" (list . "web") }}
   labels:
-    app.kubernetes.io/name: {{ include "temporal.name" . }}
-    helm.sh/chart: {{ include "temporal.chart" . }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
+    {{ include "temporal.resourceLabels" . | nindent 4 }}
     app.kubernetes.io/component: web
-    app.kubernetes.io/part-of: {{ .Chart.Name }}
 {{- with .Values.web.ingress.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}

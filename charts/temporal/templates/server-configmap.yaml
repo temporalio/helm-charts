@@ -6,12 +6,7 @@ kind: ConfigMap
 metadata:
   name: "{{ include "temporal.fullname" $ }}-config"
   labels:
-    app.kubernetes.io/name: {{ include "temporal.name" $ }}
-    helm.sh/chart: {{ include "temporal.chart" $ }}
-    app.kubernetes.io/managed-by: {{ $.Release.Service }}
-    app.kubernetes.io/instance: {{ $.Release.Name }}
-    app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
-    app.kubernetes.io/part-of: {{ $.Chart.Name }}
+    {{ include "temporal.resourceLabels" . | nindent 4 }}
 data:
   config_template.yaml: |-
     log:
