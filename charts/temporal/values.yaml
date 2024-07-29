@@ -114,6 +114,15 @@ server:
     #       serverName: dnsSanInFrontendCertificate
     #       rootCaFiles:
     #         - /path/to/frontend/serverCa
+    # Define your Authorizer and ClaimMapper configuration here. See https://docs.temporal.io/self-hosted-guide/security#authorization
+    # authorization:
+    #   jwtKeyProvider:
+    #     keySourceURIs:
+    #       - http://localhost:/jwks.json
+    #     refreshInterval: 1m
+    #   permissionsClaimName: permissions
+    #   authorizer: default
+    #   claimMapper: default
     persistence:
       defaultStore: default
       additionalStores: {}
