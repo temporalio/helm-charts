@@ -58,6 +58,8 @@ server:
       #   targetLabel: __name__
     prometheus:
       timerType: histogram
+  deploymentAnnotations: {}
+  deploymentLabels: {}
   podAnnotations: {}
   podLabels: {}
   secretLabels: {}
@@ -207,6 +209,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentAnnotations: {}
+    deploymentLabels: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -229,6 +233,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentAnnotations: {}
+    deploymentLabels: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -251,6 +257,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentAnnotations: {}
+    deploymentLabels: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -273,6 +281,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentAnnotations: {}
+    deploymentLabels: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -293,6 +303,8 @@ admintools:
     type: ClusterIP
     port: 22
     annotations: {}
+  deploymentAnnotations: {}
+  deploymentLabels: {}
   podLabels: {}
   podAnnotations: {}
   nodeSelector: {}
@@ -332,6 +344,8 @@ web:
     #  - secretName: chart-example-tls
     #    hosts:
     #      - chart-example.local
+  deploymentAnnotations: {}
+  deploymentLabels: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}
