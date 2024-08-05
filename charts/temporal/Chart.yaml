@@ -18,7 +18,7 @@ dependencies:
     condition: cassandra.enabled
   - name: prometheus
     repository: https://prometheus-community.github.io/helm-charts
-    version: 25.22.0
+    version: 25.22.1
     condition: prometheus.enabled
   - name: elasticsearch
     repository: https://helm.elastic.co
