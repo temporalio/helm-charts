@@ -384,7 +384,7 @@ elasticsearch:
   password: ""
   visibilityIndex: "temporal_visibility_v1_dev"
 prometheus:
-  enabled: true
+  enabled: false
   nodeExporter:
     enabled: false
 grafana:
