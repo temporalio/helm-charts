@@ -115,7 +115,7 @@ spec:
                 {{- $plugin := include "temporal.persistence.sql.driver" (list $ $store) }}
                 {{- if eq $plugin "mysql8" }}
           command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v8/{{ $schema }}/versioned']
-                {{- else if eq $plugin "postgres12" }}
+                {{- else if or (eq $plugin "postgres12") (eq $plugin "postgres12_pgx") }}
           command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v12/{{ $schema }}/versioned']
                 {{- end }}
               {{- end }}
