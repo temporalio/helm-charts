@@ -24,6 +24,11 @@ spec:
       {{- if hasKey .Values.server.frontend.service "nodePort" }}
       nodePort: {{ .Values.server.frontend.service.nodePort }}
       {{- end }}
+    - port: {{ .Values.server.frontend.service.httpPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+      # TODO: Allow customizing the node HTTP port
   selector:
     app.kubernetes.io/name: {{ include "temporal.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -31,7 +36,7 @@ spec:
 
 ---
 {{- range $service := (list "frontend" "matching" "history" "worker") }}
-{{- $serviceValues := index $.Values.server $service -}}
+{{ $serviceValues := index $.Values.server $service }}
 apiVersion: v1
 kind: Service
 metadata:

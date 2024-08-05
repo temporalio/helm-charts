@@ -42,7 +42,7 @@ Create the name of the service account
 Define the service account as needed
 */}}
 {{- define "temporal.serviceAccount" -}}
-{{- if .Values.serviceAccount.create -}}
+{{- if .Values.serviceAccount.name -}}
 serviceAccountName: {{ include "temporal.serviceAccountName" . }}
 {{- end -}}
 {{- end -}}
@@ -69,70 +69,6 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- include $template (dict "Chart" (dict "Name" $subchart) "Values" (index $dot.Values $subchart) "Release" $dot.Release "Capabilities" $dot.Capabilities) }}
 {{- end }}
 
-{{- define "temporal.frontend.grpcPort" -}}
-{{- if $.Values.server.frontend.service.port -}}
-{{- $.Values.server.frontend.service.port -}}
-{{- else -}}
-{{- 7233 -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.frontend.membershipPort" -}}
-{{- if $.Values.server.frontend.service.membershipPort -}}
-{{- $.Values.server.frontend.service.membershipPort -}}
-{{- else -}}
-{{- 6933 -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.history.grpcPort" -}}
-{{- if $.Values.server.history.service.port -}}
-{{- $.Values.server.history.service.port -}}
-{{- else -}}
-{{- 7234 -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.history.membershipPort" -}}
-{{- if $.Values.server.history.service.membershipPort -}}
-{{- $.Values.server.history.service.membershipPort -}}
-{{- else -}}
-{{- 6934 -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.matching.grpcPort" -}}
-{{- if $.Values.server.matching.service.port -}}
-{{- $.Values.server.matching.service.port -}}
-{{- else -}}
-{{- 7235 -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.matching.membershipPort" -}}
-{{- if $.Values.server.matching.service.membershipPort -}}
-{{- $.Values.server.matching.service.membershipPort -}}
-{{- else -}}
-{{- 6935 -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.worker.grpcPort" -}}
-{{- if $.Values.server.worker.service.port -}}
-{{- $.Values.server.worker.service.port -}}
-{{- else -}}
-{{- 7239 -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.worker.membershipPort" -}}
-{{- if $.Values.server.worker.service.membershipPort -}}
-{{- $.Values.server.worker.service.membershipPort -}}
-{{- else -}}
-{{- 6939 -}}
-{{- end -}}
-{{- end -}}
-
 {{- define "temporal.persistence.schema" -}}
 {{- if eq . "default" -}}
 {{- print "temporal" -}}
@@ -145,10 +81,12 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.driver -}}
-{{- $storeConfig.driver -}}
-{{- else if $global.Values.cassandra.enabled -}}
+{{- if and (eq $store "default") $global.Values.cassandra.enabled -}}
 {{- print "cassandra" -}}
+{{- else if and (eq $store "visibility") (or $global.Values.elasticsearch.enabled $global.Values.elasticsearch.external) -}}
+{{- print "elasticsearch" -}}
+{{- else if $storeConfig.driver -}}
+{{- $storeConfig.driver -}}
 {{- else if $global.Values.mysql.enabled -}}
 {{- print "sql" -}}
 {{- else if $global.Values.postgresql.enabled -}}
@@ -188,9 +126,10 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.cassandra.existingSecret -}}
-{{- $storeConfig.cassandra.existingSecret -}}
-{{- else if $storeConfig.cassandra.password -}}
+{{- $driverConfig := $storeConfig.cassandra -}}
+{{- if $driverConfig.existingSecret -}}
+{{- $driverConfig.existingSecret -}}
+{{- else if $driverConfig.password -}}
 {{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
 {{- else -}}
 {{/* Cassandra password is optional, but we will create an empty secret for it */}}
@@ -202,8 +141,13 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.cassandra -}}
+{{- with $driverConfig.secretKey -}}
+{{- print . -}}
+{{- else -}}
 {{/* Cassandra password is optional, but we will create an empty secret for it */}}
 {{- print "password" -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.persistence.sql.database" -}}
@@ -304,8 +248,11 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.sql.existingSecret -}}
-{{- $storeConfig.sql.existingSecret -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if $driverConfig.existingSecret -}}
+{{- $driverConfig.existingSecret -}}
+{{- else if $driverConfig.secretName -}}
+{{- print $driverConfig.secretName -}}
 {{- else if $storeConfig.sql.password -}}
 {{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
 {{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
@@ -321,7 +268,10 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if or $storeConfig.sql.existingSecret $storeConfig.sql.password -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if $driverConfig.secretKey -}}
+{{- print $driverConfig.secretKey -}}
+{{- else if or $driverConfig.existingSecret $driverConfig.password -}}
 {{- print "password" -}}
 {{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
 {{- print "mysql-password" -}}
@@ -329,6 +279,30 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- print "postgresql-password" -}}
 {{- else -}}
 {{- fail (printf "Please specify sql password or existing secret for %s store" $store) -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.elasticsearch.secretName" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $driverConfig := $global.Values.elasticsearch -}}
+{{- if $driverConfig.existingSecret -}}
+{{- print $driverConfig.existingSecret -}}
+{{- else if $driverConfig.secretName -}}
+{{- print $driverConfig.secretName -}}
+{{- else -}}
+{{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.elasticsearch.secretKey" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $driverConfig := $global.Values.elasticsearch -}}
+{{- if $driverConfig.secretKey -}}
+{{- print $driverConfig.secretKey -}}
+{{- else -}}
+{{- "password" -}}
 {{- end -}}
 {{- end -}}
 
@@ -350,7 +324,7 @@ All Cassandra hosts.
 {{- define "cassandra.hosts" -}}
 {{- range $i := (until (int .Values.cassandra.config.cluster_size)) }}
 {{- $cassandraName := include "call-nested" (list $ "cassandra" "cassandra.fullname") -}}
-{{- printf "%s.%s.svc.cluster.local," $cassandraName $.Release.Namespace -}}
+{{- printf "%s.%s," $cassandraName $.Release.Namespace -}}
 {{- end }}
 {{- end -}}
 
@@ -359,7 +333,7 @@ The first Cassandra host in the stateful set.
 */}}
 {{- define "cassandra.host" -}}
 {{- $cassandraName := include "call-nested" (list . "cassandra" "cassandra.fullname") -}}
-{{- printf "%s.%s.svc.cluster.local" $cassandraName .Release.Namespace -}}
+{{- printf "%s.%s" $cassandraName .Release.Namespace -}}
 {{- end -}}
 
 {{/*
