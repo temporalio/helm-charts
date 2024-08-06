@@ -4,8 +4,7 @@ kind: Service
 metadata:
   name: {{ include "temporal.componentname" (list . "frontend") }}
   labels:
-    {{ include "temporal.resourceLabels" $ | nindent 4 }}
-    app.kubernetes.io/component: frontend
+    {{ include "temporal.resourceLabels" (list $ "frontend" "") | nindent 4 }}
   {{- if .Values.server.frontend.service.annotations }}
   annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.server.frontend.service.annotations "context" $) | nindent 4 }}
   {{- end }}
@@ -37,8 +36,7 @@ kind: Service
 metadata:
   name: {{ include "temporal.componentname" (list $ (printf "%s-headless" $service)) }}
   labels:
-    {{ include "temporal.resourceLabels" $ | nindent 4 }}
-    app.kubernetes.io/component: {{ $service }}
+    {{ include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
     app.kubernetes.io/headless: 'true'
     prometheus.io/job: {{ $.Chart.Name }}-{{ $service }}
     prometheus.io/scrape: 'true'

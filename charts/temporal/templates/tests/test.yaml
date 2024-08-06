@@ -3,8 +3,7 @@ kind: Pod
 metadata:
   name: "{{ include "temporal.fullname" . }}-test-wfl"
   labels:
-    {{ include "temporal.resourceLabels" . | nindent 4 }}
-    app.kubernetes.io/component: test
+    {{ include "temporal.resourceLabels" (list $ "test" "") | nindent 4 }}
   annotations:
     "helm.sh/hook": test
 spec:

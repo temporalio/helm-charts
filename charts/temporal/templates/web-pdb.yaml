@@ -5,8 +5,7 @@ kind: PodDisruptionBudget
 metadata:
   name: {{ include "temporal.componentname" (list . "web") }}-pdb
   labels:
-    {{ include "temporal.resourceLabels" . | nindent 4 }}
-    app.kubernetes.io/component: web
+    {{ include "temporal.resourceLabels" (list . "web" "") | nindent 4 }}
 spec:
   {{ toYaml $.Values.web.podDisruptionBudget }}
   selector:

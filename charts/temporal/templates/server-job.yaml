@@ -4,16 +4,15 @@ kind: Job
 metadata:
   name: {{ include "temporal.componentname" (list . "schema") }}
   labels:
-    {{ include "temporal.resourceLabels" . | nindent 4 }}
-    app.kubernetes.io/component: database
+    {{ include "temporal.resourceLabels" (list . "database" "") | nindent 4 }}
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
   template:
     metadata:
       name: {{ include "temporal.componentname" (list . "schema") }}
       labels:
-        {{ include "temporal.resourceLabels" . | nindent 8 }}
-        app.kubernetes.io/component: database
+        # Currently there are no labels for job type
+        {{ include "temporal.resourceLabels" (list . "database" "") | nindent 8 }}
     spec:
       {{ include "temporal.serviceAccount" . }}
       restartPolicy: OnFailure

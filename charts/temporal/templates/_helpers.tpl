@@ -73,12 +73,35 @@ Define the AppVersion
 Create the labels for all resources
 */}}
 {{- define "temporal.resourceLabels" -}}
-app.kubernetes.io/name: {{ include "temporal.name" $ }}
-helm.sh/chart: {{ include "temporal.chart" $ }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-app.kubernetes.io/version: {{ include "temporal.appVersion" $ }}
-{{ include "temporal.additionalResourceLabels" $ }}
+{{- $global := index . 0 -}}
+{{- $scope := index . 1 -}}
+{{- $resourceType := index . 2 -}}
+{{- $component := "server" -}}
+{{- if (or (eq $scope "admintools") (eq $scope "web")) -}}
+{{- $component = $scope -}}
+{{- end -}}
+{{- with $scope -}}
+app.kubernetes.io/component: {{ . }}
+{{- end }}
+app.kubernetes.io/name: {{ include "temporal.name" $global }}
+helm.sh/chart: {{ include "temporal.chart" $global }}
+app.kubernetes.io/managed-by: {{ index $global "Release" "Service" }}
+app.kubernetes.io/instance: {{ index $global "Release" "Name" }}
+app.kubernetes.io/version: {{ include "temporal.appVersion" $global }}
+app.kubernetes.io/part-of: {{ $global.Chart.Name }}
+{{- with $resourceType -}}
+{{- $resourceTypeKey := printf "%sLabels" . -}}
+{{- $resourceLabels := dict -}}
+{{ if or (eq $scope "") (ne $component "server") -}}
+{{- $resourceLabels = (index $global.Values $component $resourceTypeKey) -}}
+{{- else -}}
+{{- $resourceLabels = (index $global.Values $component $scope $resourceTypeKey) -}}
+{{- end -}}
+{{- range $label_name, $label_value := $resourceLabels -}}
+{{ $label_name}}: {{ $label_value }}
+{{- end -}}
+{{- end -}}
+{{ include "temporal.additionalResourceLabels" $global }}
 {{- end -}}
 
 {{/*

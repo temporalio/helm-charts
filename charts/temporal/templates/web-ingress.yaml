@@ -10,8 +10,7 @@ kind: Ingress
 metadata:
   name: {{ include "temporal.componentname" (list . "web") }}
   labels:
-    {{ include "temporal.resourceLabels" . | nindent 4 }}
-    app.kubernetes.io/component: web
+    {{ include "temporal.resourceLabels" (list . "web" "") | nindent 4 }}
 {{- with .Values.web.ingress.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}

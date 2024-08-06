@@ -10,8 +10,7 @@ kind: Ingress
 metadata:
   name: {{ include "temporal.componentname" (list . "frontend") }}
   labels:
-    {{ include "temporal.resourceLabels" . | nindent 4 }}
-    app.kubernetes.io/component: frontend
+    {{ include "temporal.resourceLabels" (list . "frontend" "") | nindent 4 }}
 {{- with .Values.server.frontend.ingress.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}

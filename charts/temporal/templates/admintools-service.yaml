@@ -4,8 +4,7 @@ kind: Service
 metadata:
   name: {{ include "temporal.componentname" (list . "admintools") }}
   labels:
-    {{ include "temporal.resourceLabels" . | nindent 4 }}
-    app.kubernetes.io/component: admintools
+    {{ include "temporal.resourceLabels" (list . "admintools" "") | nindent 4 }}
 spec:
   type: ClusterIP 
   ports:
