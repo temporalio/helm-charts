@@ -4,7 +4,7 @@ kind: Service
 metadata:
   name: {{ include "temporal.componentname" (list . "admintools") }}
   labels:
-    {{ include "temporal.resourceLabels" (list . "admintools" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list . "admintools" "") | nindent 4 }}
 spec:
   type: ClusterIP 
   ports:

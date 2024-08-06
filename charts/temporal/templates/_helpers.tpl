@@ -82,7 +82,7 @@ Create the labels for all resources
 {{- end -}}
 {{- with $scope -}}
 app.kubernetes.io/component: {{ . }}
-{{- end }}
+{{ end -}}
 app.kubernetes.io/name: {{ include "temporal.name" $global }}
 helm.sh/chart: {{ include "temporal.chart" $global }}
 app.kubernetes.io/managed-by: {{ index $global "Release" "Service" }}
@@ -92,7 +92,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- with $resourceType -}}
 {{- $resourceTypeKey := printf "%sLabels" . -}}
 {{- $resourceLabels := dict -}}
-{{ if or (eq $scope "") (ne $component "server") -}}
+{{- if or (eq $scope "") (ne $component "server") -}}
 {{- $resourceLabels = (index $global.Values $component $resourceTypeKey) -}}
 {{- else -}}
 {{- $resourceLabels = (index $global.Values $component $scope $resourceTypeKey) -}}
@@ -108,7 +108,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 Additonal user specified labels for all resources
 */}}
 {{- define "temporal.additionalResourceLabels" -}}
-{{- range $label_name, $label_value := .Values.addtionalLabels }}
+{{- range $label_name, $label_value := .Values.additionalLabels }}
 {{ $label_name }}: {{ $label_value }}
 {{- end -}}
 {{- end -}}

@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list . "admintools") }}
   labels:
-    {{ include "temporal.resourceLabels" (list . "admintools" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list . "admintools" "") | nindent 4 }}
 spec:
   replicas: 1
   selector:
@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       labels:
-        {{ include "temporal.resourceLabels" (list . "admintools" "pod") | nindent 8 }}
+        {{- include "temporal.resourceLabels" (list . "admintools" "pod") | nindent 8 }}
       {{- with $.Values.admintools.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}

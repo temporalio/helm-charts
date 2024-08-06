@@ -4,7 +4,7 @@ kind: Job
 metadata:
   name: {{ include "temporal.componentname" (list . "schema") }}
   labels:
-    {{ include "temporal.resourceLabels" (list . "database" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list . "database" "") | nindent 4 }}
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
   template:
@@ -12,7 +12,7 @@ spec:
       name: {{ include "temporal.componentname" (list . "schema") }}
       labels:
         # Currently there are no labels for job type
-        {{ include "temporal.resourceLabels" (list . "database" "") | nindent 8 }}
+        {{- include "temporal.resourceLabels" (list . "database" "") | nindent 8 }}
     spec:
       {{ include "temporal.serviceAccount" . }}
       restartPolicy: OnFailure

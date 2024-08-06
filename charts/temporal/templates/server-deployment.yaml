@@ -6,7 +6,7 @@ kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
   labels:
-    {{ include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
 spec:
   replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
   selector:
@@ -17,7 +17,7 @@ spec:
   template:
     metadata:
       labels:
-        {{ include "temporal.resourceLabels" (list $ $service "pod") | nindent 8 }}
+        {{- include "temporal.resourceLabels" (list $ $service "pod") | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/server-configmap.yaml") $ | sha256sum }}
         {{- if (default $.Values.server.metrics.annotations.enabled $serviceValues.metrics.annotations.enabled) }}
