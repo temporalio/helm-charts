@@ -7,13 +7,7 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
   labels:
-    app.kubernetes.io/name: {{ include "temporal.name" $ }}
-    helm.sh/chart: {{ include "temporal.chart" $ }}
-    app.kubernetes.io/managed-by: {{ $.Release.Service }}
-    app.kubernetes.io/instance: {{ $.Release.Name }}
-    app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
-    app.kubernetes.io/component: {{ $service }}
-    app.kubernetes.io/part-of: {{ $.Chart.Name }}
+    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
     {{- with (default $.Values.server.metrics.serviceMonitor.additionalLabels $serviceValues.metrics.serviceMonitor.additionalLabels) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}

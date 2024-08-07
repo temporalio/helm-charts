@@ -4,13 +4,7 @@ kind: Service
 metadata:
   name: {{ include "temporal.componentname" (list . "frontend") }}
   labels:
-    app.kubernetes.io/name: {{ include "temporal.name" . }}
-    helm.sh/chart: {{ include "temporal.chart" . }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
-    app.kubernetes.io/component: frontend
-    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    {{- include "temporal.resourceLabels" (list $ "frontend" "") | nindent 4 }}
   {{- if .Values.server.frontend.service.annotations }}
   annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.server.frontend.service.annotations "context" $) | nindent 4 }}
   {{- end }}
@@ -42,13 +36,7 @@ kind: Service
 metadata:
   name: {{ include "temporal.componentname" (list $ (printf "%s-headless" $service)) }}
   labels:
-    app.kubernetes.io/name: {{ include "temporal.name" $ }}
-    helm.sh/chart: {{ include "temporal.chart" $ }}
-    app.kubernetes.io/managed-by: {{ $.Release.Service }}
-    app.kubernetes.io/instance: {{ $.Release.Name }}
-    app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
-    app.kubernetes.io/component: {{ $service }}
-    app.kubernetes.io/part-of: {{ $.Chart.Name }}
+    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
     app.kubernetes.io/headless: 'true'
     prometheus.io/job: {{ $.Chart.Name }}-{{ $service }}
     prometheus.io/scrape: 'true'
