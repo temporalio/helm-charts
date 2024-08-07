@@ -59,6 +59,61 @@ and we want to make sure that the component is included in the name.
 {{- end -}}
 
 {{/*
+Define the AppVersion
+*/}}
+{{- define "temporal.appVersion" -}}
+{{- if .Chart.AppVersion -}}
+{{ .Chart.AppVersion | replace "+" "_" | quote }}
+{{- else -}}
+{{ include "temporal.chart" $ }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create the labels for all resources
+*/}}
+{{- define "temporal.resourceLabels" -}}
+{{- $global := index . 0 -}}
+{{- $scope := index . 1 -}}
+{{- $resourceType := index . 2 -}}
+{{- $component := "server" -}}
+{{- if (or (eq $scope "admintools") (eq $scope "web")) -}}
+{{- $component = $scope -}}
+{{- end -}}
+{{- with $scope -}}
+app.kubernetes.io/component: {{ . }}
+{{ end -}}
+app.kubernetes.io/name: {{ include "temporal.name" $global }}
+helm.sh/chart: {{ include "temporal.chart" $global }}
+app.kubernetes.io/managed-by: {{ index $global "Release" "Service" }}
+app.kubernetes.io/instance: {{ index $global "Release" "Name" }}
+app.kubernetes.io/version: {{ include "temporal.appVersion" $global }}
+app.kubernetes.io/part-of: {{ $global.Chart.Name }}
+{{- with $resourceType -}}
+{{- $resourceTypeKey := printf "%sLabels" . -}}
+{{- $resourceLabels := dict -}}
+{{- if or (eq $scope "") (ne $component "server") -}}
+{{- $resourceLabels = (index $global.Values $component $resourceTypeKey) -}}
+{{- else -}}
+{{- $resourceLabels = (index $global.Values $component $scope $resourceTypeKey) -}}
+{{- end -}}
+{{- range $label_name, $label_value := $resourceLabels -}}
+{{ $label_name}}: {{ $label_value }}
+{{- end -}}
+{{- end -}}
+{{ include "temporal.additionalResourceLabels" $global }}
+{{- end -}}
+
+{{/*
+Additonal user specified labels for all resources
+*/}}
+{{- define "temporal.additionalResourceLabels" -}}
+{{- range $label_name, $label_value := .Values.additionalLabels }}
+{{ $label_name }}: {{ $label_value }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Call nested templates.
 Source: https://stackoverflow.com/a/52024583/3027614
 */}}
