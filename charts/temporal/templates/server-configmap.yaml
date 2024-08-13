@@ -52,13 +52,26 @@ data:
           elasticsearch:
             version: "{{ $elasticsearch.version }}"
             url:
-                scheme: "{{ $elasticsearch.scheme }}"
-                host: "{{ $elasticsearch.host }}:{{ $elasticsearch.port }}"
+              scheme: "{{ $elasticsearch.scheme }}"
+              host: "{{ $elasticsearch.host }}:{{ $elasticsearch.port }}"
             username: "{{ $elasticsearch.username }}"
             password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
             logLevel: "{{ $elasticsearch.logLevel }}"
+        {{- if $elasticsearch.tls.enabled }}
+            tls:
+              enabled: {{ $elasticsearch.tls.enabled }}
+              {{- if $elasticsearch.tls.cert }}
+              certFile: "/etc/temporal/elasticsearch-certs/{{ $elasticsearch.tls.cert }}"
+              {{- end }}
+              {{- if $elasticsearch.tls.key }}
+              keyFile: "/etc/temporal/elasticsearch-certs/{{ $elasticsearch.tls.key }}"
+              {{- end }}
+              {{- if $elasticsearch.tls.ca }}
+              caFile: "/etc/temporal/elasticsearch-certs/{{ $elasticsearch.tls.ca }}"
+              {{- end }}
+        {{- end }}
             indices:
-                visibility: "{{ $elasticsearch.visibilityIndex }}"
+              visibility: "{{ $elasticsearch.visibilityIndex }}"
         {{- else if eq (include "temporal.persistence.driver" (list $ "visibility")) "sql" }}
           sql:
             pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"

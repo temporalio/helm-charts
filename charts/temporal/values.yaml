@@ -384,6 +384,12 @@ elasticsearch:
   username: ""
   password: ""
   visibilityIndex: "temporal_visibility_v1_dev"
+  tls:
+    enabled: false
+    secretName: ""
+    cert: ""
+    key: ""
+    ca: ""
 prometheus:
   enabled: true
   nodeExporter:
