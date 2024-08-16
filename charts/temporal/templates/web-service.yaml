@@ -4,17 +4,10 @@ kind: Service
 metadata:
   name: {{ include "temporal.componentname" (list . "web") }}
   labels:
-    app.kubernetes.io/name: {{ include "temporal.name" . }}
-    helm.sh/chart: {{ include "temporal.chart" . }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
-    app.kubernetes.io/component: web
-    app.kubernetes.io/part-of: {{ .Chart.Name }}
-{{- with .Values.web.service.annotations }}
-  annotations:
-{{ toYaml . | indent 4 }}
-{{- end }}
+    {{- include "temporal.resourceLabels" (list . "web" "") | nindent 4 }}
+  {{- if .Values.web.service.annotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.web.service.annotations "context" $) | nindent 4 }}
+  {{- end }}
 spec:
   {{- with .Values.web.service.loadBalancerIP }}
   loadBalancerIP: {{.}}

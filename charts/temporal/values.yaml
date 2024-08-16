@@ -1,29 +1,25 @@
 nameOverride: ""
 fullnameOverride: ""
-
 # Chart debug mode
 # (eg. disable helm hook delete policy)
 debug: false
-
+imagePullSecrets: {}
 # Custom Service account management
 serviceAccount:
   # Whether to create service account or not
   create: false
-
   # Name of the service account, default: temporal.fullname
   name:
-
   # extraAnnotations would let users add additional annotations
   extraAnnotations:
-
+additionalLabels: {}
 server:
   enabled: true
-  sidecarContainers: {}
+  sidecarContainers: []
   image:
     repository: temporalio/server
-    tag: 1.22.4
+    tag: 1.24.2
     pullPolicy: IfNotPresent
-
   # Global default settings (can be overridden per service)
   replicaCount: 1
   deploymentStrategy:
@@ -89,13 +85,10 @@ server:
   securityContext:
     fsGroup: 1000
     runAsUser: 1000
-
   config:
     logLevel: "debug,info"
-
     # IMPORTANT: This value cannot be changed, once it's set.
     numHistoryShards: 512
-
     # Define your TLS configuration here. See https://docs.temporal.io/references/configuration#tls
     # for configuration options. You must also use `server.additionalVolumeMounts` and `server.additionalVolumes`
     # to mount certificates (from Secret or ConfigMap etc) to the path you use below.
@@ -124,14 +117,11 @@ server:
     #       serverName: dnsSanInFrontendCertificate
     #       rootCaFiles:
     #         - /path/to/frontend/serverCa
-
     persistence:
       defaultStore: default
       additionalStores: {}
-
       default:
         driver: "cassandra"
-
         cassandra:
           hosts: []
           # port: 9042
@@ -140,14 +130,13 @@ server:
           password: "password"
           existingSecret: ""
           replicationFactor: 1
+          # datacenter: "us-east-1a"
+          # maxQPS: 1000
+          # maxConns: 2
           consistency:
             default:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
-          # datacenter: "us-east-1a"
-          # maxQPS: 1000
-          # maxConns: 2
-
         sql:
           driver: "mysql"
           host: "mysql"
@@ -161,10 +150,8 @@ server:
           maxConnLifetime: "1h"
           # connectAttributes:
           # tx_isolation: 'READ-COMMITTED'
-
       visibility:
         driver: "cassandra"
-
         cassandra:
           hosts: []
           # port: 9042
@@ -180,7 +167,6 @@ server:
             default:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
-
         sql:
           driver: "mysql"
           host: "mysql"
@@ -194,12 +180,29 @@ server:
           maxConnLifetime: "1h"
           # connectAttributes:
           #   tx_isolation: 'READ-COMMITTED'
-
   frontend:
     service:
-      annotations: {} # Evaluated as template
+      # Evaluated as template
+      annotations: {}
       type: ClusterIP
       port: 7233
+      membershipPort: 6933
+      httpPort: 7243
+    ingress:
+      enabled: false
+      # className:
+      annotations: {}
+      # kubernetes.io/ingress.class: traefik
+      # ingress.kubernetes.io/ssl-redirect: "false"
+      # traefik.frontend.rule.type: PathPrefix
+      hosts:
+        - "/"
+        # - "domain.com/xyz"
+        # - "domain.com"
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
     metrics:
       annotations:
         enabled: true
@@ -215,13 +218,13 @@ server:
     affinity: {}
     additionalEnv: []
     containerSecurityContext: {}
-    topologySpreadConstraints: {}
+    topologySpreadConstraints: []
     podDisruptionBudget: {}
-
   history:
     service:
       # type: ClusterIP
       port: 7234
+      membershipPort: 6934
     metrics:
       annotations:
         enabled: true
@@ -237,13 +240,13 @@ server:
     affinity: {}
     additionalEnv: []
     containerSecurityContext: {}
-    topologySpreadConstraints: {}
+    topologySpreadConstraints: []
     podDisruptionBudget: {}
-
   matching:
     service:
       # type: ClusterIP
       port: 7235
+      membershipPort: 6935
     metrics:
       annotations:
         enabled: false
@@ -259,13 +262,13 @@ server:
     affinity: {}
     additionalEnv: []
     containerSecurityContext: {}
-    topologySpreadConstraints: {}
+    topologySpreadConstraints: []
     podDisruptionBudget: {}
-
   worker:
     service:
       # type: ClusterIP
       port: 7239
+      membershipPort: 6939
     metrics:
       annotations:
         enabled: true
@@ -281,16 +284,14 @@ server:
     affinity: {}
     additionalEnv: []
     containerSecurityContext: {}
-    topologySpreadConstraints: {}
+    topologySpreadConstraints: []
     podDisruptionBudget: {}
-
 admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.22.4
+    tag: 1.24.2-tctl-1.18.1-cli-0.13.0
     pullPolicy: IfNotPresent
-
   service:
     type: ClusterIP
     port: 22
@@ -305,24 +306,13 @@ admintools:
   containerSecurityContext: {}
   securityContext: {}
   podDisruptionBudget: {}
-
 web:
   enabled: true
-  config:
-    # server/config.yml file content
-    auth:
-      enabled: false
-    routing:
-      default_to_namespace: # internal use only
-      issue_report_link: https://github.com/temporalio/web/issues/new/choose # set this field if you need to direct people to internal support forums
-
   replicaCount: 1
-
   image:
     repository: temporalio/ui
-    tag: 2.16.2
+    tag: 2.28.0
     pullPolicy: IfNotPresent
-
   service:
     # set type to NodePort if access to web needs access from outside the cluster
     # for more info see https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
@@ -330,7 +320,6 @@ web:
     port: 8080
     annotations: {}
     # loadBalancerIP:
-
   ingress:
     enabled: false
     # className:
@@ -346,10 +335,8 @@ web:
     #  - secretName: chart-example-tls
     #    hosts:
     #      - chart-example.local
-
   podAnnotations: {}
   podLabels: {}
-
   resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -361,23 +348,21 @@ web:
   # requests:
   #  cpu: 100m
   #  memory: 128Mi
-
   nodeSelector: {}
-
   tolerations: []
-
   affinity: {}
-
   additionalVolumes: []
   additionalVolumeMounts: []
-
+  # Adjust Web UI config with environment variables:
+  # https://docs.temporal.io/references/web-ui-environment-variables
   additionalEnv: []
-
   containerSecurityContext: {}
-  
   securityContext: {}
-
+  topologySpreadConstraints: []
+  podDisruptionBudget: {}
 schema:
+  createDatabase:
+    enabled: true
   setup:
     enabled: true
     backoffLimit: 100
@@ -387,7 +372,6 @@ schema:
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
-
 elasticsearch:
   enabled: true
   replicas: 3
@@ -402,12 +386,10 @@ elasticsearch:
   username: ""
   password: ""
   visibilityIndex: "temporal_visibility_v1_dev"
-
 prometheus:
   enabled: true
   nodeExporter:
     enabled: false
-
 grafana:
   enabled: true
   replicas: 1
@@ -464,7 +446,6 @@ grafana:
       misc-worker-service-specific-github:
         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json
         datasource: TemporalMetrics
-
 cassandra:
   enabled: true
   persistence:
@@ -483,6 +464,5 @@ cassandra:
     seed_size: 0
   service:
     type: ClusterIP
-
 mysql:
   enabled: false

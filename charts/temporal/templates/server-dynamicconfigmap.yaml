@@ -4,12 +4,7 @@ kind: ConfigMap
 metadata:
   name: "{{ include "temporal.fullname" . }}-dynamic-config"
   labels:
-    app.kubernetes.io/name: {{ include "temporal.name" . }}
-    helm.sh/chart: {{ include "temporal.chart" . }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
-    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
 data:
   dynamic_config.yaml: |-
   {{- if $.Values.server.dynamicConfig }}

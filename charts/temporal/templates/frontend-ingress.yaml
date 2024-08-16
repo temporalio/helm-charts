@@ -1,4 +1,4 @@
-{{- if .Values.web.ingress.enabled -}}
+{{- if .Values.server.frontend.ingress.enabled -}}
   {{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1" }}
 apiVersion: networking.k8s.io/v1
   {{- else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" }}
@@ -8,20 +8,20 @@ apiVersion: extensions/v1beta1
   {{- end }}
 kind: Ingress
 metadata:
-  name: {{ include "temporal.componentname" (list . "web") }}
+  name: {{ include "temporal.componentname" (list . "frontend") }}
   labels:
-    {{- include "temporal.resourceLabels" (list . "web" "") | nindent 4 }}
-{{- with .Values.web.ingress.annotations }}
+    {{- include "temporal.resourceLabels" (list . "frontend" "") | nindent 4 }}
+{{- with .Values.server.frontend.ingress.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}
 {{- end }}
 spec:
-  {{- with .Values.web.ingress.className }}
+  {{- with .Values.server.frontend.ingress.className }}
   ingressClassName: {{ . | quote }}
   {{- end }}
-  {{- if .Values.web.ingress.tls }}
+  {{- if .Values.server.frontend.ingress.tls }}
   tls:
-    {{- range .Values.web.ingress.tls }}
+    {{- range .Values.server.frontend.ingress.tls }}
     - hosts:
       {{- range .hosts }}
       - {{ . | quote }}
@@ -30,7 +30,7 @@ spec:
       {{- end }}
       {{- end }}
   rules:
-    {{- range .Values.web.ingress.hosts }}
+    {{- range .Values.server.frontend.ingress.hosts }}
       {{- $url := splitList "/" . }}
       - host: {{ first $url }}
         http:
@@ -40,13 +40,13 @@ spec:
               pathType: Prefix
               backend:
                 service:
-                  name: {{ include "temporal.fullname" $ }}-web
+                  name: {{ include "temporal.fullname" $ }}-frontend
                   port:
-                    number: {{ $.Values.web.service.port }}
+                    number: {{ $.Values.server.frontend.service.port }}
               {{- else if $.Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" }}
               backend:
-                serviceName: {{ include "temporal.fullname" $ }}-web
-                servicePort: {{ $.Values.web.service.port }}
+                serviceName: {{ include "temporal.fullname" $ }}-frontend
+                servicePort: {{ $.Values.server.frontend.service.port }}
               {{- end }}
     {{- end}}
 {{- end }}

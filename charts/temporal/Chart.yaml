@@ -1,32 +1,24 @@
 apiVersion: v2
-
 name: temporal
-
 description: Temporal is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous long-running business logic in a scalable and resilient way.
-
 home: https://temporal.io/
-
 keywords:
   - temporal
   - workflow
   - orchestration
-
 maintainers:
-  - name: Temporal Technologies Inc.
+  - name: temporalio
     url: https://temporal.io/
-
 sources:
   - https://github.com/temporalio/temporal
-
 dependencies:
   - name: cassandra
     version: "0.14.3"
     repository: https://charts.helm.sh/incubator
-    enabled: false
     condition: cassandra.enabled
   - name: prometheus
     repository: https://prometheus-community.github.io/helm-charts
-    version: 15.1.3
+    version: 25.22.0
     condition: prometheus.enabled
   - name: elasticsearch
     repository: https://helm.elastic.co
@@ -34,9 +26,8 @@ dependencies:
     condition: elasticsearch.enabled
   - name: grafana
     repository: https://grafana.github.io/helm-charts
-    version: 5.0.10
+    version: 8.0.2
     condition: grafana.enabled
-
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives
@@ -46,11 +37,9 @@ dependencies:
 # a dependency of application charts to inject those utilities and functions into the rendering
 # pipeline. Library charts do not define any templates and therefore cannot be deployed.
 type: application
-
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 0.36.0
-
+version: 0.44.0
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
-appVersion: 1.23.0
+appVersion: 1.24.2

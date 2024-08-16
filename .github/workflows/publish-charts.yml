@@ -3,8 +3,14 @@ name: Release Charts
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "Temporal version to use for release (for example 1.22.4)"
+      server_version:
+        description: "Temporal Server version to use for release (for example 1.24.1)"
+        required: true
+      admintools_version:
+        description: "Temporal Admin Tools version to use for release (for example 1.24.1-tctl-1.18.1-cli-0.12.0)"
+        required: true
+      ui_version:
+        description: "Temporal UI version to use for release (for example 2.27.2)"
         required: true
       bump:
         description: "Chart version bump level"
@@ -14,6 +20,12 @@ on:
         options:
           - minor
           - patch
+      force_version:
+        description: "Force a chart version (ignore Chart bump level)"
+      mark_latest:
+        description: "Mark this release as the latest"
+        type: boolean
+        default: true
 
 jobs:
   release:
@@ -40,38 +52,62 @@ jobs:
         run: |
           git config --local user.name 'Temporal Data'
           git config --local user.email 'commander-data@temporal.io'
-      
-      - name: Update Temporal chart version
+        
+      - name: Bump Temporal chart version
+        id: chart-version
         working-directory: charts/temporal
         run: |
-          RE='([0-9]+)\.([0-9]+)\.([0-9]+)'
+          CHART_VERSION="${{ github.event.inputs.force_version }}"
 
-          current="$(grep -m 1 '^version:' Chart.yaml | awk '{print $2}')"
+          if [ -z "${CHART_VERSION}" ]; then
+            current="$(grep -m 1 '^version:' Chart.yaml | awk '{print $2}')"
 
-          MAJOR=`echo $current | sed -E "s#$RE#\1#"`
-          MINOR=`echo $current | sed -E "s#$RE#\2#"`
-          PATCH=`echo $current | sed -E "s#$RE#\3#"`
+            RE='([0-9]+)\.([0-9]+)\.([0-9]+)'
 
-          if [ "${{ github.event.inputs.bump }}" == "minor" ]; then
-            MINOR=$((MINOR+1))
-            PATCH=0
-          else
-            PATCH=$((PATCH+1))
+            MAJOR=`echo $current | sed -E "s#$RE#\1#"`
+            MINOR=`echo $current | sed -E "s#$RE#\2#"`
+            PATCH=`echo $current | sed -E "s#$RE#\3#"`
+
+            if [ "${{ github.event.inputs.bump }}" == "minor" ]; then
+              MINOR=$((MINOR+1))
+              PATCH=0
+            else
+              PATCH=$((PATCH+1))
+            fi
+            CHART_VERSION="$MAJOR.$MINOR.$PATCH"
           fi
-          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          
+          echo "chart_version=$CHART_VERSION" >> "$GITHUB_OUTPUT"
+  
+      - name: Update image tags
+        uses: mikefarah/yq@v4
+        with:
+          cmd: |
+            yq -i '.server.image.tag = "${{ github.event.inputs.server_version }}"' charts/temporal/values.yaml
+            yq -i '.admintools.image.tag = "${{ github.event.inputs.admintools_version }}"' charts/temporal/values.yaml
+            yq -i '.web.image.tag = "${{ github.event.inputs.ui_version }}"' charts/temporal/values.yaml
 
-          sed -i -e "s/^version: .*/version: $NEW_VERSION/" Chart.yaml
-          sed -i -e "s/^appVersion: .*/appVersion: ${{ github.event.inputs.version }}/" Chart.yaml
+      - name: Update chart
+        uses: mikefarah/yq@v4
+        with:
+          cmd: |
+            yq -i '.appVersion = "${{ github.event.inputs.server_version }}"' charts/temporal/Chart.yaml
+            yq -i '.version = "${{ steps.chart-version.outputs.chart_version }}"' charts/temporal/Chart.yaml
+    
+      - name: Commit changes
+        working-directory: charts/temporal
+        run: |
+          git commit -m "Update Chart to ${{ steps.chart-version.outputs.chart_version }}." Chart.yaml values.yaml
+          git tag -a "temporal-${{ steps.chart-version.outputs.chart_version }}" -m "Release Chart: ${{ steps.chart-version.outputs.chart_version }}"
 
-          git commit -m "Update Chart to $NEW_VERSION, Temporal v${{ github.event.inputs.version }}" Chart.yaml
-          git tag -a "temporal-${NEW_VERSION}" -m "Release Chart: $NEW_VERSION. Temporal ${{ github.event.inputs.version }}"
-
-          git push --tags origin master
+          git push --tags origin main
 
       - name: Install Helm
         uses: azure/setup-helm@v3
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
+        with:
+          mark_as_latest: "${{ github.event.inputs.mark_latest }}"
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

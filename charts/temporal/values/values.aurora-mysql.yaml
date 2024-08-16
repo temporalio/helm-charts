@@ -41,6 +41,8 @@ postgresql:
   enabled: false
 
 schema:
+  createDatabase:
+    enabled: true
   setup:
     enabled: false
   update:
