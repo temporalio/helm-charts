@@ -125,6 +125,28 @@ spec:
             {{- end }}
           {{- end }}
         {{- end }}
+        {{- if $.Values.server.config.defaultNamespace.enabled }}
+        - name: create-default-namespace
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['/bin/sh','-c']
+          args: ['temporal operator namespace describe -n {{ $.Values.server.config.defaultNamespace.namespace }} || temporal operator namespace create -n {{ $.Values.server.config.defaultNamespace.namespace }} --retention {{ $.Values.server.config.defaultNamespace.retention }}']
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: "{{ include "temporal.fullname" . }}-frontend.{{ .Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
+              {{- with $.Values.server.additionalVolumeMounts }}
+          volumeMounts:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with $.Values.schema.resources }}
+          resources:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with $.Values.schema.containerSecurityContext }}
+          securityContext:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+        {{- end }}
       containers:
         - name: done
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
