@@ -102,6 +102,11 @@ data:
         {{- toYaml . | nindent 10 }}
       {{- end }}
 
+      {{- with $server.config.authorization }}
+      authorization:
+        {{- toYaml . | nindent 10 }}
+      {{- end }}
+
     services:
       frontend:
         rpc:
