@@ -2,26 +2,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "temporal.componentname" (list . "web") }}
+  name: {{ include "temporal.componentname" (list $ "web") }}
+  annotations:
+    {{- include "temporal.resourceAnnotations" (list $ "web" "deployment") | nindent 4 }}
   labels:
-    {{- include "temporal.resourceLabels" (list . "web" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "web" "deployment") | nindent 4 }}
 spec:
   replicas: {{ .Values.web.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "temporal.name" . }}
+      app.kubernetes.io/name: {{ include "temporal.name" $ }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/component: web
   template:
     metadata:
+      annotations:
+        {{- include "temporal.resourceAnnotations" (list $ "web" "pod") | nindent 8 }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "web" "pod") | nindent 8 }}
-      {{- with .Values.web.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
     spec:
-      {{ include "temporal.serviceAccount" . }}
+      {{ include "temporal.serviceAccount" $ }}
       {{- if .Values.web.additionalVolumes }}
       volumes:
       {{- toYaml .Values.web.additionalVolumes | nindent 8 }}
@@ -32,9 +32,14 @@ spec:
           imagePullPolicy: {{ .Values.web.image.pullPolicy }}
           env:
             - name: TEMPORAL_ADDRESS
-              value: "{{ include "temporal.fullname" . }}-frontend.{{ .Release.Namespace }}.svc:{{ .Values.server.frontend.service.port }}"
+              value: "{{ include "temporal.fullname" $ }}-frontend.{{ .Release.Namespace }}.svc:{{ .Values.server.frontend.service.port }}"
           {{- if .Values.web.additionalEnv }}
           {{- toYaml .Values.web.additionalEnv | nindent 12 }}
+          {{- end }}
+          {{- if .Values.web.additionalEnvSecretName }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.web.additionalEnvSecretName }}
           {{- end }}
           ports:
             - name: http

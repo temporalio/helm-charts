@@ -8,17 +8,20 @@ imagePullSecrets: {}
 serviceAccount:
   # Whether to create service account or not
   create: false
-  # Name of the service account, default: temporal.fullname
+  # Name of the service account.
+  # Uses `name` if set.
+  # If `create: true` defaults to temporal.fullname, otherwise uses the namespace's default serviceAccount.
   name:
   # extraAnnotations would let users add additional annotations
   extraAnnotations:
+additionalAnnotations: {}
 additionalLabels: {}
 server:
   enabled: true
   sidecarContainers: []
   image:
     repository: temporalio/server
-    tag: 1.25.0
+    tag: 1.25.2
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -29,6 +32,8 @@ server:
       enabled: true
     # Additional tags to be added to Prometheus metrics
     tags: {}
+    # Tags to be excluded in Prometheus metrics
+    excludeTags: {}
     # Enable Prometheus ServiceMonitor
     # Use this if you installed the Prometheus Operator (https://github.com/coreos/prometheus-operator).
     serviceMonitor:
@@ -59,6 +64,8 @@ server:
       #   targetLabel: __name__
     prometheus:
       timerType: histogram
+  deploymentLabels: {}
+  deploymentAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   secretLabels: {}
@@ -80,6 +87,7 @@ server:
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
+  additionalInitContainers: []
   securityContext:
     fsGroup: 1000
     runAsUser: 1000
@@ -187,6 +195,12 @@ server:
           maxConnLifetime: "1h"
           # connectAttributes:
           #   tx_isolation: 'READ-COMMITTED'
+    namespaces:
+      # Enable this to create namespaces
+      create: false
+      namespace:
+        - name: default
+          retention: 3d
   frontend:
     service:
       # Evaluated as template
@@ -195,6 +209,8 @@ server:
       port: 7233
       membershipPort: 6933
       httpPort: 7243
+      # loadBalancerSourceRanges:
+      # - "10.0.0.0/8"
     ingress:
       enabled: false
       # className:
@@ -217,6 +233,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -239,6 +257,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -246,6 +266,7 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
+    additionalEnvSecretName: ""
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
@@ -261,6 +282,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -283,6 +306,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -297,18 +322,24 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.25.0-tctl-1.18.1-cli-1.0.0
+    tag: 1.25.2-tctl-1.18.1-cli-1.1.1
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
     port: 22
     annotations: {}
+  deploymentLabels: {}
+  deploymentAnnotations: {}
   podLabels: {}
   podAnnotations: {}
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  additionalVolumes: []
+  additionalVolumeMounts: []
   additionalEnv: []
+  additionalEnvSecretName: ""
+  additionalInitContainers: []
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
@@ -318,7 +349,7 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.30.5
+    tag: 2.31.2
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
@@ -342,6 +373,8 @@ web:
     #  - secretName: chart-example-tls
     #    hosts:
     #      - chart-example.local
+  deploymentLabels: {}
+  deploymentAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}
@@ -363,6 +396,7 @@ web:
   # Adjust Web UI config with environment variables:
   # https://docs.temporal.io/references/web-ui-environment-variables
   additionalEnv: []
+  additionalEnvSecretName: ""
   containerSecurityContext: {}
   securityContext: {}
   topologySpreadConstraints: []
@@ -376,6 +410,8 @@ schema:
   update:
     enabled: true
     backoffLimit: 100
+  podAnnotations: {}
+  podLabels: {}
   resources: {}
   containerSecurityContext: {}
   securityContext: {}

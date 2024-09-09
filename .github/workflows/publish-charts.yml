@@ -10,7 +10,7 @@ on:
         description: "Temporal Admin Tools version to use for release (for example 1.24.1-tctl-1.18.1-cli-0.12.0)"
         required: true
       ui_version:
-        description: "Temporal UI version to use for release (for example 2.27.2)"
+        description: "Temporal UI version to use for release (for example 2.27.2). Please make sure to use version from https://github.com/temporalio/ui-server/releases!"
         required: true
       bump:
         description: "Chart version bump level"
@@ -104,6 +104,13 @@ jobs:
 
       - name: Install Helm
         uses: azure/setup-helm@v3
+
+      - name: Add dependency repos
+        run: |
+          helm repo add incubator https://charts.helm.sh/incubator
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add elastic https://helm.elastic.co
+          helm repo add grafana https://grafana.github.io/helm-charts
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
