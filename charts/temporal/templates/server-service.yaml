@@ -10,6 +10,9 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.server.frontend.service.type }}
+  {{- if .Values.server.frontend.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{- include "common.tplvalues.render" ( dict "value" .Values.server.frontend.service.loadBalancerSourceRanges "context" $) | nindent 4 }}
+  {{- end }}
   ports:
     - port: {{ .Values.server.frontend.service.port }}
       targetPort: rpc
