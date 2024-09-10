@@ -7,6 +7,9 @@ metadata:
     {{- include "temporal.resourceLabels" (list . "database" "") | nindent 4 }}
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
+  {{- if $.Values.schema.ttlSecondsAfterFinished }}
+  ttlSecondsAfterFinished: {{ $.Values.schema.ttlSecondsAfterFinished }}
+  {{- end }}
   template:
     metadata:
       name: {{ include "temporal.componentname" (list . "schema") }}

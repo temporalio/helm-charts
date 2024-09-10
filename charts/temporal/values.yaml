@@ -379,6 +379,8 @@ schema:
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
+  # To delete the Job resource after it is finished. This can help with subsequent upgrades
+  # ttlSecondsAfterFinished: 10
 elasticsearch:
   enabled: true
   replicas: 3
