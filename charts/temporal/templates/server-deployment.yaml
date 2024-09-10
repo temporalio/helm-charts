@@ -1,6 +1,7 @@
 {{- if $.Values.server.enabled }}
 {{- range $service := (list "frontend" "history" "matching" "worker") }}
 {{ $serviceValues := index $.Values.server $service }}
+{{- $elasticsearch := $.Values.elasticsearch -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,7 +37,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- end }}
-      {{- if or $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external)}}
+      {{- if or $.Values.cassandra.enabled (or $elasticsearch.enabled $elasticsearch.external)}}
       initContainers:
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra-service
@@ -51,11 +52,17 @@ spec:
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
           command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$; do echo waiting for default keyspace to become ready; sleep 1; done;']
         {{- end }}
-        {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
+        {{- if or $elasticsearch.enabled $elasticsearch.external }}
         - name: check-elasticsearch-index
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail {{- if and $.Values.elasticsearch.username $.Values.elasticsearch.password }} --user "{{ $.Values.elasticsearch.username }}:{{ $.Values.elasticsearch.password }}" {{- end }} {{ $.Values.elasticsearch.scheme }}://{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}/{{ $.Values.elasticsearch.visibilityIndex }} 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
+          {{- if $elasticsearch.tls.enabled }}
+          volumeMounts:
+              - name: elasticsearch-certs
+                mountPath: /etc/temporal/elasticsearch-certs
+                readOnly: true
+          {{- end }}
+          command: ['sh', '-c', 'until curl {{- if and $elasticsearch.tls.enabled $elasticsearch.tls.ca }} --cacert /etc/temporal/elasticsearch-certs/{{ $elasticsearch.tls.ca }} {{- end }} --silent --fail {{- if and $elasticsearch.username $elasticsearch.password }} --user "{{ $elasticsearch.username }}:{{ $elasticsearch.password }}" {{- end }} {{ $elasticsearch.scheme }}://{{ $elasticsearch.host }}:{{ $elasticsearch.port }}/{{ $elasticsearch.visibilityIndex }} 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
         {{- end }}
       {{- end }}
       containers:
@@ -112,6 +119,11 @@ spec:
               subPath: config_template.yaml
             - name: dynamic-config
               mountPath: /etc/temporal/dynamic_config
+            {{- if $elasticsearch.tls.secretName }}
+            - name: elasticsearch-certs
+              mountPath: /etc/temporal/elasticsearch-certs
+              readOnly: true
+            {{- end }}
             {{- if $.Values.server.additionalVolumeMounts }}
             {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12}}
             {{- end }}
@@ -129,6 +141,11 @@ spec:
       {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+        {{- if and $elasticsearch.tls.enabled $elasticsearch.tls.secretName }}
+        - name: elasticsearch-certs
+          secret:
+            secretName: {{ $elasticsearch.tls.secretName | quote }}
+        {{- end }}
         - name: config
           configMap:
             name: "{{ include "temporal.fullname" $ }}-config"

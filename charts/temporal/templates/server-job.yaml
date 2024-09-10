@@ -1,4 +1,5 @@
 {{- if $.Values.server.enabled }}{{- if or $.Values.schema.createDatabase.enabled $.Values.schema.setup.enabled $.Values.schema.update.enabled }}
+{{- $elasticsearch := $.Values.elasticsearch -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -30,7 +31,7 @@ spec:
         - name: check-elasticsearch
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
+          command: ['sh', '-c', 'until curl --silent --fail {{- if and $elasticsearch.tls.enabled $elasticsearch.tls.ca }} --cacert /etc/temporal/elasticsearch-certs/{{ $elasticsearch.tls.ca }} {{- end }} --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
           env:
             {{- include "temporal.admintools-env" (list $ "visibility") | nindent 12 }}
         {{- end }}
@@ -70,14 +71,19 @@ spec:
             {{- else if eq $driver "elasticsearch" }}
           command: ['sh', '-c']
           args:
-            - 'curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&
-              curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1'
+            - 'curl -X PUT --fail {{- if and $elasticsearch.tls.enabled $elasticsearch.tls.ca }} --cacert /etc/temporal/elasticsearch-certs/{{ $elasticsearch.tls.ca }} {{- end }} --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&
+              curl -X PUT --fail {{- if and $elasticsearch.tls.enabled $elasticsearch.tls.ca }} --cacert /etc/temporal/elasticsearch-certs/{{ $elasticsearch.tls.ca }} {{- end }} --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1'
             {{- end }}
           env:
             {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-            {{- with $.Values.server.additionalVolumeMounts }}
           volumeMounts:
+            {{- with $.Values.server.additionalVolumeMounts }}
               {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if and $elasticsearch.tls.enabled $elasticsearch.tls.secretName }}
+            - name: elasticsearch-certs
+              mountPath: /etc/temporal/elasticsearch-certs
+              readOnly: true
             {{- end }}
             {{- with $.Values.schema.resources }}
           resources:
@@ -158,8 +164,13 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $.Values.server.additionalVolumes }}
       volumes:
+      {{- if $elasticsearch.tls.secretName }}
+      - name: elasticsearch-certs
+        secret:
+          secretName: {{ $elasticsearch.tls.secretName | quote }}
+      {{- end }}
+      {{- with $.Values.server.additionalVolumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end -}}{{- end -}}

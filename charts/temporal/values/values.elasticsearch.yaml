@@ -6,3 +6,5 @@ elasticsearch:
   version: "v7"
   scheme: "http"
   logLevel: "error"
+  tls:
+    enabled: false
