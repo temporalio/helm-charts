@@ -36,8 +36,11 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- end }}
-      {{- if or $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external)}}
+      {{- if or (or $.Values.server.additionalInitContainers $.Values.cassandra.enabled) (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external)}}
       initContainers:
+        {{- if $.Values.server.additionalInitContainers }}
+        {{- toYaml $.Values.server.additionalInitContainers | nindent 8}}
+        {{- end }}
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra-service
           image: busybox
