@@ -97,6 +97,17 @@ data:
           listenAddress: "0.0.0.0:9090"
         {{- end }}
 
+      {{- if $server.authorization }}
+      authorization:
+        jwtKeyProvider:
+          keySourceURIs:
+            - "{{ $server.authorization.keySourceURI }}"
+          refreshInterval: {{ default "1m" $server.authorization.refreshInterval }}
+        permissionsClaimName: {{ default "permissions" $server.authorization.permissionsClaimName }}
+        authorizer: {{ default "default" $server.authorization.authorizer }}
+        claimMapper: {{ default "default" $server.authorization.claimMapper }}
+      {{- end }}
+
       {{- with $server.config.tls }}
       tls:
         {{- toYaml . | nindent 10 }}
