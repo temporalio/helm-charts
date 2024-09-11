@@ -1,0 +1,17 @@
+{{- if $.Values.web.enabled }}
+{{- if $.Values.web.podDisruptionBudget }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "temporal.componentname" (list . "web") }}-pdb
+  labels:
+    {{- include "temporal.resourceLabels" (list . "web" "") | nindent 4 }}
+spec:
+  {{ toYaml $.Values.web.podDisruptionBudget }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "temporal.name" $ }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+      app.kubernetes.io/component: web
+{{- end }}
+{{- end }}

@@ -1,18 +1,12 @@
 {{- if $.Values.server.enabled }}
 {{- range $service := (list "frontend" "history" "matching" "worker") }}
-{{- $serviceValues := index $.Values.server $service -}}
+{{ $serviceValues := index $.Values.server $service }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
   labels:
-    app.kubernetes.io/name: {{ include "temporal.name" $ }}
-    helm.sh/chart: {{ include "temporal.chart" $ }}
-    app.kubernetes.io/managed-by: {{ $.Release.Service }}
-    app.kubernetes.io/instance: {{ $.Release.Name }}
-    app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
-    app.kubernetes.io/component: {{ $service }}
-    app.kubernetes.io/part-of: {{ $.Chart.Name }}
+    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
 spec:
   replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
   selector:
@@ -23,16 +17,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "temporal.name" $ }}
-        helm.sh/chart: {{ include "temporal.chart" $ }}
-        app.kubernetes.io/managed-by: {{ $.Release.Service }}
-        app.kubernetes.io/instance: {{ $.Release.Name }}
-        app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
-        app.kubernetes.io/component: {{ $service }}
-        app.kubernetes.io/part-of: {{ $.Chart.Name }}
-        {{- with (default $.Values.server.podLabels $serviceValues.podLabels) }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+        {{- include "temporal.resourceLabels" (list $ $service "pod") | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/server-configmap.yaml") $ | sha256sum }}
         {{- if (default $.Values.server.metrics.annotations.enabled $serviceValues.metrics.annotations.enabled) }}
@@ -51,6 +36,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- end }}
+      {{- if or $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external)}}
       initContainers:
         {{- if $.Values.server.additionalInitContainers }}
         {{- toYaml $.Values.server.additionalInitContainers | nindent 8}}
@@ -59,7 +45,7 @@ spec:
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra-service
           image: busybox
-          command: ['sh', '-c', 'until nslookup {{ include "cassandra.host" $ }}; do echo waiting for cassandra service; sleep 1; done;']
+          command: ['sh', '-c', 'until nc -z {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }}; do echo waiting for cassandra service; sleep 1; done;']
         - name: check-cassandra
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
@@ -68,16 +54,12 @@ spec:
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
           command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$; do echo waiting for default keyspace to become ready; sleep 1; done;']
-        - name: check-cassandra-visibility-schema
-          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
-          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.visibility.cassandra.keyspace }}$; do echo waiting for visibility keyspace to become ready; sleep 1; done;']
         {{- end }}
         {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
         - name: check-elasticsearch-index
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail {{- if and $.Values.elasticsearch.username $.Values.elasticsearch.password }} --user {{ $.Values.elasticsearch.username }}:{{ $.Values.elasticsearch.password }} {{- end }} {{ $.Values.elasticsearch.scheme }}://{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}/{{ $.Values.elasticsearch.visibilityIndex }} 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
+          command: ['sh', '-c', 'until curl --silent --fail {{- if and $.Values.elasticsearch.username $.Values.elasticsearch.password }} --user "{{ $.Values.elasticsearch.username }}:{{ $.Values.elasticsearch.password }}" {{- end }} {{ $.Values.elasticsearch.scheme }}://{{ $.Values.elasticsearch.host }}:{{ $.Values.elasticsearch.port }}/{{ $.Values.elasticsearch.visibilityIndex }} 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
         {{- end }}
       {{- end }}
       containers:
@@ -89,22 +71,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            - name: ENABLE_ES
-              value: "{{ or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}"
-            - name: ES_SEEDS
-              value: "{{ $.Values.elasticsearch.host }}"
-            - name: ES_PORT
-              value: "{{ $.Values.elasticsearch.port }}"
-            - name: ES_VERSION
-              value: "{{ $.Values.elasticsearch.version }}"
-            - name: ES_SCHEME
-              value: "{{ $.Values.elasticsearch.scheme }}"
-            - name: ES_VIS_INDEX
-              value: "{{ $.Values.elasticsearch.visibilityIndex }}"
-            - name: ES_USER
-              value: "{{ $.Values.elasticsearch.username }}"
-            - name: ES_PWD
-              value: "{{ $.Values.elasticsearch.password }}"
             - name: SERVICES
               value: {{ $service }}
             - name: TEMPORAL_STORE_PASSWORD
@@ -125,13 +91,20 @@ spec:
           {{- toYaml (default $.Values.server.additionalEnv $serviceValues.additionalEnv) | nindent 12 }}
           {{- end }}
           ports:
+          {{- if ne $service "worker" }}
             - name: rpc
-              containerPort: {{ include (printf "temporal.%s.grpcPort" $service) $ }}
+              containerPort: {{ $serviceValues.service.port }}
               protocol: TCP
+          {{- end }}
+          {{- if eq $service "frontend" }}
+            - name: http
+              containerPort: {{ $serviceValues.service.httpPort }}
+              protocol: TCP
+          {{- end }}
             - name: metrics
               containerPort: 9090
               protocol: TCP
-          {{- if ne $service "worker"}}
+          {{- if ne $service "worker" }}
           livenessProbe:
              initialDelaySeconds: 150
              tcpSocket:
@@ -162,7 +135,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: "{{ include "temporal.componentname" (list $ $service) }}-config"
+            name: "{{ include "temporal.fullname" $ }}-config"
         - name: dynamic-config
           configMap:
             name: "{{ include "temporal.fullname" $ }}-dynamic-config"

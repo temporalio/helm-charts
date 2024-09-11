@@ -1,0 +1,52 @@
+{{- if .Values.web.ingress.enabled -}}
+  {{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1" }}
+apiVersion: networking.k8s.io/v1
+  {{- else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" }}
+apiVersion: networking.k8s.io/v1beta1
+  {{- else if .Capabilities.APIVersions.Has "extensions/v1beta1" }}
+apiVersion: extensions/v1beta1
+  {{- end }}
+kind: Ingress
+metadata:
+  name: {{ include "temporal.componentname" (list . "web") }}
+  labels:
+    {{- include "temporal.resourceLabels" (list . "web" "") | nindent 4 }}
+{{- with .Values.web.ingress.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+  {{- with .Values.web.ingress.className }}
+  ingressClassName: {{ . | quote }}
+  {{- end }}
+  {{- if .Values.web.ingress.tls }}
+  tls:
+    {{- range .Values.web.ingress.tls }}
+    - hosts:
+      {{- range .hosts }}
+      - {{ . | quote }}
+      {{- end }}
+      secretName: {{ .secretName }}
+      {{- end }}
+      {{- end }}
+  rules:
+    {{- range .Values.web.ingress.hosts }}
+      {{- $url := splitList "/" . }}
+      - host: {{ first $url }}
+        http:
+          paths:
+            - path: /{{ rest $url | join "/" }}
+              {{- if $.Capabilities.APIVersions.Has "networking.k8s.io/v1" }}
+              pathType: Prefix
+              backend:
+                service:
+                  name: {{ include "temporal.fullname" $ }}-web
+                  port:
+                    number: {{ $.Values.web.service.port }}
+              {{- else if $.Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" }}
+              backend:
+                serviceName: {{ include "temporal.fullname" $ }}-web
+                servicePort: {{ $.Values.web.service.port }}
+              {{- end }}
+    {{- end}}
+{{- end }}

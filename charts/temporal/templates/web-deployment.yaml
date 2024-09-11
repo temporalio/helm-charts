@@ -4,13 +4,7 @@ kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list . "web") }}
   labels:
-    app.kubernetes.io/name: {{ include "temporal.name" . }}
-    helm.sh/chart: {{ include "temporal.chart" . }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
-    app.kubernetes.io/component: web
-    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    {{- include "temporal.resourceLabels" (list . "web" "") | nindent 4 }}
 spec:
   replicas: {{ .Values.web.replicaCount }}
   selector:
@@ -21,27 +15,15 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "temporal.name" . }}
-        helm.sh/chart: {{ include "temporal.chart" . }}
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/version: {{ .Chart.AppVersion | replace "+" "_" }}
-        app.kubernetes.io/component: web
-        app.kubernetes.io/part-of: {{ .Chart.Name }}
-        {{- with .Values.web.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+        {{- include "temporal.resourceLabels" (list $ "web" "pod") | nindent 8 }}
       {{- with .Values.web.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
       {{ include "temporal.serviceAccount" . }}
-      volumes:
-        - name: {{ .Chart.Name }}-web-config
-          configMap:
-            name: {{ include "temporal.componentname" (list . "web") }}-config
       {{- if .Values.web.additionalVolumes }}
+      volumes:
       {{- toYaml .Values.web.additionalVolumes | nindent 8 }}
       {{- end }}
       containers:
@@ -72,6 +54,10 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.web.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -83,5 +69,9 @@ spec:
     {{- with .Values.web.tolerations }}
       tolerations:
       {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.web.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
     {{- end }}
   {{- end }}
