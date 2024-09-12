@@ -1,0 +1,87 @@
+{{- if and  $.Values.server.config.tls $.Values.certManager}}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  annotations:
+  labels:
+    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+  name: {{ $.Release.Name }}-selfsigned-ca-issuer
+spec:
+  selfSigned: {}
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+  name: {{ $.Release.Name }}-ca-certificate
+  namespace: cert-manager
+spec:
+  secretName: {{ $.Release.Name }}-ca-secret
+  isCA: true
+  commonName: {{ $.Release.Name }}-ca
+  issuerRef:
+    name: {{ $.Release.Name }}-selfsigned-ca-issuer
+    kind: ClusterIssuer
+
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  labels:
+    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+  name: {{ $.Release.Name }}-selfsigned-issuer
+spec:
+  ca:
+    secretName: {{ $.Release.Name }}-ca-secret
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+  name: {{ $.Release.Name }}-cluster-certificate
+spec:
+  dnsNames:
+  - {{ include "temporal.componentname" (list . "frontend") }}
+  subject:
+    organizationalUnits:
+    - "temporal:temporal-system:write"
+  issuerRef:
+    kind: ClusterIssuer
+    name: {{ $.Release.Name }}-selfsigned-issuer
+  secretName: {{ $.Release.Name }}-cluster-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+  name: {{ $.Release.Name }}-web-certificate
+spec:
+  dnsNames:
+  - {{ $.Release.Name }}-web
+  issuerRef:
+    kind: ClusterIssuer
+    name: {{ $.Release.Name }}-selfsigned-issuer
+  secretName: {{ $.Release.Name }}-web-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+  name: {{ $.Release.Name }}-admin-certificate
+spec:
+  dnsNames:
+  - {{ $.Release.Name }}-admintools
+  subject:
+    organizationalUnits:
+    - "temporal:temporal-system:admin"
+  issuerRef:
+    kind: ClusterIssuer
+    name: {{ $.Release.Name }}-selfsigned-issuer
+  secretName: {{ $.Release.Name }}-admin-cert
+---
+{{- end }}
