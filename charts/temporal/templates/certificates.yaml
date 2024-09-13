@@ -45,6 +45,7 @@ metadata:
 spec:
   dnsNames:
   - {{ include "temporal.componentname" (list . "frontend") }}
+  - {{ include "temporal.componentname" (list . "frontend") }}.{{ $.Release.Namespace }}
   subject:
     organizationalUnits:
     - "temporal:temporal-system:write"
