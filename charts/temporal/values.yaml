@@ -368,6 +368,7 @@ web:
   topologySpreadConstraints: []
   podDisruptionBudget: {}
 schema:
+  isHook: false
   createDatabase:
     enabled: true
   setup:
