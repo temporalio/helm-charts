@@ -125,8 +125,8 @@ spec:
             {{- end }}
           {{- end }}
         {{- end }}
-        {{- if $.Values.server.config.defaultNamespaces.enabled }}
-          {{- range $namespace := $.Values.server.config.defaultNamespaces.namespace }}
+        {{- if $.Values.server.config.namespaces.create }}
+          {{- range $namespace := $.Values.server.config.namespaces.namespace }}
         - name: create-{{ $namespace.name }}-namespace
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}

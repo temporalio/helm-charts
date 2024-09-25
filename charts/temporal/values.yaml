@@ -178,9 +178,9 @@ server:
           maxConnLifetime: "1h"
           # connectAttributes:
           #   tx_isolation: 'READ-COMMITTED'
-    defaultNamespaces:
+    namespaces:
       # Enable this to create namespaces
-      enabled: false
+      create: false
       namespace:
         - name: default
           retention: 3d
