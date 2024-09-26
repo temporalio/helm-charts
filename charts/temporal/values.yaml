@@ -187,6 +187,12 @@ server:
           maxConnLifetime: "1h"
           # connectAttributes:
           #   tx_isolation: 'READ-COMMITTED'
+    namespaces:
+      # Enable this to create namespaces
+      create: false
+      namespace:
+        - name: default
+          retention: 3d
   frontend:
     service:
       # Evaluated as template
