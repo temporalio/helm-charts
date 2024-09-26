@@ -35,7 +35,11 @@ Create chart name and version as used by the chart label.
 Create the name of the service account
 */}}
 {{- define "temporal.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
 {{ default (include "temporal.fullname" .) .Values.serviceAccount.name }}
+{{- else -}}
+{{ default "default" .Values.serviceAccount.name }}
+{{- end -}}
 {{- end -}}
 
 {{/*
