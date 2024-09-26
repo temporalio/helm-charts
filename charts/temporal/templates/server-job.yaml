@@ -146,7 +146,7 @@ spec:
           env:
             - name: TEMPORAL_ADDRESS
               value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
-              {{- with $.Values.admintools.additionalVolumeMounts }}
+              {{- with $.Values.server.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
