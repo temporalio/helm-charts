@@ -382,6 +382,8 @@ schema:
   update:
     enabled: true
     backoffLimit: 100
+  podAnnotations: {}
+  podLabels: {}
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
