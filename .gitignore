@@ -1,2 +1,6 @@
+<<<<<<< HEAD
 /Chart.lock
 /.idea
+=======
+/charts
+>>>>>>> 03662b7 (add Job annotations and labels (#536))
