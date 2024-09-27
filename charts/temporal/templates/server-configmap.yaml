@@ -35,7 +35,7 @@ data:
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "default") }}:{{ include "temporal.persistence.sql.port" (list $ "default") }}"
             connectProtocol: "tcp"
             user: {{ include "temporal.persistence.sql.user" (list $ "default") }}
-            password: "{{ `{{ .Env.TEMPORAL_STORE_PASSWORD }}` }}"
+            password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
             {{- with (omit $server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -99,6 +99,11 @@ data:
 
       {{- with $server.config.tls }}
       tls:
+        {{- toYaml . | nindent 10 }}
+      {{- end }}
+
+      {{- with $server.config.authorization }}
+      authorization:
         {{- toYaml . | nindent 10 }}
       {{- end }}
 

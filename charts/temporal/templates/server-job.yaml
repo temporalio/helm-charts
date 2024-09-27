@@ -131,6 +131,30 @@ spec:
             {{- end }}
           {{- end }}
         {{- end }}
+        {{- if $.Values.server.config.namespaces.create }}
+          {{- range $namespace := $.Values.server.config.namespaces.namespace }}
+        - name: create-{{ $namespace.name }}-namespace
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['/bin/sh','-c']
+          args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
+              {{- with $.Values.server.additionalVolumeMounts }}
+          volumeMounts:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with $.Values.schema.resources }}
+          resources:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with $.Values.schema.containerSecurityContext }}
+          securityContext:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+          {{- end }}
+        {{- end }}
       containers:
         - name: done
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
