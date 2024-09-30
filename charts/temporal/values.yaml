@@ -349,7 +349,7 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.30.2
+    tag: 2.31.0
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
