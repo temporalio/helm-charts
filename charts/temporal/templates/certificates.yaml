@@ -48,7 +48,7 @@ spec:
   - {{ include "temporal.componentname" (list . "frontend") }}.{{ $.Release.Namespace }}
   subject:
     organizationalUnits:
-    - "temporal:temporal-system:write"
+    - "temporal:temporal-system:admin"
   issuerRef:
     kind: ClusterIssuer
     name: {{ $.Release.Name }}-selfsigned-issuer
