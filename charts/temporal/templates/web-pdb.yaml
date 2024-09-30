@@ -3,9 +3,9 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "temporal.componentname" (list . "web") }}-pdb
+  name: {{ include "temporal.componentname" (list $ "web") }}-pdb
   labels:
-    {{- include "temporal.resourceLabels" (list . "web" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "web" "") | nindent 4 }}
 spec:
   {{ toYaml $.Values.web.podDisruptionBudget }}
   selector:
