@@ -218,6 +218,49 @@ server:
       #  - secretName: chart-example-tls
       #    hosts:
       #      - chart-example.local
+
+    metrics:
+      annotations:
+        enabled: true
+      serviceMonitor: {}
+      # enabled: false
+      prometheus: {}
+      # timerType: histogram
+    podAnnotations: {}
+    podLabels: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: []
+    podDisruptionBudget: {}
+
+  internal-frontend:
+    service:
+      # Evaluated as template
+      annotations: {}
+      type: ClusterIP
+      port: 7236
+      membershipPort: 6936
+      #httpPort: 7243
+    ingress:
+      enabled: false
+      # className:
+      annotations: {}
+      # kubernetes.io/ingress.class: traefik
+      # ingress.kubernetes.io/ssl-redirect: "false"
+      # traefik.frontend.rule.type: PathPrefix
+      hosts:
+        - "/"
+        # - "domain.com/xyz"
+        # - "domain.com"
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+
     metrics:
       annotations:
         enabled: true

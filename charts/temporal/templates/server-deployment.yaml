@@ -1,5 +1,12 @@
 {{- if $.Values.server.enabled }}
-{{- range $service := (list "frontend" "history" "matching" "worker") }}
+
+{{- $serviceList := (list "frontend" "history" "matching" "worker") }}
+
+{{- if and (hasKey .Values.server.config "authorization") (hasKey .Values.server.config.authorization "authorizer") }}
+  {{- $serviceList = (list "frontend" "internal-frontend" "history" "matching" "worker") }}
+{{- end }}
+
+{{- range $service := $serviceList }}
 {{ $serviceValues := index $.Values.server $service }}
 apiVersion: apps/v1
 kind: Deployment
