@@ -22,6 +22,10 @@ spec:
       {{- end }}
     spec:
       {{ include "temporal.serviceAccount" . }}
+      volumes:
+      {{- if $.Values.admintools.additionalVolumes }}
+      {{- toYaml $.Values.admintools.additionalVolumes | nindent 8}}
+      {{- end }}
       containers:
         - name: admin-tools
           image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
@@ -52,6 +56,10 @@ spec:
           {{- end }}
           {{- with .Values.admintools.containerSecurityContext }}
           securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.admintools.additionalVolumeMounts }}
+          volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
       {{- with .Values.admintools.securityContext }}
