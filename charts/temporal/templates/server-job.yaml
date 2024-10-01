@@ -2,16 +2,16 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "temporal.componentname" (list . "schema") }}
+  name: {{ include "temporal.componentname" (list $ "schema") }}
   labels:
-    {{- include "temporal.resourceLabels" (list . "database" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
   template:
     metadata:
-      name: {{ include "temporal.componentname" (list . "schema") }}
+      name: {{ include "temporal.componentname" (list $ "schema") }}
       labels:
-        {{- include "temporal.resourceLabels" (list . "database" "") | nindent 8 }}
+        {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 8 }}
         {{- with $.Values.schema.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -20,7 +20,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
-      {{- include "temporal.serviceAccount" . }}
+      {{- include "temporal.serviceAccount" $ }}
       restartPolicy: OnFailure
       initContainers:
         {{- if $.Values.cassandra.enabled }}

@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "temporal.componentname" (list . "web") }}
+  name: {{ include "temporal.componentname" (list $ "web") }}
   labels:
-    {{- include "temporal.resourceLabels" (list . "web" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "web" "") | nindent 4 }}
   {{- if .Values.web.service.annotations }}
   annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.web.service.annotations "context" $) | nindent 4 }}
   {{- end }}
@@ -22,7 +22,7 @@ spec:
       nodePort: {{ .Values.web.service.nodePort }}
       {{- end }}
   selector:
-    app.kubernetes.io/name: {{ include "temporal.name" . }}
+    app.kubernetes.io/name: {{ include "temporal.name" $ }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: web
   {{- end }}

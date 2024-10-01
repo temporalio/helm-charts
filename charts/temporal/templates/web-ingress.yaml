@@ -8,9 +8,9 @@ apiVersion: extensions/v1beta1
   {{- end }}
 kind: Ingress
 metadata:
-  name: {{ include "temporal.componentname" (list . "web") }}
+  name: {{ include "temporal.componentname" (list $ "web") }}
   labels:
-    {{- include "temporal.resourceLabels" (list . "web" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "web" "") | nindent 4 }}
 {{- with .Values.web.ingress.annotations }}
   annotations:
 {{ toYaml . | indent 4 }}

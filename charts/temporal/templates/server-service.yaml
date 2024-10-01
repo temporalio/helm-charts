@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "temporal.componentname" (list . "frontend") }}
+  name: {{ include "temporal.componentname" (list $ "frontend") }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "frontend" "") | nindent 4 }}
   {{- if .Values.server.frontend.service.annotations }}
@@ -24,7 +24,7 @@ spec:
       name: http
       # TODO: Allow customizing the node HTTP port
   selector:
-    app.kubernetes.io/name: {{ include "temporal.name" . }}
+    app.kubernetes.io/name: {{ include "temporal.name" $ }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: frontend
 
