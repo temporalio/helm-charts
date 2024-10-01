@@ -3,10 +3,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ "admintools") }}
-  annotations:
-    {{- include "temporal.resourceAnnotations" (list $ "admintools" "deployment") | nindent 4 }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ "admintools" "deployment") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "admintools" "") | nindent 4 }}
 spec:
   replicas: 1
   selector:
@@ -16,16 +14,15 @@ spec:
       app.kubernetes.io/component: admintools
   template:
     metadata:
+      labels:
+        {{- include "temporal.resourceLabels" (list $ "admintools" "pod") | nindent 8 }}
+      {{- with $.Values.admintools.podAnnotations }}
       annotations:
         {{- include "temporal.resourceAnnotations" (list $ "admintools" "pod") | nindent 8 }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "admintools" "pod") | nindent 8 }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
-      {{- if $.Values.admintools.additionalInitContainers }}
-      initContainers:
-        {{- toYaml $.Values.admintools.additionalInitContainers | nindent 8 }}
-      {{- end }}
       containers:
         - name: admin-tools
           image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
