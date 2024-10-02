@@ -6,7 +6,7 @@ kind: ConfigMap
 metadata:
   name: "{{ include "temporal.fullname" $ }}-config"
   labels:
-    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
 data:
   config_template.yaml: |-
     log:
@@ -35,7 +35,7 @@ data:
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "default") }}:{{ include "temporal.persistence.sql.port" (list $ "default") }}"
             connectProtocol: "tcp"
             user: {{ include "temporal.persistence.sql.user" (list $ "default") }}
-            password: "{{ `{{ .Env.TEMPORAL_STORE_PASSWORD }}` }}"
+            password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
             {{- with (omit $server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -88,6 +88,10 @@ data:
           {{- with $server.metrics.tags }}
             {{- toYaml . | nindent 10 }}
           {{- end }}
+        {{- with $server.metrics.excludeTags }}
+        excludeTags:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- with $server.config.prometheus }}
         prometheus:
           {{- toYaml . | nindent 10 }}
@@ -97,19 +101,13 @@ data:
           listenAddress: "0.0.0.0:9090"
         {{- end }}
 
-      {{- if $server.authorization }}
-      authorization:
-        jwtKeyProvider:
-          keySourceURIs:
-            - "{{ $server.authorization.keySourceURI }}"
-          refreshInterval: {{ default "1m" $server.authorization.refreshInterval }}
-        permissionsClaimName: {{ default "permissions" $server.authorization.permissionsClaimName }}
-        authorizer: {{ default "default" $server.authorization.authorizer }}
-        claimMapper: {{ default "default" $server.authorization.claimMapper }}
-      {{- end }}
-
       {{- with $server.config.tls }}
       tls:
+        {{- toYaml . | nindent 10 }}
+      {{- end }}
+
+      {{- with $server.config.authorization }}
+      authorization:
         {{- toYaml . | nindent 10 }}
       {{- end }}
 
