@@ -94,8 +94,10 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- $resourceLabels := dict -}}
 {{- if or (eq $scope "") (ne $component "server") -}}
 {{- $resourceLabels = (index $global.Values $component $resourceTypeKey) -}}
-{{- else -}}
+{{- else if (index $global.Values $component $scope $resourceTypeKey) -}}
 {{- $resourceLabels = (index $global.Values $component $scope $resourceTypeKey) -}}
+{{- else -}}
+{{- $resourceLabels = (index $global.Values $component $resourceTypeKey) -}}
 {{- end -}}
 {{- range $label_name, $label_value := $resourceLabels -}}
 {{ $label_name}}: {{ $label_value }}
