@@ -97,7 +97,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- else -}}
 {{- $resourceLabels = (index $global.Values $component $scope $resourceTypeKey) -}}
 {{- end -}}
-{{- range $label_name, $label_value := $resourceLabels -}}
+{{- range $label_name, $label_value := $resourceLabels }}
 {{ $label_name}}: {{ $label_value }}
 {{- end -}}
 {{- end -}}
