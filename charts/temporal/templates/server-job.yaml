@@ -1,15 +1,17 @@
 {{- if $.Values.server.enabled }}{{- if or $.Values.schema.createDatabase.enabled $.Values.schema.setup.enabled $.Values.schema.update.enabled }}
+{{- $jobData := toJson $.Values }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "temporal.componentname" (list $ "schema") }}
+  name: {{ include "temporal.componentname" (list $ "schema") }}-{{ $jobData | sha256sum | trunc 8 }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
   template:
     metadata:
-      name: {{ include "temporal.componentname" (list $ "schema") }}
+      {{/* We append values hash because job-specs are immutable */}}
+      name: {{ include "temporal.componentname" (list $ "schema") }}-{{ $jobData | sha256sum | trunc 8 }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 8 }}
         {{- with $.Values.schema.podLabels }}
