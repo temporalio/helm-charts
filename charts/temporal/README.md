@@ -10,6 +10,13 @@ Open pull request to merge the `master` branch into `fm-devops`. When resolving 
 
 - [https://github.com/fairmoney/temporal-helm-charts/pull/10/files](https://github.com/fairmoney/temporal-helm-charts/pull/10/files)
 - [https://github.com/fairmoney/temporal-helm-charts/pull/4/files](https://github.com/fairmoney/temporal-helm-charts/pull/4/files)
+- [https://github.com/fairmoney/temporal-helm-charts/pull/18](https://github.com/fairmoney/temporal-helm-charts/pull/18)
+
+Also, on `fm-devops` branch, there are some additional files specific for Fairmoney deployments:
+
+- charts/temporal/templates/certificates.yaml
+- charts/temporal/templates/external-secrets.yaml
+- charts/temporal/README.md
 
 After resolving the conflicts, when prompted, choose to write the changes to a new branch (e.g. `master-upgrade`). Then, a new PR from `master-upgrade` into `fm-devops` will be created.
 
