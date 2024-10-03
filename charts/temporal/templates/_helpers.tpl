@@ -91,7 +91,7 @@ app.kubernetes.io/managed-by: {{ index $global "Release" "Service" }}
 app.kubernetes.io/instance: {{ index $global "Release" "Name" }}
 app.kubernetes.io/version: {{ include "temporal.appVersion" $global }}
 app.kubernetes.io/part-of: {{ $global.Chart.Name }}
-{{- with $resourceType -}}
+{{ with $resourceType -}}
 {{- $resourceTypeKey := printf "%sLabels" . -}}
 {{- $resourceLabels := dict -}}
 {{- if or (eq $scope "") (ne $component "server") -}}

@@ -2,19 +2,25 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "temporal.componentname" (list . "schema") }}
+  name: {{ include "temporal.componentname" (list $ "schema") }}
   labels:
-    {{- include "temporal.resourceLabels" (list . "database" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
   template:
     metadata:
-      name: {{ include "temporal.componentname" (list . "schema") }}
+      name: {{ include "temporal.componentname" (list $ "schema") }}
       labels:
-        # Currently there are no labels for job type
-        {{- include "temporal.resourceLabels" (list . "database" "") | nindent 8 }}
+        {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 8 }}
+        {{- with $.Values.schema.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with $.Values.schema.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
-      {{ include "temporal.serviceAccount" . }}
+      {{- include "temporal.serviceAccount" $ }}
       restartPolicy: OnFailure
       initContainers:
         {{- if $.Values.cassandra.enabled }}
@@ -123,6 +129,30 @@ spec:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
             {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if $.Values.server.config.namespaces.create }}
+          {{- range $namespace := $.Values.server.config.namespaces.namespace }}
+        - name: create-{{ $namespace.name }}-namespace
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['/bin/sh','-c']
+          args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
+              {{- with $.Values.server.additionalVolumeMounts }}
+          volumeMounts:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with $.Values.schema.resources }}
+          resources:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with $.Values.schema.containerSecurityContext }}
+          securityContext:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
           {{- end }}
         {{- end }}
       containers:
