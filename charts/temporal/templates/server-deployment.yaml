@@ -6,7 +6,7 @@ kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ $service "deployment") | nindent 4 }}
 spec:
   replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
   selector:
