@@ -18,12 +18,12 @@ spec:
       app.kubernetes.io/component: web
   template:
     metadata:
+      {{- if or $.Values.additionalAnnotations $.Values.web.podAnnotations }}
+      annotations:
+        {{- include "temporal.resourceAnnotations" (list $ "web" "pod") | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "web" "pod") | nindent 8 }}
-      {{- with .Values.web.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
       {{- if .Values.web.additionalVolumes }}
