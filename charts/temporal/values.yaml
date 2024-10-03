@@ -8,7 +8,9 @@ imagePullSecrets: {}
 serviceAccount:
   # Whether to create service account or not
   create: false
-  # Name of the service account, default if `create: true` and `name` not defined: temporal.fullname
+  # Name of the service account.
+  # Uses `name` if set.
+  # If `create: true` defaults to temporal.fullname, otherwise uses the namespace's default serviceAccount.
   name:
   # extraAnnotations would let users add additional annotations
   extraAnnotations:
