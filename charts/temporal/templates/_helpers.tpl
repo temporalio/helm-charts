@@ -70,6 +70,43 @@ Define the AppVersion
 {{- end -}}
 
 {{/*
+Create the annotations for all resources
+*/}}
+{{- define "temporal.resourceAnnotations" -}}
+{{- $global := index . 0 -}}
+{{- $scope := index . 1 -}}
+{{- $resourceType := index . 2 -}}
+{{- $component := "server" -}}
+{{- if (or (eq $scope "admintools") (eq $scope "web")) -}}
+{{- $component = $scope -}}
+{{- end -}}
+{{- with $resourceType -}}
+{{- $resourceTypeKey := printf "%sAnnotations" . -}}
+{{- $resourceAnnotations := dict -}}
+{{- if or (eq $scope "") (ne $component "server") -}}
+{{- $resourceAnnotations = (index $global.Values $component $resourceTypeKey) -}}
+{{- else if (index $global.Values $component $scope $resourceTypeKey) -}}
+{{- $resourceAnnotations = (index $global.Values $component $scope $resourceTypeKey) -}}
+{{- else -}}
+{{- $resourceAnnotations = (index $global.Values $component $resourceTypeKey) -}}
+{{- end -}}
+{{- range $annotation_name, $annotation_value := $resourceAnnotations }}
+{{ $annotation_name }}: {{ $annotation_value }}
+{{- end -}}
+{{- end -}}
+{{ include "temporal.additionalResourceAnnotations" $global }}
+{{- end -}}
+
+{{/*
+Additonal user specified annotations for all resources
+*/}}
+{{- define "temporal.additionalResourceAnnotations" -}}
+{{- range $annotation_name, $annotation_value := .Values.additionalAnnotations }}
+{{ $annotation_name }}: {{ $annotation_value }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Create the labels for all resources
 */}}
 {{- define "temporal.resourceLabels" -}}

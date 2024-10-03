@@ -5,6 +5,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
+  {{- if or $.Values.additionalAnnotations $.Values.server.deploymentAnnotations }}
+  annotations:
+    {{- include "temporal.resourceAnnotations" (list $ $service "deployment") | nindent 4 }}
+  {{- end }}
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
 spec:

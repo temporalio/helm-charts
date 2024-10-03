@@ -12,6 +12,7 @@ serviceAccount:
   name:
   # extraAnnotations would let users add additional annotations
   extraAnnotations:
+additionalAnnotations: {}
 additionalLabels: {}
 server:
   enabled: true
@@ -61,6 +62,7 @@ server:
       #   targetLabel: __name__
     prometheus:
       timerType: histogram
+  deploymentAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   secretLabels: {}
@@ -225,6 +227,7 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -247,6 +250,7 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -269,6 +273,7 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -291,6 +296,7 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -311,6 +317,7 @@ admintools:
     type: ClusterIP
     port: 22
     annotations: {}
+  deploymentAnnotations: {}
   podLabels: {}
   podAnnotations: {}
   nodeSelector: {}
@@ -350,6 +357,7 @@ web:
     #  - secretName: chart-example-tls
     #    hosts:
     #      - chart-example.local
+  deploymentAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}
