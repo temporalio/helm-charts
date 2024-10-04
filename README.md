@@ -5,7 +5,7 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 
 This repo contains a V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. The dependencies that are bundled with this solution by default offer a baseline configuration to experiment with Temporal software. This Helm chart can also be used to install just the Temporal server, configured to connect to dependencies (such as a Cassandra, MySQL, or PostgreSQL database) that you may already have available in your environment.
 
-The only portions of the helm chart that are considered production ready are the parts that configure and manage Temporal itself. Cassandra, Elasticsearch, Prometheus, and Grafana are all using minimal development configurations, and should be reconfigured in a production deployment.
+The only portions of the helm chart that are considered production ready are the parts that configure and manage Temporal itself. Cassandra, Elasticsearch, and Grafana are all using minimal development configurations, and should be reconfigured in a production deployment.
 
 This Helm Chart code is tested by a dedicated test pipeline. It is also used extensively by other Temporal pipelines for testing various aspects of Temporal systems. Our test pipeline currently uses Helm 3.1.1.
 
@@ -43,14 +43,13 @@ Temporal can be configured to run with various dependencies. The default "Batter
 
 * Cassandra
 * Elasticsearch
-* Prometheus
 * Grafana
 
 The sections that follow describe various deployment configurations, from a minimal one-replica installation using included dependencies, to a replicated deployment on existing infrastructure.
 
 ### Minimal installation with required dependencies only
 
-To install Temporal in a limited but working and self-contained configuration (one replica of Cassandra, Elasticsearch and each of Temporal's services, no metrics), you can run:
+To install Temporal in a limited but working and self-contained configuration (one replica of Cassandra, Elasticsearch and each of Temporal's services), you can run:
 
 ```bash
 helm install \
@@ -58,7 +57,6 @@ helm install \
     --set server.replicaCount=1 \
     --set cassandra.config.cluster_size=1 \
     --set elasticsearch.replicas=1 \
-    --set prometheus.enabled=false \
     --set grafana.enabled=false \
     temporaltest temporal \
     --timeout 15m
@@ -87,7 +85,7 @@ temporaltest-worker-7c9d68f4cf-8tzfw           1/1     Running   2          11m
 
 This method requires a three node kubernetes cluster to successfully bring up all the dependencies.
 
-When installed without manully setting dependency replicas to 1, this Temporal Helm Chart configures Temporal to run with a three node Cassandra cluster (for persistence) and Elasticsearch (for "visibility" features), Prometheus, and Grafana. By default, Temporal Helm Chart installs all dependencies, out of the box.
+When installed without manully setting dependency replicas to 1, this Temporal Helm Chart configures Temporal to run with a three node Cassandra cluster (for persistence) and Elasticsearch (for "visibility" features), and Grafana. By default, Temporal Helm Chart installs all dependencies, out of the box.
 
 To install Temporal with all of its dependencies run this command:
 
@@ -97,12 +95,11 @@ helm install --repo https://go.temporal.io/helm-charts temporaltest temporal --t
 
 To use your own instance of Elasticsearch, MySQL, PostgreSQL, or Cassandra, please read the "Bring Your Own" sections below.
 
-Other components (Prometheus, Grafana) can be omitted from the installation by setting their corresponding `enable` flag to `false`:
+Other components (Grafana) can be omitted from the installation by setting their corresponding `enable` flag to `false`:
 
 ```bash
 helm install \
     --repo https://go.temporal.io/helm-charts \
-    --set prometheus.enabled=false \
     --set grafana.enabled=false \
     temporaltest temporal \
     --timeout 900s
@@ -275,7 +272,6 @@ helm install \
   -f values/values.archival.filestore.yaml \
   --set server.replicaCount=1 \
   --set cassandra.config.cluster_size=1 \
-  --set prometheus.enabled=false \
   --set grafana.enabled=false \
   --set elasticsearch.enabled=false \
   temporaltest temporal \
@@ -302,7 +298,6 @@ helm install \
   -f values/values.elasticsearch.yaml \
   --set elasticsearch.enabled=true \
   --set grafana.enabled=false \
-  --set prometheus.enabled=false \
   --set server.replicaCount=5 \
   --set server.config.persistence.default.cassandra.hosts=cassandra.data.host.example \
   --set server.config.persistence.default.cassandra.user=cassandra_user \
