@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "temporal.componentname" (list . (printf "schema-%s" .Chart.Version | replace "." "-")) }}
+  name: {{ include "temporal.componentname" (list . (printf "schema-%d" .Release.Revision | replace "." "-")) }}
   labels:
     {{- include "temporal.resourceLabels" (list . "database" "") | nindent 4 }}
 spec:
@@ -10,7 +10,7 @@ spec:
   ttlSecondsAfterFinished: 86400
   template:
     metadata:
-      name: {{ include "temporal.componentname" (list . (printf "schema-%s" .Chart.Version | replace "." "-")) }}
+      name: {{ include "temporal.componentname" (list . (printf "schema-%d" .Release.Revision | replace "." "-")) }}
       labels:
         # Currently there are no labels for job type
         {{- include "temporal.resourceLabels" (list . "database" "") | nindent 8 }}
