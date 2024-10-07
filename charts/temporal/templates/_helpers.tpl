@@ -119,16 +119,15 @@ app.kubernetes.io/managed-by: {{ index $global "Release" "Service" }}
 app.kubernetes.io/instance: {{ index $global "Release" "Name" }}
 app.kubernetes.io/version: {{ include "temporal.appVersion" $global }}
 app.kubernetes.io/part-of: {{ $global.Chart.Name }}
-{{ with $resourceType -}}
+{{- with $resourceType -}}
 {{- $resourceTypeKey := printf "%sLabels" . -}}
 {{- $componentLabels := (index $global.Values $component $resourceTypeKey) -}}
 {{- $scopeLabels := dict -}}
 {{- if hasKey (index $global.Values $component) $scope -}}
 {{- $scopeLabels = (index $global.Values $component $scope $resourceTypeKey) -}}
 {{- end -}}
-{{- $resourceLabels := merge $scopeLabels $componentLabels -}}
 {{- range $label_name, $label_value := $resourceLabels }}
-{{ $label_name}}: {{ $label_value | quote }}
+{{ $label_name}}: {{ $label_value }}
 {{- end -}}
 {{- end -}}
 {{- range $label_name, $label_value := $global.Values.additionalLabels }}
