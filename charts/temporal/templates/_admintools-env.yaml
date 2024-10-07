@@ -21,18 +21,6 @@
     secretKeyRef:
       name: {{ include "temporal.persistence.secretName" (list $global $store) }}
       key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
-  {{- with $driverConfig.tls }}
-- name: CASSANDRA_ENABLE_TLS
-  value: {{ .enabled | quote }}
-    {{- with .caFile }}
-- name: CASSANDRA_TLS_CA
-  value: {{ . }}
-    {{- end }}
-    {{- if hasKey . "enableHostVerification" }}
-- name: CASSANDRA_TLS_DISABLE_HOST_VERIFICATION
-  value: {{ not .enableHostVerification | quote }}
-    {{- end }}
-  {{- end }}
 {{- else if eq $driver "sql" -}}
 - name: SQL_PLUGIN
   value: {{ include "temporal.persistence.sql.driver" (list $global $store) }}
