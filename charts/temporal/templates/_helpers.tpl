@@ -35,16 +35,18 @@ Create chart name and version as used by the chart label.
 Create the name of the service account
 */}}
 {{- define "temporal.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
 {{ default (include "temporal.fullname" .) .Values.serviceAccount.name }}
+{{- else -}}
+{{ default "default" .Values.serviceAccount.name }}
+{{- end -}}
 {{- end -}}
 
 {{/*
 Define the service account as needed
 */}}
 {{- define "temporal.serviceAccount" -}}
-{{- if .Values.serviceAccount.name -}}
 serviceAccountName: {{ include "temporal.serviceAccountName" . }}
-{{- end -}}
 {{- end -}}
 
 {{/*
@@ -89,7 +91,7 @@ app.kubernetes.io/managed-by: {{ index $global "Release" "Service" }}
 app.kubernetes.io/instance: {{ index $global "Release" "Name" }}
 app.kubernetes.io/version: {{ include "temporal.appVersion" $global }}
 app.kubernetes.io/part-of: {{ $global.Chart.Name }}
-{{- with $resourceType -}}
+{{ with $resourceType -}}
 {{- $resourceTypeKey := printf "%sLabels" . -}}
 {{- $resourceLabels := dict -}}
 {{- if or (eq $scope "") (ne $component "server") -}}
