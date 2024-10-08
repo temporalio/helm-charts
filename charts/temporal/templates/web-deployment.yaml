@@ -3,6 +3,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ "web") }}
+  {{- if or $.Values.additionalAnnotations $.Values.admintools.deploymentAnnotations }}
+  annotations:
+    {{- include "temporal.resourceAnnotations" (list $ "web" "deployment") | nindent 4 }}
+  {{- end }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "web" "") | nindent 4 }}
 spec:
@@ -14,12 +18,12 @@ spec:
       app.kubernetes.io/component: web
   template:
     metadata:
+      {{- if or $.Values.additionalAnnotations $.Values.web.podAnnotations }}
+      annotations:
+        {{- include "temporal.resourceAnnotations" (list $ "web" "pod") | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "web" "pod") | nindent 8 }}
-      {{- with .Values.web.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
       {{- if .Values.web.additionalVolumes }}
