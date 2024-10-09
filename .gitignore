@@ -1,6 +1,11 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 /Chart.lock
 /.idea
 =======
 /charts
 >>>>>>> 03662b7 (add Job annotations and labels (#536))
+=======
+/Chart.lock
+/.idea
+>>>>>>> 80a5f51 (Ensure we allow component level labels as well as scoped. (#584))

@@ -126,6 +126,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- if hasKey (index $global.Values $component) $scope -}}
 {{- $scopeLabels = (index $global.Values $component $scope $resourceTypeKey) -}}
 {{- end -}}
+{{- $resourceLabels := merge $scopeLabels $componentLabels -}}
 {{- range $label_name, $label_value := $resourceLabels }}
 {{ $label_name}}: {{ $label_value }}
 {{- end -}}
