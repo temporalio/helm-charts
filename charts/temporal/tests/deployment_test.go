@@ -13,8 +13,8 @@ import (
 	"github.com/gruntwork-io/terratest/modules/random"
 )
 
-func TestTemplateServerDeployment(t *testing.T) {
-	t.Parallel()
+func TestTemplateServerDeploymentDefault(t *testing.T) {
+	// t.Parallel()
 
 	helmChartPath, err := filepath.Abs("../")
 	releaseName := "temporal"
@@ -32,8 +32,20 @@ func TestTemplateServerDeployment(t *testing.T) {
 	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/server-deployment.yaml"})
 
 	helm.UnmarshalK8SYaml(t, output, &deployment)
+}
 
-	options = &helm.Options{
+func TestTemplateServerDeploymentWhitespace(t *testing.T) {
+	// t.Parallel()
+
+	helmChartPath, err := filepath.Abs("../")
+	releaseName := "temporal"
+	require.NoError(t, err)
+
+	namespaceName := "temporal-" + strings.ToLower(random.UniqueId())
+
+	var deployment appsv1.Deployment
+
+	options := &helm.Options{
 		SetValues: map[string]string{
 			"server.frontend.podLabels.one": "one",
 		},
@@ -41,9 +53,11 @@ func TestTemplateServerDeployment(t *testing.T) {
 		BuildDependencies: true,
 	}
 
-	output = helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/server-deployment.yaml"})
+	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/server-deployment.yaml"})
 
 	helm.UnmarshalK8SYaml(t, output, &deployment)
+
+	require.Equal(t, "one", deployment.Spec.Template.ObjectMeta.Labels["one"])
 
 	options = &helm.Options{
 		SetValues: map[string]string{
@@ -58,7 +72,22 @@ func TestTemplateServerDeployment(t *testing.T) {
 
 	helm.UnmarshalK8SYaml(t, output, &deployment)
 
-	options = &helm.Options{
+	require.Equal(t, "one", deployment.Spec.Template.ObjectMeta.Labels["one"])
+	require.Equal(t, "two", deployment.Spec.Template.ObjectMeta.Labels["two"])
+}
+
+func TestTemplateServerDeploymentMerging(t *testing.T) {
+	// t.Parallel()
+
+	helmChartPath, err := filepath.Abs("../")
+	releaseName := "temporal"
+	require.NoError(t, err)
+
+	namespaceName := "temporal-" + strings.ToLower(random.UniqueId())
+
+	var deployment appsv1.Deployment
+
+	options := &helm.Options{
 		SetValues: map[string]string{
 			"server.frontend.podLabels.one": "three",
 			"server.podLabels.one":          "one",
@@ -68,7 +97,7 @@ func TestTemplateServerDeployment(t *testing.T) {
 		BuildDependencies: true,
 	}
 
-	output = helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/server-deployment.yaml"})
+	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/server-deployment.yaml"})
 
 	helm.UnmarshalK8SYaml(t, output, &deployment)
 
