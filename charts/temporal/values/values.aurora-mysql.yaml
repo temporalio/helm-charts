@@ -14,7 +14,7 @@ server:
           maxConns: 20
           maxConnLifetime: "1h"
           connectAttributes:
-            tx_isolation: 'READ-COMMITTED'
+            transaction_isolation: 'READ-COMMITTED'
 
       visibility:
         driver: "sql"
@@ -29,7 +29,7 @@ server:
           maxConns: 20
           maxConnLifetime: "1h"
           connectAttributes:
-            tx_isolation: 'READ-COMMITTED'          
+            transaction_isolation: 'READ-COMMITTED'
 
 cassandra:
   enabled: false
