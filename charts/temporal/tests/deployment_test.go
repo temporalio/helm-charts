@@ -13,15 +13,6 @@ import (
 	"github.com/gruntwork-io/terratest/modules/random"
 )
 
-// This file contains examples of how to use terratest to test helm chart template logic by rendering the templates
-// using `helm template`, and then reading in the rendered templates.
-// There are two tests:
-// - TestHelmBasicExampleTemplateRenderedDeployment: An example of how to read in the rendered object and check the
-//   computed values.
-// - TestHelmBasicExampleTemplateRequiredTemplateArgs: An example of how to check that the required args are indeed
-//   required for the template to render.
-
-// An example of how to verify the rendered template object of a Helm Chart given various inputs.
 func TestTemplateServerDeployment(t *testing.T) {
 	t.Parallel()
 
