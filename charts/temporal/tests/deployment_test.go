@@ -122,7 +122,7 @@ func TestTemplateServerDeploymentLabels(t *testing.T) {
 			"server.frontend.deploymentLabels.four": "four",
 			"server.deploymentLabels.one":           "one",
 			"server.deploymentLabels.two":           "two",
-			"additionalLabels.zero": "zero",
+			"additionalLabels.zero":                 "zero",
 		},
 		KubectlOptions:    k8s.NewKubectlOptions("", "", namespaceName),
 		BuildDependencies: true,
