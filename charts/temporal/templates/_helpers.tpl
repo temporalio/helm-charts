@@ -84,14 +84,12 @@ Create the annotations for all resources
 {{- end -}}
 {{- with $resourceType -}}
 {{- $resourceTypeKey := printf "%sAnnotations" . -}}
-{{- $resourceAnnotations := dict -}}
-{{- if or (eq $scope "") (ne $component "server") -}}
-{{- $resourceAnnotations = (index $global.Values $component $resourceTypeKey) -}}
-{{- else if (index $global.Values $component $scope $resourceTypeKey) -}}
-{{- $resourceAnnotations = (index $global.Values $component $scope $resourceTypeKey) -}}
-{{- else -}}
-{{- $resourceAnnotations = (index $global.Values $component $resourceTypeKey) -}}
+{{- $componentAnnotations := (index $global.Values $component $resourceTypeKey) -}}
+{{- $scopeAnnotations := dict -}}
+{{- if hasKey (index $global.Values $component) $scope -}}
+{{- $scopeAnnotations = (index $global.Values $component $scope $resourceTypeKey) -}}
 {{- end -}}
+{{- $resourceAnnotations := merge $scopeAnnotations $componentAnnotations -}}
 {{- range $annotation_name, $annotation_value := $resourceAnnotations }}
 {{ $annotation_name }}: {{ $annotation_value }}
 {{- end -}}
