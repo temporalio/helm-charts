@@ -104,3 +104,34 @@ func TestTemplateServerDeploymentMerging(t *testing.T) {
 	require.Equal(t, "three", deployment.Spec.Template.ObjectMeta.Labels["one"])
 	require.Equal(t, "two", deployment.Spec.Template.ObjectMeta.Labels["two"])
 }
+
+func TestTemplateServerDeploymentLabels(t *testing.T) {
+	// t.Parallel()
+
+	helmChartPath, err := filepath.Abs("../")
+	releaseName := "temporal"
+	require.NoError(t, err)
+
+	namespaceName := "temporal-" + strings.ToLower(random.UniqueId())
+
+	var deployment appsv1.Deployment
+
+	options := &helm.Options{
+		SetValues: map[string]string{
+			"server.frontend.deploymentLabels.one":  "three",
+			"server.frontend.deploymentLabels.four": "four",
+			"server.deploymentLabels.one":           "one",
+			"server.deploymentLabels.two":           "two",
+		},
+		KubectlOptions:    k8s.NewKubectlOptions("", "", namespaceName),
+		BuildDependencies: true,
+	}
+
+	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/server-deployment.yaml"})
+
+	helm.UnmarshalK8SYaml(t, output, &deployment)
+
+	require.Equal(t, "three", deployment.ObjectMeta.Labels["one"])
+	require.Equal(t, "two", deployment.ObjectMeta.Labels["two"])
+	require.Equal(t, "four", deployment.ObjectMeta.Labels["four"])
+}
