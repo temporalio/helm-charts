@@ -35,16 +35,18 @@ Create chart name and version as used by the chart label.
 Create the name of the service account
 */}}
 {{- define "temporal.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
 {{ default (include "temporal.fullname" .) .Values.serviceAccount.name }}
+{{- else -}}
+{{ default "default" .Values.serviceAccount.name }}
+{{- end -}}
 {{- end -}}
 
 {{/*
 Define the service account as needed
 */}}
 {{- define "temporal.serviceAccount" -}}
-{{- if .Values.serviceAccount.name -}}
 serviceAccountName: {{ include "temporal.serviceAccountName" . }}
-{{- end -}}
 {{- end -}}
 
 {{/*
@@ -89,15 +91,15 @@ app.kubernetes.io/managed-by: {{ index $global "Release" "Service" }}
 app.kubernetes.io/instance: {{ index $global "Release" "Name" }}
 app.kubernetes.io/version: {{ include "temporal.appVersion" $global }}
 app.kubernetes.io/part-of: {{ $global.Chart.Name }}
-{{ with $resourceType -}}
+{{- with $resourceType -}}
 {{- $resourceTypeKey := printf "%sLabels" . -}}
-{{- $resourceLabels := dict -}}
-{{- if or (eq $scope "") (ne $component "server") -}}
-{{- $resourceLabels = (index $global.Values $component $resourceTypeKey) -}}
-{{- else -}}
-{{- $resourceLabels = (index $global.Values $component $scope $resourceTypeKey) -}}
+{{- $componentLabels := (index $global.Values $component $resourceTypeKey) -}}
+{{- $scopeLabels := dict -}}
+{{- if hasKey (index $global.Values $component) $scope -}}
+{{- $scopeLabels = (index $global.Values $component $scope $resourceTypeKey) -}}
 {{- end -}}
-{{- range $label_name, $label_value := $resourceLabels -}}
+{{- $resourceLabels := merge $scopeLabels $componentLabels -}}
+{{- range $label_name, $label_value := $resourceLabels }}
 {{ $label_name}}: {{ $label_value }}
 {{- end -}}
 {{- end -}}

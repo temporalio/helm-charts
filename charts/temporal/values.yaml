@@ -8,7 +8,9 @@ imagePullSecrets: {}
 serviceAccount:
   # Whether to create service account or not
   create: false
-  # Name of the service account, default: temporal.fullname
+  # Name of the service account.
+  # Uses `name` if set.
+  # If `create: true` defaults to temporal.fullname, otherwise uses the namespace's default serviceAccount.
   name:
   # extraAnnotations would let users add additional annotations
   extraAnnotations:
@@ -18,7 +20,7 @@ server:
   sidecarContainers: []
   image:
     repository: temporalio/server
-    tag: 1.25.0
+    tag: 1.25.1
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -310,7 +312,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.25.0-tctl-1.18.1-cli-1.0.0
+    tag: 1.25.1-tctl-1.18.1-cli-1.1.0
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -332,7 +334,7 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.31.0
+    tag: 2.31.2
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
