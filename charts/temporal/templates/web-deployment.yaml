@@ -3,10 +3,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ "web") }}
-  {{- if or $.Values.additionalAnnotations $.Values.admintools.deploymentAnnotations }}
   annotations:
     {{- include "temporal.resourceAnnotations" (list $ "web" "deployment") | nindent 4 }}
-  {{- end }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "web" "") | nindent 4 }}
 spec:
