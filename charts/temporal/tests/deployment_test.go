@@ -122,6 +122,7 @@ func TestTemplateServerDeploymentAnnotations(t *testing.T) {
 			"server.frontend.deploymentAnnotations.four": "four",
 			"server.deploymentAnnotations.one":           "one",
 			"server.deploymentAnnotations.two":           "two",
+			"additionalAnnotations.zero":                 "zero",
 		},
 		KubectlOptions:    k8s.NewKubectlOptions("", "", namespaceName),
 		BuildDependencies: true,
