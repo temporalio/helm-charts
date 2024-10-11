@@ -94,14 +94,7 @@ Create the annotations for all resources
 {{ $annotation_name }}: {{ $annotation_value }}
 {{- end -}}
 {{- end -}}
-{{ include "temporal.additionalResourceAnnotations" $global }}
-{{- end -}}
-
-{{/*
-Additonal user specified annotations for all resources
-*/}}
-{{- define "temporal.additionalResourceAnnotations" -}}
-{{- range $annotation_name, $annotation_value := .Values.additionalAnnotations }}
+{{- range $annotation_name, $annotation_value := $global.Values.additionalAnnotations }}
 {{ $annotation_name }}: {{ $annotation_value }}
 {{- end -}}
 {{- end -}}
