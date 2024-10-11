@@ -122,6 +122,7 @@ func TestTemplateServerDeploymentLabels(t *testing.T) {
 			"server.frontend.deploymentLabels.four": "four",
 			"server.deploymentLabels.one":           "one",
 			"server.deploymentLabels.two":           "two",
+			"additionalLabels.zero": "zero",
 		},
 		KubectlOptions:    k8s.NewKubectlOptions("", "", namespaceName),
 		BuildDependencies: true,
@@ -134,4 +135,6 @@ func TestTemplateServerDeploymentLabels(t *testing.T) {
 	require.Equal(t, "three", deployment.ObjectMeta.Labels["one"])
 	require.Equal(t, "two", deployment.ObjectMeta.Labels["two"])
 	require.Equal(t, "four", deployment.ObjectMeta.Labels["four"])
+	require.Equal(t, "zero", deployment.ObjectMeta.Labels["zero"])
+	require.Equal(t, "zero", deployment.Spec.Template.ObjectMeta.Labels["zero"])
 }
