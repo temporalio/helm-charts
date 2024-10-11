@@ -135,4 +135,6 @@ func TestTemplateServerDeploymentAnnotations(t *testing.T) {
 	require.Equal(t, "three", deployment.ObjectMeta.Annotations["one"])
 	require.Equal(t, "two", deployment.ObjectMeta.Annotations["two"])
 	require.Equal(t, "four", deployment.ObjectMeta.Annotations["four"])
+	require.Equal(t, "zero", deployment.ObjectMeta.Annotations["zero"])
+	require.Equal(t, "zero", deployment.Spec.Template.ObjectMeta.Annotations["zero"])
 }
