@@ -16,10 +16,8 @@ spec:
       app.kubernetes.io/component: admintools
   template:
     metadata:
-      {{- if or $.Values.additionalAnnotations $.Values.admintools.podAnnotations }}
       annotations:
         {{- include "temporal.resourceAnnotations" (list $ "admintools" "pod") | nindent 8 }}
-      {{- end }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "admintools" "pod") | nindent 8 }}
     spec:

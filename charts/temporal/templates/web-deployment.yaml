@@ -16,10 +16,8 @@ spec:
       app.kubernetes.io/component: web
   template:
     metadata:
-      {{- if or $.Values.additionalAnnotations $.Values.web.podAnnotations }}
       annotations:
         {{- include "temporal.resourceAnnotations" (list $ "web" "pod") | nindent 8 }}
-      {{- end }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "web" "pod") | nindent 8 }}
     spec:
