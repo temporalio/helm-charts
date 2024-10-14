@@ -3,6 +3,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ "admintools") }}
+  annotations:
+    {{- include "temporal.resourceAnnotations" (list $ "admintools" "deployment") | nindent 4 }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "admintools" "") | nindent 4 }}
 spec:
@@ -14,9 +16,6 @@ spec:
       app.kubernetes.io/component: admintools
   template:
     metadata:
-      labels:
-        {{- include "temporal.resourceLabels" (list $ "admintools" "pod") | nindent 8 }}
-      {{- with $.Values.admintools.podAnnotations }}
       annotations:
         {{- include "temporal.resourceAnnotations" (list $ "admintools" "pod") | nindent 8 }}
       labels:

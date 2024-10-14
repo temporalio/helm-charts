@@ -91,11 +91,11 @@ Create the annotations for all resources
 {{- end -}}
 {{- $resourceAnnotations := merge $scopeAnnotations $componentAnnotations -}}
 {{- range $annotation_name, $annotation_value := $resourceAnnotations }}
-{{ $annotation_name }}: {{ $annotation_value | quote }}
+{{ $annotation_name }}: {{ $annotation_value }}
 {{- end -}}
 {{- end -}}
 {{- range $annotation_name, $annotation_value := $global.Values.additionalAnnotations }}
-{{ $annotation_name }}: {{ $annotation_value | quote }}
+{{ $annotation_name }}: {{ $annotation_value }}
 {{- end -}}
 {{- end -}}
 
