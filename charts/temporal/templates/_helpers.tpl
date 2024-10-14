@@ -132,7 +132,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- end -}}
 {{- end -}}
 {{- range $label_name, $label_value := $global.Values.additionalLabels }}
-{{ $label_name }}: {{ $label_value | quote }}
+{{ $label_name }}: {{ $label_value }}
 {{- end -}}
 {{- end -}}
 

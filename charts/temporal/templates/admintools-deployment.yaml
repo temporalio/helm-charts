@@ -6,7 +6,7 @@ metadata:
   annotations:
     {{- include "temporal.resourceAnnotations" (list $ "admintools" "deployment") | nindent 4 }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ "admintools" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "admintools" "deployment") | nindent 4 }}
 spec:
   replicas: 1
   selector:
