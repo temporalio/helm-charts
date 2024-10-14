@@ -4,9 +4,9 @@ kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ "admintools") }}
   annotations:
-    {{- include "temporal.resourceAnnotations" (list $ "admintools" "deployment") | nindent 4 }}
+    {{- include "temporal.resourceAnnotations" (list $ "admintools" "deployment") | trim | nindent 4 }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ "admintools" "deployment") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "admintools" "deployment") | trim | nindent 4 }}
 spec:
   replicas: 1
   selector:
@@ -17,9 +17,9 @@ spec:
   template:
     metadata:
       annotations:
-        {{- include "temporal.resourceAnnotations" (list $ "admintools" "pod") | nindent 8 }}
+        {{- include "temporal.resourceAnnotations" (list $ "admintools" "pod") | trim | nindent 8 }}
       labels:
-        {{- include "temporal.resourceLabels" (list $ "admintools" "pod") | nindent 8 }}
+        {{- include "temporal.resourceLabels" (list $ "admintools" "pod") | trim | nindent 8 }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
       containers:

@@ -6,9 +6,9 @@ kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
   annotations:
-    {{- include "temporal.resourceAnnotations" (list $ $service "deployment") | nindent 4 }}
+    {{- include "temporal.resourceAnnotations" (list $ $service "deployment") | trim | nindent 4 }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ $service "deployment") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ $service "deployment") | trim | nindent 4 }}
 spec:
   replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
   selector:
@@ -25,9 +25,9 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '9090'
         {{- end }}
-        {{- include "temporal.resourceAnnotations" (list $ $service "pod") | nindent 8 }}
+        {{- include "temporal.resourceAnnotations" (list $ $service "pod") | trim | nindent 8 }}
       labels:
-        {{- include "temporal.resourceLabels" (list $ $service "pod") | nindent 8 }}
+        {{- include "temporal.resourceLabels" (list $ $service "pod") | trim | nindent 8 }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
       {{- if semverCompare ">=1.13.0" $.Chart.AppVersion}}
