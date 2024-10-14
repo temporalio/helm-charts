@@ -8,7 +8,7 @@ metadata:
   annotations:
     {{- include "temporal.resourceAnnotations" (list $ $service "deployment") | nindent 4 }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ $service "deployment") | nindent 4 }}
 spec:
   replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
   selector:

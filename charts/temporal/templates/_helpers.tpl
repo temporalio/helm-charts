@@ -131,14 +131,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{ $label_name}}: {{ $label_value }}
 {{- end -}}
 {{- end -}}
-{{ include "temporal.additionalResourceLabels" $global }}
-{{- end -}}
-
-{{/*
-Additonal user specified labels for all resources
-*/}}
-{{- define "temporal.additionalResourceLabels" -}}
-{{- range $label_name, $label_value := .Values.additionalLabels }}
+{{- range $label_name, $label_value := $global.Values.additionalLabels }}
 {{ $label_name }}: {{ $label_value }}
 {{- end -}}
 {{- end -}}
