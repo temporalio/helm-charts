@@ -91,11 +91,11 @@ Create the annotations for all resources
 {{- end -}}
 {{- $resourceAnnotations := merge $scopeAnnotations $componentAnnotations -}}
 {{- range $annotation_name, $annotation_value := $resourceAnnotations }}
-{{ $annotation_name }}: {{ $annotation_value }}
+{{ $annotation_name }}: {{ $annotation_value | toYaml }}
 {{- end -}}
 {{- end -}}
 {{- range $annotation_name, $annotation_value := $global.Values.additionalAnnotations }}
-{{ $annotation_name }}: {{ $annotation_value }}
+{{ $annotation_name }}: {{ $annotation_value | toYaml }}
 {{- end -}}
 {{- end -}}
 
@@ -128,11 +128,11 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- end -}}
 {{- $resourceLabels := merge $scopeLabels $componentLabels -}}
 {{- range $label_name, $label_value := $resourceLabels }}
-{{ $label_name}}: {{ $label_value }}
+{{ $label_name}}: {{ $label_value | toYaml }}
 {{- end -}}
 {{- end -}}
 {{- range $label_name, $label_value := $global.Values.additionalLabels }}
-{{ $label_name }}: {{ $label_value }}
+{{ $label_name }}: {{ $label_value | toYaml }}
 {{- end -}}
 {{- end -}}
 
