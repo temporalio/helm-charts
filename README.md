@@ -316,6 +316,36 @@ helm install \
   --wait
 ```
 
+### Configuring authorization
+
+See https://docs.temporal.io/self-hosted-guide/security#claim-mapper
+
+This chart enables you to configure Temporal's authorization support. The values within this Helm chart
+server.config.authorization section are included in the resulting Temporal configuration under the 
+global.authorization section.
+
+For instance, you could enable the JWT based default authorizer and claim mapper functionality by including the following:
+
+This configures Temporal to load the JSON Web Key Set from the provided keySourceURIs, and refresh it on an internal. 
+That is used to validate the JWTs that you provide to Temporal via the "authorization" meta data header. 
+
+```yaml
+server:
+  config:    
+    authorization:
+     jwtKeyProvider:
+       keySourceURIs:
+         - http://localhost:/jwks.json
+       refreshInterval: 1m
+     permissionsClaimName: permissions
+     authorizer: default
+     claimMapper: default
+```
+
+Note that if a non-default value is provided for server.config.authorization.authorizer, then we will automatically
+include the "internal-frontend" service that the other Temporal services use for internal communication that bypasses the 
+authorization process. 
+
 ## Play With It
 
 ### Exploring Your Cluster
