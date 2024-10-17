@@ -5,8 +5,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
+  annotations:
+    {{- include "temporal.resourceAnnotations" (list $ $service "deployment") | nindent 4 }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ $service "deployment") | nindent 4 }}
 spec:
   replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
   selector:
@@ -16,8 +18,6 @@ spec:
       app.kubernetes.io/component: {{ $service }}
   template:
     metadata:
-      labels:
-        {{- include "temporal.resourceLabels" (list $ $service "pod") | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/server-configmap.yaml") $ | sha256sum }}
         {{- if (default $.Values.server.metrics.annotations.enabled $serviceValues.metrics.annotations.enabled) }}
@@ -25,9 +25,9 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '9090'
         {{- end }}
-        {{- with (default $.Values.server.podAnnotations $serviceValues.podAnnotations) }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+        {{- include "temporal.resourceAnnotations" (list $ $service "pod") | nindent 8 }}
+      labels:
+        {{- include "temporal.resourceLabels" (list $ $service "pod") | nindent 8 }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
       {{- if semverCompare ">=1.13.0" $.Chart.AppVersion}}

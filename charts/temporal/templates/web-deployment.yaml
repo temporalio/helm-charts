@@ -3,8 +3,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ "web") }}
+  annotations:
+    {{- include "temporal.resourceAnnotations" (list $ "web" "deployment") | nindent 4 }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ "web" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "web" "deployment") | nindent 4 }}
 spec:
   replicas: {{ .Values.web.replicaCount }}
   selector:
@@ -14,12 +16,10 @@ spec:
       app.kubernetes.io/component: web
   template:
     metadata:
+      annotations:
+        {{- include "temporal.resourceAnnotations" (list $ "web" "pod") | nindent 8 }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "web" "pod") | nindent 8 }}
-      {{- with .Values.web.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
       {{- if .Values.web.additionalVolumes }}

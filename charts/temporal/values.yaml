@@ -14,13 +14,14 @@ serviceAccount:
   name:
   # extraAnnotations would let users add additional annotations
   extraAnnotations:
+additionalAnnotations: {}
 additionalLabels: {}
 server:
   enabled: true
   sidecarContainers: []
   image:
     repository: temporalio/server
-    tag: 1.25.0
+    tag: 1.25.1
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -63,6 +64,8 @@ server:
       #   targetLabel: __name__
     prometheus:
       timerType: histogram
+  deploymentLabels: {}
+  deploymentAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   secretLabels: {}
@@ -227,6 +230,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -249,6 +254,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -271,6 +278,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -293,6 +302,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -307,12 +318,14 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.25.0-tctl-1.18.1-cli-1.0.0
+    tag: 1.25.1-tctl-1.18.1-cli-1.1.0
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
     port: 22
     annotations: {}
+  deploymentLabels: {}
+  deploymentAnnotations: {}
   podLabels: {}
   podAnnotations: {}
   nodeSelector: {}
@@ -328,7 +341,7 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.31.0
+    tag: 2.31.2
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
@@ -352,6 +365,8 @@ web:
     #  - secretName: chart-example-tls
     #    hosts:
     #      - chart-example.local
+  deploymentLabels: {}
+  deploymentAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}

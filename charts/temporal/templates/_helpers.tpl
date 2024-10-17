@@ -72,6 +72,34 @@ Define the AppVersion
 {{- end -}}
 
 {{/*
+Create the annotations for all resources
+*/}}
+{{- define "temporal.resourceAnnotations" -}}
+{{- $global := index . 0 -}}
+{{- $scope := index . 1 -}}
+{{- $resourceType := index . 2 -}}
+{{- $component := "server" -}}
+{{- if (or (eq $scope "admintools") (eq $scope "web")) -}}
+{{- $component = $scope -}}
+{{- end -}}
+{{- with $resourceType -}}
+{{- $resourceTypeKey := printf "%sAnnotations" . -}}
+{{- $componentAnnotations := (index $global.Values $component $resourceTypeKey) -}}
+{{- $scopeAnnotations := dict -}}
+{{- if hasKey (index $global.Values $component) $scope -}}
+{{- $scopeAnnotations = (index $global.Values $component $scope $resourceTypeKey) -}}
+{{- end -}}
+{{- $resourceAnnotations := merge $scopeAnnotations $componentAnnotations -}}
+{{- range $annotation_name, $annotation_value := $resourceAnnotations }}
+{{ $annotation_name }}: {{ $annotation_value }}
+{{- end -}}
+{{- end -}}
+{{- range $annotation_name, $annotation_value := $global.Values.additionalAnnotations }}
+{{ $annotation_name }}: {{ $annotation_value }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Create the labels for all resources
 */}}
 {{- define "temporal.resourceLabels" -}}
@@ -93,24 +121,17 @@ app.kubernetes.io/version: {{ include "temporal.appVersion" $global }}
 app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- with $resourceType -}}
 {{- $resourceTypeKey := printf "%sLabels" . -}}
-{{- $resourceLabels := dict -}}
-{{- if or (eq $scope "") (ne $component "server") -}}
-{{- $resourceLabels = (index $global.Values $component $resourceTypeKey) -}}
-{{- else -}}
-{{- $resourceLabels = (index $global.Values $component $scope $resourceTypeKey) -}}
+{{- $componentLabels := (index $global.Values $component $resourceTypeKey) -}}
+{{- $scopeLabels := dict -}}
+{{- if hasKey (index $global.Values $component) $scope -}}
+{{- $scopeLabels = (index $global.Values $component $scope $resourceTypeKey) -}}
 {{- end -}}
+{{- $resourceLabels := merge $scopeLabels $componentLabels -}}
 {{- range $label_name, $label_value := $resourceLabels }}
 {{ $label_name}}: {{ $label_value }}
 {{- end -}}
 {{- end -}}
-{{ include "temporal.additionalResourceLabels" $global }}
-{{- end -}}
-
-{{/*
-Additonal user specified labels for all resources
-*/}}
-{{- define "temporal.additionalResourceLabels" -}}
-{{- range $label_name, $label_value := .Values.additionalLabels }}
+{{- range $label_name, $label_value := $global.Values.additionalLabels }}
 {{ $label_name }}: {{ $label_value }}
 {{- end -}}
 {{- end -}}
