@@ -78,6 +78,7 @@ spec:
           command: ['sh', '-c']
           args:
             - 'curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&
+              curl --head --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1 ||
               curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1'
             {{- end }}
           env:
