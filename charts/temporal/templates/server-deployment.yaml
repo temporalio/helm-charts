@@ -104,9 +104,9 @@ spec:
               protocol: TCP
           {{- if ne $service "worker" }}
           livenessProbe:
-             initialDelaySeconds: 150
-             tcpSocket:
-               port: rpc
+            initialDelaySeconds: 150
+            tcpSocket:
+              port: rpc
           {{- end }}
           volumeMounts:
             - name: config
