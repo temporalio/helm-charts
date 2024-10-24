@@ -5,7 +5,7 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 
 This repo contains a V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. The dependencies that are bundled with this solution by default offer a baseline configuration to experiment with Temporal software. This Helm chart can also be used to install just the Temporal server, configured to connect to dependencies (such as a Cassandra, MySQL, or PostgreSQL database) that you may already have available in your environment.
 
-The only portions of the helm chart that are considered production ready are the parts that configure and manage Temporal itself. Cassandra, Elasticsearch, and Grafana are all using minimal development configurations, and should be reconfigured in a production deployment.
+The only portions of the helm chart that are considered production ready are the parts that configure and manage Temporal itself. Cassandra and Elasticsearch are all using minimal development configurations, and should be reconfigured in a production deployment.
 
 This Helm Chart code is tested by a dedicated test pipeline. It is also used extensively by other Temporal pipelines for testing various aspects of Temporal systems. Our test pipeline currently uses Helm 3.1.1.
 
@@ -43,7 +43,6 @@ Temporal can be configured to run with various dependencies. The default "Batter
 
 * Cassandra
 * Elasticsearch
-* Grafana
 
 The sections that follow describe various deployment configurations, from a minimal one-replica installation using included dependencies, to a replicated deployment on existing infrastructure.
 
@@ -57,7 +56,6 @@ helm install \
     --set server.replicaCount=1 \
     --set cassandra.config.cluster_size=1 \
     --set elasticsearch.replicas=1 \
-    --set grafana.enabled=false \
     temporaltest temporal \
     --timeout 15m
 ```
@@ -85,7 +83,7 @@ temporaltest-worker-7c9d68f4cf-8tzfw           1/1     Running   2          11m
 
 This method requires a three node kubernetes cluster to successfully bring up all the dependencies.
 
-When installed without manully setting dependency replicas to 1, this Temporal Helm Chart configures Temporal to run with a three node Cassandra cluster (for persistence) and Elasticsearch (for "visibility" features), and Grafana. By default, Temporal Helm Chart installs all dependencies, out of the box.
+When installed without manully setting dependency replicas to 1, this Temporal Helm Chart configures Temporal to run with a three node Cassandra cluster (for persistence) and Elasticsearch (for "visibility" features). By default, Temporal Helm Chart installs all dependencies, out of the box.
 
 To install Temporal with all of its dependencies run this command:
 
@@ -95,12 +93,11 @@ helm install --repo https://go.temporal.io/helm-charts temporaltest temporal --t
 
 To use your own instance of Elasticsearch, MySQL, PostgreSQL, or Cassandra, please read the "Bring Your Own" sections below.
 
-Other components (Grafana) can be omitted from the installation by setting their corresponding `enable` flag to `false`:
+Other components can be omitted from the installation by setting their corresponding `enable` flag to `false`:
 
 ```bash
 helm install \
     --repo https://go.temporal.io/helm-charts \
-    --set grafana.enabled=false \
     temporaltest temporal \
     --timeout 900s
 ```
@@ -272,7 +269,6 @@ helm install \
   -f values/values.archival.filestore.yaml \
   --set server.replicaCount=1 \
   --set cassandra.config.cluster_size=1 \
-  --set grafana.enabled=false \
   --set elasticsearch.enabled=false \
   temporaltest temporal \
   --timeout 15m
@@ -297,7 +293,6 @@ helm install \
   -f values/values.cassandra.yaml \
   -f values/values.elasticsearch.yaml \
   --set elasticsearch.enabled=true \
-  --set grafana.enabled=false \
   --set server.replicaCount=5 \
   --set server.config.persistence.default.cassandra.hosts=cassandra.data.host.example \
   --set server.config.persistence.default.cassandra.user=cassandra_user \
@@ -430,28 +425,16 @@ and navigate to http://127.0.0.1:8080 in your browser.
 
 ### Exploring Metrics via Grafana
 
-By default, the full "Batteries Included" configuration comes with a few Grafana dashboards.
+There are a number of preconfigured dashboards that you may import into your Grafana installation.
 
-To access those dashboards, follow the following steps:
-
-1. Extract Grafana's `admin` password from your installation:
-
-```
-$ kubectl get secret --namespace default temporaltest-grafana -o jsonpath="{.data.admin-password}" | base64 --decode
-
-t7EqZQpiB6BztZV321dEDppXbeisdpiEAMgnu6yy%
-```
-
-2. Set up port forwarding, so you can access Grafana from your host:
-
-```
-$ kubectl port-forward services/temporaltest-grafana 8081:80
-Forwarding from 127.0.0.1:8081 -> 3000
-Forwarding from [::1]:8081 -> 3000
-...
-```
-
-3. Navigate to the forwarded Grafana port in your browser (http://localhost:8081/), login as `admin` (using the password from step 1), and click on the "Home" button (upper left corner) to see available dashboards.
+* [Server-General](https://raw.githubusercontent.com/temporalio/dashboards/helm/server/server-general.json)
+* [SDK-General](https://raw.githubusercontent.com/temporalio/dashboards/helm/sdk/sdk-general.json)
+* [Misc - Advanced Visibility Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/advanced-visibility-specific.json)
+* [Misc - Cluster Monitoring Kubernetes](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/clustermonitoring-kubernetes.json)
+* [Misc - Frontend Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/frontend-service-specific.json)
+* [Misc - History Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/history-service-specific.json)
+* [Misc - Matching Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/matching-service-specific.json)
+* [Misc - Worker Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json)
 
 ### Updating Dynamic Configs
 
