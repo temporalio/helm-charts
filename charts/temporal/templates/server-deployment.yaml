@@ -71,16 +71,26 @@ spec:
                   fieldPath: status.podIP
             - name: SERVICES
               value: {{ $service }}
+            - name: TEMPORAL_STORE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ "default") }}
+                  key: {{ include "temporal.persistence.secretKeyUser" (list $ "default") }}
             - name: TEMPORAL_STORE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "default") }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ "default") }}
+                  key: {{ include "temporal.persistence.secretKeyPassword" (list $ "default") }}
+            - name: TEMPORAL_VISIBILITY_STORE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
+                  key: {{ include "temporal.persistence.secretKeyUser" (list $ "visibility") }}
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ "visibility") }}
+                  key: {{ include "temporal.persistence.secretKeyPassword" (list $ "visibility") }}
           {{- if $.Values.server.versionCheckDisabled }}
             - name: TEMPORAL_VERSION_CHECK_DISABLED
               value: "1"

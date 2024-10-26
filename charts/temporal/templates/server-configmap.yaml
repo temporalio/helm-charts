@@ -23,8 +23,9 @@ data:
           cassandra:
             hosts: "{{ include "temporal.persistence.cassandra.hosts" (list $ "default") }}"
             port: {{ include "temporal.persistence.cassandra.port" (list $ "default") }}
+            user: {{ `{{ .Env.TEMPORAL_STORE_USER | quote }}` }}
             password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
-            {{- with (omit $server.config.persistence.default.cassandra "hosts" "port" "password" "existingSecret") }}
+            {{- with (omit $server.config.persistence.default.cassandra "hosts" "port" "user" "password" "existingSecret") }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- else if eq (include "temporal.persistence.driver" (list $ "default")) "sql" }}
@@ -34,7 +35,7 @@ data:
             databaseName: "{{ $server.config.persistence.default.sql.database }}"
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "default") }}:{{ include "temporal.persistence.sql.port" (list $ "default") }}"
             connectProtocol: "tcp"
-            user: {{ include "temporal.persistence.sql.user" (list $ "default") }}
+            user: {{ `{{ .Env.TEMPORAL_STORE_USER | quote }}` }}
             password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
             {{- with (omit $server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
               {{- toYaml . | nindent 12 }}
@@ -66,7 +67,7 @@ data:
             databaseName: "{{ $server.config.persistence.visibility.sql.database }}"
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "visibility") }}:{{ include "temporal.persistence.sql.port" (list $ "visibility") }}"
             connectProtocol: "tcp"
-            user: "{{ include "temporal.persistence.sql.user" (list $ "visibility") }}"
+            user: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_USER  | quote }}` }}
             password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
             {{- with (omit $server.config.persistence.visibility.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
               {{- toYaml . | nindent 12 }}
