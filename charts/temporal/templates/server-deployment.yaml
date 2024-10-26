@@ -1,5 +1,5 @@
 {{- if $.Values.server.enabled }}
-{{- range $service := (list "frontend" "history" "matching" "worker") }}
+{{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
 {{ $serviceValues := index $.Values.server $service }}
 apiVersion: apps/v1
 kind: Deployment
@@ -81,6 +81,10 @@ spec:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
                   key: {{ include "temporal.persistence.secretKey" (list $ "visibility") }}
+          {{- if index $.Values.server "internal-frontend" "enabled" }}
+            - name: USE_INTERNAL_FRONTEND
+              value: "1"
+          {{- end }}
           {{- if $.Values.server.versionCheckDisabled }}
             - name: TEMPORAL_VERSION_CHECK_DISABLED
               value: "1"
@@ -94,7 +98,7 @@ spec:
               containerPort: {{ $serviceValues.service.port }}
               protocol: TCP
           {{- end }}
-          {{- if eq $service "frontend" }}
+          {{- if or (eq $service "frontend") (eq $service "internal-frontend") }}
             - name: http
               containerPort: {{ $serviceValues.service.httpPort }}
               protocol: TCP

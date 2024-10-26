@@ -1,5 +1,5 @@
 {{- if $.Values.server.enabled }}
-{{- range $service := (list "frontend" "history" "matching" "worker") }}
+{{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
 {{- $serviceValues := index $.Values.server $service -}}
 {{- if and (gt ($serviceValues.replicaCount | int) 1) ($serviceValues.podDisruptionBudget) }}
 apiVersion: policy/v1
