@@ -1,6 +1,7 @@
 {{- if $.Values.server.enabled }}
 {{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
 {{- $serviceValues := index $.Values.server $service -}}
+{{- if or (not (hasKey $serviceValues "enabled")) $serviceValues.enabled }}
 {{- if and (gt ($serviceValues.replicaCount | int) 1) ($serviceValues.podDisruptionBudget) }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
@@ -17,5 +18,6 @@ spec:
       app.kubernetes.io/component: {{ $service }}
 {{- end }}
 ---
+{{- end }}
 {{- end }}
 {{- end }}

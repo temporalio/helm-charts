@@ -1,6 +1,7 @@
 {{- if $.Values.server.enabled }}
 {{- range $service := (list "frontend" "internal-frontend" "matching" "history" "worker") }}
 {{- $serviceValues := index $.Values.server $service -}}
+{{- if or (not (hasKey $serviceValues "enabled")) $serviceValues.enabled }}
 {{- if (default $.Values.server.metrics.serviceMonitor.enabled $serviceValues.metrics.serviceMonitor.enabled) }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -30,6 +31,7 @@ spec:
       app.kubernetes.io/component: {{ $service }}
       app.kubernetes.io/headless: 'true'
 ---
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

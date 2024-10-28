@@ -29,6 +29,7 @@ spec:
     app.kubernetes.io/component: frontend
 
 ---
+{{- if index $.Values.server "internal-frontend" "enabled" }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -59,8 +60,10 @@ spec:
     app.kubernetes.io/component: internal-frontend
 
 ---
+{{- end }}
 {{- range $service := (list "frontend" "internal-frontend" "matching" "history" "worker") }}
 {{ $serviceValues := index $.Values.server $service }}
+{{- if or (not (hasKey $serviceValues "enabled")) $serviceValues.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -98,5 +101,6 @@ spec:
     app.kubernetes.io/component: {{ $service }}
 
 ---
+{{- end }}
 {{- end }}
 {{- end }}
