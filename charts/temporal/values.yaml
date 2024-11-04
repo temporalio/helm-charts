@@ -243,11 +243,11 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
     autoscaling:
-      enabled: true
-      minReplicas: "2"
-      maxReplicas: "12"
-      targetCPU: "65"
-      targetMemory: "65"
+      enabled: false
+      minReplicas: "1"
+      maxReplicas: "2"
+      targetCPU: "75"
+      targetMemory: "75"
   history:
     service:
       # type: ClusterIP
@@ -273,11 +273,11 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
     autoscaling:
-      enabled: true
-      minReplicas: "2"
-      maxReplicas: "4"
-      targetCPU: "65"
-      targetMemory: "65"
+      enabled: false
+      minReplicas: "1"
+      maxReplicas: "2"
+      targetCPU: "75"
+      targetMemory: "75"
   matching:
     service:
       # type: ClusterIP
@@ -303,11 +303,11 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
     autoscaling:
-      enabled: true
-      minReplicas: "4"
-      maxReplicas: "12"
-      targetCPU: "65"
-      targetMemory: "65"
+      enabled: false
+      minReplicas: "1"
+      maxReplicas: "2"
+      targetCPU: "75"
+      targetMemory: "75"
   worker:
     service:
       # type: ClusterIP
@@ -333,11 +333,11 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
     autoscaling:
-      enabled: true
-      minReplicas: "4"
-      maxReplicas: "12"
-      targetCPU: "65"
-      targetMemory: "65"
+      enabled: false
+      minReplicas: "1"
+      maxReplicas: "2"
+      targetCPU: "75"
+      targetMemory: "75"
 admintools:
   enabled: true
   image:
