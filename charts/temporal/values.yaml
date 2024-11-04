@@ -200,6 +200,11 @@ server:
       namespace:
         - name: default
           retention: 3d
+          searchAttributes: []
+            # - name: my_keyword
+            #   type: Keyword
+            # - name: my_keyword2
+            #   type: Keyword
   frontend:
     service:
       # Evaluated as template

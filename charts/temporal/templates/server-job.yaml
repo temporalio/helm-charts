@@ -155,6 +155,28 @@ spec:
           securityContext:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
+        {{- if $namespace.searchAttributes }}
+        - name: create-{{ $namespace.name }}-search-attributes
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['/bin/sh','-c']
+          args: ['temporal operator search-attribute create --namespace {{ $namespace.name }} {{- range $attr := $namespace.searchAttributes }} --name {{ $attr.name }} --type {{ $attr.type }}{{- end }}']
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
+              {{- with $.Values.server.additionalVolumeMounts }}
+          volumeMounts:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with $.Values.schema.resources }}
+          resources:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with $.Values.schema.containerSecurityContext }}
+          securityContext:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+          {{- end }}
           {{- end }}
         {{- end }}
       containers:
