@@ -1,0 +1,40 @@
+{{- if $.Values.server.enabled }}
+{{- range $service := (list "frontend" "history" "matching" "worker") }}
+{{- $serviceValues := index $.Values.server $service -}}
+{{- if ($serviceValues.autoscaling.enabled) }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "temporal.componentname" (list $ $service) }}
+  labels:
+    app.kubernetes.io/name: {{ include "temporal.name" $ }}
+    helm.sh/chart: {{ include "temporal.chart" $ }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/version: {{ $.Chart.AppVersion | replace "+" "_" }}
+    app.kubernetes.io/component: {{ $service }}
+    app.kubernetes.io/part-of: {{ $.Chart.Name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "temporal.componentname" (list $ $service) }}
+  minReplicas:  {{ default $.Values.server.replicaCount $serviceValues.autoscaling.minReplicas }}
+  maxReplicas: {{ default $.Values.server.replicaCount $serviceValues.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $serviceValues.autoscaling.targetMemory }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $serviceValues.autoscaling.targetCPU }}
+---
+{{- end }}
+{{- end }}
+{{- end }}
