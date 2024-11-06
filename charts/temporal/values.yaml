@@ -21,7 +21,7 @@ server:
   sidecarContainers: []
   image:
     repository: temporalio/server
-    tag: 1.25.1
+    tag: 1.25.2
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -318,7 +318,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.25.1-tctl-1.18.1-cli-1.1.0
+    tag: 1.25.2-tctl-1.18.1-cli-1.1.1
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
