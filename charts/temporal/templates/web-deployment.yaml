@@ -36,7 +36,7 @@ spec:
           {{- if .Values.web.additionalEnv }}
           {{- toYaml .Values.web.additionalEnv | nindent 12 }}
           {{- end }}
-          {{- if.Values.web.additionalEnvSecretName }}
+          {{- if .Values.web.additionalEnvSecretName }}
           envFrom:
             - secretRef:
                 name: {{ .Values.web.additionalEnvSecretName }}
