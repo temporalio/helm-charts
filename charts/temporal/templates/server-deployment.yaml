@@ -88,7 +88,7 @@ spec:
           {{- if or $.Values.server.additionalEnv $serviceValues.additionalEnv }}
           {{- toYaml (default $.Values.server.additionalEnv $serviceValues.additionalEnv) | nindent 12 }}
           {{- end }}
-          {{- if.Values.server.additionalEnvSecretName }}
+          {{- if .Values.server.additionalEnvSecretName }}
           envFrom:
             - secretRef:
                 name: {{ .Values.server.additionalEnvSecretName }}
