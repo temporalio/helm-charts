@@ -39,6 +39,11 @@ spec:
           {{- if .Values.admintools.additionalEnv }}
           {{- toYaml .Values.admintools.additionalEnv | nindent 12 }}
           {{- end }}
+          {{- if .Values.admintools.additionalEnvSecretName }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.admintools.additionalEnvSecretName }}
+          {{- end }}
           livenessProbe:
               exec:
                 command:

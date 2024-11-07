@@ -263,6 +263,7 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
+    additionalEnvSecretName: ""
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
@@ -332,6 +333,7 @@ admintools:
   tolerations: []
   affinity: {}
   additionalEnv: []
+  additionalEnvSecretName: ""
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
@@ -388,6 +390,7 @@ web:
   # Adjust Web UI config with environment variables:
   # https://docs.temporal.io/references/web-ui-environment-variables
   additionalEnv: []
+  additionalEnvSecretName: ""
   containerSecurityContext: {}
   securityContext: {}
   topologySpreadConstraints: []

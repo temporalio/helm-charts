@@ -88,6 +88,11 @@ spec:
           {{- if or $.Values.server.additionalEnv $serviceValues.additionalEnv }}
           {{- toYaml (default $.Values.server.additionalEnv $serviceValues.additionalEnv) | nindent 12 }}
           {{- end }}
+          {{- if $.Values.server.additionalEnvSecretName }}
+          envFrom:
+            - secretRef:
+                name: {{ $.Values.server.additionalEnvSecretName }}
+          {{- end }}
           ports:
           {{- if ne $service "worker" }}
             - name: rpc
