@@ -118,6 +118,10 @@ spec:
              initialDelaySeconds: 150
              tcpSocket:
                port: rpc
+          readinessProbe:
+             initialDelaySeconds: 150
+             tcpSocket:
+               port: rpc
           {{- end }}
           volumeMounts:
             - name: config
