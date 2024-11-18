@@ -6,6 +6,8 @@ metadata:
   name: {{ include "temporal.componentname" (list $ "schema") }}-{{ $jobData | sha256sum | trunc 8 }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
   template:
