@@ -1,6 +1,10 @@
 {{- if $.Values.server.enabled }}
 {{- range $service := (list "frontend" "history" "matching" "worker") }}
-{{ $serviceValues := index $.Values.server $service }}
+{{- $serviceValues := index $.Values.server $service }}
+{{- $replicaCount := $.Values.server.replicaCount }}
+{{- if and (hasKey $serviceValues "replicaCount") (kindIs "float64" $serviceValues.replicaCount) }}
+  {{- $replicaCount = $serviceValues.replicaCount }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -12,7 +16,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-  replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
+  replicas: {{ $replicaCount }}
   strategy:
     type: {{ $.Values.server.deploymentStrategy.type }}
     {{- if eq $.Values.server.deploymentStrategy.type "RollingUpdate" }}
