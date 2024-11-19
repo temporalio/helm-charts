@@ -50,3 +50,9 @@ jobs:
       - name: Run template tests
         working-directory: charts/temporal/tests
         run: go test
+
+      - name: Install helm-unittest
+        run: helm plugin install https://github.com/quintush/helm-unittest
+
+      - name: Run helm-unittest
+        run: helm unittest charts/temporal
