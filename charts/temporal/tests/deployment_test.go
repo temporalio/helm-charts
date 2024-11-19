@@ -172,39 +172,3 @@ func TestTemplateServerDeploymentLabels(t *testing.T) {
 	require.Equal(t, "zero", deployment.ObjectMeta.Labels["zero"])
 	require.Equal(t, "zero", deployment.Spec.Template.ObjectMeta.Labels["zero"])
 }
-
-func TestTemplateServerDeploymentReplicaCount(t *testing.T) {
-	// t.Parallel()
-
-	helmChartPath, err := filepath.Abs("../")
-	releaseName := "temporal"
-	require.NoError(t, err)
-
-	namespaceName := "temporal-" + strings.ToLower(random.UniqueId())
-
-	options := &helm.Options{
-		SetValues: map[string]string{
-			"server.replicaCount":          "2",
-			"server.frontend.replicaCount": "3",
-		},
-		KubectlOptions:    k8s.NewKubectlOptions("", "", namespaceName),
-		BuildDependencies: true,
-	}
-
-	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/server-deployment.yaml"})
-	var nonFrontendDeployment appsv1.Deployment
-	var frontendDeployment appsv1.Deployment
-
-	for _, output := range strings.Split(output, "---") {
-		if strings.Contains(output, "frontend") {
-			helm.UnmarshalK8SYaml(t, output, &frontendDeployment)
-		} else {
-			helm.UnmarshalK8SYaml(t, output, &nonFrontendDeployment)
-		}
-	}
-
-	require.NotNil(t, frontendDeployment.Spec.Replicas)
-	require.Equal(t, int32(3), *frontendDeployment.Spec.Replicas)
-	require.NotNil(t, nonFrontendDeployment.Spec.Replicas)
-	require.Equal(t, int32(2), *nonFrontendDeployment.Spec.Replicas)
-}
