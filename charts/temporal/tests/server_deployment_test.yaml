@@ -8,19 +8,11 @@ set:
     resources:
       requests:
         cpu: 100m
-        memory: 128Mi
-      limits:
-        cpu: 200m
-        memory: 256Mi
     frontend:
       replicaCount: 3
       resources:
         requests:
           cpu: 200m
-          memory: 256Mi
-        limits:
-          cpu: 400m
-          memory: 512Mi
 tests:
   - it: defaults to service wide replica count
     template: templates/server-deployment.yaml
