@@ -52,7 +52,7 @@ jobs:
         run: go test
 
       - name: Install helm-unittest
-        run: helm plugin install https://github.com/quintush/helm-unittest
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git
 
       - name: Run helm-unittest
         working-directory: charts/temporal
