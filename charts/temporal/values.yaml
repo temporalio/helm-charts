@@ -198,6 +198,15 @@ server:
         - name: default
           retention: 3d
   frontend:
+    # -- enable Keda autoscaler
+    keda: false
+
+    # -- Keda metrics
+    kedaMetrics: {}
+
+    # -- hpa scaling behavior
+    hpaBehavior: {}
+
     service:
       # Evaluated as template
       annotations: {}
@@ -238,6 +247,15 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   history:
+    # -- enable Keda autoscaler
+    keda: false
+
+    # -- Keda metrics
+    kedaMetrics: {}
+
+    # -- hpa scaling behavior
+    hpaBehavior: {}
+
     service:
       # type: ClusterIP
       port: 7234
@@ -260,6 +278,15 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   matching:
+    # -- enable Keda autoscaler
+    keda: false
+
+    # -- Keda metrics
+    kedaMetrics: {}
+
+    # -- hpa scaling behavior
+    hpaBehavior: {}
+
     service:
       # type: ClusterIP
       port: 7235
@@ -282,6 +309,16 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   worker:
+
+    # -- enable Keda autoscaler
+    keda: false
+
+    # -- Keda metrics
+    kedaMetrics: {}
+
+    # -- hpa scaling behavior
+    hpaBehavior: {}
+
     service:
       # type: ClusterIP
       port: 7239
@@ -485,3 +522,13 @@ cassandra:
     type: ClusterIP
 mysql:
   enabled: false
+
+
+# -- enable Keda autoscaler 
+keda: false
+
+# -- Keda metrics
+kedaMetrics: {}
+
+# -- hpa scaling behavior
+hpaBehavior: {}

@@ -16,7 +16,9 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
+  {{- if not $serviceValues.keda }}
   replicas: {{ $replicaCount }}
+  {{- end }}
   strategy:
     type: {{ $.Values.server.deploymentStrategy.type }}
     {{- if eq $.Values.server.deploymentStrategy.type "RollingUpdate" }}

@@ -1,0 +1,78 @@
+{{- define "app.kedaTriggers" -}}
+{{- $kedaMetrics := index . 0 -}}
+{{- $targetCPUUtilizationPercentage := index . 1 -}}
+{{- $prometheusServerAddress := index . 2 -}}
+{{- $awsRegion := index .  3 -}}
+{{- $parentContext := index . 4 -}}
+{{- if gt (len $kedaMetrics) 0 -}}
+{{- range $type, $metric := $kedaMetrics -}}
+- type: {{ $type }}
+  metricType: {{ $metric.metricType }}
+  metadata:
+    {{- if eq $type "prometheus" }}
+    serverAddress: {{ $prometheusServerAddress }}
+    threshold: {{ $metric.threshold | quote }}
+    query: {{ tpl (toYaml $metric.query) $parentContext }}
+    authModes: "custom"
+    {{- else if eq $type "aws-sqs-queue" }}
+    queueURL: {{ tpl $metric.queueURL $parentContext }}
+    queueLength : {{ $metric.queueLength | quote }}
+    awsRegion: {{ $awsRegion }}
+    {{- else if eq $type "memory" }}
+    value: {{ $metric.value | quote }}
+    {{- end }}
+    {{- if eq $type "prometheus" }}
+  authenticationRef:
+    name: groundcover-cluster-trigger-auth
+    kind: ClusterTriggerAuthentication
+    {{- else if eq $type "aws-sqs-queue" }}
+  authenticationRef:  
+    name: sqs-cluster-trigger-auth
+    kind: ClusterTriggerAuthentication 
+   {{- end }}
+{{- end -}}
+{{- else -}}
+- type: cpu
+  metricType: Utilization
+  metadata:
+    value: {{ $targetCPUUtilizationPercentage }}
+{{- end -}}
+{{- end -}}
+
+
+{{- if $.Values.server.enabled }}
+{{- range $service := (list "frontend" "history" "matching" "worker") }}
+{{ $serviceValues := index $.Values.server $service }}
+{{- if $serviceValues.keda }}
+{{- $minReplicas := default $.Values.server.replicaCount $serviceValues.replicaCount }}
+{{- $maxReplicas := $serviceValues.maxReplicaCount }}
+{{- $kedaMetrics := $serviceValues.kedaMetrics }}
+{{- $hpaBehavior := $serviceValues.hpaBehavior }}
+{{- $targetCPUUtilizationPercentage := $serviceValues.targetCPUUtilizationPercentage | quote }}
+{{- $prometheusServerAddress := $.Values.prometheusServerAddress | quote}}
+{{- $awsRegion := $.Values.awsRegion -}}
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "temporal.componentname" (list $ $service) }}-scaledobject
+spec:
+  advanced:
+    horizontalPodAutoscalerConfig:
+      name: {{ include "temporal.componentname" (list $ $service) }}-keda-hpa
+      {{- if $hpaBehavior }}
+      behavior:
+      {{- tpl (toYaml $hpaBehavior) $ | nindent 8 }}
+      {{- end }}
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "temporal.componentname" (list $ $service) }}
+  minReplicaCount: {{ $minReplicas }}
+  maxReplicaCount: {{ $maxReplicas }}
+  triggers:
+  {{- include "app.kedaTriggers" (list $kedaMetrics $targetCPUUtilizationPercentage $prometheusServerAddress $awsRegion $) | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
