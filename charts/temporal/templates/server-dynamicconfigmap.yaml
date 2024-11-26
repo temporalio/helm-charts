@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: "{{ include "temporal.fullname" . }}-dynamic-config"
+  name: "{{ include "temporal.fullname" $ }}-dynamic-config"
   labels:
-    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
 data:
   dynamic_config.yaml: |-
   {{- if $.Values.server.dynamicConfig }}

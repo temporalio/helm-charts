@@ -6,7 +6,7 @@ kind: ConfigMap
 metadata:
   name: "{{ include "temporal.fullname" $ }}-config"
   labels:
-    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
 data:
   config_template.yaml: |-
     log:
@@ -88,6 +88,10 @@ data:
           {{- with $server.metrics.tags }}
             {{- toYaml . | nindent 10 }}
           {{- end }}
+        {{- with $server.metrics.excludeTags }}
+        excludeTags:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- with $server.config.prometheus }}
         prometheus:
           {{- toYaml . | nindent 10 }}
