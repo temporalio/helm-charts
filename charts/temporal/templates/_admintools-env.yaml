@@ -15,12 +15,15 @@
 - name: CASSANDRA_KEYSPACE
   value: {{ $driverConfig.keyspace }}
 - name: CASSANDRA_USER
-  value: {{ $driverConfig.user }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "temporal.persistence.secretName" (list $global $store) }}
+      key: {{ include "temporal.persistence.secretKeyUser" (list $global $store) }}
 - name: CASSANDRA_PASSWORD
   valueFrom:
     secretKeyRef:
       name: {{ include "temporal.persistence.secretName" (list $global $store) }}
-      key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
+      key: {{ include "temporal.persistence.secretKeyPassword" (list $global $store) }}
 {{- else if eq $driver "sql" -}}
 - name: SQL_PLUGIN
   value: {{ include "temporal.persistence.sql.driver" (list $global $store) }}
@@ -31,12 +34,15 @@
 - name: SQL_DATABASE
   value: {{ include "temporal.persistence.sql.database" (list $global $store) }}
 - name: SQL_USER
-  value: {{ $driverConfig.user }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "temporal.persistence.secretName" (list $global $store) }}
+      key: {{ include "temporal.persistence.secretKeyUser" (list $global $store) }}
 - name: SQL_PASSWORD
   valueFrom:
     secretKeyRef:
       name: {{ include "temporal.persistence.secretName" (list $global $store) }}
-      key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
+      key: {{ include "temporal.persistence.secretKeyPassword" (list $global $store) }}
   {{- with $driverConfig.tls }}
 - name: SQL_TLS
   value: {{ .enabled | quote }}
@@ -67,12 +73,15 @@
 - name: ES_PORT
   value: {{ $driverConfig.port | quote }}
 - name: ES_USER
-  value: {{ $driverConfig.username | quote }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "temporal.persistence.secretName" (list $global $store) }}
+      key: {{ include "temporal.persistence.secretKeyUser" (list $global $store) }}
 - name: ES_PWD
   valueFrom:
     secretKeyRef:
       name: {{ include "temporal.persistence.secretName" (list $global $store) }}
-      key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
+      key: {{ include "temporal.persistence.secretKeyPassword" (list $global $store) }}
 - name: ES_VERSION
   value: {{ $driverConfig.version }}
 - name: ES_VISIBILITY_INDEX

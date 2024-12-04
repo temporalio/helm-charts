@@ -215,12 +215,25 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- end -}}
 {{- end -}}
 
-{{- define "temporal.persistence.cassandra.secretKey" -}}
+{{- define "temporal.persistence.cassandra.secretKeyUser" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
 {{- $driverConfig := $storeConfig.cassandra -}}
-{{- with $driverConfig.secretKey -}}
+{{- with $driverConfig.secretKeyUser -}}
+{{- print . -}}
+{{- else -}}
+{{/* Cassandra user is optional, but we will create an empty secret for it */}}
+{{- print "user" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.cassandra.secretKeyPassword" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.cassandra -}}
+{{- with $driverConfig.secretKeyPassword -}}
 {{- print . -}}
 {{- else -}}
 {{/* Cassandra password is optional, but we will create an empty secret for it */}}
@@ -342,13 +355,31 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- end -}}
 {{- end -}}
 
-{{- define "temporal.persistence.sql.secretKey" -}}
+{{- define "temporal.persistence.sql.secretKeyUser" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
 {{- $driverConfig := $storeConfig.sql -}}
-{{- if $driverConfig.secretKey -}}
-{{- print $driverConfig.secretKey -}}
+{{- if $driverConfig.secretKeyUser -}}
+{{- print $driverConfig.secretKeyUser -}}
+{{- else if or $driverConfig.existingSecret $driverConfig.user -}}
+{{- print "username" -}}
+{{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
+{{- print "mysql-username" -}}
+{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres12")) -}}
+{{- print "postgresql-username" -}}
+{{- else -}}
+{{- fail (printf "Please specify sql username or existing secret for %s store" $store) -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.secretKeyPassword" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if $driverConfig.secretKeyPassword -}}
+{{- print $driverConfig.secretKeyPassword -}}
 {{- else if or $driverConfig.existingSecret $driverConfig.password -}}
 {{- print "password" -}}
 {{- else if and $global.Values.mysql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "mysql8")) -}}
@@ -373,12 +404,23 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- end -}}
 {{- end -}}
 
-{{- define "temporal.persistence.elasticsearch.secretKey" -}}
+{{- define "temporal.persistence.elasticsearch.secretKeyUser" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
 {{- $driverConfig := $global.Values.elasticsearch -}}
-{{- if $driverConfig.secretKey -}}
-{{- print $driverConfig.secretKey -}}
+{{- if $driverConfig.secretKeyUser -}}
+{{- print $driverConfig.secretKeyUser -}}
+{{- else -}}
+{{- "password" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.elasticsearch.secretKeyPassword" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $driverConfig := $global.Values.elasticsearch -}}
+{{- if $driverConfig.secretKeyPassword -}}
+{{- print $driverConfig.secretKeyPassword -}}
 {{- else -}}
 {{- "password" -}}
 {{- end -}}
@@ -390,10 +432,16 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- include (printf "temporal.persistence.%s.secretName" (include "temporal.persistence.driver" (list $global $store))) (list $global $store) -}}
 {{- end -}}
 
-{{- define "temporal.persistence.secretKey" -}}
+{{- define "temporal.persistence.secretKeyUser" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
-{{- include (printf "temporal.persistence.%s.secretKey" (include "temporal.persistence.driver" (list $global $store))) (list $global $store) -}}
+{{- include (printf "temporal.persistence.%s.secretKeyUser" (include "temporal.persistence.driver" (list $global $store))) (list $global $store) -}}
+{{- end -}}
+
+{{- define "temporal.persistence.secretKeyPassword" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- include (printf "temporal.persistence.%s.secretKeyPassword" (include "temporal.persistence.driver" (list $global $store))) (list $global $store) -}}
 {{- end -}}
 
 {{/*
