@@ -1,0 +1,31 @@
+suite: test admintools deployment
+templates:
+  - admintools-deployment.yaml
+tests:
+  - it: includes additional init containers
+    set:
+      admintools:
+        additionalInitContainers:
+          - name: my-init-container
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: my-init-container
+  - it: includes additional volumes
+    set:
+      admintools:
+        additionalVolumes:
+          - name: my-volume
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: my-volume
+  - it: includes additional volume mounts
+    set:
+      admintools:
+        additionalVolumeMounts:
+          - name: my-volume
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: my-volume
