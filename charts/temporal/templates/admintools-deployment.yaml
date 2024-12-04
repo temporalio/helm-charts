@@ -22,6 +22,10 @@ spec:
         {{- include "temporal.resourceLabels" (list $ "admintools" "pod") | nindent 8 }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
+      {{- if $.Values.admintools.additionalInitContainers }}
+      initContainers:
+        {{- toYaml $.Values.admintools.additionalInitContainers | nindent 8}}
+      {{- end }}
       containers:
         - name: admin-tools
           image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"

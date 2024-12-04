@@ -339,6 +339,7 @@ admintools:
   additionalVolumeMounts: []
   additionalEnv: []
   additionalEnvSecretName: ""
+  additionalInitContainers: []
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
