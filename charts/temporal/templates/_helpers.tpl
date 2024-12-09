@@ -360,6 +360,18 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- end -}}
 {{- end -}}
 
+{{- define "temporal.persistence.sql.connectAttributes" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- $result := list -}}
+{{- range $key, $value := $driverConfig.connectAttributes -}}
+  {{- $result = append $result (printf "%s=%v" $key $value) -}}
+{{- end -}}
+{{- join "&" $result -}}
+{{- end -}}
+
 {{- define "temporal.persistence.elasticsearch.secretName" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}

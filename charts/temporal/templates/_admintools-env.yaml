@@ -37,6 +37,10 @@
     secretKeyRef:
       name: {{ include "temporal.persistence.secretName" (list $global $store) }}
       key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
+  {{- with $driverConfig.connectAttributes }}
+- name: SQL_CONNECT_ATTRIBUTES
+  value: {{ include "temporal.persistence.sql.connectAttributes" (list $global $store) | quote }}
+  {{- end }}
   {{- with $driverConfig.tls }}
 - name: SQL_TLS
   value: {{ .enabled | quote }}
