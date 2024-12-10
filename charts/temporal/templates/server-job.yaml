@@ -24,6 +24,9 @@ spec:
       {{ include "temporal.serviceAccount" $ }}
       restartPolicy: OnFailure
       initContainers:
+        {{- if $.Values.admintools.additionalInitContainers }}
+          {{- toYaml $.Values.admintools.additionalInitContainers | nindent 8 }}
+        {{- end }}
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra-service
           image: busybox
@@ -56,7 +59,7 @@ spec:
               {{- end }}
           env:
               {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-              {{- with $.Values.server.additionalVolumeMounts }}
+              {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
@@ -83,7 +86,7 @@ spec:
             {{- end }}
           env:
             {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-            {{- with $.Values.server.additionalVolumeMounts }}
+            {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
               {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -118,7 +121,7 @@ spec:
               {{- end }}
           env:
               {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-              {{- with $.Values.server.additionalVolumeMounts }}
+              {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
@@ -143,7 +146,7 @@ spec:
           env:
             - name: TEMPORAL_ADDRESS
               value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
-              {{- with $.Values.server.additionalVolumeMounts }}
+              {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
@@ -178,19 +181,15 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $.Values.server.nodeSelector }}
+      {{- with $.Values.admintools.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $.Values.server.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $.Values.server.tolerations }}
+      {{- with $.Values.admintools.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $.Values.server.additionalVolumes }}
+      {{- with $.Values.admintools.additionalVolumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
       {{- end }}
