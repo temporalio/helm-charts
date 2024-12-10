@@ -24,7 +24,7 @@ spec:
       {{ include "temporal.serviceAccount" $ }}
       {{- if $.Values.admintools.additionalInitContainers }}
       initContainers:
-        {{- toYaml $.Values.admintools.additionalInitContainers | nindent 8}}
+        {{- toYaml $.Values.admintools.additionalInitContainers | nindent 8 }}
       {{- end }}
       containers:
         - name: admin-tools
