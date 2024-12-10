@@ -87,6 +87,7 @@ server:
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
+  additionalInitContainers: []
   securityContext:
     fsGroup: 1000
     runAsUser: 1000
@@ -337,8 +338,11 @@ admintools:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  additionalVolumes: []
+  additionalVolumeMounts: []
   additionalEnv: []
   additionalEnvSecretName: ""
+  additionalInitContainers: []
   resources: {}
   containerSecurityContext: {}
   securityContext: {}

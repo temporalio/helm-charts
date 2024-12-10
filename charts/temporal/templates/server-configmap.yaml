@@ -59,6 +59,10 @@ data:
             logLevel: "{{ $elasticsearch.logLevel }}"
             indices:
                 visibility: "{{ $elasticsearch.visibilityIndex }}"
+            {{- with $elasticsearch.tls }}
+            tls:
+              {{- toYaml . | nindent 16 }}
+            {{- end }}
         {{- else if eq (include "temporal.persistence.driver" (list $ "visibility")) "sql" }}
           sql:
             pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"

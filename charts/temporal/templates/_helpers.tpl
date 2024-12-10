@@ -91,11 +91,11 @@ Create the annotations for all resources
 {{- end -}}
 {{- $resourceAnnotations := merge $scopeAnnotations $componentAnnotations -}}
 {{- range $annotation_name, $annotation_value := $resourceAnnotations }}
-{{ $annotation_name }}: {{ $annotation_value }}
+{{ $annotation_name }}: {{ $annotation_value | quote }}
 {{- end -}}
 {{- end -}}
 {{- range $annotation_name, $annotation_value := $global.Values.additionalAnnotations }}
-{{ $annotation_name }}: {{ $annotation_value }}
+{{ $annotation_name }}: {{ $annotation_value | quote }}
 {{- end -}}
 {{- end -}}
 
@@ -128,11 +128,11 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- end -}}
 {{- $resourceLabels := merge $scopeLabels $componentLabels -}}
 {{- range $label_name, $label_value := $resourceLabels }}
-{{ $label_name}}: {{ $label_value }}
+{{ $label_name}}: {{ $label_value | quote }}
 {{- end -}}
 {{- end -}}
 {{- range $label_name, $label_value := $global.Values.additionalLabels }}
-{{ $label_name }}: {{ $label_value }}
+{{ $label_name }}: {{ $label_value | quote }}
 {{- end -}}
 {{- end -}}
 
@@ -358,6 +358,18 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- else -}}
 {{- fail (printf "Please specify sql password or existing secret for %s store" $store) -}}
 {{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.connectAttributes" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- $result := list -}}
+{{- range $key, $value := $driverConfig.connectAttributes -}}
+  {{- $result = append $result (printf "%s=%v" $key $value) -}}
+{{- end -}}
+{{- join "&" $result -}}
 {{- end -}}
 
 {{- define "temporal.persistence.elasticsearch.secretName" -}}
