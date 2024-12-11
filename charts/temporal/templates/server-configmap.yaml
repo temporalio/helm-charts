@@ -6,7 +6,7 @@ kind: ConfigMap
 metadata:
   name: "{{ include "temporal.fullname" $ }}-config"
   labels:
-    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
 data:
   config_template.yaml: |-
     log:
@@ -59,6 +59,10 @@ data:
             logLevel: "{{ $elasticsearch.logLevel }}"
             indices:
                 visibility: "{{ $elasticsearch.visibilityIndex }}"
+            {{- with $elasticsearch.tls }}
+            tls:
+              {{- toYaml . | nindent 16 }}
+            {{- end }}
         {{- else if eq (include "temporal.persistence.driver" (list $ "visibility")) "sql" }}
           sql:
             pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"
@@ -88,6 +92,10 @@ data:
           {{- with $server.metrics.tags }}
             {{- toYaml . | nindent 10 }}
           {{- end }}
+        {{- with $server.metrics.excludeTags }}
+        excludeTags:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- with $server.config.prometheus }}
         prometheus:
           {{- toYaml . | nindent 10 }}

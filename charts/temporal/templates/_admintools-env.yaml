@@ -1,13 +1,13 @@
 {{- define "temporal.admintools-env" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store }}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
 {{- $driver := include "temporal.persistence.driver" (list $global $store) -}}
 {{- $driverConfig := index $storeConfig $driver }}
 {{- if eq $driver "elasticsearch" -}}
 {{- $driverConfig = $global.Values.elasticsearch -}}
 {{- end -}}
-{{- if eq $driver "cassandra" }}
+{{- if eq $driver "cassandra" -}}
 - name: CASSANDRA_HOST
   value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $global $store))) }}
 - name: CASSANDRA_PORT
@@ -33,7 +33,7 @@
   value: {{ not .enableHostVerification | quote }}
     {{- end }}
   {{- end }}
-{{- else if eq $driver "sql" }}
+{{- else if eq $driver "sql" -}}
 - name: SQL_PLUGIN
   value: {{ include "temporal.persistence.sql.driver" (list $global $store) }}
 - name: SQL_HOST
@@ -49,6 +49,10 @@
     secretKeyRef:
       name: {{ include "temporal.persistence.secretName" (list $global $store) }}
       key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
+  {{- with $driverConfig.connectAttributes }}
+- name: SQL_CONNECT_ATTRIBUTES
+  value: {{ include "temporal.persistence.sql.connectAttributes" (list $global $store) | quote }}
+  {{- end }}
   {{- with $driverConfig.tls }}
 - name: SQL_TLS
   value: {{ .enabled | quote }}
@@ -71,7 +75,7 @@
   value: {{ not .enableHostVerification | quote }}
     {{- end }}
   {{- end }}
-{{- else if eq $driver "elasticsearch" }}
+{{- else if eq $driver "elasticsearch" -}}
 - name: ES_SCHEME
   value: {{ $driverConfig.scheme }}
 - name: ES_HOST
