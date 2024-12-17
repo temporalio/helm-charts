@@ -119,12 +119,12 @@ data:
           membershipPort: {{ $server.frontend.service.membershipPort }}
           bindOnIP: "0.0.0.0"
 
-      {{- if index $.Values.server "internal-frontend" "enabled" }}
+      {{- if .Values.server.internalFrontend.enabled }}
       internal-frontend:
         rpc:
-          grpcPort: {{ index $server "internal-frontend" "service" "port" }}
-          httpPort: {{ index $server "internal-frontend" "service" "httpPort" }}
-          membershipPort: {{ index $server "internal-frontend" "service" "membershipPort" }}
+          grpcPort: {{ $server.internalFrontend.service.port }}
+          httpPort: {{ $server.internalFrontend.service.httpPort }}
+          membershipPort: {{ $server.internalFrontend.service.membershipPort }}
           bindOnIP: "0.0.0.0"
       {{- end }}
 
@@ -182,7 +182,7 @@ data:
       {{- toYaml . | nindent 6 }}
     {{- end }}
 
-    {{- if not (index $.Values.server "internal-frontend" "enabled") }}
+    {{- if not (.Values.server.internalFrontend.enabled) }}
     publicClient:
       hostPort: "{{ include "temporal.componentname" (list $ "frontend") }}:{{ $server.frontend.service.port }}"
     {{- end }}

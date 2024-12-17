@@ -1,24 +1,26 @@
 {{- if $.Values.server.enabled }}
+{{- range $service := include "serviceName" (list "frontend" "internalFrontend") }}
+{{- $serviceValues := index $.Values.server $service -}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "temporal.componentname" (list $ "frontend") }}
+  name: {{ include "temporal.componentname" (list $ $service) }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ "frontend" "") | nindent 4 }}
-  {{- if .Values.server.frontend.service.annotations }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.server.frontend.service.annotations "context" $) | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
+  {{- if $serviceValues.service.annotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" $serviceValues.service.annotations "context" $) | nindent 4 }}
   {{- end }}
 spec:
-  type: {{ .Values.server.frontend.service.type }}
+  type: {{ $serviceValues.service.type }}
   ports:
-    - port: {{ .Values.server.frontend.service.port }}
+    - port: {{ $serviceValues.service.port }}
       targetPort: rpc
       protocol: TCP
       name: grpc-rpc
-      {{- if hasKey .Values.server.frontend.service "nodePort" }}
-      nodePort: {{ .Values.server.frontend.service.nodePort }}
+      {{- if hasKey $serviceValues.service "nodePort" }}
+      nodePort: {{ $serviceValues.service.nodePort }}
       {{- end }}
-    - port: {{ .Values.server.frontend.service.httpPort }}
+    - port: {{ $serviceValues.service.httpPort }}
       targetPort: http
       protocol: TCP
       name: http
@@ -29,39 +31,11 @@ spec:
     app.kubernetes.io/component: frontend
 
 ---
-{{- if index $.Values.server "internal-frontend" "enabled" }}
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "temporal.componentname" (list $ "internal-frontend") }}
-  labels:
-    {{- include "temporal.resourceLabels" (list $ "internal-frontend" "") | nindent 4 }}
-  {{- if hasKey (index .Values.server "internal-frontend" "service") "annotations" }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" (index .Values.server "internal-frontend" "service" "annotations") "context" $) | nindent 4 }}
-  {{- end }}
-spec:
-  type: {{ index .Values.server "internal-frontend" "service" "type" }}
-  ports:
-    - port: {{ index .Values.server "internal-frontend" "service" "port" }}
-      targetPort: rpc
-      protocol: TCP
-      name: grpc-rpc
-      {{- if hasKey (index .Values.server "internal-frontend" "service") "nodePort" }}
-      nodePort: {{ index .Values.server "internal-frontend" "service" "nodePort" }}
-      {{- end }}
-    - port: {{ index .Values.server "internal-frontend" "service" "httpPort" }}
-      targetPort: http
-      protocol: TCP
-      name: http
-      # TODO: Allow customizing the node HTTP port
-  selector:
-    app.kubernetes.io/name: {{ include "temporal.name" $ }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: internal-frontend
-
----
 {{- end }}
-{{- range $service := (list "frontend" "internal-frontend" "matching" "history" "worker") }}
+{{- end }}
+{{- end }}
+
+{{- range $service := include "serviceName" (list "frontend" "internalFrontend" "matching" "history" "worker") }}
 {{ $serviceValues := index $.Values.server $service }}
 {{- if or (not (hasKey $serviceValues "enabled")) $serviceValues.enabled }}
 apiVersion: v1

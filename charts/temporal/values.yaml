@@ -242,16 +242,16 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
-  internal-frontend:
+  internalFrontend:
     # Enable this to create internal-frontend
     enabled: false
     service:
       # Evaluated as template
       annotations: {}
       type: ClusterIP
-      port: 7233
-      membershipPort: 6933
-      httpPort: 7243
+      port: 7236
+      membershipPort: 6936
+      httpPort: 7246
     metrics:
       annotations:
         enabled: true

@@ -33,14 +33,14 @@ spec:
           env:
             # TEMPORAL_CLI_ADDRESS is deprecated, use TEMPORAL_ADDRESS instead
             - name: TEMPORAL_CLI_ADDRESS
-              {{- if index $.Values.server "internal-frontend" "enabled" }}
-              value: {{ include "temporal.fullname" $ }}-internal-frontend:{{ index $.Values.server "internal-frontend" "service" "port" }}
+              {{- if .Values.server.internalFrontend.enabled }}
+              value: {{ include "temporal.fullname" $ }}-internal-frontend:{{ .Values.server.internalFrontend.service.port }}
               {{- else }}
               value: {{ include "temporal.fullname" $ }}-frontend:{{ .Values.server.frontend.service.port }}
               {{- end }}
             - name: TEMPORAL_ADDRESS
-              {{- if index $.Values.server "internal-frontend" "enabled" }}
-              value: {{ include "temporal.fullname" $ }}-internal-frontend:{{ index $.Values.server "internal-frontend" "service" "port" }}
+              {{- if .Values.server.internalFrontend.enabled }}
+              value: {{ include "temporal.fullname" $ }}-internal-frontend:{{ .Values.server.internalFrontend.service.port }}
               {{- else }}
               value: {{ include "temporal.fullname" $ }}-frontend:{{ .Values.server.frontend.service.port }}
               {{- end }}

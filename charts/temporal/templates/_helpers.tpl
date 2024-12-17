@@ -427,3 +427,15 @@ Usage:
         {{- tpl (.value | toYaml) .context }}
     {{- end }}
 {{- end -}}
+
+{{/*
+To modify camelCase to hyphenated internal-frontend service name
+*/}}
+{{- define "serviceName" -}}
+    {{- $service := index . 0 -}}
+    {{- if eq $service "internalFrontend" }}
+        {{- print "internal-frontend" }}
+    {{- else }}
+        {{- print $service }}
+    {{- end }}
+{{- end -}}
