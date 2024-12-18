@@ -21,7 +21,7 @@ server:
   sidecarContainers: []
   image:
     repository: temporalio/server
-    tag: 1.25.1
+    tag: 1.25.2
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -87,6 +87,7 @@ server:
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
+  additionalInitContainers: []
   securityContext:
     fsGroup: 1000
     runAsUser: 1000
@@ -292,6 +293,7 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
+    additionalEnvSecretName: ""
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
@@ -347,7 +349,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.25.1-tctl-1.18.1-cli-1.1.0
+    tag: 1.25.2-tctl-1.18.1-cli-1.1.1
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -360,7 +362,11 @@ admintools:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  additionalVolumes: []
+  additionalVolumeMounts: []
   additionalEnv: []
+  additionalEnvSecretName: ""
+  additionalInitContainers: []
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
@@ -417,6 +423,7 @@ web:
   # Adjust Web UI config with environment variables:
   # https://docs.temporal.io/references/web-ui-environment-variables
   additionalEnv: []
+  additionalEnvSecretName: ""
   containerSecurityContext: {}
   securityContext: {}
   topologySpreadConstraints: []
