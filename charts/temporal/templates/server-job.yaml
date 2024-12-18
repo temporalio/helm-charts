@@ -145,7 +145,11 @@ spec:
           args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
           env:
             - name: TEMPORAL_ADDRESS
+              {{- if and (hasKey .Values.server "internalFrontend") .Values.server.internalFrontend.enabled }}
+              value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ .Values.server.internalFrontend.service.port }}
+              {{- else }}
               value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
+			  {{- end }}
               {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
