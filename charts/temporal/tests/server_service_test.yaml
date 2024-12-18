@@ -1,0 +1,30 @@
+suite: test server service
+templates:
+  - server-service.yaml
+set:
+  server:
+    frontend:
+      service:
+        port: 7233
+        loadBalancerSourceRanges:
+          - "10.0.0.0/8"
+tests:
+  - it: defaults to service wide replica count
+    template: templates/server-service.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 7233
+  - it: includes load balancer source ranges
+    template: templates/server-service.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: spec.loadBalancerSourceRanges
+          value:
+          - "10.0.0.0/8"

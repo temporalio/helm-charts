@@ -209,6 +209,8 @@ server:
       port: 7233
       membershipPort: 6933
       httpPort: 7243
+      # loadBalancerSourceRanges:
+      # - "10.0.0.0/8"
     ingress:
       enabled: false
       # className:
