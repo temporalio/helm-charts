@@ -243,6 +243,35 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+  internalFrontend:
+    # Enable this to create internal-frontend
+    enabled: false
+    service:
+      # Evaluated as template
+      annotations: {}
+      type: ClusterIP
+      port: 7236
+      membershipPort: 6936
+      httpPort: 7246
+    metrics:
+      annotations:
+        enabled: true
+      serviceMonitor: {}
+      # enabled: false
+      prometheus: {}
+      # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
+    podAnnotations: {}
+    podLabels: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: []
+    podDisruptionBudget: {}
   history:
     service:
       # type: ClusterIP
