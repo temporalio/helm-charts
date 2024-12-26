@@ -149,7 +149,7 @@ spec:
               value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ .Values.server.internalFrontend.service.port }}
               {{- else }}
               value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
-			  {{- end }}
+              {{- end }}
               {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
