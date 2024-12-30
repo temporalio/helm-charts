@@ -29,7 +29,7 @@ spec:
   selector:
     app.kubernetes.io/name: {{ include "temporal.name" $ }}
     app.kubernetes.io/instance: {{ $.Release.Name }}
-    app.kubernetes.io/component: frontend
+    app.kubernetes.io/component: {{ $service }}
 
 ---
 {{- end }}
