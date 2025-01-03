@@ -1,8 +1,8 @@
 prometheus: 
   alertmanager:
     enabled: false
-  alertmanagerFiles:
-    alertmanager.yml: {}
+  config:
+  # mounted as alertmanager.yml:
   kubeStateMetrics:
     enabled: false
   nodeExporter:
