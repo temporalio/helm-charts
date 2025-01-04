@@ -224,7 +224,7 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- print . -}}
 {{- else -}}
 {{/* Cassandra user is optional, but we will create an empty secret for it */}}
-{{- print "user" -}}
+{{- print "username" -}}
 {{- end -}}
 {{- end -}}
 
@@ -411,7 +411,7 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- if $driverConfig.secretKeyUser -}}
 {{- print $driverConfig.secretKeyUser -}}
 {{- else -}}
-{{- "password" -}}
+{{- "username" -}}
 {{- end -}}
 {{- end -}}
 

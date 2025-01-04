@@ -55,7 +55,7 @@ data:
             url:
                 scheme: "{{ $elasticsearch.scheme }}"
                 host: "{{ $elasticsearch.host }}:{{ $elasticsearch.port }}"
-            username: "{{ $elasticsearch.username }}"
+            user: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_USER  | quote }}` }}
             password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
             logLevel: "{{ $elasticsearch.logLevel }}"
             indices:
