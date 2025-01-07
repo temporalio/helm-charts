@@ -16,6 +16,9 @@ data:
     persistence:
       defaultStore: {{ $server.config.persistence.defaultStore }}
       visibilityStore: visibility
+      {{- if $server.config.persistence.secondaryVisibilityStore }}
+      secondaryVisibilityStore: {{ $server.config.persistence.secondaryVisibilityStore }}
+      {{- end }}
       numHistoryShards: {{ $server.config.numHistoryShards }}
       datastores:
         default:
@@ -72,7 +75,33 @@ data:
               {{- toYaml . | nindent 12 }}
             {{- end }}
         {{- end }}
-
+        {{- if $server.config.persistence.secondaryVisibilityStore }}
+        secondaryVisibility:
+        {{- if or $elasticsearch.enabled $elasticsearch.external }}
+          elasticsearch:
+            version: "{{ $elasticsearch.version }}"
+            url:
+                scheme: "{{ $elasticsearch.scheme }}"
+                host: "{{ $elasticsearch.host }}:{{ $elasticsearch.port }}"
+            username: "{{ $elasticsearch.username }}"
+            password: {{ `{{ .Env.TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD  | quote }}` }}
+            logLevel: "{{ $elasticsearch.logLevel }}"
+            indices:
+                visibility: "{{ $elasticsearch.secondaryVisibilityIndex }}"
+        {{- else if eq (include "temporal.persistence.driver" (list $ "secondaryVisibility")) "sql" }}
+          sql:
+            pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "secondaryVisibility") }}"
+            driverName: "{{ include "temporal.persistence.sql.driver" (list $ "secondaryVisibility") }}"
+            databaseName: "{{ $server.config.persistence.secondaryVisibility.sql.database }}"
+            connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "secondaryVisibility") }}:{{ include "temporal.persistence.sql.port" (list $ "secondaryVisibility") }}"
+            connectProtocol: "tcp"
+            user: "{{ include "temporal.persistence.sql.user" (list $ "secondaryVisibility") }}"
+            password: {{ `{{ .Env.TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD  | quote }}` }}
+            {{- with (omit $server.config.persistence.secondaryVisibility.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
     global:
       membership:
         name: temporal

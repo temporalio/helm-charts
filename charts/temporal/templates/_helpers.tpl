@@ -127,6 +127,8 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- define "temporal.persistence.schema" -}}
 {{- if eq . "default" -}}
 {{- print "temporal" -}}
+{{- else if eq . "secondaryVisibility" -}}
+{{- print "visibility" -}}
 {{- else -}}
 {{- print . -}}
 {{- end -}}
