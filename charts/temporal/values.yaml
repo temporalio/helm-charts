@@ -21,7 +21,7 @@ server:
   sidecarContainers: []
   image:
     repository: temporalio/server
-    tag: 1.25.2
+    tag: 1.26.2
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -248,6 +248,35 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+  internalFrontend:
+    # Enable this to create internal-frontend
+    enabled: false
+    service:
+      # Evaluated as template
+      annotations: {}
+      type: ClusterIP
+      port: 7236
+      membershipPort: 6936
+      httpPort: 7246
+    metrics:
+      annotations:
+        enabled: true
+      serviceMonitor: {}
+      # enabled: false
+      prometheus: {}
+      # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
+    podAnnotations: {}
+    podLabels: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: []
+    podDisruptionBudget: {}
   history:
     service:
       # type: ClusterIP
@@ -325,7 +354,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.25.2-tctl-1.18.1-cli-1.1.1
+    tag: 1.26.2
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -352,7 +381,7 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.31.2
+    tag: 2.33.0
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
