@@ -96,6 +96,9 @@ data:
         excludeTags:
           {{- toYaml . | nindent 10 }}
         {{- end }}
+        {{- with $server.metrics.prefix }}
+        prefix: "{{- . }}"
+        {{- end }}
         {{- with $server.config.prometheus }}
         prometheus:
           {{- toYaml . | nindent 10 }}
