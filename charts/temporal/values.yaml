@@ -34,7 +34,7 @@ server:
     tags: {}
     # Tags to be excluded in Prometheus metrics
     excludeTags: {}
-    prefix: 
+    prefix:
     # Enable Prometheus ServiceMonitor
     # Use this if you installed the Prometheus Operator (https://github.com/coreos/prometheus-operator).
     serviceMonitor:
