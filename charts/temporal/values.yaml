@@ -154,7 +154,7 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
         sql:
-          driver: "mysql"
+          driver: "mysql8"
           host: "mysql"
           port: 3306
           database: "temporal"
@@ -184,7 +184,7 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
         sql:
-          driver: "mysql"
+          driver: "mysql8"
           host: "mysql"
           port: 3306
           database: "temporal_visibility"
