@@ -42,13 +42,9 @@ spec:
                 name: {{ .Values.web.additionalEnvSecretName }}
           {{- end }}
           livenessProbe:
-            failureThreshold: 3
             initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
             tcpSocket:
               port: http
-            timeoutSeconds: 1
           ports:
             - name: http
               containerPort: 8080
