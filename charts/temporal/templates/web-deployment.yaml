@@ -41,6 +41,10 @@ spec:
             - secretRef:
                 name: {{ .Values.web.additionalEnvSecretName }}
           {{- end }}
+          livenessProbe:
+            initialDelaySeconds: 10
+            tcpSocket:
+              port: http
           ports:
             - name: http
               containerPort: 8080
