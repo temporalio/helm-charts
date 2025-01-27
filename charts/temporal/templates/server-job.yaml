@@ -162,7 +162,7 @@ spec:
           securityContext:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
-        {{- if $namespace.searchAttributes }}
+        {{- if and (gt (len $namespace.searchAttributes) 0) (eq (include "temporal.persistence.driver" (list $ "default")) "sql") }}
         - name: create-{{ $namespace.name }}-search-attributes
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
