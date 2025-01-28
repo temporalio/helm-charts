@@ -1,4 +1,4 @@
-# Contributing to Temporal Cloud Terraform Provider
+# Contributing to Temporal Helm Charts
 
 Thank you for your interest in contributing to the Temporal Helm Charts! This document explains our process and expectations for community contributions.
 
