@@ -61,13 +61,27 @@ spec:
   type: ClusterIP
   clusterIP: None
   publishNotReadyAddresses: true
+  # For Istio service mesh - make sure all ports are defined here and in the deployment:
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+  # Also for Istio - make sure to set the `appProtocol` property, see:
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/protocol-selection/#explicit-protocol-selection
+  # Note that only the monitoring port is used for discovery (by prometheus).
+  # The other ports are listed here solely to allow Istio to configure itself to intercept traffic.
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
   ports:
     - port: {{ $serviceValues.service.port }}
       targetPort: rpc
+      appProtocol: tcp
       protocol: TCP
       name: grpc-rpc
+    - port: {{ $serviceValues.service.membershipPort }}
+      targetPort: membership
+      appProtocol: tcp
+      protocol: TCP
+      name: grpc-membership
     - port: 9090
       targetPort: metrics
+      appProtocol: http
       protocol: TCP
       name: metrics
   selector:
