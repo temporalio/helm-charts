@@ -150,6 +150,9 @@ spec:
               {{- else }}
               value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
               {{- end }}
+              {{- if $.Values.server.config.namespaces.additionalEnv }} 
+                {{- toYaml $.Values.server.config.namespaces.additionalEnv | nindent 12 }}
+              {{- end }} 
               {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}

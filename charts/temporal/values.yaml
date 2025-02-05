@@ -202,6 +202,7 @@ server:
       namespace:
         - name: default
           retention: 3d
+      additionalEnv: []
   frontend:
     service:
       # Evaluated as template
