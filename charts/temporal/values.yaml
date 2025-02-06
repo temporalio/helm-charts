@@ -134,10 +134,12 @@ server:
     #   authorizer: default
     #   claimMapper: default
     persistence:
+      temporal_sql_tool_paramaters: {}
+      #"'--tls', '--tls-ca-file', '/etc/temporal/rds_ca.pem', '--pl', 'postgres12', '--ca search_path', 'public', '--endpoint', 'xxxx', '--port', '5432', '--user', 'masteruser', '--password', 'pwd', '--database', 'test'"
       defaultStore: default
       additionalStores: {}
       default:
-        driver: "cassandra"
+        driver: "sql"
         cassandra:
           hosts: []
           # port: 9042
@@ -154,7 +156,8 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
         sql:
-          driver: "mysql8"
+          paramaters:
+          driver: "postgres12"
           host: "mysql"
           port: 3306
           database: "temporal"
@@ -167,7 +170,7 @@ server:
           # connectAttributes:
           # tx_isolation: 'READ-COMMITTED'
       visibility:
-        driver: "cassandra"
+        driver: "sql"
         cassandra:
           hosts: []
           # port: 9042
@@ -184,7 +187,7 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
         sql:
-          driver: "mysql8"
+          driver: "postgres12"
           host: "mysql"
           port: 3306
           database: "temporal_visibility"
@@ -518,7 +521,7 @@ grafana:
         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json
         datasource: TemporalMetrics
 cassandra:
-  enabled: true
+  enabled: false
   persistence:
     enabled: false
   image:
@@ -537,3 +540,5 @@ cassandra:
     type: ClusterIP
 mysql:
   enabled: false
+postgres:
+  enabled: true

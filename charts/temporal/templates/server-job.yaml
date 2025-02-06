@@ -1,4 +1,4 @@
-{{- if or $.Values.schema.createDatabase.enabled $.Values.schema.setup.enabled $.Values.schema.update.enabled }}
+{{- if $.Values.server.enabled }}{{- if  or $.Values.schema.createDatabase.enabled $.Values.schema.setup.enabled $.Values.schema.update.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -76,7 +76,7 @@ spec:
             {{- if eq $driver "cassandra" }}
           command: ['temporal-cassandra-tool', 'setup-schema', '-v', '0.0']
             {{- else if eq $driver "sql" }}
-          command: ['temporal-sql-tool', 'setup-schema', '-v', '0.0']
+          command: ['temporal-sql-tool', 'setup-schema', '-v', '0.0' {{- if $.Values.server.config.persistence.temporal_sql_tool_paramaters }}{{- $.Values.server.config.persistence.temporal_sql_tool_paramaters  }}{{- end }}]
             {{- else if eq $driver "elasticsearch" }}
           command: ['sh', '-c']
           args:
@@ -116,7 +116,7 @@ spec:
                 {{- if eq $plugin "mysql8" }}
           command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v8/{{ $schema }}/versioned']
                 {{- else if or (eq $plugin "postgres12") (eq $plugin "postgres12_pgx") }}
-          command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v12/{{ $schema }}/versioned']
+          command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v12/{{ $schema }}/versioned' {{- if $.Values.server.config.persistence.temporal_sql_tool_paramaters }}{{- $.Values.server.config.persistence.temporal_sql_tool_paramaters  }}{{- end }}]
                 {{- end }}
               {{- end }}
           env:
