@@ -135,7 +135,7 @@ server:
     #   claimMapper: default
     persistence:
       temporal_sql_tool_paramaters: {}
-      #"'--tls', '--tls-ca-file', '/etc/temporal/rds_ca.pem', '--pl', 'postgres12', '--ca search_path', 'public', '--endpoint', 'xxxx', '--port', '5432', '--user', 'masteruser', '--password', 'pwd', '--database', 'test'
+      #"'--tls', '--tls-ca-file', '/etc/temporal/rds_ca.pem', '--pl', 'postgres12', '--ca search_path', 'public', '--endpoint', 'xxxx', '--port', '5432', '--user', 'test', '--password', 'pwd', '--database', 'test'
       defaultStore: default
       additionalStores: {}
       default:
