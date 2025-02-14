@@ -373,7 +373,7 @@ admintools:
   securityContext: {}
   podDisruptionBudget: {}
 web:
-  initContainers: []
+  # initContainers: []
   enabled: true
   replicaCount: 1
   image:
