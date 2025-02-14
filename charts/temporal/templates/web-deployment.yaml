@@ -21,6 +21,10 @@ spec:
       labels:
         {{- include "temporal.resourceLabels" (list $ "web" "pod") | nindent 8 }}
     spec:
+      initContainers:
+        {{- if $.Values.web.initContainers }}
+        {{- toYaml $.Values.server.initContainers | nindent 8}}
+        {{- end }}
       {{ include "temporal.serviceAccount" $ }}
       {{- if .Values.web.additionalVolumes }}
       volumes:
