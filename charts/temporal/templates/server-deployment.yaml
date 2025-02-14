@@ -102,12 +102,17 @@ spec:
             - secretRef:
                 name: {{ $.Values.server.additionalEnvSecretName }}
           {{- end }}
+          # For Istio service mesh - make sure ports are defined here and in the headless service, see:
+          # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
           ports:
           {{- if ne $service "worker" }}
             - name: rpc
               containerPort: {{ $serviceValues.service.port }}
               protocol: TCP
           {{- end }}
+            - name: membership
+              containerPort: {{ $serviceValues.service.membershipPort }}
+              protocol: TCP
           {{- if or (eq $service "frontend") (eq $service "internal-frontend") }}
             - name: http
               containerPort: {{ $serviceValues.service.httpPort }}
