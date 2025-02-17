@@ -9,7 +9,7 @@ tests:
           - name: my-init-container
     asserts:
       - equal:
-          path: spec.template.spec.initContainers[0].name
+          path: spec.template.spec.initContainers[-1].name
           value: my-init-container
   - it: includes additional volumes
     set:
