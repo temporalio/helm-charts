@@ -29,3 +29,54 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[*].volumeMounts[0].name
           value: my-volume
+  - it: renders searchAttributes for sql
+    set:
+      cassandra:
+        enabled: false
+      elasticsearch:
+        enabled: false
+      mysql:
+        enabled: true
+      server:
+        config:
+          persistence:
+            default:
+              driver: "sql"
+            visibility:
+              driver: "sql"
+          namespaces:
+            create: true
+            namespace:
+              - name: my-namespace
+                retention: 3d
+                searchAttributes:
+                  - name: my_keyword
+                    type: Keyword
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.initContainers[?(@.name == "create-my-namespace-search-attributes")].args[0]
+          pattern: "--namespace my-namespace --name my_keyword --type Keyword"
+  - it: does not render searchAttributes for cassandra
+    set:
+      cassandra:
+        enabled: true
+      server:
+        config:
+          persistence:
+            default:
+              driver: "cassandra"
+            visibility:
+              driver: "cassandra"
+          namespaces:
+            create: true
+            namespace:
+              - name: my-namespace
+                retention: 3d
+                searchAttributes:
+                  - name: my_keyword
+                    type: Keyword
+    asserts:
+      - notContains:
+          path: spec.template.spec.initContainers
+          content:
+            name: create-my-namespace-search-attributes
