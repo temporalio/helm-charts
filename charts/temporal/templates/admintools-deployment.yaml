@@ -22,9 +22,9 @@ spec:
         {{- include "temporal.resourceLabels" (list $ "admintools" "pod") | nindent 8 }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
-      {{- if $.Values.admintools.additionalInitContainers }}
+      {{- with $.Values.admintools.additionalInitContainers }}
       initContainers:
-        {{- toYaml $.Values.admintools.additionalInitContainers | nindent 8 }}
+        {{- toYaml .| nindent 8 }}
       {{- end }}
       containers:
         - name: admin-tools
@@ -48,13 +48,13 @@ spec:
               {{- else }}
               value: {{ include "temporal.fullname" $ }}-frontend:{{ .Values.server.frontend.service.port }}
               {{- end }}
-          {{- if .Values.admintools.additionalEnv }}
-          {{- toYaml .Values.admintools.additionalEnv | nindent 12 }}
+          {{- with .Values.admintools.additionalEnv }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.admintools.additionalEnvSecretName }}
+          {{- with .Values.admintools.additionalEnvSecretName }}
           envFrom:
             - secretRef:
-                name: {{ .Values.admintools.additionalEnvSecretName }}
+                name: {{ . }}
           {{- end }}
           livenessProbe:
               exec:
@@ -63,9 +63,9 @@ spec:
                 - /
               initialDelaySeconds: 5
               periodSeconds: 5
-          {{- if $.Values.admintools.additionalVolumeMounts }}
+          {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
-            {{- toYaml $.Values.admintools.additionalVolumeMounts | nindent 12}}
+            {{- toYaml . | nindent 12}}
           {{- end }}
           {{- with .Values.admintools.resources }}
           resources:
@@ -83,9 +83,9 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if $.Values.admintools.additionalVolumes }}
+      {{- with $.Values.admintools.additionalVolumes }}
       volumes:
-        {{- toYaml $.Values.admintools.additionalVolumes | nindent 8}}
+        {{- toYaml . | nindent 8}}
       {{- end }}
       {{- with .Values.admintools.nodeSelector }}
       nodeSelector:
