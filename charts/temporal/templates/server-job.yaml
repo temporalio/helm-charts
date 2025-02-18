@@ -14,7 +14,7 @@ spec:
       labels:
         {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 8 }}
         {{- with $.Values.schema.podLabels }}
-        {{- toYaml . | nindent 8 }}
+          {{- toYaml . | nindent 8 }}
         {{- end }}
       {{- with $.Values.schema.podAnnotations }}
       annotations:
@@ -24,8 +24,8 @@ spec:
       {{ include "temporal.serviceAccount" $ }}
       restartPolicy: OnFailure
       initContainers:
-        {{- if $.Values.admintools.additionalInitContainers }}
-          {{- toYaml $.Values.admintools.additionalInitContainers | nindent 8 }}
+        {{- with $.Values.admintools.additionalInitContainers }}
+          {{- toYaml . | nindent 8 }}
         {{- end }}
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra-service

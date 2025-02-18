@@ -40,8 +40,8 @@ spec:
       {{- end }}
       {{- if or (or $.Values.server.additionalInitContainers $.Values.cassandra.enabled) (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external)}}
       initContainers:
-        {{- if $.Values.server.additionalInitContainers }}
-        {{- toYaml $.Values.server.additionalInitContainers | nindent 8}}
+        {{- with $.Values.server.additionalInitContainers }}
+          {{- toYaml . | nindent 8}}
         {{- end }}
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra-service
@@ -142,9 +142,6 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- if $.Values.server.sidecarContainers }}
-        {{- toYaml $.Values.server.sidecarContainers | nindent 8 }}
-        {{- end }}
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
       {{- toYaml . | nindent 8 }}

@@ -18,7 +18,6 @@ additionalAnnotations: {}
 additionalLabels: {}
 server:
   enabled: true
-  sidecarContainers: []
   image:
     repository: temporalio/server
     tag: 1.26.2
@@ -88,6 +87,7 @@ server:
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
+  # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
   securityContext:
     fsGroup: 1000
@@ -367,6 +367,7 @@ admintools:
   additionalVolumeMounts: []
   additionalEnv: []
   additionalEnvSecretName: ""
+  # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
   resources: {}
   containerSecurityContext: {}
