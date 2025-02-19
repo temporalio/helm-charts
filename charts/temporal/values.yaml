@@ -204,7 +204,7 @@ server:
           retention: 3d
   frontend:
     service:
-      # name: temporal-frontend-name
+      # name: temporal-frontend-serviceName
       # Evaluated as template
       annotations: {}
       type: ClusterIP
