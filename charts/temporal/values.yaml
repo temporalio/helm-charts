@@ -140,7 +140,7 @@ server:
         driver: "cassandra"
         cassandra:
           hosts: []
-          # port: 9042
+          port: 9042
           keyspace: "temporal"
           user: "user"
           password: "password"
@@ -170,7 +170,7 @@ server:
         driver: "cassandra"
         cassandra:
           hosts: []
-          # port: 9042
+          port: 9042
           keyspace: "temporal_visibility"
           user: "user"
           password: "password"
@@ -204,6 +204,7 @@ server:
           retention: 3d
   frontend:
     service:
+      # name: temporal-frontend-name
       # Evaluated as template
       annotations: {}
       type: ClusterIP
@@ -211,7 +212,7 @@ server:
       membershipPort: 6933
       httpPort: 7243
     ingress:
-      enabled: false
+      enabled: true
       # className:
       annotations: {}
       # kubernetes.io/ingress.class: traefik

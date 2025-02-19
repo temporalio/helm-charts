@@ -40,12 +40,12 @@ spec:
               pathType: Prefix
               backend:
                 service:
-                  name: {{ include "temporal.fullname" $ }}-frontend
+                  name: {{ default (printf "%s-frontend" (include "temporal.fullname" $)) $.Values.server.frontend.service.name }}
                   port:
                     number: {{ $.Values.server.frontend.service.port }}
               {{- else if $.Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" }}
               backend:
-                serviceName: {{ include "temporal.fullname" $ }}-frontend
+                serviceName: {{ default (printf "%s-frontend" (include "temporal.fullname" $)) $.Values.server.frontend.service.name }}
                 servicePort: {{ $.Values.server.frontend.service.port }}
               {{- end }}
     {{- end}}
