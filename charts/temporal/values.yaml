@@ -212,7 +212,7 @@ server:
       membershipPort: 6933
       httpPort: 7243
     ingress:
-      enabled: true
+      enabled: false
       # className:
       annotations: {}
       # kubernetes.io/ingress.class: traefik
