@@ -53,6 +53,11 @@ spec:
   dnsNames:
   - {{ include "temporal.componentname" (list . "frontend") }}
   - {{ include "temporal.componentname" (list . "frontend") }}.{{ $.Release.Namespace }}
+{{- if $.Values.additionalDnsNames }}
+{{- range $.Values.additionalDnsNames }}
+  - {{ . }}
+{{- end }}
+{{- end }}
   subject:
     organizationalUnits:
     - "temporal:temporal-system:admin"
