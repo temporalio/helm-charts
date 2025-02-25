@@ -1,0 +1,37 @@
+suite: test server service
+templates:
+  - server-service.yaml
+set:
+  server:
+    replicaCount: 2
+    resources:
+      requests:
+        cpu: 100m
+    frontend:
+      replicaCount: 3
+      resources:
+        requests:
+          cpu: 200m
+tests:
+  - it: omits prometheus annotations when disabled
+    template: templates/server-service.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Service
+      matchMany: true
+    set:
+      server:
+        metrics:
+          annotations:
+            enabled: false
+        frontend:
+          metrics:
+            annotations:
+              enabled: false
+    asserts:
+      - notExists:
+          path: spec.template.metadata.annotations["prometheus.io/job"]
+      - notExists:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+      - notExists:
+          path: spec.template.metadata.annotations["prometheus.io/port"]
