@@ -524,7 +524,7 @@ mysql:
   enabled: false
 
 
-# -- enable Keda autoscaler 
+# -- enable Keda autoscaler
 keda: false
 
 # -- Keda metrics
