@@ -532,3 +532,7 @@ kedaMetrics: {}
 
 # -- hpa scaling behavior
 hpaBehavior: {}
+
+# -- cert-manager Root CA lifetime settings
+# rootCaCertLifetimeHours: 2160 # 90d
+# rootCaCertRenewBeforeHours: 720 # 30d

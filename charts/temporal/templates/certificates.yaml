@@ -23,6 +23,12 @@ metadata:
 spec:
   secretName: {{ $.Release.Name }}-ca-secret
   isCA: true
+  {{- with $.Values.rootCaCertLifetimeHours }}
+  duration: {{ . }}h
+  {{- end }}
+  {{- with $.Values.rootCaCertRenewBeforeHours }}
+  renewBefore: {{ . }}h
+  {{- end }}
   commonName: {{ $.Release.Name }}-ca
   issuerRef:
     name: {{ $.Release.Name }}-selfsigned-ca-issuer
