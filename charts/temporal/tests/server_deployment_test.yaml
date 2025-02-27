@@ -74,9 +74,6 @@ tests:
       matchMany: true
     set:
       server:
-        metrics:
-          annotations:
-            enabled: false
         frontend:
           metrics:
             annotations:

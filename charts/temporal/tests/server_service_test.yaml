@@ -16,22 +16,19 @@ tests:
   - it: omits prometheus annotations when disabled
     template: templates/server-service.yaml
     documentSelector:
-      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-headless")].kind'
       value: Service
       matchMany: true
     set:
       server:
-        metrics:
-          annotations:
-            enabled: false
         frontend:
           metrics:
             annotations:
               enabled: false
     asserts:
       - notExists:
-          path: spec.template.metadata.annotations["prometheus.io/job"]
+          path: metadata.annotations["prometheus.io/job"]
       - notExists:
-          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          path: metadata.annotations["prometheus.io/scrape"]
       - notExists:
-          path: spec.template.metadata.annotations["prometheus.io/port"]
+          path: metadata.annotations["prometheus.io/port"]
