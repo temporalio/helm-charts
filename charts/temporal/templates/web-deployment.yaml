@@ -3,8 +3,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ "web") }}
+  annotations:
+    {{- include "temporal.resourceAnnotations" (list $ "web" "deployment") | nindent 4 }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ "web" "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ "web" "deployment") | nindent 4 }}
 spec:
   replicas: {{ .Values.web.replicaCount }}
   selector:
@@ -14,13 +16,15 @@ spec:
       app.kubernetes.io/component: web
   template:
     metadata:
+      annotations:
+        {{- include "temporal.resourceAnnotations" (list $ "web" "pod") | nindent 8 }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "web" "pod") | nindent 8 }}
-      {{- with .Values.web.podAnnotations }}
-      annotations:
+    spec:
+      {{- with .Values.web.additionalInitContainers }}
+      initContainers:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-    spec:
       {{ include "temporal.serviceAccount" $ }}
       {{- if .Values.web.additionalVolumes }}
       volumes:
@@ -36,6 +40,15 @@ spec:
           {{- if .Values.web.additionalEnv }}
           {{- toYaml .Values.web.additionalEnv | nindent 12 }}
           {{- end }}
+          {{- if .Values.web.additionalEnvSecretName }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.web.additionalEnvSecretName }}
+          {{- end }}
+          livenessProbe:
+            initialDelaySeconds: 10
+            tcpSocket:
+              port: http
           ports:
             - name: http
               containerPort: 8080

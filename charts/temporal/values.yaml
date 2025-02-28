@@ -14,13 +14,13 @@ serviceAccount:
   name:
   # extraAnnotations would let users add additional annotations
   extraAnnotations:
+additionalAnnotations: {}
 additionalLabels: {}
 server:
   enabled: true
-  sidecarContainers: []
   image:
     repository: temporalio/server
-    tag: 1.25.0
+    tag: 1.27.1
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -36,6 +36,7 @@ server:
     tags: {}
     # Tags to be excluded in Prometheus metrics
     excludeTags: {}
+    prefix:
     # Enable Prometheus ServiceMonitor
     # Use this if you installed the Prometheus Operator (https://github.com/coreos/prometheus-operator).
     serviceMonitor:
@@ -66,6 +67,8 @@ server:
       #   targetLabel: __name__
     prometheus:
       timerType: histogram
+  deploymentLabels: {}
+  deploymentAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   secretLabels: {}
@@ -87,6 +90,8 @@ server:
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
+  # for sidecar containers, add containers here with restartPolicy: Always
+  additionalInitContainers: []
   securityContext:
     fsGroup: 1000
     runAsUser: 1000
@@ -152,7 +157,7 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
         sql:
-          driver: "mysql"
+          driver: "mysql8"
           host: "mysql"
           port: 3306
           database: "temporal"
@@ -182,7 +187,7 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
         sql:
-          driver: "mysql"
+          driver: "mysql8"
           host: "mysql"
           port: 3306
           database: "temporal_visibility"
@@ -230,6 +235,37 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
+    podAnnotations: {}
+    podLabels: {}
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    additionalEnv: []
+    containerSecurityContext: {}
+    topologySpreadConstraints: []
+    podDisruptionBudget: {}
+  internalFrontend:
+    # Enable this to create internal-frontend
+    enabled: false
+    service:
+      # Evaluated as template
+      annotations: {}
+      type: ClusterIP
+      port: 7236
+      membershipPort: 6936
+      httpPort: 7246
+    metrics:
+      annotations:
+        enabled: true
+      serviceMonitor: {}
+      # enabled: false
+      prometheus: {}
+      # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -252,6 +288,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -259,6 +297,7 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
+    additionalEnvSecretName: ""
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
@@ -274,6 +313,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -296,6 +337,8 @@ server:
       # enabled: false
       prometheus: {}
       # timerType: histogram
+    deploymentLabels: {}
+    deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -310,28 +353,36 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.25.0-tctl-1.18.1-cli-1.0.0
+    tag: 1.27.1
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
     port: 22
     annotations: {}
+  deploymentLabels: {}
+  deploymentAnnotations: {}
   podLabels: {}
   podAnnotations: {}
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  additionalVolumes: []
+  additionalVolumeMounts: []
   additionalEnv: []
+  additionalEnvSecretName: ""
+  # for sidecar containers, add containers here with restartPolicy: Always
+  additionalInitContainers: []
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
   podDisruptionBudget: {}
 web:
+  # additionalInitContainers: []
   enabled: true
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.31.0
+    tag: 2.36.0
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
@@ -355,6 +406,8 @@ web:
     #  - secretName: chart-example-tls
     #    hosts:
     #      - chart-example.local
+  deploymentLabels: {}
+  deploymentAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}
@@ -376,6 +429,7 @@ web:
   # Adjust Web UI config with environment variables:
   # https://docs.temporal.io/references/web-ui-environment-variables
   additionalEnv: []
+  additionalEnvSecretName: ""
   containerSecurityContext: {}
   securityContext: {}
   topologySpreadConstraints: []

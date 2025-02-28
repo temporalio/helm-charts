@@ -2,18 +2,19 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "temporal.componentname" (list $ "schema") }}
+  name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
+  ttlSecondsAfterFinished: 86400
   template:
     metadata:
-      name: {{ include "temporal.componentname" (list $ "schema") }}
+      name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 8 }}
         {{- with $.Values.schema.podLabels }}
-        {{- toYaml . | nindent 8 }}
+          {{- toYaml . | nindent 8 }}
         {{- end }}
       {{- with $.Values.schema.podAnnotations }}
       annotations:
@@ -23,6 +24,9 @@ spec:
       {{ include "temporal.serviceAccount" $ }}
       restartPolicy: OnFailure
       initContainers:
+        {{- with $.Values.admintools.additionalInitContainers }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra-service
           image: busybox
@@ -55,7 +59,7 @@ spec:
               {{- end }}
           env:
               {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-              {{- with $.Values.server.additionalVolumeMounts }}
+              {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
@@ -77,11 +81,12 @@ spec:
           command: ['sh', '-c']
           args:
             - 'curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&
+              curl --head --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1 ||
               curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1'
             {{- end }}
           env:
             {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-            {{- with $.Values.server.additionalVolumeMounts }}
+            {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
               {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -116,7 +121,7 @@ spec:
               {{- end }}
           env:
               {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-              {{- with $.Values.server.additionalVolumeMounts }}
+              {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
@@ -140,8 +145,15 @@ spec:
           args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
           env:
             - name: TEMPORAL_ADDRESS
+              {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
+              value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.internalFrontend.service.port }}
+              {{- else }}
               value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
-              {{- with $.Values.server.additionalVolumeMounts }}
+              {{- end }}
+              {{- with $.Values.admintools.additionalEnv }}
+                {{- toYaml . | nindent 12 }}
+              {{- end }} 
+              {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
@@ -176,19 +188,15 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $.Values.server.nodeSelector }}
+      {{- with $.Values.admintools.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $.Values.server.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $.Values.server.tolerations }}
+      {{- with $.Values.admintools.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $.Values.server.additionalVolumes }}
+      {{- with $.Values.admintools.additionalVolumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
       {{- end }}

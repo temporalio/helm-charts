@@ -1,0 +1,68 @@
+suite: test server deployment
+templates:
+  - server-deployment.yaml
+  - server-configmap.yaml
+set:
+  server:
+    replicaCount: 2
+    resources:
+      requests:
+        cpu: 100m
+    frontend:
+      replicaCount: 3
+      resources:
+        requests:
+          cpu: 200m
+tests:
+  - it: defaults to service wide replica count
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name != "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 2
+  - it: favours service specific replica count
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+  - it: defaults to service wide resources
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name != "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 100m
+  - it: favours service specific resources
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 200m
+  - it: includes additional init containers
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        additionalInitContainers:
+          - name: my-init-container
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: my-init-container
