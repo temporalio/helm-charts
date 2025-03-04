@@ -93,5 +93,27 @@
   value: {{ $driverConfig.version }}
 - name: ES_VISIBILITY_INDEX
   value: {{ $driverConfig.visibilityIndex }}
+{{- with $driverConfig.tls }}
+- name: ES_TLS
+  value: {{ .enabled | quote }}
+{{- with .caFile }}
+- name: ES_TLS_CA_FILE
+  value: {{ . }}
+{{- end }}
+{{- if and .certFile .keyFile }}
+- name: ES_TLS_CERT_FILE
+  value: {{ .certFile }}
+- name: ES_TLS_KEY_FILE
+  value: {{ .keyFile }}
+{{- end }}
+{{- with .serverName }}
+- name: ES_TLS_SERVER_NAME
+  value: {{ . }}
+{{- end }}
+{{- with .enableHostVerification }}
+- name: ES_TLS_ENABLE_HOST_VERIFICATION
+  value: {{ . }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end -}}
