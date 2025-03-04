@@ -41,7 +41,26 @@ spec:
         - name: check-elasticsearch
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
+          command:
+            - sh
+            - -c
+            - |
+              CURL=curl;
+              if test "x${ES_TLS}" = "xtrue"; then
+                if test -n "$ES_TLS_CA_FILE"; then
+                  CURL="$CURL --cacert $ES_TLS_CA_FILE";
+                fi;
+                if test -n "$ES_TLS_CERT_FILE" -a -n "$ES_TLS_KEY_FILE"; then
+                  CURL="$CURL --cert $ES_TLS_CERT_FILE --key $ES_TLS_KEY_FILE";
+                fi;
+                if test "x${ES_TLS_ENABLE_HOST_VERIFICATION}" != "xtrue"; then
+                  CURL="$CURL --insecure";
+                fi;
+              fi;
+              until $CURL --silent --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT 2>&1 > /dev/null; do
+                echo waiting for elasticsearch to start;
+                sleep 1;
+              done;
           env:
             {{- include "temporal.admintools-env" (list $ "visibility") | nindent 12 }}
           {{- with $.Values.schema.containerSecurityContext }}
@@ -94,10 +113,24 @@ spec:
               {{- else if eq $driver "elasticsearch" }}
           command: ['sh', '-c']
           args:
-            - 'curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&
-              curl --head --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1 ||
-              curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1'
-              {{- end }}
+            - |
+              CURL=curl;
+              if test "x${ES_TLS}" = "xtrue"; then
+                if test -n "$ES_TLS_CA_FILE"; then
+                  CURL="$CURL --cacert $ES_TLS_CA_FILE";
+                fi;
+                if test -n "$ES_TLS_CERT_FILE" -a -n "$ES_TLS_KEY_FILE"; then
+                  CURL="$CURL --cert $ES_TLS_CERT_FILE --key $ES_TLS_KEY_FILE";
+                fi;
+                if test "x${ES_TLS_ENABLE_HOST_VERIFICATION}" != "xtrue"; then
+                  CURL="$CURL --insecure";
+                fi;
+              fi;
+              $CURL -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template \
+                    -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&
+              $CURL --head --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1 ||
+              $CURL -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1
+            {{- end }}
           env:
               {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
               {{- with $.Values.admintools.additionalVolumeMounts }}
