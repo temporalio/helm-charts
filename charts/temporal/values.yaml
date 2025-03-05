@@ -202,6 +202,12 @@ server:
       namespace:
         - name: default
           retention: 3d
+          # per namespace search attributes are only supported for SQL
+          searchAttributes: []
+            # - name: my_keyword
+            #   type: Keyword
+            # - name: my_keyword2
+            #   type: Keyword
   frontend:
     service:
       # Evaluated as template
