@@ -22,7 +22,7 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/server-configmap.yaml") $ | sha256sum }}
-        {{- if (default $.Values.server.metrics.annotations.enabled $serviceValues.metrics.annotations.enabled) }}
+        {{- if (dig "metrics" "annotations" "enabled" $.Values.server.metrics.annotations.enabled $serviceValues) }}
         prometheus.io/job: {{ $.Chart.Name }}-{{ $service }}
         prometheus.io/scrape: 'true'
         prometheus.io/port: '9090'
