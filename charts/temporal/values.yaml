@@ -16,6 +16,13 @@ serviceAccount:
   extraAnnotations:
 additionalAnnotations: {}
 additionalLabels: {}
+
+busybox:
+  image:
+    repository: busybox
+    tag: 1.37.0
+    pullPolicy: IfNotPresent
+
 server:
   enabled: true
   image:
