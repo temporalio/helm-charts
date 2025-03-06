@@ -123,9 +123,13 @@ spec:
               protocol: TCP
           {{- if ne $service "worker" }}
           livenessProbe:
-             initialDelaySeconds: 150
-             tcpSocket:
-               port: rpc
+            {{- if $serviceValues.livenessProbe }}
+            {{- toYaml $serviceValues.livenessProbe | nindent 12}}
+            {{- else }}
+              initialDelaySeconds: 150
+              tcpSocket:
+                port: rpc
+            {{- end }}
           {{- end }}
           volumeMounts:
             - name: config
