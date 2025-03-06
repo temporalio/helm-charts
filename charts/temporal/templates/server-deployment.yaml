@@ -45,7 +45,9 @@ spec:
         {{- end }}
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra-service
-          image: busybox
+          image: {{ $.Values.busybox.image.repository }}
+          tag: {{ $.Values.busybox.image.tag }}
+          imagePullPolicy: {{ $.Values.busybox.image.pullPolicy }}
           command: ['sh', '-c', 'until nc -z {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }}; do echo waiting for cassandra service; sleep 1; done;']
         - name: check-cassandra
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
