@@ -136,6 +136,8 @@ server:
     persistence:
       defaultStore: default
       additionalStores: {}
+      # name of the secondary data store definition that should be used to set up Dual Visibility
+      # secondaryVisibilityStore: sql
       default:
         driver: "cassandra"
         cassandra:

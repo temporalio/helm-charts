@@ -16,6 +16,9 @@ data:
     persistence:
       defaultStore: {{ $server.config.persistence.defaultStore }}
       visibilityStore: visibility
+      {{- if $.Values.server.config.persistance.secondaryVisibilityStore }}
+      secondaryVisibilityStore: {{ $.Values.server.config.persistance.secondaryVisibilityStore }}
+      {{- end }}
       numHistoryShards: {{ $server.config.numHistoryShards }}
       datastores:
         default:
