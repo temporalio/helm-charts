@@ -127,4 +127,86 @@ spec:
     name: {{ $.Release.Name }}-selfsigned-issuer
   secretName: {{ $.Release.Name }}-provider-cert
 {{- end }}
+---
+{{- if and $.Values.secretStore $.Values.secretStoreSecret }}
+apiVersion: kubernetes.crossplane.io/v1alpha2
+kind: Object
+metadata:
+  name: {{ $.Release.Name }}-pushsecret
+  annotations:
+    argocd.argoproj.io/sync-wave: "-35"
+spec:
+  watch: true
+  references:
+  - patchesFrom:
+      apiVersion: v1
+      kind: Secret
+      name: {{ $.Release.Name }}-ca-secret
+      namespace: cert-manager
+      fieldPath: metadata.resourceVersion
+    toFieldPath: spec.data[0].match.remoteRef.property
+  forProvider:
+    manifest:
+      apiVersion: external-secrets.io/v1alpha1
+      kind: PushSecret
+      metadata:
+        name: pushsecret-{{ $.Release.Name }}
+        namespace: cert-manager
+      spec:
+        updatePolicy: Replace
+        refreshInterval: 1h
+        secretStoreRefs:
+          - name: {{ $.Values.secretStore }}
+            kind: ClusterSecretStore
+        selector:
+          secret:
+            name: {{ $.Release.Name }}-ca-secret
+        data:
+          - match:
+              secretKey: tls.crt
+              remoteRef:
+                remoteKey: {{ $.Values.secretStoreSecret }}
+  providerConfigRef:
+    name: provider-kubernetes
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+  labels:
+    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+  name: {{ $.Release.Name }}-root-ca-list
+  namespace: cert-manager
+spec:
+  dataFrom:
+    - extract:
+        key: {{ $.Values.secretStoreSecret }}
+  refreshInterval: 3m
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: {{ $.Values.secretStore }}
+  target:
+    name: {{ $.Release.Name }}-root-ca-list
+---
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-25"
+  labels:
+    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+  name: {{ $.Release.Name }}-trust-bundle
+spec:
+  sources:
+  - secret:
+      name: {{ $.Release.Name }}-ca-secret
+      key: "tls.crt"
+  - secret:
+      name: {{ $.Release.Name }}-root-ca-list
+      includeAllKeys: true
+  target:
+    secret:
+      key: "trust-bundle.pem"
+{{- end }}
 {{- end }}
