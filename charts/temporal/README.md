@@ -97,3 +97,13 @@ Now, to release a new FM temporal server image, from `fairmoney/temporal-docker-
 - set the tag for the image, make sure it starts with **v** (e.g. v1.25-fairmoney)
 
 ![Actions workflow](./img/actions3.png)
+
+# Build cross cluster CA trust using Pushsecret from ESO and Bundle from trust-manager
+
+Using `Object.kubernetes.crossplane.io` and `watch` feature from provider-kubernetes, a `PushSecret` resource is created each time `temporal-ca-secret` in `cert-manager` namespace has a new `resourceVersion` (meaning the root CA was renewed or changed for some reason). When this happens, `PushSecret` adds a new key/value in `temporal/non-prod-root-ca-list` secret from AWS Secrets Manager. The key is the `resourceVersion` of the secret and the value is the new root CA (`tls.crt`).
+
+Then, using `externalsecret` from ESO, the Secrets Manager secret is imported into `temporal-root-ca-list` secret in `cert-manager` namespace.
+
+Lastly, a `Bundle.trust.cert-manager.io` resource takes all keys from `temporal-root-ca-list` secret and the local `tls.crt` key from `temporal-ca-secret` and bundles them into a trust bundle written to `temporal-trust-bundle` secret in all namespaces.
+
+Detailed diagram [here](https://www.notion.so/fairmoney/Cross-cluster-trust-for-Temporal-root-CA-using-trust-manager-1967f8f1d6868093a4d3f7ed56ba734e).
