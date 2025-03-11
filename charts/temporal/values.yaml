@@ -163,6 +163,7 @@ server:
           existingSecret: ""
           secretName: ""
           maxConns: 20
+          maxIdleConns: 20
           maxConnLifetime: "1h"
           # connectAttributes:
           # tx_isolation: 'READ-COMMITTED'
@@ -193,6 +194,7 @@ server:
           existingSecret: ""
           secretName: ""
           maxConns: 20
+          maxIdleConns: 20
           maxConnLifetime: "1h"
           # connectAttributes:
           #   tx_isolation: 'READ-COMMITTED'
