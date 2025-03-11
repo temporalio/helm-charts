@@ -46,6 +46,15 @@ web:
     - name: temporal-tls-certs
       secret:
         secretName: temporal-tls-certs
+  additionalEnv:
+    - name: TEMPORAL_TLS_SERVER_NAME
+      value: ""
+    - name: TEMPORAL_TLS_CA
+      value: /etc/temporal/tls/ca.crt
+    - name: TEMPORAL_TLS_CERT
+      value: /etc/temporal/tls/tls.crt
+    - name: TEMPORAL_TLS_KEY
+      value: /etc/temporal/tls/tls.key
 frontend:
   service:
     enabled: true
