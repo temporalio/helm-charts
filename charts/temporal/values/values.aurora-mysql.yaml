@@ -12,6 +12,7 @@ server:
           user: _USERNAME_
           password: _PASSWORD_
           maxConns: 20
+          maxIdleConns: 20
           maxConnLifetime: "1h"
           connectAttributes:
             tx_isolation: 'READ-COMMITTED'
@@ -27,6 +28,7 @@ server:
           user: _USERNAME_
           password: _PASSWORD_
           maxConns: 20
+          maxIdleConns: 20
           maxConnLifetime: "1h"
           connectAttributes:
             tx_isolation: 'READ-COMMITTED'          

@@ -13,6 +13,7 @@ server:
           user: "temporal"
           password: "temporal"
           maxConns: 20
+          maxIdleConns: 20
           maxConnLifetime: "1h"
 elasticsearch:
   enabled: true
