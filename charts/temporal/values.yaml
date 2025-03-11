@@ -541,3 +541,17 @@ cassandra:
     type: ClusterIP
 mysql:
   enabled: false
+
+certifcates:
+  enabled: false
+  name: temporal-cert
+  isssue:
+    name: temporal-issuer
+    secretName: tls-certs
+  secret:
+    name: temporal-tls-certs
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always  
+  annotations: {}  

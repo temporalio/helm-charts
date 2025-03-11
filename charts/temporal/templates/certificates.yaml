@@ -1,0 +1,48 @@
+---
+{{- if .Values.certificates.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ .Values.certificates.issuer.name }}
+spec:
+  ca:
+    secretName: {{ .Values.certificates.issuer.secretName }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.certificates.name }}
+spec:
+  dnsNames:
+    {{- range .Values.frontend.ingress.hosts }}
+    {{- $url := splitList "/" . }}
+    - {{ first $url }}
+  commonName: {{ first $url }}
+  {{- end}}
+  isCA: false
+  issuerRef:
+    kind: Issuer
+    name: {{ .Values.certificates.issuerName }}
+  secretName: {{ .Values.certificates.secret.name }}
+  privateKey:
+    algorithm: {{ .Values.certificates.privateKey.algorithm }}
+    size: {{ .Values.certificates.privateKey.size }}
+    rotationPolicy: {{ .Values.certificates.privateKey.rotationPolicy }}
+---
+{{- range .Values.certificates.secrets }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "{{ .name }}"
+  annotations:
+    {{- with .Values.certificates.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+data:
+{{- range $key, $val := .value }}
+  {{ $key }}: {{ $val | b64enc | nindent 4 }}
+{{- end }}
+type: Opaque
+{{- end }}
+{{- end }}

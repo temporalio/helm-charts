@@ -1,0 +1,62 @@
+server:
+  additionalVolumeMounts:
+    - name: tls-certs
+      mountPath: /etc/tls
+    - name: temporal-tls-certs
+      mountPath: /etc/temporal/tls
+  additionalVolumes:
+    - name: tls-certs
+      secret:
+        secretName: tls-certs
+    - name: temporal-tls-certs
+      secret:
+        secretName: temporal-tls-certs
+  config:
+    tls:
+      internode:
+        server:
+          certFile: "/etc/temporal/tls/tls.crt"
+          keyFile: "/etc/temporal/tls/tls.key"
+          requireClientAuth: true
+          clientCaFiles:
+            - "/etc/temporal/tls/ca.crt"
+        client:
+          serverName: ""
+          rootCaFiles:
+            - "/etc/temporal/tls/ca.crt"
+      frontend:
+        server:
+          certFile: "/etc/temporal/tls/tls.crt"
+          keyFile: "/etc/temporal/tls/tls.key"
+          requireClientAuth: false
+        client:
+          serverName: ""
+          rootCaFiles:
+            - "/etc/temporal/tls/ca.crt"
+web:
+  additionalVolumeMounts:
+    - name: tls-certs
+      mountPath: /etc/tls
+    - name: temporal-tls-certs
+      mountPath: /etc/temporal/tls
+  additionalVolumes:
+    - name: tls-certs
+      secret:
+        secretName: tls-certs
+    - name: temporal-tls-certs
+      secret:
+        secretName: temporal-tls-certs
+frontend:
+  service:
+    enabled: true
+  ingress:
+    enabled: true
+    className: ""
+    hosts:
+      - ""
+secrets:
+  - name: tls-certs
+    value:
+      tls.crt: |
+    
+      tls.key: |
