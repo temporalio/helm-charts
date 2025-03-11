@@ -69,3 +69,16 @@ secrets:
       tls.crt: |
     
       tls.key: |
+certifcates:
+  enabled: true
+  name: temporal-cert
+  isssue:
+    name: temporal-issuer
+    secretName: tls-certs
+  secret:
+    name: temporal-tls-certs
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always  
+  annotations: {} 
