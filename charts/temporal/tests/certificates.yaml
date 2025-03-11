@@ -81,4 +81,5 @@ certifcates:
     algorithm: RSA
     size: 2048
     rotationPolicy: Always  
-  annotations: {} 
+  annotations:
+    argocd.argoproj.io/hook: PreSync
