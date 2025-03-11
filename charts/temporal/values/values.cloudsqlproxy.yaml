@@ -7,7 +7,7 @@ admintools:
         - "-ip_address_types=PRIVATE"
         - "-instances=_PROJECTNAME_:_REGION_:_INSTANCENAME_=tcp:5432"
         - "-credential_file=/etc/google-cloud-key/key.json"
-      restart: Always
+      restartPolicy: Always
       securityContext:
         runAsNonRoot: true
       volumeMounts:
@@ -29,7 +29,7 @@ server:
         - "-ip_address_types=PRIVATE"
         - "-instances=_PROJECTNAME_:_REGION_:_INSTANCENAME_=tcp:5432"
         - "-credential_file=/etc/google-cloud-key/key.json"
-      restart: Always
+      restartPolicy: Always
       securityContext:
         runAsNonRoot: true
       volumeMounts:
