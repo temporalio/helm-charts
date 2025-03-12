@@ -67,8 +67,11 @@ secrets:
   - name: tls-certs
     value:
       tls.crt: |
-    
+        -----BEGIN CERTIFICATE-----
+        -----END CERTIFICATE-----
       tls.key: |
+        -----BEGIN EC PRIVATE KEY-----
+        -----END EC PRIVATE KEY-----
 certifcates:
   enabled: false
   isssuer:
