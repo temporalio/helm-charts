@@ -74,7 +74,6 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 | certifcates.certificate.privateKey.size | int | `2048` |  |
 | certifcates.certificate.secret.name | string | `"temporal-tls-certs"` |  |
 | certifcates.enabled | bool | `false` |  |
-| certifcates.isCA | bool | `false` |  |
 | certifcates.isssuer.name | string | `"temporal-issuer"` |  |
 | certifcates.isssuer.secretName | string | `"tls-certs"` |  |
 | debug | bool | `false` |  |

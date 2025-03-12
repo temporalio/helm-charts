@@ -544,7 +544,6 @@ mysql:
 
 certifcates:
   enabled: false
-  isCA: false
   isssuer:
     name: temporal-issuer
     secretName: tls-certs
