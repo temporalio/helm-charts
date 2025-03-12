@@ -11,7 +11,7 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ .Values.certificates.name }}
+  name: {{ .Values.certificates.certificate.name }}
 spec:
   dnsNames:
     {{- range .Values.frontend.ingress.hosts }}
@@ -19,15 +19,15 @@ spec:
     - {{ first $url }}
   commonName: {{ first $url }}
   {{- end}}
-  isCA: false
+  isCA: {{ .Values.certificates.certificate.isCA }}
   issuerRef:
     kind: Issuer
-    name: {{ .Values.certificates.issuerName }}
-  secretName: {{ .Values.certificates.secret.name }}
+    name: {{ .Values.certificates.certificate.issuerName }}
+  secretName: {{ .Values.certificates.certificate.secret.name }}
   privateKey:
-    algorithm: {{ .Values.certificates.privateKey.algorithm }}
-    size: {{ .Values.certificates.privateKey.size }}
-    rotationPolicy: {{ .Values.certificates.privateKey.rotationPolicy }}
+    algorithm: {{ .Values.certificates.certificate.privateKey.algorithm }}
+    size: {{ .Values.certificates.certificate.privateKey.size }}
+    rotationPolicy: {{ .Values.certificates.certificate.privateKey.rotationPolicy }}
 ---
 {{- range .Values.certificates.secrets }}
 ---
@@ -36,7 +36,7 @@ kind: Secret
 metadata:
   name: "{{ .name }}"
   annotations:
-    {{- with .Values.certificates.annotations }}
+    {{- with .Values.certificates.secrete.annotations }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
 data:

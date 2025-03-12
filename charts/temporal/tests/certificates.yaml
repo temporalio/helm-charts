@@ -70,16 +70,19 @@ secrets:
     
       tls.key: |
 certifcates:
-  enabled: true
-  name: temporal-cert
-  isssue:
+  enabled: false
+  isCA: false
+  isssuer:
     name: temporal-issuer
     secretName: tls-certs
-  secret:
-    name: temporal-tls-certs
-  privateKey:
-    algorithm: RSA
-    size: 2048
-    rotationPolicy: Always  
-  annotations:
-    argocd.argoproj.io/hook: PreSync
+  certificate:
+    name: temporal-cert
+    isCA: false
+    secret:
+      name: temporal-tls-certs
+    privateKey:
+      algorithm: RSA
+      size: 2048
+      rotationPolicy: Always   
+    annotations:
+      argocd.argoproj.io/hook: PreSync
