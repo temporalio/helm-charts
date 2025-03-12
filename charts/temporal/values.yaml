@@ -442,6 +442,7 @@ schema:
   update:
     enabled: true
     backoffLimit: 100
+  jobAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}
