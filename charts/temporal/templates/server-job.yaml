@@ -63,6 +63,10 @@ spec:
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
+              {{- with $.Values.schema.resources }}
+          resources:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
             {{- end }}
           {{- end }}
         {{- end }}
