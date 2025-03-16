@@ -63,7 +63,7 @@ frontend:
     className: ""
     hosts:
       - ""
-secrets:
+additionalSecrets:
   - name: tls-certs
     value:
       tls.crt: |

@@ -31,6 +31,7 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 |-----|------|---------|-------------|
 | additionalAnnotations | object | `{}` |  |
 | additionalLabels | object | `{}` |  |
+| additionalSecrets | list | `[]` |  |
 | admintools.additionalEnv | list | `[]` |  |
 | admintools.additionalEnvSecretName | string | `""` |  |
 | admintools.additionalInitContainers | list | `[]` |  |
