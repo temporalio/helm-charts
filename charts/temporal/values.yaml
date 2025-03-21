@@ -452,6 +452,10 @@ elasticsearch:
   replicas: 3
   persistence:
     enabled: true
+  volumeClaimTemplate:
+    resources:
+      requests:
+        storage: 5Gi
   imageTag: 7.17.3
   host: elasticsearch-master-headless
   scheme: http
@@ -525,6 +529,7 @@ cassandra:
   enabled: true
   persistence:
     enabled: true
+    size: 5Gi
   image:
     repo: cassandra
     tag: 3.11.3
