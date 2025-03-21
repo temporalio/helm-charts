@@ -540,3 +540,4 @@ hpaBehavior: {}
 # -- root CA bundle settings
 # secretStore: secret-store
 # secretStoreSecret: secret-store-secret
+tctlSecretStoreSecret: eks/temporal-tctl-certificate

@@ -208,5 +208,52 @@ spec:
   target:
     secret:
       key: "trust-bundle.pem"
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-40"
+  labels:
+    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+  name: {{ $.Release.Name }}-tctl-certificate
+spec:
+  dnsNames:
+  - {{ $.Release.Name }}-tctl
+  issuerRef:
+    kind: ClusterIssuer
+    name: {{ $.Release.Name }}-selfsigned-issuer
+  secretName: {{ $.Release.Name }}-tctl-cert
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: pushsecret-tctl-{{ $.Release.Name }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  updatePolicy: Replace
+  refreshInterval: 1h
+  secretStoreRefs:
+    - name: {{ $.Values.secretStore }}
+      kind: ClusterSecretStore
+  selector:
+    secret:
+      name: {{ $.Release.Name }}-tctl-cert
+  data:
+    - match:
+        secretKey: tls.crt
+        remoteRef:
+          remoteKey: {{ $.Values.tctlSecretStoreSecret }}
+          property: tls.crt
+    - match:
+        secretKey: tls.key
+        remoteRef:
+          remoteKey: {{ $.Values.tctlSecretStoreSecret }}
+          property: tls.key
+    - match:
+        secretKey: ca.crt
+        remoteRef:
+          remoteKey: {{ $.Values.tctlSecretStoreSecret }}
+          property: ca.crt
 {{- end }}
 {{- end }}
