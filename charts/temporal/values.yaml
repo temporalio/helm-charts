@@ -214,6 +214,7 @@ server:
       httpPort: 7243
     ingress:
       enabled: false
+      #temporaladdress:
       # className:
       annotations: {}
       # kubernetes.io/ingress.class: traefik
