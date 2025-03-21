@@ -97,3 +97,40 @@ tests:
           path: spec.template.metadata.annotations["prometheus.io/scrape"]
       - notExists:
           path: spec.template.metadata.annotations["prometheus.io/port"]
+  - it: renders log config with defaults
+    template: templates/server-configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "stdout: true"
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: 'level: "debug,info"'
+      - notMatchRegex:
+          path: data["config_template.yaml"]
+          pattern: "outputFile:"
+      - notMatchRegex:
+          path: data["config_template.yaml"]
+          pattern: "format:"
+  - it: renders log config with overrides
+    template: templates/server-configmap.yaml
+    set:
+      server:
+        config:
+          logstdOut: false
+          logLevel: warn
+          logOutputFile: /var/log/temporal.log
+          logFormat: json
+    asserts:
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "stdout: false"
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: 'level: "warn"'
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: 'outputFile: "/var/log/temporal.log"'
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: 'format: "json"'
