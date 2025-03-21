@@ -148,7 +148,7 @@ spec:
               {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
               value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.internalFrontend.service.port }}
               {{- else if $.Values.server.frontend.ingress.enabled }}
-              value: "$.Values.server.frontend.ingress.temporaladdress"
+              value: {{ "$.Values.server.frontend.ingress.temporaladdress" }}
               {{- else }}
               value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
               {{- end }}
