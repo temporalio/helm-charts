@@ -451,7 +451,7 @@ elasticsearch:
   enabled: true
   replicas: 3
   persistence:
-    enabled: false
+    enabled: true
   imageTag: 7.17.3
   host: elasticsearch-master-headless
   scheme: http
@@ -524,7 +524,7 @@ grafana:
 cassandra:
   enabled: true
   persistence:
-    enabled: false
+    enabled: true
   image:
     repo: cassandra
     tag: 3.11.3
