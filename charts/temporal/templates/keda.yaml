@@ -1,44 +1,61 @@
 {{- define "app.kedaTriggers" -}}
 {{- $kedaMetrics := index . 0 -}}
-{{- $targetCPUUtilizationPercentage := index . 1 -}}
-{{- $prometheusServerAddress := index . 2 -}}
-{{- $awsRegion := index .  3 -}}
-{{- $parentContext := index . 4 -}}
-{{- if gt (len $kedaMetrics) 0 -}}
+{{- $prometheusServerAddress := index . 1 -}}
+{{- $awsRegion := index .  2 -}}
+{{- $parentContext := index . 3 -}}
 {{- range $type, $metric := $kedaMetrics -}}
+{{- if eq $type "prometheus" }}
+{{- include "app.prometheusTrigger" (list $prometheusServerAddress $metric $type $parentContext) }}
+{{- else if eq $type "aws-sqs-queue" }}
+{{- include "app.sqsTrigger" (list $awsRegion $metric $type $parentContext) }}
+{{- else if or (eq $type "memory") (eq $type "cpu") }}
+{{- include "app.resourceTrigger" (list  $metric $type $parentContext) }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- define "app.prometheusTrigger" -}}
+{{- $prometheusServerAddress := index . 0 -}}
+{{- $metric := index . 1 -}}
+{{- $type := index . 2 -}}
+{{- $parentContext := index . 3 }}
 - type: {{ $type }}
   metricType: {{ $metric.metricType }}
   metadata:
-    {{- if eq $type "prometheus" }}
     serverAddress: {{ $prometheusServerAddress }}
     threshold: {{ $metric.threshold | quote }}
     query: {{ tpl (toYaml $metric.query) $parentContext }}
     authModes: "custom"
-    {{- else if eq $type "aws-sqs-queue" }}
-    queueURL: {{ tpl $metric.queueURL $parentContext }}
-    queueLength : {{ $metric.queueLength | quote }}
-    awsRegion: {{ $awsRegion }}
-    {{- else if eq $type "memory" }}
-    value: {{ $metric.value | quote }}
-    {{- end }}
-    {{- if eq $type "prometheus" }}
   authenticationRef:
     name: groundcover-cluster-trigger-auth
     kind: ClusterTriggerAuthentication
-    {{- else if eq $type "aws-sqs-queue" }}
-  authenticationRef:  
-    name: sqs-cluster-trigger-auth
-    kind: ClusterTriggerAuthentication 
-   {{- end }}
-{{- end -}}
-{{- else -}}
-- type: cpu
-  metricType: Utilization
-  metadata:
-    value: {{ $targetCPUUtilizationPercentage }}
-{{- end -}}
-{{- end -}}
+{{- end }}
 
+{{- define "app.sqsTrigger" -}}
+{{- $awsRegion := index . 0 -}}
+{{- $metric := index . 1 -}}
+{{- $type := index . 2 -}}
+{{- $parentContext := index . 3 }}
+- type: {{ $type }}
+  metricType: {{ $metric.metricType }}
+  metadata:
+    queueURL: {{ tpl $metric.queueURL $parentContext }}
+    queueLength: {{ $metric.queueLength | quote }}
+    awsRegion: {{ $awsRegion }}
+  authenticationRef:
+    name: sqs-cluster-trigger-auth
+    kind: ClusterTriggerAuthentication
+{{- end }}
+
+{{- define "app.resourceTrigger" -}}
+{{- $metric := index . 0 -}}
+{{- $type := index . 1 -}}
+{{- $parentContext := index . 2 }}
+- type: {{ $type }}
+  metricType: {{ $metric.metricType }}
+  metadata:
+    value: {{ $metric.value | quote }}
+{{- end }}
 
 {{- if $.Values.server.enabled }}
 {{- range $service := (list "frontend" "history" "matching" "worker") }}
@@ -48,7 +65,6 @@
 {{- $maxReplicas := $serviceValues.maxReplicaCount }}
 {{- $kedaMetrics := $serviceValues.kedaMetrics }}
 {{- $hpaBehavior := $serviceValues.hpaBehavior }}
-{{- $targetCPUUtilizationPercentage := $serviceValues.targetCPUUtilizationPercentage | quote }}
 {{- $prometheusServerAddress := $.Values.prometheusServerAddress | quote}}
 {{- $awsRegion := $.Values.awsRegion -}}
 
@@ -72,7 +88,7 @@ spec:
   minReplicaCount: {{ $minReplicas }}
   maxReplicaCount: {{ $maxReplicas }}
   triggers:
-  {{- include "app.kedaTriggers" (list $kedaMetrics $targetCPUUtilizationPercentage $prometheusServerAddress $awsRegion $) | nindent 4 }}
+  {{- include "app.kedaTriggers" (list $kedaMetrics $prometheusServerAddress $awsRegion $) | nindent 4 }}
 {{- end }}
 {{- end }}
 {{- end }}
