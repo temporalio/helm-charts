@@ -1,0 +1,36 @@
+suite: test web service
+templates:
+  - web-service.yaml
+tests:
+  - it: app protocol default
+    template: templates/web-service.yaml
+    asserts:
+      - lengthEqual:
+          path: spec.ports
+          count: 1
+      - equal:
+          path: spec.ports[0]
+          value:
+            appProtocol: http
+            name: http
+            port: 8080
+            protocol: TCP
+            targetPort: http
+  - it: app protocol custom
+    template: templates/web-service.yaml
+    set:
+      web:
+        service:
+          appProtocol: http2
+    asserts:
+      - lengthEqual:
+          path: spec.ports
+          count: 1
+      - equal:
+          path: spec.ports[0]
+          value:
+            appProtocol: http2
+            name: http
+            port: 8080
+            protocol: TCP
+            targetPort: http
