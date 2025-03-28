@@ -7,7 +7,7 @@ kind: Service
 metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ $rawService "") | nindent 4 }}
   {{- if $serviceValues.service.annotations }}
   annotations: {{- include "common.tplvalues.render" ( dict "value" $serviceValues.service.annotations "context" $) | nindent 4 }}
   {{- end }}
@@ -44,7 +44,7 @@ kind: Service
 metadata:
   name: {{ include "temporal.componentname" (list $ (printf "%s-headless" $service)) }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ $rawService "") | nindent 4 }}
     app.kubernetes.io/headless: 'true'
   annotations:
     # Use this annotation in addition to the actual field below because the
