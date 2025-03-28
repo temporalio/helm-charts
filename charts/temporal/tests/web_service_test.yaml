@@ -1,0 +1,31 @@
+suite: test server service
+templates:
+  - web-service.yaml
+tests:
+  - it: includes the provided clusterIP to make the service headless
+    template: templates/web-service.yaml
+    documentSelector:
+      path: kind
+      value: Service
+    set:
+      web:
+        service:
+          clusterIP: None
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - equal:
+          path: spec.clusterIP
+          value: None
+  - it: does not include a spec.clusterIP by default, when none is given
+    template: templates/web-service.yaml
+    documentSelector:
+      path: kind
+      value: Service
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - notExists:
+          path: spec.clusterIP

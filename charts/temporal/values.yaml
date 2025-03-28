@@ -387,6 +387,9 @@ web:
     # set type to NodePort if access to web needs access from outside the cluster
     # for more info see https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
     type: ClusterIP
+    # The below clusterIP setting can be set to "None" to make the temporal-web service headless.
+    # Note that this requires the web.service.type to be the default ClusterIP value.
+    # clusterIP:
     port: 8080
     annotations: {}
     # loadBalancerIP:
