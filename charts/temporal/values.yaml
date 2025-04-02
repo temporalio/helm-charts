@@ -542,5 +542,6 @@ cassandra:
     seed_size: 0
   service:
     type: ClusterIP
+  checkServiceImage: busybox
 mysql:
   enabled: false
