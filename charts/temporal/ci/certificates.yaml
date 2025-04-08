@@ -72,7 +72,7 @@ additionalSecrets:
       tls.key: |
         -----BEGIN EC PRIVATE KEY-----
         -----END EC PRIVATE KEY-----
-certifcates:
+certificates:
   enabled: false
   isssuer:
     name: temporal-issuer
