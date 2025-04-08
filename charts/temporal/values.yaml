@@ -541,3 +541,5 @@ cassandra:
     type: ClusterIP
 mysql:
   enabled: false
+postgresql:
+  enabled: false
