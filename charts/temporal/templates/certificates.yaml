@@ -22,7 +22,7 @@ spec:
   isCA: {{ .Values.certificates.certificate.isCA }}
   issuerRef:
     kind: Issuer
-    name: {{ .Values.certificates.certificate.issuerName }}
+    name: {{ .Values.certificates.issuer.name }}
   secretName: {{ .Values.certificates.certificate.secret.name }}
   privateKey:
     algorithm: {{ .Values.certificates.certificate.privateKey.algorithm }}
