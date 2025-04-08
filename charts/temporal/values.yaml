@@ -544,7 +544,7 @@ mysql:
 
 certificates:
   enabled: false
-  isssuer:
+  issuer:
     name: temporal-issuer
     secretName: tls-certs
   certificate:
