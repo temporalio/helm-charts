@@ -74,7 +74,7 @@ additionalSecrets:
         -----END EC PRIVATE KEY-----
 certificates:
   enabled: false
-  isssuer:
+  issuer:
     name: temporal-issuer
     secretName: tls-certs
   certificate:
