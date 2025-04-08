@@ -542,7 +542,7 @@ cassandra:
 mysql:
   enabled: false
 
-certifcates:
+certificates:
   enabled: false
   isssuer:
     name: temporal-issuer
