@@ -556,7 +556,6 @@ certificates:
       algorithm: RSA
       size: 2048
       rotationPolicy: Always  
-    annotations: {}  
 
 additionalSecrets: []
   # - name: tls-certs
