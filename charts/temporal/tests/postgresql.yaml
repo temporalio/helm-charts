@@ -1,0 +1,47 @@
+cassandra:
+  enabled: false
+prometheus:
+  enabled: false
+grafana:
+  enabled: false
+elasticsearch:
+  enabled: false
+
+postgresql:
+  enabled: true
+  global:
+    postgresql:
+      auth:
+        username: antonio
+        password: brito
+  primary:
+    initdb:
+      scripts:
+        01-init.sql: |-
+          CREATE DATABASE "temporal";
+          CREATE DATABASE "temporal_visibility";
+  commonAnnotations:
+    "helm.sh/hook": "pre-install"
+    "helm.sh/hook-weight": "-1"
+
+server:
+  config:
+    persistence:
+      default:
+        driver: "sql"
+        sql:
+          driver: "postgres12"
+          host: "temporal-postgresql.temporal-tests.svc.cluster.local"
+          port: 5432
+          database: "temporal"
+          user: "antonio"
+          password: "brito"
+      visibility:
+        driver: "sql"
+        sql:
+          driver: "postgres12"
+          host: "temporal-postgresql.temporal-tests.svc.cluster.local"
+          port: 5432
+          database: "temporal_visibility"
+          user: "antonio"
+          password: "brito"

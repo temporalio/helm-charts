@@ -28,6 +28,10 @@ dependencies:
     repository: https://grafana.github.io/helm-charts
     version: 8.0.2
     condition: grafana.enabled
+  - name: postgresql
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: 16.6.2
+    condition: postgresql.enabled
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives
