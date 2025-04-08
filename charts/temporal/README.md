@@ -1,6 +1,6 @@
 # temporal
 
-![Version: 0.57.0](https://img.shields.io/badge/Version-0.57.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.27.1](https://img.shields.io/badge/AppVersion-1.27.1-informational?style=flat-square)
+![Version: 0.60.0](https://img.shields.io/badge/Version-0.60.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.27.2](https://img.shields.io/badge/AppVersion-1.27.2-informational?style=flat-square)
 
 Temporal is a distributed, scalable, durable, and highly available orchestration engine to execute asynchronous long-running business logic in a scalable and resilient way.
 
@@ -44,7 +44,7 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 | admintools.enabled | bool | `true` |  |
 | admintools.image.pullPolicy | string | `"IfNotPresent"` |  |
 | admintools.image.repository | string | `"temporalio/admin-tools"` |  |
-| admintools.image.tag | string | `"1.27.1"` |  |
+| admintools.image.tag | string | `"1.27.2-tctl-1.18.2-cli-1.3.0"` |  |
 | admintools.nodeSelector | object | `{}` |  |
 | admintools.podAnnotations | object | `{}` |  |
 | admintools.podDisruptionBudget | object | `{}` |  |
@@ -67,16 +67,15 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 | cassandra.image.tag | string | `"3.11.3"` |  |
 | cassandra.persistence.enabled | bool | `false` |  |
 | cassandra.service.type | string | `"ClusterIP"` |  |
-| certifcates.certificate.annotations | object | `{}` |  |
-| certifcates.certificate.isCA | bool | `false` |  |
-| certifcates.certificate.name | string | `"temporal-cert"` |  |
-| certifcates.certificate.privateKey.algorithm | string | `"RSA"` |  |
-| certifcates.certificate.privateKey.rotationPolicy | string | `"Always"` |  |
-| certifcates.certificate.privateKey.size | int | `2048` |  |
-| certifcates.certificate.secret.name | string | `"temporal-tls-certs"` |  |
-| certifcates.enabled | bool | `false` |  |
-| certifcates.isssuer.name | string | `"temporal-issuer"` |  |
-| certifcates.isssuer.secretName | string | `"tls-certs"` |  |
+| certificates.certificate.isCA | bool | `false` |  |
+| certificates.certificate.name | string | `"temporal-cert"` |  |
+| certificates.certificate.privateKey.algorithm | string | `"RSA"` |  |
+| certificates.certificate.privateKey.rotationPolicy | string | `"Always"` |  |
+| certificates.certificate.privateKey.size | int | `2048` |  |
+| certificates.certificate.secret.name | string | `"temporal-tls-certs"` |  |
+| certificates.enabled | bool | `false` |  |
+| certificates.issuer.name | string | `"temporal-issuer"` |  |
+| certificates.issuer.secretName | string | `"tls-certs"` |  |
 | debug | bool | `false` |  |
 | elasticsearch.enabled | bool | `true` |  |
 | elasticsearch.host | string | `"elasticsearch-master-headless"` |  |
@@ -241,7 +240,7 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 | server.history.topologySpreadConstraints | list | `[]` |  |
 | server.image.pullPolicy | string | `"IfNotPresent"` |  |
 | server.image.repository | string | `"temporalio/server"` |  |
-| server.image.tag | string | `"1.27.1"` |  |
+| server.image.tag | string | `"1.27.2"` |  |
 | server.internalFrontend.additionalEnv | list | `[]` |  |
 | server.internalFrontend.affinity | object | `{}` |  |
 | server.internalFrontend.containerSecurityContext | object | `{}` |  |
@@ -330,7 +329,7 @@ Temporal is a distributed, scalable, durable, and highly available orchestration
 | web.enabled | bool | `true` |  |
 | web.image.pullPolicy | string | `"IfNotPresent"` |  |
 | web.image.repository | string | `"temporalio/ui"` |  |
-| web.image.tag | string | `"2.36.0"` |  |
+| web.image.tag | string | `"2.36.1"` |  |
 | web.ingress.annotations | object | `{}` |  |
 | web.ingress.enabled | bool | `false` |  |
 | web.ingress.hosts[0] | string | `"/"` |  |
