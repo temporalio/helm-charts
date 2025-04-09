@@ -1,0 +1,52 @@
+prometheus:
+  enabled: false
+grafana:
+  enabled: false
+elasticsearch:
+  enabled: false
+
+# Temporal Chart Configuration
+server:
+  config:
+    persistence:
+      default:
+        driver: cassandra
+        cassandra:
+          hosts:
+            - "{{ .Release.Name }}-cassandra.default.svc.cluster.local"  # Replace with correct service name
+          port: 9042
+          keyspace: temporal
+          user: root
+          password: superSecret123
+          replicationFactor: 1
+          consistency:
+            default:
+              consistency: local_quorum
+              serialConsistency: local_serial
+      visibility:
+        driver: cassandra
+        cassandra:
+          hosts:
+            - "{{ .Release.Name }}-cassandra.default.svc.cluster.local"
+          port: 9042
+          keyspace: temporal_visibility
+          user: root
+          password: superSecret123
+          replicationFactor: 1
+          consistency:
+            default:
+              consistency: local_quorum
+              serialConsistency: local_serial
+
+# Cassandra Configuration (from Bitnami chart)
+cassandra:
+  auth:
+    username: root
+    password: superSecret123
+  initDB:
+    - |
+      CREATE KEYSPACE IF NOT EXISTS temporal WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };
+    - |
+      CREATE KEYSPACE IF NOT EXISTS temporal_visibility WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };
+    - |
+      CREATE TABLE IF NOT EXISTS temporal.users (id UUID PRIMARY KEY, name text);

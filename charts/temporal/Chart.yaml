@@ -13,8 +13,8 @@ sources:
   - https://github.com/temporalio/temporal
 dependencies:
   - name: cassandra
-    version: "0.14.3"
-    repository: https://charts.helm.sh/incubator
+    version: 12.3.0
+    repository: oci://registry-1.docker.io/bitnamicharts
     condition: cassandra.enabled
   - name: prometheus
     repository: https://prometheus-community.github.io/helm-charts

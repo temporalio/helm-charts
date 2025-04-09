@@ -1,7 +1,7 @@
 dependencies:
 - name: cassandra
-  repository: https://charts.helm.sh/incubator
-  version: 0.14.3
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 12.3.0
 - name: prometheus
   repository: https://prometheus-community.github.io/helm-charts
   version: 25.22.0
@@ -11,5 +11,5 @@ dependencies:
 - name: grafana
   repository: https://grafana.github.io/helm-charts
   version: 8.0.2
-digest: sha256:f74565632d43941cad32e713f73481b3d8065d9c462473e80d86fd1f7c5049af
-generated: "2024-10-07T14:43:06.775398+01:00"
+digest: sha256:2a2fa96aa0855b55daadf71ed68dd34d2ab2078a7872880f23e919cf04893e05
+generated: "2025-04-09T12:31:51.577056+01:00"
