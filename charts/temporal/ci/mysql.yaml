@@ -1,0 +1,42 @@
+cassandra:
+  enabled: false
+prometheus:
+  enabled: false
+grafana:
+  enabled: false
+elasticsearch:
+  enabled: false
+
+mysql:
+  enabled: true
+  auth:
+    rootPassword: jeremias
+  initdbScripts:
+    init.sql: |
+      CREATE DATABASE temporal;
+      CREATE DATABASE temporal_visibility;
+  commonAnnotations:
+    "helm.sh/hook": "pre-install"
+    "helm.sh/hook-weight": "-1"
+
+server:
+  config:
+    persistence:
+      default:
+        driver: "sql"
+        sql:
+          driver: "mysql8"
+          host: "temporal-mysql.temporal-tests.svc.cluster.local"
+          port: 3306
+          database: "temporal"
+          user: "root"
+          password: "jeremias"
+      visibility:
+        driver: "sql"
+        sql:
+          driver: "mysql8"
+          host: "temporal-mysql.temporal-tests.svc.cluster.local"
+          port: 3306
+          database: "temporal_visibility"
+          user: "root"
+          password: "jeremias"
