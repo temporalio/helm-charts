@@ -32,3 +32,13 @@ tests:
           path: metadata.annotations["prometheus.io/scrape"]
       - notExists:
           path: metadata.annotations["prometheus.io/port"]
+  - it: doesn't create any services when the server is disabled
+    template: templates/server-service.yaml
+    set:
+      server:
+        enabled: false
+    asserts:
+      - not: true
+        containsDocument:
+          kind: Service
+          apiVersion: v1
