@@ -35,6 +35,7 @@ spec:
 {{- end }}
 {{- end }}
 
+{{- if $.Values.server.enabled }}
 {{- range $rawService := (list "frontend" "internalFrontend" "matching" "history" "worker") }}
 {{- $service := include "serviceName" (list $rawService) }}
 {{- $serviceValues := index $.Values.server $rawService }}
@@ -92,5 +93,6 @@ spec:
     app.kubernetes.io/component: {{ $service }}
 
 ---
+{{- end }}
 {{- end }}
 {{- end }}
