@@ -4,9 +4,6 @@ grafana:
   enabled: false
 elasticsearch:
   enabled: false
-schema:
-  createDatabase:
-    enabled: false
 
 mysql:
   enabled: true
@@ -20,10 +17,6 @@ mysql:
     "helm.sh/hook": "pre-install"
 
 cassandra:
-  image:
-    repository: bitnami/cassandra
-    repo: bitnami/cassandra
-    tag: 5.0.3-debian-12-r9
   dbUser:
     password: cassandra
   initDB:

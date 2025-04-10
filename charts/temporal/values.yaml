@@ -529,8 +529,8 @@ cassandra:
   persistence:
     enabled: false
   image:
-    repo: cassandra
-    tag: 3.11.3
+    repo: bitnami/cassandra
+    tag: 5.0.3
     pullPolicy: IfNotPresent
   config:
     cluster_size: 3
