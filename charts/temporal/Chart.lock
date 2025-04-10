@@ -1,0 +1,18 @@
+dependencies:
+- name: cassandra
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 12.3.0
+- name: prometheus
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 25.22.0
+- name: elasticsearch
+  repository: https://helm.elastic.co
+  version: 7.17.3
+- name: grafana
+  repository: https://grafana.github.io/helm-charts
+  version: 8.0.2
+- name: mysql
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 12.3.3
+digest: sha256:5cffc6a0f802a924ac7bda6597a51831fd082fe1208813faeaf4c12873283aa9
+generated: "2025-04-10T03:14:27.145429+01:00"
