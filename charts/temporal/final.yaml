@@ -1,0 +1,2118 @@
+---
+# Source: temporal/charts/cassandra/templates/networkpolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: temporal-cassandra
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cassandra
+    app.kubernetes.io/version: 5.0.3
+    helm.sh/chart: cassandra-12.3.0
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/name: cassandra
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - {}
+  ingress:
+    - ports:
+        - port: 9042
+        - port: 7199
+        - port: 7001
+        - port: 7000
+---
+# Source: temporal/charts/cassandra/templates/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: temporal-cassandra
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cassandra
+    app.kubernetes.io/version: 5.0.3
+    helm.sh/chart: cassandra-12.3.0
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/name: cassandra
+---
+# Source: temporal/charts/cassandra/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: temporal-cassandra
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cassandra
+    app.kubernetes.io/version: 5.0.3
+    helm.sh/chart: cassandra-12.3.0
+automountServiceAccountToken: false
+---
+# Source: temporal/charts/cassandra/templates/cassandra-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: temporal-cassandra
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cassandra
+    app.kubernetes.io/version: 5.0.3
+    helm.sh/chart: cassandra-12.3.0
+type: Opaque
+data:
+  cassandra-password: "Y2Fzc2FuZHJh"
+---
+# Source: temporal/templates/server-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: temporal-default-store
+  labels:
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+type: Opaque
+data:
+  password: "Y2Fzc2FuZHJh"
+---
+# Source: temporal/templates/server-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: temporal-visibility-store
+  labels:
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+type: Opaque
+data:
+  password: "amVyZW1pYXM="
+---
+# Source: temporal/charts/cassandra/templates/initdb-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: temporal-cassandra-init-scripts
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cassandra
+    app.kubernetes.io/version: 5.0.3
+    helm.sh/chart: cassandra-12.3.0
+    app.kubernetes.io/part-of: cassandra
+data:
+  initdb-create-keyspace.cql: |
+    CREATE KEYSPACE IF NOT EXISTS temporal
+    WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+---
+# Source: temporal/charts/cassandra/templates/metrics-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: temporal-cassandra-metrics-conf
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cassandra
+    app.kubernetes.io/version: 5.0.3
+    helm.sh/chart: cassandra-12.3.0
+    app.kubernetes.io/part-of: cassandra
+    app.kubernetes.io/component: cassandra-exporter
+data:
+  config.yml: |-
+    host: localhost:7199
+    ssl: False
+    user:
+    password:
+    listenPort: 8080
+    blacklist:
+      # To profile the duration of jmx call you can start the program with the following options
+      # > java -Dorg.slf4j.simpleLogger.defaultLogLevel=trace -jar cassandra_exporter.jar config.yml --oneshot
+      #
+      # To get intuition of what is done by cassandra when something is called you can look in cassandra
+      # https://github.com/apache/cassandra/tree/trunk/src/java/org/apache/cassandra/metrics
+      # Please avoid to scrape frequently those calls that are iterating over all sstables
+    
+      # Unaccessible metrics (not enough privilege)
+      - java:lang:memorypool:.*usagethreshold.*
+    
+      # Leaf attributes not interesting for us but that are presents in many path
+      - .*:999thpercentile
+      - .*:95thpercentile
+      - .*:fifteenminuterate
+      - .*:fiveminuterate
+      - .*:durationunit
+      - .*:rateunit
+      - .*:stddev
+      - .*:meanrate
+      - .*:mean
+      - .*:min
+    
+      # Path present in many metrics but uninterresting
+      - .*:viewlockacquiretime:.*
+      - .*:viewreadtime:.*
+      - .*:cas[a-z]+latency:.*
+      - .*:colupdatetimedeltahistogram:.*
+    
+      # Mostly for RPC, do not scrap them
+      - org:apache:cassandra:db:.*
+    
+      # columnfamily is an alias for Table metrics
+      # https://github.com/apache/cassandra/blob/8b3a60b9a7dbefeecc06bace617279612ec7092d/src/java/org/apache/cassandra/metrics/TableMetrics.java#L162
+      - org:apache:cassandra:metrics:columnfamily:.*
+    
+      # Should we export metrics for system keyspaces/tables ?
+      - org:apache:cassandra:metrics:[^:]+:system[^:]*:.*
+    
+      # Don't scrap us
+      - com:criteo:nosql:cassandra:exporter:.*
+    
+    maxScrapFrequencyInSec:
+      50:
+        - .*
+    
+      # Refresh those metrics only every hour as it is costly for cassandra to retrieve them
+      3600:
+        - .*:snapshotssize:.*
+        - .*:estimated.*
+        - .*:totaldiskspaceused:.*
+---
+# Source: temporal/templates/server-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "temporal-config"
+  labels:
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+data:
+  config_template.yaml: |-
+    log:
+      stdout: true
+      level: "debug,info"
+
+    persistence:
+      defaultStore: default
+      visibilityStore: visibility
+      numHistoryShards: 512
+      datastores:
+        default:
+          cassandra:
+            hosts: "temporal-cassandra.temporal-tests.svc.cluster.local"
+            port: 9042
+            password: {{ .Env.TEMPORAL_STORE_PASSWORD | quote }}
+            consistency:
+              default:
+                consistency: local_quorum
+                serialConsistency: local_serial
+            keyspace: temporal
+            replicationFactor: 1
+            user: cassandra
+        visibility:
+          sql:
+            pluginName: "mysql8"
+            driverName: "mysql8"
+            databaseName: "temporal_visibility"
+            connectAddr: "temporal-mysql.temporal-tests.svc.cluster.local:3306"
+            connectProtocol: "tcp"
+            user: "root"
+            password: {{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}
+            maxConnLifetime: 1h
+            maxConns: 20
+            maxIdleConns: 20
+            secretName: ""
+
+    global:
+      membership:
+        name: temporal
+        maxJoinDuration: 30s
+        broadcastAddress: {{ default .Env.POD_IP "0.0.0.0" }}
+
+      pprof:
+        port: 7936
+
+      metrics:
+        tags:
+          type: {{ .Env.SERVICES }}
+        prometheus:
+          timerType: histogram
+          listenAddress: "0.0.0.0:9090"
+
+    services:
+      frontend:
+        rpc:
+          grpcPort: 7233
+          httpPort: 7243
+          membershipPort: 6933
+          bindOnIP: "0.0.0.0"
+
+      history:
+        rpc:
+          grpcPort: 7234
+          membershipPort: 6934
+          bindOnIP: "0.0.0.0"
+
+      matching:
+        rpc:
+          grpcPort: 7235
+          membershipPort: 6935
+          bindOnIP: "0.0.0.0"
+
+      worker:
+        rpc:
+          membershipPort: 6939
+          bindOnIP: "0.0.0.0"
+
+    clusterMetadata:
+      enableGlobalDomain: false
+      failoverVersionIncrement: 10
+      masterClusterName: "active"
+      currentClusterName: "active"
+      clusterInformation:
+        active:
+          enabled: true
+          initialFailoverVersion: 1
+          rpcName: "temporal-frontend"
+          rpcAddress: "127.0.0.1:7233"
+          httpAddress: "127.0.0.1:7243"
+
+    dcRedirectionPolicy:
+      policy: "noop"
+      toDC: ""
+
+    archival:
+      status: "disabled"
+    publicClient:
+      hostPort: "temporal-frontend:7233"
+
+    dynamicConfigClient:
+      filepath: "/etc/temporal/dynamic_config/dynamic_config.yaml"
+      pollInterval: "10s"
+---
+# Source: temporal/templates/server-dynamicconfigmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "temporal-dynamic-config"
+  labels:
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+data:
+  dynamic_config.yaml: |-
+---
+# Source: temporal/charts/cassandra/templates/headless-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-cassandra-headless
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cassandra
+    app.kubernetes.io/version: 5.0.3
+    helm.sh/chart: cassandra-12.3.0
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: intra
+      port: 7000
+      targetPort: intra
+    - name: tls
+      port: 7001
+      targetPort: tls
+    - name: jmx
+      port: 7199
+      targetPort: jmx
+    - name: cql
+      port: 9042
+      targetPort: cql
+  selector:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/name: cassandra
+---
+# Source: temporal/charts/cassandra/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-cassandra
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cassandra
+    app.kubernetes.io/version: 5.0.3
+    helm.sh/chart: cassandra-12.3.0
+spec:
+  type: ClusterIP
+  sessionAffinity: None
+  ports:
+    - name: cql
+      port: 9042
+      targetPort: cql
+      nodePort: null
+  selector:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/name: cassandra
+---
+# Source: temporal/templates/admintools-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-admintools
+  labels:
+    app.kubernetes.io/component: admintools
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+spec:
+  type: ClusterIP 
+  ports:
+    - port: 22
+      targetPort: 22
+      protocol: TCP
+      name: ssh
+
+  selector:
+    app.kubernetes.io/name: temporal
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/component: admintools
+---
+# Source: temporal/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-frontend
+  labels:
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7233
+      targetPort: rpc
+      protocol: TCP
+      name: grpc-rpc
+    - port: 7243
+      targetPort: http
+      protocol: TCP
+      name: http
+      # TODO: Allow customizing the node HTTP port
+  selector:
+    app.kubernetes.io/name: temporal
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/component: frontend
+---
+# Source: temporal/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-internal-frontend
+  labels:
+    app.kubernetes.io/component: internal-frontend
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7236
+      targetPort: rpc
+      protocol: TCP
+      name: grpc-rpc
+    - port: 7246
+      targetPort: http
+      protocol: TCP
+      name: http
+      # TODO: Allow customizing the node HTTP port
+  selector:
+    app.kubernetes.io/name: temporal
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/component: internal-frontend
+---
+# Source: temporal/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-frontend-headless
+  labels:
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+    app.kubernetes.io/headless: 'true'
+  annotations:
+    # Use this annotation in addition to the actual field below because the
+    # annotation will stop being respected soon but the field is broken in
+    # some versions of Kubernetes:
+    # https://github.com/kubernetes/kubernetes/issues/58662
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    prometheus.io/job: temporal-frontend
+    prometheus.io/scrape: 'true'
+    prometheus.io/scheme: http
+    prometheus.io/port: "9090"
+
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  # For Istio service mesh - make sure all ports are defined here and in the deployment:
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+  # Also for Istio - make sure to set the `appProtocol` property, see:
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/protocol-selection/#explicit-protocol-selection
+  # Note that only the monitoring port is used for discovery (by prometheus).
+  # The other ports are listed here solely to allow Istio to configure itself to intercept traffic.
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+  ports:
+    - port: 7233
+      targetPort: rpc
+      appProtocol: tcp
+      protocol: TCP
+      name: grpc-rpc
+    - port: 6933
+      targetPort: membership
+      appProtocol: tcp
+      protocol: TCP
+      name: grpc-membership
+    - port: 9090
+      targetPort: metrics
+      appProtocol: http
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: temporal
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/component: frontend
+---
+# Source: temporal/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-matching-headless
+  labels:
+    app.kubernetes.io/component: matching
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+    app.kubernetes.io/headless: 'true'
+  annotations:
+    # Use this annotation in addition to the actual field below because the
+    # annotation will stop being respected soon but the field is broken in
+    # some versions of Kubernetes:
+    # https://github.com/kubernetes/kubernetes/issues/58662
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  # For Istio service mesh - make sure all ports are defined here and in the deployment:
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+  # Also for Istio - make sure to set the `appProtocol` property, see:
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/protocol-selection/#explicit-protocol-selection
+  # Note that only the monitoring port is used for discovery (by prometheus).
+  # The other ports are listed here solely to allow Istio to configure itself to intercept traffic.
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+  ports:
+    - port: 7235
+      targetPort: rpc
+      appProtocol: tcp
+      protocol: TCP
+      name: grpc-rpc
+    - port: 6935
+      targetPort: membership
+      appProtocol: tcp
+      protocol: TCP
+      name: grpc-membership
+    - port: 9090
+      targetPort: metrics
+      appProtocol: http
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: temporal
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/component: matching
+---
+# Source: temporal/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-history-headless
+  labels:
+    app.kubernetes.io/component: history
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+    app.kubernetes.io/headless: 'true'
+  annotations:
+    # Use this annotation in addition to the actual field below because the
+    # annotation will stop being respected soon but the field is broken in
+    # some versions of Kubernetes:
+    # https://github.com/kubernetes/kubernetes/issues/58662
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    prometheus.io/job: temporal-history
+    prometheus.io/scrape: 'true'
+    prometheus.io/scheme: http
+    prometheus.io/port: "9090"
+
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  # For Istio service mesh - make sure all ports are defined here and in the deployment:
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+  # Also for Istio - make sure to set the `appProtocol` property, see:
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/protocol-selection/#explicit-protocol-selection
+  # Note that only the monitoring port is used for discovery (by prometheus).
+  # The other ports are listed here solely to allow Istio to configure itself to intercept traffic.
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+  ports:
+    - port: 7234
+      targetPort: rpc
+      appProtocol: tcp
+      protocol: TCP
+      name: grpc-rpc
+    - port: 6934
+      targetPort: membership
+      appProtocol: tcp
+      protocol: TCP
+      name: grpc-membership
+    - port: 9090
+      targetPort: metrics
+      appProtocol: http
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: temporal
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/component: history
+---
+# Source: temporal/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-worker-headless
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+    app.kubernetes.io/headless: 'true'
+  annotations:
+    # Use this annotation in addition to the actual field below because the
+    # annotation will stop being respected soon but the field is broken in
+    # some versions of Kubernetes:
+    # https://github.com/kubernetes/kubernetes/issues/58662
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    prometheus.io/job: temporal-worker
+    prometheus.io/scrape: 'true'
+    prometheus.io/scheme: http
+    prometheus.io/port: "9090"
+
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  # For Istio service mesh - make sure all ports are defined here and in the deployment:
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+  # Also for Istio - make sure to set the `appProtocol` property, see:
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/protocol-selection/#explicit-protocol-selection
+  # Note that only the monitoring port is used for discovery (by prometheus).
+  # The other ports are listed here solely to allow Istio to configure itself to intercept traffic.
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+  ports:
+    - port: 7239
+      targetPort: rpc
+      appProtocol: tcp
+      protocol: TCP
+      name: grpc-rpc
+    - port: 6939
+      targetPort: membership
+      appProtocol: tcp
+      protocol: TCP
+      name: grpc-membership
+    - port: 9090
+      targetPort: metrics
+      appProtocol: http
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: temporal
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/component: worker
+---
+# Source: temporal/templates/web-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-web
+  labels:
+    app.kubernetes.io/component: web
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: temporal
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/component: web
+---
+# Source: temporal/templates/admintools-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal-admintools
+  annotations:
+    
+  labels:
+    app.kubernetes.io/component: admintools
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: temporal
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/component: admintools
+  template:
+    metadata:
+      annotations:
+        
+      labels:
+        app.kubernetes.io/component: admintools
+        app.kubernetes.io/name: temporal
+        helm.sh/chart: temporal-0.57.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: temporal
+        app.kubernetes.io/version: "1.27.1"
+        app.kubernetes.io/part-of: temporal
+    spec:
+      serviceAccountName: default
+      containers:
+        - name: admin-tools
+          image: "temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 22
+              protocol: TCP
+          env:
+            # TEMPORAL_CLI_ADDRESS is deprecated, use TEMPORAL_ADDRESS instead
+            - name: TEMPORAL_CLI_ADDRESS
+              value: temporal-frontend:7233
+            - name: TEMPORAL_ADDRESS
+              value: temporal-frontend:7233
+          livenessProbe:
+              exec:
+                command:
+                - ls
+                - /
+              initialDelaySeconds: 5
+              periodSeconds: 5
+---
+# Source: temporal/templates/server-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal-frontend
+  annotations:
+    
+  labels:
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: temporal
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      annotations:
+        checksum/config: 6b717b1080c2f011b008796999d7fcfdad79c2ad0a90209084d8704dd5f6b70b
+        prometheus.io/job: temporal-frontend
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9090'
+        
+      labels:
+        app.kubernetes.io/component: frontend
+        app.kubernetes.io/name: temporal
+        helm.sh/chart: temporal-0.57.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: temporal
+        app.kubernetes.io/version: "1.27.1"
+        app.kubernetes.io/part-of: temporal
+    spec:
+      serviceAccountName: default
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      initContainers:
+        - name: check-cassandra-service
+          image: busybox
+          command: ['sh', '-c', 'until nc -z temporal-cassandra.temporal-tests.svc.cluster.local 9042; do echo waiting for cassandra service; sleep 1; done;']
+        - name: check-cassandra
+          image: "bitnami/cassandra:5.0.3"
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'until cqlsh temporal-cassandra.temporal-tests.svc.cluster.local 9042 -u cassandra -pcassandra   -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+        - name: check-cassandra-temporal-schema
+          image: "bitnami/cassandra:5.0.3"
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'until cqlsh temporal-cassandra.temporal-tests 9042 -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep temporal$; do echo waiting for default keyspace to become ready; sleep 1; done;']
+      containers:
+        - name: temporal-frontend
+          image: "temporalio/server:1.27.2"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SERVICES
+              value: frontend
+            - name: TEMPORAL_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-default-store
+                  key: password
+            - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-visibility-store
+                  key: password
+          # For Istio service mesh - make sure ports are defined here and in the headless service, see:
+          # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+          ports:
+            - name: rpc
+              containerPort: 7233
+              protocol: TCP
+            - name: membership
+              containerPort: 6933
+              protocol: TCP
+            - name: http
+              containerPort: 7243
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          livenessProbe:
+             initialDelaySeconds: 150
+             tcpSocket:
+               port: rpc
+          volumeMounts:
+            - name: config
+              mountPath: /etc/temporal/config/config_template.yaml
+              subPath: config_template.yaml
+            - name: dynamic-config
+              mountPath: /etc/temporal/dynamic_config
+          resources:
+            {}
+      volumes:
+        - name: config
+          configMap:
+            name: "temporal-config"
+        - name: dynamic-config
+          configMap:
+            name: "temporal-dynamic-config"
+            items:
+            - key: dynamic_config.yaml
+              path: dynamic_config.yaml
+---
+# Source: temporal/templates/server-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal-history
+  annotations:
+    
+  labels:
+    app.kubernetes.io/component: history
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: temporal
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/component: history
+  template:
+    metadata:
+      annotations:
+        checksum/config: 6b717b1080c2f011b008796999d7fcfdad79c2ad0a90209084d8704dd5f6b70b
+        prometheus.io/job: temporal-history
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9090'
+        
+      labels:
+        app.kubernetes.io/component: history
+        app.kubernetes.io/name: temporal
+        helm.sh/chart: temporal-0.57.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: temporal
+        app.kubernetes.io/version: "1.27.1"
+        app.kubernetes.io/part-of: temporal
+    spec:
+      serviceAccountName: default
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      initContainers:
+        - name: check-cassandra-service
+          image: busybox
+          command: ['sh', '-c', 'until nc -z temporal-cassandra.temporal-tests.svc.cluster.local 9042; do echo waiting for cassandra service; sleep 1; done;']
+        - name: check-cassandra
+          image: "bitnami/cassandra:5.0.3"
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'until cqlsh temporal-cassandra.temporal-tests.svc.cluster.local 9042 -u cassandra -pcassandra   -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+        - name: check-cassandra-temporal-schema
+          image: "bitnami/cassandra:5.0.3"
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'until cqlsh temporal-cassandra.temporal-tests 9042 -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep temporal$; do echo waiting for default keyspace to become ready; sleep 1; done;']
+      containers:
+        - name: temporal-history
+          image: "temporalio/server:1.27.2"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SERVICES
+              value: history
+            - name: TEMPORAL_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-default-store
+                  key: password
+            - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-visibility-store
+                  key: password
+          # For Istio service mesh - make sure ports are defined here and in the headless service, see:
+          # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+          ports:
+            - name: rpc
+              containerPort: 7234
+              protocol: TCP
+            - name: membership
+              containerPort: 6934
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          livenessProbe:
+             initialDelaySeconds: 150
+             tcpSocket:
+               port: rpc
+          volumeMounts:
+            - name: config
+              mountPath: /etc/temporal/config/config_template.yaml
+              subPath: config_template.yaml
+            - name: dynamic-config
+              mountPath: /etc/temporal/dynamic_config
+          resources:
+            {}
+      volumes:
+        - name: config
+          configMap:
+            name: "temporal-config"
+        - name: dynamic-config
+          configMap:
+            name: "temporal-dynamic-config"
+            items:
+            - key: dynamic_config.yaml
+              path: dynamic_config.yaml
+---
+# Source: temporal/templates/server-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal-matching
+  annotations:
+    
+  labels:
+    app.kubernetes.io/component: matching
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: temporal
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/component: matching
+  template:
+    metadata:
+      annotations:
+        checksum/config: 6b717b1080c2f011b008796999d7fcfdad79c2ad0a90209084d8704dd5f6b70b
+        
+      labels:
+        app.kubernetes.io/component: matching
+        app.kubernetes.io/name: temporal
+        helm.sh/chart: temporal-0.57.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: temporal
+        app.kubernetes.io/version: "1.27.1"
+        app.kubernetes.io/part-of: temporal
+    spec:
+      serviceAccountName: default
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      initContainers:
+        - name: check-cassandra-service
+          image: busybox
+          command: ['sh', '-c', 'until nc -z temporal-cassandra.temporal-tests.svc.cluster.local 9042; do echo waiting for cassandra service; sleep 1; done;']
+        - name: check-cassandra
+          image: "bitnami/cassandra:5.0.3"
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'until cqlsh temporal-cassandra.temporal-tests.svc.cluster.local 9042 -u cassandra -pcassandra   -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+        - name: check-cassandra-temporal-schema
+          image: "bitnami/cassandra:5.0.3"
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'until cqlsh temporal-cassandra.temporal-tests 9042 -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep temporal$; do echo waiting for default keyspace to become ready; sleep 1; done;']
+      containers:
+        - name: temporal-matching
+          image: "temporalio/server:1.27.2"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SERVICES
+              value: matching
+            - name: TEMPORAL_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-default-store
+                  key: password
+            - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-visibility-store
+                  key: password
+          # For Istio service mesh - make sure ports are defined here and in the headless service, see:
+          # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+          ports:
+            - name: rpc
+              containerPort: 7235
+              protocol: TCP
+            - name: membership
+              containerPort: 6935
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          livenessProbe:
+             initialDelaySeconds: 150
+             tcpSocket:
+               port: rpc
+          volumeMounts:
+            - name: config
+              mountPath: /etc/temporal/config/config_template.yaml
+              subPath: config_template.yaml
+            - name: dynamic-config
+              mountPath: /etc/temporal/dynamic_config
+          resources:
+            {}
+      volumes:
+        - name: config
+          configMap:
+            name: "temporal-config"
+        - name: dynamic-config
+          configMap:
+            name: "temporal-dynamic-config"
+            items:
+            - key: dynamic_config.yaml
+              path: dynamic_config.yaml
+---
+# Source: temporal/templates/server-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal-worker
+  annotations:
+    
+  labels:
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: temporal
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      annotations:
+        checksum/config: 6b717b1080c2f011b008796999d7fcfdad79c2ad0a90209084d8704dd5f6b70b
+        prometheus.io/job: temporal-worker
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9090'
+        
+      labels:
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/name: temporal
+        helm.sh/chart: temporal-0.57.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: temporal
+        app.kubernetes.io/version: "1.27.1"
+        app.kubernetes.io/part-of: temporal
+    spec:
+      serviceAccountName: default
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      initContainers:
+        - name: check-cassandra-service
+          image: busybox
+          command: ['sh', '-c', 'until nc -z temporal-cassandra.temporal-tests.svc.cluster.local 9042; do echo waiting for cassandra service; sleep 1; done;']
+        - name: check-cassandra
+          image: "bitnami/cassandra:5.0.3"
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'until cqlsh temporal-cassandra.temporal-tests.svc.cluster.local 9042 -u cassandra -pcassandra   -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+        - name: check-cassandra-temporal-schema
+          image: "bitnami/cassandra:5.0.3"
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'until cqlsh temporal-cassandra.temporal-tests 9042 -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep temporal$; do echo waiting for default keyspace to become ready; sleep 1; done;']
+      containers:
+        - name: temporal-worker
+          image: "temporalio/server:1.27.2"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SERVICES
+              value: worker
+            - name: TEMPORAL_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-default-store
+                  key: password
+            - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-visibility-store
+                  key: password
+          # For Istio service mesh - make sure ports are defined here and in the headless service, see:
+          # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
+          ports:
+            - name: membership
+              containerPort: 6939
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/temporal/config/config_template.yaml
+              subPath: config_template.yaml
+            - name: dynamic-config
+              mountPath: /etc/temporal/dynamic_config
+          resources:
+            {}
+      volumes:
+        - name: config
+          configMap:
+            name: "temporal-config"
+        - name: dynamic-config
+          configMap:
+            name: "temporal-dynamic-config"
+            items:
+            - key: dynamic_config.yaml
+              path: dynamic_config.yaml
+---
+# Source: temporal/templates/web-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal-web
+  annotations:
+    
+  labels:
+    app.kubernetes.io/component: web
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: temporal
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      annotations:
+        
+      labels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/name: temporal
+        helm.sh/chart: temporal-0.57.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: temporal
+        app.kubernetes.io/version: "1.27.1"
+        app.kubernetes.io/part-of: temporal
+    spec:
+      serviceAccountName: default
+      containers:
+        - name: temporal-web
+          image: "temporalio/ui:2.36.1"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: "temporal-frontend.temporal-tests.svc:7233"
+          livenessProbe:
+            initialDelaySeconds: 10
+            tcpSocket:
+              port: http
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            {}
+---
+# Source: temporal/charts/cassandra/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: temporal-cassandra
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cassandra
+    app.kubernetes.io/version: 5.0.3
+    helm.sh/chart: cassandra-12.3.0
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/name: cassandra
+  serviceName: temporal-cassandra-headless
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: temporal
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: cassandra
+        app.kubernetes.io/version: 5.0.3
+        helm.sh/chart: cassandra-12.3.0
+    spec:
+      
+      automountServiceAccountToken: false
+      serviceAccountName: temporal-cassandra
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: temporal
+                    app.kubernetes.io/name: cassandra
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      containers:
+        - name: cassandra
+          command:
+            - bash
+            - -ec
+            - |
+              # Node 0 is the password seeder
+              if [[ $POD_NAME =~ (.*)-0$ ]]; then
+                  echo "Setting node as password seeder"
+                  export CASSANDRA_PASSWORD_SEEDER=yes
+              else
+                  # Only node 0 will execute the startup initdb scripts
+                  export CASSANDRA_IGNORE_INITDB_SCRIPTS=1
+              fi
+              /opt/bitnami/scripts/cassandra/entrypoint.sh /opt/bitnami/scripts/cassandra/run.sh
+          image: docker.io/bitnami/cassandra:5.0.3
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: CASSANDRA_CLUSTER_NAME
+              value: cassandra
+            - name: CASSANDRA_SEEDS
+              value: "temporal-cassandra-0.temporal-cassandra-headless.temporal-tests.svc.cluster.local"
+            - name: CASSANDRA_PASSWORD_FILE
+              value: /opt/bitnami/cassandra/secrets/cassandra-password
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: CASSANDRA_USER
+              value: "cassandra"
+            - name: CASSANDRA_NUM_TOKENS
+              value: "256"
+            - name: CASSANDRA_DATACENTER
+              value: dc1
+            - name: CASSANDRA_ENDPOINT_SNITCH
+              value: SimpleSnitch
+            - name: CASSANDRA_KEYSTORE_LOCATION
+              value: "/opt/bitnami/cassandra/certs/keystore"
+            - name: CASSANDRA_TRUSTSTORE_LOCATION
+              value: "/opt/bitnami/cassandra/certs/truststore"
+            - name: CASSANDRA_RACK
+              value: rack1
+            - name: MAX_HEAP_SIZE
+              value: "768M"
+            - name: HEAP_NEWSIZE
+              value: "256M"
+            - name: CASSANDRA_TRANSPORT_PORT_NUMBER
+              value: "7000"
+            - name: CASSANDRA_JMX_PORT_NUMBER
+              value: "7199"
+            - name: CASSANDRA_CQL_PORT_NUMBER
+              value: "9042"
+          envFrom:
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - |
+                  nodetool info | grep "Native Transport active: true"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 30
+            successThreshold: 1
+            failureThreshold: 5
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - |
+                  nodetool status | grep -E "^UN\\s+${POD_IP}"
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 30
+            successThreshold: 1
+            failureThreshold: 5
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - bash
+                  - -ec
+                  - nodetool decommission
+          ports:
+            - name: intra
+              containerPort: 7000
+            - name: jmx
+              containerPort: 7199
+            - name: cql
+              containerPort: 9042
+          resources:
+            limits:
+              cpu: "1.5"
+              ephemeral-storage: 2Gi
+              memory: 3072Mi
+            requests:
+              cpu: "1.0"
+              ephemeral-storage: 50Mi
+              memory: 2048Mi
+          volumeMounts:
+            - name: data
+              mountPath: /bitnami/cassandra
+            - name: cassandra-secrets
+              mountPath: /opt/bitnami/cassandra/secrets
+            - name: init-db-cm
+              mountPath: /docker-entrypoint-initdb.d/configmap
+            
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/cassandra/conf
+              subPath: app-conf-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/cassandra/tmp
+              subPath: app-tmp-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/cassandra/logs
+              subPath: app-logs-dir
+      volumes:
+        - name: metrics-conf
+          configMap:
+            name: temporal-cassandra-metrics-conf
+        - name: cassandra-secrets
+          projected:
+            sources:
+              - secret:
+                  name: temporal-cassandra
+        - name: empty-dir
+          emptyDir: {}
+        - name: init-db-cm
+          configMap:
+            name: temporal-cassandra-init-scripts
+        - name: data
+          emptyDir: {}
+---
+# Source: temporal/templates/server-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: temporal-schema-1
+  labels:
+    app.kubernetes.io/component: database
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.57.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: "1.27.1"
+    app.kubernetes.io/part-of: temporal
+spec:
+  backoffLimit: 100
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      name: temporal-schema-1
+      labels:
+        app.kubernetes.io/component: database
+        app.kubernetes.io/name: temporal
+        helm.sh/chart: temporal-0.57.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: temporal
+        app.kubernetes.io/version: "1.27.1"
+        app.kubernetes.io/part-of: temporal
+    spec:
+      serviceAccountName: default
+      restartPolicy: OnFailure
+      initContainers:
+        - name: check-cassandra-service
+          image: busybox
+          command: ['sh', '-c', 'until nc -z temporal-cassandra.temporal-tests.svc.cluster.local 9042; do echo waiting for cassandra service; sleep 1; done;']
+        - name: check-cassandra
+          image: "bitnami/cassandra:5.0.3"
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'until cqlsh temporal-cassandra.temporal-tests.svc.cluster.local 9042 -u cassandra -pcassandra -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+        - name: create-default-store
+          image: "temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0"
+          imagePullPolicy: IfNotPresent
+          command: ['temporal-cassandra-tool', 'create', '-k', 'temporal', '--replication-factor', '1']
+          env:
+            - name: CASSANDRA_HOST
+              value: temporal-cassandra.temporal-tests.svc.cluster.local
+            - name: CASSANDRA_PORT
+              value: "9042"
+            - name: CASSANDRA_KEYSPACE
+              value: temporal
+            - name: CASSANDRA_USER
+              value: cassandra
+            - name: CASSANDRA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-default-store
+                  key: password
+        - name: create-visibility-store
+          image: "temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0"
+          imagePullPolicy: IfNotPresent
+          command: ['temporal-sql-tool', 'create-database']
+          env:
+            - name: SQL_PLUGIN
+              value: mysql8
+            - name: SQL_HOST
+              value: temporal-mysql.temporal-tests.svc.cluster.local
+            - name: SQL_PORT
+              value: "3306"
+            - name: SQL_DATABASE
+              value: temporal_visibility
+            - name: SQL_USER
+              value: root
+            - name: SQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-visibility-store
+                  key: password
+        - name: setup-default-store
+          image: "temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0"
+          imagePullPolicy: IfNotPresent
+          command: ['temporal-cassandra-tool', 'setup-schema', '-v', '0.0']
+          env:
+            - name: CASSANDRA_HOST
+              value: temporal-cassandra.temporal-tests.svc.cluster.local
+            - name: CASSANDRA_PORT
+              value: "9042"
+            - name: CASSANDRA_KEYSPACE
+              value: temporal
+            - name: CASSANDRA_USER
+              value: cassandra
+            - name: CASSANDRA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-default-store
+                  key: password
+        - name: setup-visibility-store
+          image: "temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0"
+          imagePullPolicy: IfNotPresent
+          command: ['temporal-sql-tool', 'setup-schema', '-v', '0.0']
+          env:
+            - name: SQL_PLUGIN
+              value: mysql8
+            - name: SQL_HOST
+              value: temporal-mysql.temporal-tests.svc.cluster.local
+            - name: SQL_PORT
+              value: "3306"
+            - name: SQL_DATABASE
+              value: temporal_visibility
+            - name: SQL_USER
+              value: root
+            - name: SQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-visibility-store
+                  key: password
+        - name: update-default-store
+          image: "temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0"
+          imagePullPolicy: IfNotPresent
+          command: ['temporal-cassandra-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/cassandra/temporal/versioned']
+          env:
+            - name: CASSANDRA_HOST
+              value: temporal-cassandra.temporal-tests.svc.cluster.local
+            - name: CASSANDRA_PORT
+              value: "9042"
+            - name: CASSANDRA_KEYSPACE
+              value: temporal
+            - name: CASSANDRA_USER
+              value: cassandra
+            - name: CASSANDRA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-default-store
+                  key: password
+        - name: update-visibility-store
+          image: "temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0"
+          imagePullPolicy: IfNotPresent
+          command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v8/visibility/versioned']
+          env:
+            - name: SQL_PLUGIN
+              value: mysql8
+            - name: SQL_HOST
+              value: temporal-mysql.temporal-tests.svc.cluster.local
+            - name: SQL_PORT
+              value: "3306"
+            - name: SQL_DATABASE
+              value: temporal_visibility
+            - name: SQL_USER
+              value: root
+            - name: SQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: temporal-visibility-store
+                  key: password
+      containers:
+        - name: done
+          image: "temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0"
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'echo "Store setup completed"']
+---
+# Source: temporal/templates/server-pdb.yaml
+---
+---
+# Source: temporal/templates/server-pdb.yaml
+---
+---
+# Source: temporal/charts/mysql/templates/networkpolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: temporal-mysql
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/version: 8.4.4
+    helm.sh/chart: mysql-12.3.3
+    app.kubernetes.io/part-of: mysql
+  annotations:
+    helm.sh/hook: pre-install
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: mysql
+      app.kubernetes.io/version: 8.4.4
+      helm.sh/chart: mysql-12.3.3
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - {}
+  ingress:
+    # Allow connection from other cluster pods
+    - ports:
+        - port: 3306
+---
+# Source: temporal/charts/mysql/templates/primary/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: temporal-mysql
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/version: 8.4.4
+    helm.sh/chart: mysql-12.3.3
+    app.kubernetes.io/part-of: mysql
+    app.kubernetes.io/component: primary
+  annotations:
+    helm.sh/hook: pre-install
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/name: mysql
+      app.kubernetes.io/part-of: mysql
+      app.kubernetes.io/component: primary
+---
+# Source: temporal/charts/mysql/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: temporal-mysql
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/version: 8.4.4
+    helm.sh/chart: mysql-12.3.3
+    app.kubernetes.io/part-of: mysql
+  annotations:
+    helm.sh/hook: pre-install
+automountServiceAccountToken: false
+secrets:
+  - name: temporal-mysql
+---
+# Source: temporal/charts/mysql/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: temporal-mysql
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/version: 8.4.4
+    helm.sh/chart: mysql-12.3.3
+    app.kubernetes.io/part-of: mysql
+  annotations:
+    helm.sh/hook: pre-install
+type: Opaque
+data:
+  mysql-root-password: "amVyZW1pYXM="
+  mysql-password: "SW41ZTVHMGlEQQ=="
+---
+# Source: temporal/charts/mysql/templates/primary/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: temporal-mysql
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/version: 8.4.4
+    helm.sh/chart: mysql-12.3.3
+    app.kubernetes.io/part-of: mysql
+    app.kubernetes.io/component: primary
+  annotations:
+    helm.sh/hook: pre-install
+data:
+  my.cnf: |-
+    [mysqld]
+    authentication_policy='* ,,'
+    skip-name-resolve
+    explicit_defaults_for_timestamp
+    basedir=/opt/bitnami/mysql
+    plugin_dir=/opt/bitnami/mysql/lib/plugin
+    port=3306
+    mysqlx=0
+    mysqlx_port=33060
+    socket=/opt/bitnami/mysql/tmp/mysql.sock
+    datadir=/bitnami/mysql/data
+    tmpdir=/opt/bitnami/mysql/tmp
+    max_allowed_packet=16M
+    bind-address=*
+    pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+    log-error=/opt/bitnami/mysql/logs/mysqld.log
+    character-set-server=UTF8
+    slow_query_log=0
+    long_query_time=10.0
+    
+    [client]
+    port=3306
+    socket=/opt/bitnami/mysql/tmp/mysql.sock
+    default-character-set=UTF8
+    plugin_dir=/opt/bitnami/mysql/lib/plugin
+    
+    [manager]
+    port=3306
+    socket=/opt/bitnami/mysql/tmp/mysql.sock
+    pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+---
+# Source: temporal/charts/mysql/templates/primary/initialization-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: temporal-mysql-init-scripts
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/version: 8.4.4
+    helm.sh/chart: mysql-12.3.3
+    app.kubernetes.io/part-of: mysql
+    app.kubernetes.io/component: primary
+  annotations:
+    helm.sh/hook: pre-install
+data:
+  init.sql: |
+    CREATE DATABASE temporal;
+    CREATE DATABASE temporal_visibility;
+---
+# Source: temporal/charts/mysql/templates/primary/svc-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-mysql-headless
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/version: 8.4.4
+    helm.sh/chart: mysql-12.3.3
+    app.kubernetes.io/part-of: mysql
+    app.kubernetes.io/component: primary
+  annotations:
+    helm.sh/hook: pre-install
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: mysql
+  selector:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/component: primary
+---
+# Source: temporal/charts/mysql/templates/primary/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-mysql
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/version: 8.4.4
+    helm.sh/chart: mysql-12.3.3
+    app.kubernetes.io/part-of: mysql
+    app.kubernetes.io/component: primary
+  annotations:
+    helm.sh/hook: pre-install
+spec:
+  type: ClusterIP
+  sessionAffinity: None  
+  ports:
+    - name: mysql
+      port: 3306
+      protocol: TCP
+      targetPort: mysql
+      nodePort: null
+  selector:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/part-of: mysql
+    app.kubernetes.io/component: primary
+---
+# Source: temporal/charts/mysql/templates/primary/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: temporal-mysql
+  namespace: "temporal-tests"
+  labels:
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/version: 8.4.4
+    helm.sh/chart: mysql-12.3.3
+    app.kubernetes.io/part-of: mysql
+    app.kubernetes.io/component: primary
+  annotations:
+    helm.sh/hook: pre-install
+spec:
+  replicas: 1
+  podManagementPolicy: ""
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/name: mysql
+      app.kubernetes.io/part-of: mysql
+      app.kubernetes.io/component: primary
+  serviceName: temporal-mysql-headless
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/configuration: 500a5aa24db302a196add0877291f7904ba77d6977721f9c5da2e7616c1c87fc
+      labels:
+        app.kubernetes.io/instance: temporal
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: mysql
+        app.kubernetes.io/version: 8.4.4
+        helm.sh/chart: mysql-12.3.3
+        app.kubernetes.io/part-of: mysql
+        app.kubernetes.io/component: primary
+    spec:
+      serviceAccountName: temporal-mysql
+      
+      automountServiceAccountToken: false
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: temporal
+                    app.kubernetes.io/name: mysql
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      initContainers:
+        - name: preserve-logs-symlinks
+          image: docker.io/bitnami/mysql:8.4.4-debian-12-r7
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            limits:
+              cpu: 750m
+              ephemeral-storage: 2Gi
+              memory: 768Mi
+            requests:
+              cpu: 500m
+              ephemeral-storage: 50Mi
+              memory: 512Mi
+          command:
+            - /bin/bash
+          args:
+            - -ec
+            - |
+              #!/bin/bash
+
+              . /opt/bitnami/scripts/libfs.sh
+              # We copy the logs folder because it has symlinks to stdout and stderr
+              if ! is_dir_empty /opt/bitnami/mysql/logs; then
+                cp -r /opt/bitnami/mysql/logs /emptydir/app-logs-dir
+              fi
+          volumeMounts:
+            - name: empty-dir
+              mountPath: /emptydir
+      containers:
+        - name: mysql
+          image: docker.io/bitnami/mysql:8.4.4-debian-12-r7
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: MYSQL_ROOT_PASSWORD_FILE
+              value: /opt/bitnami/mysql/secrets/mysql-root-password
+            - name: MYSQL_ENABLE_SSL
+              value: "no"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_DATABASE
+              value: "my_database"
+          envFrom:
+          ports:
+            - name: mysql
+              containerPort: 3306
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - |
+                  password_aux="${MYSQL_ROOT_PASSWORD:-}"
+                  if [[ -f "${MYSQL_ROOT_PASSWORD_FILE:-}" ]]; then
+                      password_aux=$(cat "$MYSQL_ROOT_PASSWORD_FILE")
+                  fi
+                  mysqladmin status -uroot -p"${password_aux}"
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - |
+                  password_aux="${MYSQL_ROOT_PASSWORD:-}"
+                  if [[ -f "${MYSQL_ROOT_PASSWORD_FILE:-}" ]]; then
+                      password_aux=$(cat "$MYSQL_ROOT_PASSWORD_FILE")
+                  fi
+                  mysqladmin ping -uroot -p"${password_aux}" | grep "mysqld is alive"
+          startupProbe:
+            failureThreshold: 10
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - |
+                  password_aux="${MYSQL_ROOT_PASSWORD:-}"
+                  if [[ -f "${MYSQL_ROOT_PASSWORD_FILE:-}" ]]; then
+                      password_aux=$(cat "$MYSQL_ROOT_PASSWORD_FILE")
+                  fi
+                  mysqladmin ping -uroot -p"${password_aux}" | grep "mysqld is alive"
+          resources:
+            limits:
+              cpu: 750m
+              ephemeral-storage: 2Gi
+              memory: 768Mi
+            requests:
+              cpu: 500m
+              ephemeral-storage: 50Mi
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /bitnami/mysql
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/mysql/conf
+              subPath: app-conf-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/mysql/tmp
+              subPath: app-tmp-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/mysql/logs
+              subPath: app-logs-dir
+            - name: custom-init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+            - name: config
+              mountPath: /opt/bitnami/mysql/conf/my.cnf
+              subPath: my.cnf
+            - name: mysql-credentials
+              mountPath: /opt/bitnami/mysql/secrets/
+      volumes:
+        - name: config
+          configMap:
+            name: temporal-mysql
+        - name: custom-init-scripts
+          configMap:
+            name: temporal-mysql-init-scripts
+        - name: mysql-credentials
+          secret:
+            secretName: temporal-mysql
+            items:
+              - key: mysql-root-password
+                path: mysql-root-password
+              - key: mysql-password
+                path: mysql-password
+        - name: empty-dir
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          app.kubernetes.io/instance: temporal
+          app.kubernetes.io/name: mysql
+          app.kubernetes.io/component: primary
+        annotations:
+          helm.sh/hook: pre-install
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"

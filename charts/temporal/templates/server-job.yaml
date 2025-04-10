@@ -38,7 +38,7 @@ spec:
         - name: check-cassandra
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ $.Values.server.config.persistence.default.cassandra.hosts }} {{ $.Values.cassandra.config.ports.cql }} -u {{ $.Values.cassandra.dbUser.user }} -p{{ $.Values.cassandra.dbUser.password }}   -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+          command: ['sh', '-c', 'until cqlsh {{ $.Values.server.config.persistence.default.cassandra.hosts }} {{ $.Values.cassandra.config.ports.cql }} -u {{ $.Values.cassandra.dbUser.user }} -p{{ $.Values.cassandra.dbUser.password }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
           {{- with $.Values.schema.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
