@@ -445,6 +445,9 @@ schema:
   update:
     enabled: true
     backoffLimit: 100
+  jobttl:
+    enabled: true
+    seconds: 86400
   podAnnotations: {}
   podLabels: {}
   resources: {}
