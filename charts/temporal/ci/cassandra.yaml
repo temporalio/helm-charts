@@ -19,6 +19,18 @@ mysql:
   commonAnnotations:
     "helm.sh/hook": "pre-install"
 
+cassandra:
+  image:
+    repository: bitnami/cassandra
+    repo: bitnami/cassandra
+    tag: 5.0.3-debian-12-r9
+  dbUser:
+    password: cassandra
+  initDB:
+    initdb-create-keyspace.cql: |
+      CREATE KEYSPACE IF NOT EXISTS temporal
+      WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
 server:
   config:
     persistence:
@@ -43,17 +55,3 @@ server:
             database: "temporal_visibility"
             user: "root"
             password: "jeremias"
-
-cassandra:
-  image:
-    repository: bitnami/cassandra
-    repo: bitnami/cassandra
-    tag: 5.0.3-debian-12-r9
-  dbUser:
-    user: cassandra
-    password: cassandra
-    forcePassword: false
-  initDB:
-    initdb-create-keyspace.cql: |
-      CREATE KEYSPACE IF NOT EXISTS temporal
-      WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
