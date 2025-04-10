@@ -28,6 +28,10 @@ dependencies:
     repository: https://grafana.github.io/helm-charts
     version: 8.0.2
     condition: grafana.enabled
+  - name: mysql
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: 12.3.3
+    condition: mysql.enabled
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives

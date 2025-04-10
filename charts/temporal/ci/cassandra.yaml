@@ -4,49 +4,56 @@ grafana:
   enabled: false
 elasticsearch:
   enabled: false
+schema:
+  createDatabase:
+    enabled: false
 
-# Temporal Chart Configuration
+mysql:
+  enabled: true
+  auth:
+    rootPassword: jeremias
+  initdbScripts:
+    init.sql: |
+      CREATE DATABASE temporal;
+      CREATE DATABASE temporal_visibility;
+  commonAnnotations:
+    "helm.sh/hook": "pre-install"
+
 server:
   config:
     persistence:
-      default:
-        driver: cassandra
-        cassandra:
-          hosts:
-            - "{{ .Release.Name }}-cassandra.default.svc.cluster.local"  # Replace with correct service name
-          port: 9042
-          keyspace: temporal
-          user: root
-          password: superSecret123
-          replicationFactor: 1
-          consistency:
-            default:
-              consistency: local_quorum
-              serialConsistency: local_serial
-      visibility:
-        driver: cassandra
-        cassandra:
-          hosts:
-            - "{{ .Release.Name }}-cassandra.default.svc.cluster.local"
-          port: 9042
-          keyspace: temporal_visibility
-          user: root
-          password: superSecret123
-          replicationFactor: 1
-          consistency:
-            default:
-              consistency: local_quorum
-              serialConsistency: local_serial
+        default:
+          driver: "cassandra"
+          cassandra:
+            hosts: temporal-cassandra.temporal-tests.svc.cluster.local
+            port: 9042
+            keyspace: temporal
+            user: cassandra
+            password: cassandra
+            consistency:
+              default:
+                consistency: local_quorum
+                serialConsistency: local_serial
+        visibility:
+          driver: "sql"
+          sql:
+            driver: "mysql8"
+            host: "temporal-mysql.temporal-tests.svc.cluster.local"
+            port: 3306
+            database: "temporal_visibility"
+            user: "root"
+            password: "jeremias"
 
-# Cassandra Configuration (from Bitnami chart)
 cassandra:
-  auth:
-    username: root
-    password: superSecret123
+  image:
+    repository: bitnami/cassandra
+    repo: bitnami/cassandra
+    tag: 5.0.3-debian-12-r9
+  dbUser:
+    user: cassandra
+    password: cassandra
+    forcePassword: false
   initDB:
-    - |
-      CREATE KEYSPACE IF NOT EXISTS temporal WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };
-    - |
-      CREATE KEYSPACE IF NOT EXISTS temporal_visibility WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };
-    - |
-      CREATE TABLE IF NOT EXISTS temporal.users (id UUID PRIMARY KEY, name text);
+    initdb-create-keyspace.cql: |
+      CREATE KEYSPACE IF NOT EXISTS temporal
+      WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
