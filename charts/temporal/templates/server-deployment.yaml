@@ -50,11 +50,11 @@ spec:
         - name: check-cassandra
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ $.Values.server.config.persistence.default.cassandra.hosts }} {{ $.Values.cassandra.config.ports.cql }} -u {{ $.Values.cassandra.dbUser.user }} -p{{ $.Values.cassandra.dbUser.password }}   -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+          command: ['sh', '-c', 'until cqlsh {{ $.Values.server.config.persistence.default.cassandra.hosts }} {{ $.Values.cassandra.config.ports.cql }} -u {{ $.Values.cassandra.dbUser.user }} -p{{ $.Values.cassandra.dbUser.password }}  -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
         - name: check-cassandra-temporal-schema
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$; do echo waiting for default keyspace to become ready; sleep 1; done;']
+          command: ['sh', '-c', 'until cqlsh {{ $.Values.server.config.persistence.default.cassandra.hosts }} {{ $.Values.cassandra.config.ports.cql }} -u {{ $.Values.cassandra.dbUser.user }} -p{{ $.Values.cassandra.dbUser.password }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$; do echo waiting for default keyspace to become ready; sleep 1; done;']
         {{- end }}
         {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
         - name: check-elasticsearch-index
