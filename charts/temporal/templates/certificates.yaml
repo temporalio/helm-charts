@@ -14,11 +14,8 @@ metadata:
   name: {{ .Values.certificates.certificate.name }}
 spec:
   dnsNames:
-    {{- range .Values.frontend.ingress.hosts }}
-    {{- $url := splitList "/" . }}
-    - {{ first $url }}
-  commonName: {{ first $url }}
-  {{- end}}
+    - {{ index .Values.server.frontend.ingress.hosts 0 }}
+  commonName: {{ index .Values.server.frontend.ingress.hosts 0 }}
   isCA: {{ .Values.certificates.certificate.isCA }}
   issuerRef:
     kind: Issuer
