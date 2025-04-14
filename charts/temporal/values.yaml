@@ -349,7 +349,7 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
     keda:
-      enabled: true
+      enabled: false
       pollingInterval: 30
       cooldownPeriod: 300
       initialCooldownPeriod: 0
