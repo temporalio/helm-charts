@@ -348,6 +348,55 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+    keda:
+      enabled: true
+      pollingInterval: 30
+      cooldownPeriod: 300
+      initialCooldownPeriod: 0
+      minReplicaCount: 0
+      maxReplicaCount: 5
+      fallback: {}
+      # failureThreshold: 3
+      # replicas: 6
+      advanced: {}
+      # horizontalPodAutoscalerConfig:
+      #   behavior:
+      #     scaleDown:
+      #       stabilizationWindowSeconds: 300
+      #       policies:
+      #         - type: Percent
+      #           value: 100
+      #           periodSeconds: 15
+      triggers: []
+        # - type: temporal
+        #   metadata:
+        #     namespace: default
+        #     taskQueue: "workflow_with_single_noop_activity:test"
+        #     targetQueueSize: "2"
+        #     activationTargetQueueSize: "0"
+        #     endpoint: temporal-frontend.temporal.svc.cluster.local:7233
+        #     queueTypes: workflow # optional
+        #     buildId: 1.0.0 # optional
+        #     selectAllActive: false # optional
+        #     selectUnversioned: false optional
+        #     minConnectTimeout: 5 # optional
+        #     unsafeSsl: false # optional
+        # - type: temporal
+        #   metadata:
+        #     namespace: default
+        #     taskQueue: "workflow:test"
+        #     targetQueueSize: "2"
+        #     activationTargetQueueSize: "0"
+        #     endpoint: temporal-frontend.temporal.svc.cluster.local:7233
+        #     queueTypes: workflow # optional
+        #     buildId: 1.0.0 # optional
+        #     selectAllActive: false # optional
+        #     selectUnversioned: false optional
+        #     minConnectTimeout: 5 # optional
+        #     unsafeSsl: false # optional
+      annotations: {}
+      #   autoscaling.keda.sh/paused-replicas: "0"
+      #   autoscaling.keda.sh/paused: "true"
 admintools:
   enabled: true
   image:
