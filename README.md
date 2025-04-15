@@ -25,7 +25,7 @@ This repo only contains one chart currently, but is structured in the standard h
 
 There are two ways to install the Temporal chart, via our helm repo, or using a local git clone of this repo.
 
-The [Helm repo](https://go.temporal.io/helm-charts/) is the preferred method of installing the chart as it avoids the need for you to clone the repo locally, and also ensures you are using a release which has been tested. All of the examples in this README will use the Helm repo to install the chart.
+The Helm repo (`https://go.temporal.io/helm-charts/`) is the preferred method of installing the chart as it avoids the need for you to clone the repo locally, and also ensures you are using a release which has been tested. All of the examples in this README will use the Helm repo to install the chart.
 
 Note: The values files that we refer to in the examples are not available from the Helm repo. You will need to download them from Github to use them.
 
