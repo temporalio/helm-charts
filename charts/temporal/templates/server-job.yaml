@@ -1,4 +1,4 @@
-{{- if $.Values.server.enabled }}{{- if or $.Values.schema.createDatabase.enabled $.Values.schema.setup.enabled $.Values.schema.update.enabled }}
+{{- if or $.Values.schema.createDatabase.enabled $.Values.schema.setup.enabled $.Values.schema.update.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -220,4 +220,4 @@ spec:
       volumes:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-{{- end -}}{{- end -}}
+{{- end -}}
