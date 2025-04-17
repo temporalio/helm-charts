@@ -2,6 +2,14 @@ suite: test server job
 templates:
   - server-job.yaml
 tests:
+  - it: is able to create the server job even if Values.server.enabled is false
+    set:
+      server:
+        enabled: false
+    asserts:
+      - containsDocument:
+          kind: Job
+          apiVersion: batch/v1
   - it: includes additional init containers
     set:
       admintools:
