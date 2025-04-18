@@ -28,6 +28,10 @@
 - name: CASSANDRA_TLS_CA
   value: {{ . }}
     {{- end }}
+    {{- with .serverName }}
+- name: CASSANDRA_TLS_SERVER_NAME
+  value: {{ . }}
+    {{- end }}
     {{- if hasKey . "enableHostVerification" }}
 - name: CASSANDRA_TLS_DISABLE_HOST_VERIFICATION
   value: {{ not .enableHostVerification | quote }}
