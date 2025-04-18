@@ -79,7 +79,7 @@ Create the annotations for all resources
 {{- $scope := index . 1 -}}
 {{- $resourceType := index . 2 -}}
 {{- $component := "server" -}}
-{{- if (or (eq $scope "admintools") (eq $scope "web")) -}}
+{{- if (or (eq $scope "admintools") (eq $scope "web") (eq $scope "schema")) -}}
 {{- $component = $scope -}}
 {{- end -}}
 {{- with $resourceType -}}
