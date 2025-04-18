@@ -29,7 +29,7 @@ spec:
         {{- end }}
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra-service
-          image: busybox
+          image: "{{ default "busybox" $.Values.cassandra.checkServiceImage }}"
           command: ['sh', '-c', 'until nc -z {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }}; do echo waiting for cassandra service; sleep 1; done;']
           {{- with $.Values.schema.containerSecurityContext }}
           securityContext:
