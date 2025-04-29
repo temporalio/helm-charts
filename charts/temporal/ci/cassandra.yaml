@@ -1,0 +1,50 @@
+prometheus:
+  enabled: false
+grafana:
+  enabled: false
+elasticsearch:
+  enabled: false
+
+mysql:
+  enabled: true
+  auth:
+    rootPassword: jeremias
+  initdbScripts:
+    init.sql: |
+      CREATE DATABASE temporal;
+      CREATE DATABASE temporal_visibility;
+  commonAnnotations:
+    "helm.sh/hook": "pre-install"
+
+cassandra:
+  dbUser:
+    password: cassandra
+  initDB:
+    initdb-create-keyspace.cql: |
+      CREATE KEYSPACE IF NOT EXISTS temporal
+      WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
+server:
+  config:
+    persistence:
+        default:
+          driver: "cassandra"
+          cassandra:
+            hosts: temporal-cassandra.temporal-tests.svc.cluster.local
+            port: 9042
+            keyspace: temporal
+            user: cassandra
+            password: cassandra
+            consistency:
+              default:
+                consistency: local_quorum
+                serialConsistency: local_serial
+        visibility:
+          driver: "sql"
+          sql:
+            driver: "mysql8"
+            host: "temporal-mysql.temporal-tests.svc.cluster.local"
+            port: 3306
+            database: "temporal_visibility"
+            user: "root"
+            password: "jeremias"
