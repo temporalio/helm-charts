@@ -5,6 +5,8 @@ metadata:
   name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
+  annotations:
+    {{- include "temporal.resourceAnnotations" (list $ "schema" "job") | nindent 4 }}
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
   ttlSecondsAfterFinished: 86400
