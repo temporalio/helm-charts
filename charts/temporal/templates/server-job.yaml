@@ -53,7 +53,7 @@ spec:
           {{- range $store := (list "default" "visibility") }}
             {{- $storeConfig := index $.Values.server.config.persistence $store }}
             {{- $driver := include "temporal.persistence.driver" (list $ $store) }}
-            {{- if ne $driver "elasticsearch" }}
+            {{- if and (ne $driver "elasticsearch") (ne $driver "custom") }}
         - name: create-{{ $store }}-store
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
@@ -83,33 +83,35 @@ spec:
           {{- range $store := (list "default" "visibility") }}
             {{- $storeConfig := index $.Values.server.config.persistence $store }}
             {{- $driver := include "temporal.persistence.driver" (list $ $store) }}
+            {{- if ne $driver "custom" }}
         - name: setup-{{ $store }}-store
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-            {{- if eq $driver "cassandra" }}
+              {{- if eq $driver "cassandra" }}
           command: ['temporal-cassandra-tool', 'setup-schema', '-v', '0.0']
-            {{- else if eq $driver "sql" }}
+              {{- else if eq $driver "sql" }}
           command: ['temporal-sql-tool', 'setup-schema', '-v', '0.0']
-            {{- else if eq $driver "elasticsearch" }}
+              {{- else if eq $driver "elasticsearch" }}
           command: ['sh', '-c']
           args:
             - 'curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&
               curl --head --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1 ||
               curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1'
-            {{- end }}
+              {{- end }}
           env:
-            {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-            {{- with $.Values.admintools.additionalVolumeMounts }}
+              {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
+              {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with $.Values.schema.resources }}
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with $.Values.schema.resources }}
           resources:
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with $.Values.schema.containerSecurityContext }}
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with $.Values.schema.containerSecurityContext }}
           securityContext:
-              {{- toYaml . | nindent 12 }}
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
             {{- end }}
           {{- end }}
         {{- end }}
@@ -118,7 +120,7 @@ spec:
             {{- $storeConfig := index $.Values.server.config.persistence $store }}
             {{- $driver := include "temporal.persistence.driver" (list $ $store) }}
             {{- $schema := include "temporal.persistence.schema" $store }}
-            {{- if ne $driver "elasticsearch" }}
+            {{- if and (ne $driver "elasticsearch") (ne $driver "custom") }}
         - name: update-{{ $store }}-store
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
@@ -167,7 +169,7 @@ spec:
               {{- end }}
               {{- with $.Values.admintools.additionalEnv }}
                 {{- toYaml . | nindent 12 }}
-              {{- end }} 
+              {{- end }}
               {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
