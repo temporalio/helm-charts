@@ -1,0 +1,47 @@
+server:
+  replicaCount: 1
+  config:
+    persistence:
+      defaultStore: default
+      default:
+        driver: "sql"
+        sql:
+          driver: "mysql"
+          host: "temporal-mysql"
+          port: 3306
+          database: "temporal"
+          user: "root"
+          password: "temporal"
+          maxConns: 20
+          maxIdleConns: 20
+          maxConnLifetime: "1h"
+      visibility:
+        driver: "sql"
+        sql:
+          driver: "mysql"
+          host: "temporal-mysql"
+          port: 3306
+          database: "temporal_visibility"
+          user: "root"
+          password: "temporal"
+          maxConns: 20
+          maxIdleConns: 20
+          maxConnLifetime: "1h"
+cassandra:
+  enabled: false
+elasticsearch:
+  enabled: false
+prometheus:
+  enabled: false
+grafana:
+  enabled: false
+mysql:
+  enabled: true
+  auth:
+    rootPassword: temporal
+  initdbScripts:
+    init.sql: |
+      CREATE DATABASE temporal;
+      CREATE DATABASE temporal_visibility;
+  commonAnnotations:
+    "helm.sh/hook": "pre-install"

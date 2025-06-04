@@ -34,6 +34,9 @@ cassandra:
 
 mysql:
   enabled: true
+  auth:
+    username: _USERNAME_
+    password: _PASSWORD_
 
 postgresql:
   enabled: false
@@ -42,6 +45,16 @@ schema:
   createDatabase:
     enabled: true
   setup:
-    enabled: false
+    enabled: true
   update:
-    enabled: false
+    enabled: true
+
+prometheus:
+  enabled: false
+
+grafana:
+  enabled: false
+
+elasticsearch:
+  enabled: false
+
