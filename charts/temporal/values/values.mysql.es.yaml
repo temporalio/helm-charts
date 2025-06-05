@@ -15,20 +15,6 @@ server:
           maxIdleConns: 20
           maxConnLifetime: "1h"
 
-      visibility:
-        driver: "sql"
-
-        sql:
-          driver: "mysql8"
-          host: temporal-mysql
-          port: 3306
-          database: temporal_visibility
-          user: root
-          password: temporalRoot
-          maxConns: 20
-          maxIdleConns: 20
-          maxConnLifetime: "1h"
-
 cassandra:
   enabled: false
 
@@ -55,5 +41,6 @@ grafana:
   enabled: false
 
 elasticsearch:
-  enabled: false
+  enabled: true
+  replicas: 1
 
