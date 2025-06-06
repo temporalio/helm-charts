@@ -130,6 +130,61 @@ Example:
 helm install --repo https://go.temporal.io/helm-charts -f values/values.elasticsearch.yaml temporaltest temporal --timeout 900s
 ```
 
+### Install with a managed MySQL for persistence and ElasticSearch for visibility
+
+You can start Temporal with MySQL and ElasticSearch using our prepared chart:
+```bash
+% helm install temporal ./charts/temporal \
+  -f charts/temporal/values/values.mysql.es.yaml \
+  --debug
+```
+
+It takes ~3 minutes for the deployment to become stable. It should look similar to:
+```bash
+NAME                                   READY   STATUS      RESTARTS      AGE
+elasticsearch-master-0                 1/1     Running     0             16m
+temporal-admintools-5f9d766b5b-95fkv   1/1     Running     0             16m
+temporal-frontend-7db8b66d8d-qgtpk     1/1     Running     2 (15m ago)   16m
+temporal-history-7c5cc89fcd-twk8g      1/1     Running     2 (15m ago)   16m
+temporal-matching-58fb4d9c7f-bk7nm     1/1     Running     2 (15m ago)   16m
+temporal-mysql-0                       1/1     Running     0             16m
+temporal-schema-1-rtqwj                0/1     Completed   0             16m
+temporal-web-b8cd5487f-wjkf6           1/1     Running     0             16m
+temporal-worker-767989c884-q4qxn       1/1     Running     2 (15m ago)   16m
+```
+
+You can reach the MySQL database using port-forwarding, for example:
+```bash
+kubectl port-forward pod/temporal-mysql-0 3306:3306
+```
+
+
+### Install with a managed MySQL for persistence and visibility
+You can start Temporal with MySQL using our prepared chart:
+```bash
+% helm install temporal ./charts/temporal \
+  -f charts/temporal/values/values.mysql.yaml \
+  --debug
+```
+
+It takes ~3 minutes for the deployment to become stable. It should look similar to:
+```bash
+NAME                                   READY   STATUS      RESTARTS      AGE
+temporal-admintools-5f9d766b5b-q7wzw   1/1     Running     0             109s
+temporal-frontend-8b98b9965-gh8c6      1/1     Running     4 (53s ago)   109s
+temporal-history-6ddc85b6f5-8vfr2      1/1     Running     4 (52s ago)   109s
+temporal-matching-85c466498b-hvlzb     1/1     Running     4 (63s ago)   109s
+temporal-mysql-0                       1/1     Running     0             109s
+temporal-schema-1-dm7t8                0/1     Completed   0             109s
+temporal-web-b8cd5487f-6l2g7           1/1     Running     0             109s
+temporal-worker-7c5c9bd5d5-fn4zs       1/1     Running     4 (65s ago)   109s
+```
+
+You can reach the MySQL database using port-forwarding, for example:
+```bash
+% kubectl port-forward pod/temporal-mysql-0 3306:3306
+```
+
 ### Install with your own MySQL
 
 You might already be operating a MySQL instance that you want to use with Temporal.
