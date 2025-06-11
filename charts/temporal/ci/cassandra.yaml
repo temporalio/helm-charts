@@ -47,4 +47,4 @@ server:
             port: 3306
             database: "temporal_visibility"
             user: "root"
-            password: "jeremias"
+            password: "temporalRoot"
