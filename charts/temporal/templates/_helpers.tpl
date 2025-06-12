@@ -163,12 +163,12 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- print "cassandra" -}}
 {{- else if and (eq $store "visibility") (or $global.Values.elasticsearch.enabled $global.Values.elasticsearch.external) -}}
 {{- print "elasticsearch" -}}
-{{- else if $storeConfig.driver -}}
-{{- $storeConfig.driver -}}
 {{- else if $global.Values.mysql.enabled -}}
 {{- print "sql" -}}
 {{- else if $global.Values.postgresql.enabled -}}
 {{- print "sql" -}}
+{{- else if $storeConfig.driver -}}
+{{- $storeConfig.driver -}}
 {{- else -}}
 {{- required (printf "Please specify persistence driver for %s store" $store) $storeConfig.driver -}}
 {{- end -}}
