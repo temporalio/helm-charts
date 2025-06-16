@@ -155,11 +155,11 @@ server:
               serialConsistency: "local_serial"
         sql:
           driver: "mysql8"
-          host: "mysql"
+          host: ""
           port: 3306
           database: "temporal"
-          user: "temporal"
-          password: "temporal"
+          user: "root"
+          password: "temporalRoot"
           existingSecret: ""
           secretName: ""
           maxConns: 20
@@ -186,11 +186,11 @@ server:
               serialConsistency: "local_serial"
         sql:
           driver: "mysql8"
-          host: "mysql"
+          host: ""
           port: 3306
           database: "temporal_visibility"
-          user: "temporal"
-          password: "temporal"
+          user: "root"
+          password: "temporalRoot"
           existingSecret: ""
           secretName: ""
           maxConns: 20
@@ -544,5 +544,7 @@ cassandra:
     type: ClusterIP
 mysql:
   enabled: false
+  auth:
+    rootPassword: temporalRoot
 postgresql:
   enabled: false
