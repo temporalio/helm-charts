@@ -23,6 +23,7 @@ server:
     tag: 1.28.0
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
+  minReadySeconds: 0
   replicaCount: 1
   metrics:
     # Annotate pods directly with Prometheus annotations.
