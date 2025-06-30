@@ -163,12 +163,12 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- print "cassandra" -}}
 {{- else if and (eq $store "visibility") (or $global.Values.elasticsearch.enabled $global.Values.elasticsearch.external) -}}
 {{- print "elasticsearch" -}}
-{{- else if $storeConfig.driver -}}
-{{- $storeConfig.driver -}}
 {{- else if $global.Values.mysql.enabled -}}
 {{- print "sql" -}}
 {{- else if $global.Values.postgresql.enabled -}}
 {{- print "sql" -}}
+{{- else if $storeConfig.driver -}}
+{{- $storeConfig.driver -}}
 {{- else -}}
 {{- required (printf "Please specify persistence driver for %s store" $store) $storeConfig.driver -}}
 {{- end -}}
@@ -450,4 +450,40 @@ To modify camelCase to hyphenated internal-frontend service name
     {{- else }}
         {{- print $service }}
     {{- end }}
+{{- end -}}
+
+{{- define "mysql.fullname" -}}
+{{- if .Values.fullnameOverride -}}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "mysql.host" -}}
+{{- $mysqlName := include "call-nested" (list . "mysql" "mysql.fullname") -}}
+{{- printf "%s.%s" $mysqlName .Release.Namespace -}}
+{{- end -}}
+
+{{- define "postgresql.fullname" -}}
+{{- if .Values.fullnameOverride -}}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "postgresql.host" -}}
+{{- $postgresqlName := include "call-nested" (list . "postgresql" "postgresql.fullname") -}}
+{{- printf "%s.%s" $postgresqlName .Release.Namespace -}}
 {{- end -}}
