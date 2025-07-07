@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ "admintools") }}
+  namespace: {{ $.Release.Namespace }}
   annotations:
     {{- include "temporal.resourceAnnotations" (list $ "admintools" "deployment") | nindent 4 }}
   labels:

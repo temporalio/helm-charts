@@ -9,6 +9,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: {{ include "temporal.componentname" (list $ "frontend") }}
+  namespace: {{ $.Release.Namespace }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "frontend" "") | nindent 4 }}
 {{- with .Values.server.frontend.ingress.annotations }}
