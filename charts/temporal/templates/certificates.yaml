@@ -230,6 +230,8 @@ kind: PushSecret
 metadata:
   name: pushsecret-tctl-{{ $.Release.Name }}
   namespace: {{ $.Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-35"
 spec:
   updatePolicy: Replace
   refreshInterval: 1h
