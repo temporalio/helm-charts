@@ -3,7 +3,7 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-50"
+    argocd.argoproj.io/sync-wave: "-90"
   labels:
     {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
   name: {{ $.Release.Name }}-selfsigned-ca-issuer
@@ -15,7 +15,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-45"
+    argocd.argoproj.io/sync-wave: "-85"
   labels:
     {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
   name: {{ $.Release.Name }}-ca-certificate
@@ -39,7 +39,7 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-40"
+    argocd.argoproj.io/sync-wave: "-80"
   labels:
     {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
   name: {{ $.Release.Name }}-selfsigned-issuer
@@ -51,7 +51,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-40"
+    argocd.argoproj.io/sync-wave: "-80"
   labels:
     {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
   name: {{ $.Release.Name }}-cluster-certificate
@@ -76,7 +76,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-40"
+    argocd.argoproj.io/sync-wave: "-80"
   labels:
     {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
   name: {{ $.Release.Name }}-web-certificate
@@ -92,7 +92,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-40"
+    argocd.argoproj.io/sync-wave: "-80"
   labels:
     {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
   name: {{ $.Release.Name }}-admin-certificate
@@ -112,7 +112,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-40"
+    argocd.argoproj.io/sync-wave: "-80"
   labels:
     {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
   name: {{ $.Release.Name }}-provider-certificate
@@ -193,7 +193,7 @@ apiVersion: trust.cert-manager.io/v1alpha1
 kind: Bundle
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-25"
+    argocd.argoproj.io/sync-wave: "-65"
   labels:
     {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
   name: {{ $.Release.Name }}-trust-bundle
@@ -213,7 +213,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "-40"
+    argocd.argoproj.io/sync-wave: "-80"
   labels:
     {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
   name: {{ $.Release.Name }}-tctl-certificate
@@ -231,7 +231,7 @@ metadata:
   name: pushsecret-tctl-{{ $.Release.Name }}
   namespace: {{ $.Release.Namespace }}
   annotations:
-    argocd.argoproj.io/sync-wave: "-35"
+    argocd.argoproj.io/sync-wave: "-75"
 spec:
   updatePolicy: Replace
   refreshInterval: 1h
