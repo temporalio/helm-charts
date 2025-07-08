@@ -127,8 +127,14 @@ spec:
     name: {{ $.Release.Name }}-selfsigned-issuer
   secretName: {{ $.Release.Name }}-provider-cert
 {{- end }}
+{{- if and $.Values.secretStore }}
+{{- if $.Values.secretStoreSecret }}
+{{/* BEGIN AWS Secrets Manager specific implementation  */}}
+{{/* A single AWS Secrets Manager secret is created */}}
+{{/* AWS Secrets Manager secret name is `Values.secretStoreSecret` */}}
+{{/* The secret will have multiple properties (a.k.a. keys) inside it */}}
+{{/* The keys are the certificate resourceVersion and values are the certificate in PEM format */}}
 ---
-{{- if and $.Values.secretStore $.Values.secretStoreSecret }}
 apiVersion: kubernetes.crossplane.io/v1alpha2
 kind: Object
 metadata:
@@ -188,6 +194,77 @@ spec:
     name: {{ $.Values.secretStore }}
   target:
     name: {{ $.Release.Name }}-root-ca-list
+{{/* END AWS Secrets Manager specific implementation  */}}
+
+
+{{- else }}
+{{/* BEGIN Azure Key Vault specific implementation  */}}
+{{/* Multiple KV secrets are to be created */}}
+{{/* Each secret name is a certificate resourceVersion n 8-digit name */}}
+{{/* Each secret content is the certificate in PEM format */}}
+---
+apiVersion: kubernetes.crossplane.io/v1alpha2
+kind: Object
+metadata:
+  name: {{ $.Release.Name }}-pushsecret
+  annotations:
+    argocd.argoproj.io/sync-wave: "-75"
+spec:
+  watch: true
+  references:
+  - patchesFrom:
+      apiVersion: v1
+      kind: Secret
+      name: {{ $.Release.Name }}-ca-secret
+      namespace: cert-manager
+      fieldPath: metadata.resourceVersion
+    toFieldPath: spec.data[0].match.remoteRef.remoteKey
+  forProvider:
+    manifest:
+      apiVersion: external-secrets.io/v1alpha1
+      kind: PushSecret
+      metadata:
+        name: pushsecret-{{ $.Release.Name }}
+        namespace: cert-manager
+      spec:
+        updatePolicy: Replace
+        refreshInterval: 1h
+        secretStoreRefs:
+          - name: {{ $.Values.secretStore }}
+            kind: ClusterSecretStore
+        selector:
+          secret:
+            name: {{ $.Release.Name }}-ca-secret
+        data:
+          - match:
+              secretKey: tls.crt
+  providerConfigRef:
+    name: provider-kubernetes
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-70"
+  labels:
+    {{- include "temporal.resourceLabels" (list . "" "") | nindent 4 }}
+  name: {{ $.Release.Name }}-root-ca-list
+  namespace: cert-manager
+spec:
+  dataFrom:
+  - find:
+      name:
+        regexp: "^[0-9]{8}$"
+      tags:
+        managed-by: external-secrets
+  refreshInterval: 3m
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: {{ $.Values.secretStore }}
+  target:
+    name: {{ $.Release.Name }}-root-ca-list
+{{/* END Azure Key Vault specific implementation  */}}
+{{- end }}
 ---
 apiVersion: trust.cert-manager.io/v1alpha1
 kind: Bundle

@@ -539,5 +539,7 @@ hpaBehavior: {}
 #
 # -- root CA bundle settings
 # secretStore: secret-store
-# secretStoreSecret: secret-store-secret
-tctlSecretStoreSecret: eks/temporal-tctl-certificate
+# secretStoreSecret: secret-store-secret # specify only for AWS Secrets Manager Store; omit for Azure Key Vault
+
+# --- tctl access settings
+tctlSecretStoreSecret: eks/temporal-tctl-certificate  # for Azure Key Vault backend, value must be changed to remove the "eks" prefix: "tctlSecretStoreSecret: temporal-tctl-certificate"

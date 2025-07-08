@@ -100,9 +100,12 @@ Now, to release a new FM temporal server image, from `fairmoney/temporal-docker-
 
 # Build cross cluster CA trust using Pushsecret from ESO and Bundle from trust-manager
 
-Using `Object.kubernetes.crossplane.io` and `watch` feature from provider-kubernetes, a `PushSecret` resource is created each time `temporal-ca-secret` in `cert-manager` namespace has a new `resourceVersion` (meaning the root CA was renewed or changed for some reason). When this happens, `PushSecret` adds a new key/value in `temporal/non-prod-root-ca-list` secret from AWS Secrets Manager. The key is the `resourceVersion` of the secret and the value is the new root CA (`tls.crt`).
+Using `Object.kubernetes.crossplane.io` and `watch` feature from provider-kubernetes, a `PushSecret` resource is created each time `temporal-ca-secret` in `cert-manager` namespace has a new `resourceVersion` (meaning the root CA was renewed or changed for some reason). When this happens, 
 
-Then, using `externalsecret` from ESO, the Secrets Manager secret is imported into `temporal-root-ca-list` secret in `cert-manager` namespace.
+- [AWS implementation] `PushSecret` adds a new key/value in `temporal/non-prod-root-ca-list` secret from AWS Secrets Manager. The key is the `resourceVersion` of the secret and the value is the new root CA (`tls.crt`).
+- [Azure implementation] `PushSecret` adds a new secret in Azure Key Vault. The secret name is the new `resourceVersion` (8-digit name) and the value is the new root CA in PEM format.
+
+Then, using `externalsecret` from ESO, the Secrets Manager secret (or the Azure Key Vault secrets) are imported into `temporal-root-ca-list` secret in `cert-manager` namespace.
 
 Lastly, a `Bundle.trust.cert-manager.io` resource takes all keys from `temporal-root-ca-list` secret and the local `tls.crt` key from `temporal-ca-secret` and bundles them into a trust bundle written to `temporal-trust-bundle` secret in all namespaces.
 
