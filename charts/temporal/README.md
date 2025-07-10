@@ -96,6 +96,8 @@ Now, to release a new FM temporal server image, from `fairmoney/temporal-docker-
 - commit sha picked from ECR
 - set the tag for the image, make sure it starts with **v** (e.g. v1.25-fairmoney)
 
+In a similar way, trigger the **Release Temporal Images to FMB** (`.github/workflows/release-temporal-fmb.yml`) to publish the image to FMB Infra ACR.
+
 ![Actions workflow](./img/actions3.png)
 
 # Build cross cluster CA trust using Pushsecret from ESO and Bundle from trust-manager
