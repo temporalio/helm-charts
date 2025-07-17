@@ -194,6 +194,39 @@ spec:
     name: {{ $.Values.secretStore }}
   target:
     name: {{ $.Release.Name }}-root-ca-list
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: pushsecret-tctl-{{ $.Release.Name }}
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-75"
+spec:
+  updatePolicy: Replace
+  refreshInterval: 1h
+  secretStoreRefs:
+    - name: {{ $.Values.secretStore }}
+      kind: ClusterSecretStore
+  selector:
+    secret:
+      name: {{ $.Release.Name }}-tctl-cert
+  data:
+    - match:
+        secretKey: tls.crt
+        remoteRef:
+          remoteKey: {{ $.Values.tctlSecretStoreSecret }}
+          property: tls.crt
+    - match:
+        secretKey: tls.key
+        remoteRef:
+          remoteKey: {{ $.Values.tctlSecretStoreSecret }}
+          property: tls.key
+    - match:
+        secretKey: ca.crt
+        remoteRef:
+          remoteKey: {{ $.Values.tctlSecretStoreSecret }}
+          property: ca.crt
 {{/* END AWS Secrets Manager specific implementation  */}}
 
 
@@ -263,6 +296,27 @@ spec:
     name: {{ $.Values.secretStore }}
   target:
     name: {{ $.Release.Name }}-root-ca-list
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: pushsecret-tctl-{{ $.Release.Name }}
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-75"
+spec:
+  updatePolicy: Replace
+  refreshInterval: 1h
+  secretStoreRefs:
+    - name: {{ $.Values.secretStore }}
+      kind: ClusterSecretStore
+  selector:
+    secret:
+      name: {{ $.Release.Name }}-tctl-cert
+  data:
+    - match:
+        remoteRef:
+          remoteKey: {{ $.Values.tctlSecretStoreSecret }}
 {{/* END Azure Key Vault specific implementation  */}}
 {{- end }}
 ---
@@ -301,38 +355,5 @@ spec:
     kind: ClusterIssuer
     name: {{ $.Release.Name }}-selfsigned-issuer
   secretName: {{ $.Release.Name }}-tctl-cert
----
-apiVersion: external-secrets.io/v1alpha1
-kind: PushSecret
-metadata:
-  name: pushsecret-tctl-{{ $.Release.Name }}
-  namespace: {{ $.Release.Namespace }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "-75"
-spec:
-  updatePolicy: Replace
-  refreshInterval: 1h
-  secretStoreRefs:
-    - name: {{ $.Values.secretStore }}
-      kind: ClusterSecretStore
-  selector:
-    secret:
-      name: {{ $.Release.Name }}-tctl-cert
-  data:
-    - match:
-        secretKey: tls.crt
-        remoteRef:
-          remoteKey: {{ $.Values.tctlSecretStoreSecret }}
-          property: tls.crt
-    - match:
-        secretKey: tls.key
-        remoteRef:
-          remoteKey: {{ $.Values.tctlSecretStoreSecret }}
-          property: tls.key
-    - match:
-        secretKey: ca.crt
-        remoteRef:
-          remoteKey: {{ $.Values.tctlSecretStoreSecret }}
-          property: ca.crt
 {{- end }}
 {{- end }}
