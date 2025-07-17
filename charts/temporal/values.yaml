@@ -89,6 +89,7 @@ server:
   additionalEnv: []
   # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
+  postInitContainers: []
   securityContext:
     fsGroup: 1000
     runAsUser: 1000
@@ -450,6 +451,7 @@ schema:
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
+  postInitContainers: []
 elasticsearch:
   enabled: true
   replicas: 3

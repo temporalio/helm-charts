@@ -85,3 +85,13 @@ tests:
           path: spec.template.metadata.annotations["prometheus.io/scrape"]
       - notExists:
           path: spec.template.metadata.annotations["prometheus.io/port"]
+  - it: includes postInit containers
+    template: templates/server-deployment.yaml
+    set:
+      server:
+        postInitContainers:
+          - name: my-post-init-container
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[-1].name
+          value: my-post-init-container
