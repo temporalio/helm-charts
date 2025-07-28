@@ -50,14 +50,12 @@ The sections that follow describe various deployment configurations, from a mini
 
 ### Minimal installation with required dependencies only
 
-To install Temporal in a limited but working and self-contained configuration (one replica of Cassandra, Elasticsearch and each of Temporal's services, no metrics), you can run:
+To install Temporal in a limited but working and self-contained configuration (MySQL and one replica of each of Temporal's services, no metrics), you can run:
 
 ```bash
 helm install \
     --repo https://go.temporal.io/helm-charts \
     --set server.replicaCount=1 \
-    --set cassandra.config.cluster_size=1 \
-    --set elasticsearch.replicas=1 \
     --set prometheus.enabled=false \
     --set grafana.enabled=false \
     temporaltest temporal \
@@ -66,15 +64,13 @@ helm install \
 
 This configuration consumes limited resources and it is useful for small scale tests (such as using minikube).
 
-Note: It used to be possible to install Temporal with just Cassandra. Since Temporal 1.21, this is no longer supported. Cassandra is not supported as a visibility store, so Elasticsearch or an SQL store must be enabled.
-
 Below is an example of an environment installed in this configuration:
 
 ```
 $ kubectl get pods
 NAME                                           READY   STATUS    RESTARTS   AGE
 temporaltest-admintools-6cdf56b869-xdxz2       1/1     Running   0          11m
-temporaltest-cassandra-0                       1/1     Running   0          11m
+temporaltest-mysql-0                           1/1     Running   0          11m
 temporaltest-frontend-5d5b6d9c59-v9g5j         1/1     Running   2          11m
 temporaltest-history-64b9ddbc4b-bwk6j          1/1     Running   2          11m
 temporaltest-matching-c8887ddc4-jnzg2          1/1     Running   2          11m
@@ -135,8 +131,8 @@ helm install --repo https://go.temporal.io/helm-charts -f values/values.elastics
 You can start Temporal with MySQL and ElasticSearch using our prepared chart:
 ```bash
 % helm install temporal ./charts/temporal \
-  -f charts/temporal/values/values.mysql.es.yaml \
-  --debug
+  --set mysql.enabled=true \
+  --set elasticsearch.enabled=true
 ```
 
 It takes ~3 minutes for the deployment to become stable. It should look similar to:
@@ -158,16 +154,17 @@ You can reach the MySQL database using port-forwarding, for example:
 kubectl port-forward pod/temporal-mysql-0 3306:3306
 ```
 
-
 ### Install with a managed MySQL for persistence and visibility
+
 You can start Temporal with MySQL using our prepared chart:
 ```bash
 % helm install temporal ./charts/temporal \
-  -f charts/temporal/values/values.mysql.yaml \
-  --debug
+  --set mysql.enabled=true
 ```
 
-It takes ~3 minutes for the deployment to become stable. It should look similar to:
+Note that this is the default for the helm chart.
+
+It takes ~1 minute for the deployment to become stable. It should look similar to:
 ```bash
 NAME                                   READY   STATUS      RESTARTS      AGE
 temporal-admintools-5f9d766b5b-q7wzw   1/1     Running     0             109s

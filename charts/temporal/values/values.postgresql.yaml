@@ -1,3 +1,9 @@
+# This is an example of using an external Postgresql database for Temporal persistence and visibility.
+# Replace `_HOST_`, `_USERNAME_`, and `_PASSWORD_` with your Postgresql database host, username, and password.
+
+mysql:
+  enabled: false
+
 server:
   config:
     persistence:
@@ -57,28 +63,3 @@ server:
   #   - name: secret-with-certs
   #     mountPath: /path/to/certs/
 
-cassandra:
-  enabled: false
-
-mysql:
-  enabled: false
-
-postgresql:
-  enabled: true
-
-prometheus:
-  enabled: true
-
-grafana:
-  enabled: true
-  
-elasticsearch:
-  enabled: true
-
-schema:
-  createDatabase:
-    enabled: true
-  setup:
-    enabled: false
-  update:
-    enabled: false

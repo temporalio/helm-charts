@@ -154,12 +154,12 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
         sql:
-          driver: "mysql8"
+          driver: ""
           host: ""
-          port: 3306
+          port:
           database: "temporal"
-          user: "root"
-          password: "temporalRoot"
+          user: ""
+          password: ""
           existingSecret: ""
           secretName: ""
           maxConns: 20
@@ -185,12 +185,12 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
         sql:
-          driver: "mysql8"
+          driver: ""
           host: ""
           port: 3306
           database: "temporal_visibility"
-          user: "root"
-          password: "temporalRoot"
+          user: ""
+          password: ""
           existingSecret: ""
           secretName: ""
           maxConns: 20
@@ -451,8 +451,8 @@ schema:
   containerSecurityContext: {}
   securityContext: {}
 elasticsearch:
-  enabled: true
-  replicas: 3
+  enabled: false
+  replicas: 1
   persistence:
     enabled: false
   imageTag: 7.17.3
@@ -525,7 +525,7 @@ grafana:
         url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json
         datasource: TemporalMetrics
 cassandra:
-  enabled: true
+  enabled: false
   persistence:
     enabled: false
   image:
@@ -543,8 +543,8 @@ cassandra:
   service:
     type: ClusterIP
 mysql:
-  enabled: false
+  enabled: true
   auth:
-    rootPassword: temporalRoot
+    rootPassword: "sekret"
 postgresql:
   enabled: false
