@@ -43,7 +43,7 @@
 - name: SQL_DATABASE
   value: {{ include "temporal.persistence.sql.database" (list $global $store) }}
 - name: SQL_USER
-  value: {{ $driverConfig.user }}
+  value: {{ include "temporal.persistence.sql.user" (list $global $store) | quote }}
 - name: SQL_PASSWORD
   valueFrom:
     secretKeyRef:

@@ -1,3 +1,10 @@
+# This is an example of using an external MySQL database for Temporal persistence and visibility.
+# Replace `_HOST_`, `_USERNAME_`, and `_PASSWORD_` with your MySQL database host, username, and password.
+
+# Note: This instructs the chart not to try and install MySQL itself, using an external MySQL instance will still work.
+mysql:
+  enabled: false
+
 server:
   config:
     persistence:
@@ -11,9 +18,19 @@ server:
           database: temporal
           user: _USERNAME_
           password: _PASSWORD_
+          # for a production deployment use this instead of `password` and provision the secret beforehand e.g. with a sealed secret
+          # it has a single key called `password`
+          # existingSecret: temporal-default-store
           maxConns: 20
           maxIdleConns: 20
           maxConnLifetime: "1h"
+          # tls:
+          #  enabled: true
+          #  enableHostVerification: true
+          #  serverName: _HOST_ # this is strictly required when using serverless CRDB offerings
+          #  caFile: /path/to/certs/<CA-file> # Here we assumed that caFile, certFile, keyFile are stored in one secret mounted as 'secret-with-certs' (see: server.additionalVolumes and server.additionalVolumeMounts sections).
+          #  certFile: /path/to/certs/<client-cert-file>
+          #  keyFile: /path/to/certs/<client-key-file>
 
       visibility:
         driver: "sql"
@@ -25,23 +42,25 @@ server:
           database: temporal_visibility
           user: _USERNAME_
           password: _PASSWORD_
+          # for a production deployment use this instead of `password` and provision the secret beforehand e.g. with a sealed secret
+          # it has a single key called `password`
+          # existingSecret: temporal-visibility-store
           maxConns: 20
           maxIdleConns: 20
           maxConnLifetime: "1h"
+          # tls:
+          #  enabled: true
+          #  enableHostVerification: true
+          #  serverName: _HOST_ # this is strictly required when using serverless CRDB offerings
+          #  caFile: /path/to/certs/<CA-file> # Here we assumed that caFile, certFile, keyFile are stored in one secret mounted as 'secret-with-certs' (see: server.additionalVolumes and server.additionalVolumeMounts sections).
+          #  certFile: /path/to/certs/<client-cert-file>
+          #  keyFile: /path/to/certs/<client-key-file>
 
-cassandra:
-  enabled: false
+  # additionalVolumes:
+  #   - name: secret-with-certs
+  #     secret:
+  #       secretName: secret-with-certs
+  # additionalVolumeMounts:
+  #   - name: secret-with-certs
+  #     mountPath: /path/to/certs/
 
-mysql:
-  enabled: true
-
-postgresql:
-  enabled: false
-
-schema:
-  createDatabase:
-    enabled: true
-  setup:
-    enabled: false
-  update:
-    enabled: false

@@ -1,3 +1,7 @@
+# Disable the default, which is for the chart to install and use MySQL.
+mysql:
+  enabled: false
+
 server:
   config:
     logLevel: "debug,info"
@@ -33,25 +37,9 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
-          replicationFactor: 1
+          replicationFactor: 3
           consistency:
             default:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
 
-cassandra:
-  enabled: false
-
-mysql:
-  enabled: false
-
-postgresql:
-  enabled: false
-
-schema:
-  createDatabase:
-    enabled: true
-  setup:
-    enabled: false
-  update:
-    enabled: false

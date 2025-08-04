@@ -20,6 +20,10 @@ dependencies:
     repository: https://helm.elastic.co
     version: 7.17.3
     condition: elasticsearch.enabled
+  - name: mysql
+    repository: https://charts.bitnami.com/bitnami
+    version: 13.0.0
+    condition: mysql.enabled
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives

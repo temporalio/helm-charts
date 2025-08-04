@@ -140,7 +140,7 @@ server:
       defaultStore: default
       additionalStores: {}
       default:
-        driver: "cassandra"
+        driver: "sql"
         cassandra:
           hosts: []
           # port: 9042
@@ -157,12 +157,12 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
         sql:
-          driver: "mysql8"
-          host: "mysql"
-          port: 3306
+          driver: ""
+          host: ""
+          port:
           database: "temporal"
-          user: "temporal"
-          password: "temporal"
+          user: ""
+          password: ""
           existingSecret: ""
           secretName: ""
           maxConns: 20
@@ -171,7 +171,7 @@ server:
           # connectAttributes:
           # tx_isolation: 'READ-COMMITTED'
       visibility:
-        driver: "cassandra"
+        driver: "sql"
         cassandra:
           hosts: []
           # port: 9042
@@ -188,12 +188,12 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
         sql:
-          driver: "mysql8"
-          host: "mysql"
+          driver: ""
+          host: ""
           port: 3306
           database: "temporal_visibility"
-          user: "temporal"
-          password: "temporal"
+          user: ""
+          password: ""
           existingSecret: ""
           secretName: ""
           maxConns: 20
@@ -454,8 +454,8 @@ schema:
   containerSecurityContext: {}
   securityContext: {}
 elasticsearch:
-  enabled: true
-  replicas: 3
+  enabled: false
+  replicas: 1
   persistence:
     enabled: false
   imageTag: 7.17.3
@@ -468,7 +468,7 @@ elasticsearch:
   password: ""
   visibilityIndex: "temporal_visibility_v1_dev"
 cassandra:
-  enabled: true
+  enabled: false
   persistence:
     enabled: false
   image:
@@ -486,4 +486,8 @@ cassandra:
   service:
     type: ClusterIP
 mysql:
+  enabled: true
+  auth:
+    rootPassword: "sekret"
+postgresql:
   enabled: false
