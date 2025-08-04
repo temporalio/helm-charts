@@ -2,6 +2,14 @@ suite: test server job
 templates:
   - server-job.yaml
 tests:
+  - it: is able to create the server job even if Values.server.enabled is false
+    set:
+      server:
+        enabled: false
+    asserts:
+      - containsDocument:
+          kind: Job
+          apiVersion: batch/v1
   - it: includes additional init containers
     set:
       admintools:
@@ -29,3 +37,27 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[*].volumeMounts[0].name
           value: my-volume
+  - it: includes resource limits and requests on initContainers
+    set:
+      schema:
+        resources:
+          requests:
+            cpu: 12
+            memory: 12Gi
+          limits:
+            cpu: 16
+            memory: 16Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[*].resources.requests.cpu
+          value: 12
+      - equal:
+          path: spec.template.spec.initContainers[*].resources.requests.memory
+          value: 12Gi
+      - equal:
+          path: spec.template.spec.initContainers[*].resources.limits.cpu
+          value: 16
+      - equal:
+          path: spec.template.spec.initContainers[*].resources.limits.memory
+          value: 16Gi
+

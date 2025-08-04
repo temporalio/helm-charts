@@ -1,4 +1,4 @@
-{{- if $.Values.server.enabled }}{{- if or $.Values.schema.createDatabase.enabled $.Values.schema.setup.enabled $.Values.schema.update.enabled }}
+{{- if or $.Values.schema.createDatabase.enabled $.Values.schema.setup.enabled $.Values.schema.update.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -28,13 +28,14 @@ spec:
           {{- toYaml . | nindent 8 }}
         {{- end }}
         {{- if $.Values.cassandra.enabled }}
-        - name: check-cassandra-service
-          image: busybox
-          command: ['sh', '-c', 'until nc -z {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }}; do echo waiting for cassandra service; sleep 1; done;']
         - name: check-cassandra
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
           command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+          {{- with $.Values.schema.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         {{- end }}
         {{- if or $.Values.elasticsearch.enabled }}
         - name: check-elasticsearch
@@ -43,6 +44,10 @@ spec:
           command: ['sh', '-c', 'until curl --silent --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
           env:
             {{- include "temporal.admintools-env" (list $ "visibility") | nindent 12 }}
+          {{- with $.Values.schema.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         {{- end }}
         {{- if $.Values.schema.createDatabase.enabled }}
           {{- range $store := (list "default" "visibility") }}
@@ -61,6 +66,14 @@ spec:
               {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
               {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with $.Values.schema.resources }}
+          resources:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- with $.Values.schema.containerSecurityContext }}
+          securityContext:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
             {{- end }}
@@ -147,6 +160,8 @@ spec:
             - name: TEMPORAL_ADDRESS
               {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
               value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.internalFrontend.service.port }}
+              {{- else if $.Values.server.frontend.ingress.enabled }}
+              value: "{{ index $.Values.server.frontend.ingress.hosts 0 }}"
               {{- else }}
               value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
               {{- end }}
@@ -200,4 +215,4 @@ spec:
       volumes:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-{{- end -}}{{- end -}}
+{{- end -}}

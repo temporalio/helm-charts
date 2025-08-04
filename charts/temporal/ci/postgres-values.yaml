@@ -13,6 +13,7 @@ server:
           user: "temporal"
           password: "temporal"
           maxConns: 20
+          maxIdleConns: 20
           maxConnLifetime: "1h"
       visibility:
         driver: "sql"
@@ -24,6 +25,7 @@ server:
           user: "temporal"
           password: "temporal"
           maxConns: 20
+          maxIdleConns: 20
           maxConnLifetime: "1h"
 cassandra:
   enabled: false

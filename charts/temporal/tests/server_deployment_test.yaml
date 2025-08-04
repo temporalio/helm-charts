@@ -66,3 +66,22 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].name
           value: my-init-container
+  - it: omits prometheus annotations when disabled
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        frontend:
+          metrics:
+            annotations:
+              enabled: false
+    asserts:
+      - notExists:
+          path: spec.template.metadata.annotations["prometheus.io/job"]
+      - notExists:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+      - notExists:
+          path: spec.template.metadata.annotations["prometheus.io/port"]

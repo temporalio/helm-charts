@@ -1,0 +1,44 @@
+suite: test server service
+templates:
+  - server-service.yaml
+set:
+  server:
+    replicaCount: 2
+    resources:
+      requests:
+        cpu: 100m
+    frontend:
+      replicaCount: 3
+      resources:
+        requests:
+          cpu: 200m
+tests:
+  - it: omits prometheus annotations when disabled
+    template: templates/server-service.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-headless")].kind'
+      value: Service
+      matchMany: true
+    set:
+      server:
+        frontend:
+          metrics:
+            annotations:
+              enabled: false
+    asserts:
+      - notExists:
+          path: metadata.annotations["prometheus.io/job"]
+      - notExists:
+          path: metadata.annotations["prometheus.io/scrape"]
+      - notExists:
+          path: metadata.annotations["prometheus.io/port"]
+  - it: doesn't create any services when the server is disabled
+    template: templates/server-service.yaml
+    set:
+      server:
+        enabled: false
+    asserts:
+      - not: true
+        containsDocument:
+          kind: Service
+          apiVersion: v1

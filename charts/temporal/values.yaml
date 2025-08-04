@@ -20,7 +20,7 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.27.1
+    tag: 1.28.0
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -166,6 +166,7 @@ server:
           existingSecret: ""
           secretName: ""
           maxConns: 20
+          maxIdleConns: 20
           maxConnLifetime: "1h"
           # connectAttributes:
           # tx_isolation: 'READ-COMMITTED'
@@ -196,6 +197,7 @@ server:
           existingSecret: ""
           secretName: ""
           maxConns: 20
+          maxIdleConns: 20
           maxConnLifetime: "1h"
           # connectAttributes:
           #   tx_isolation: 'READ-COMMITTED'
@@ -353,7 +355,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.27.1
+    tag: 1.28.0-tctl-1.18.2-cli-1.3.0
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -382,12 +384,15 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.36.0
+    tag: 2.38.3
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
     # for more info see https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
     type: ClusterIP
+    # The below clusterIP setting can be set to "None" to make the temporal-web service headless.
+    # Note that this requires the web.service.type to be the default ClusterIP value.
+    # clusterIP:
     port: 8080
     annotations: {}
     # loadBalancerIP:

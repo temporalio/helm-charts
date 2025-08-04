@@ -15,6 +15,7 @@ server:
           # it has a single key called `password`
           # existingSecret: temporal-default-store
           maxConns: 20
+          maxIdleConns: 20
           maxConnLifetime: "1h"
           # tls:
           #  enabled: true
@@ -38,6 +39,7 @@ server:
           # it has a single key called `password`
           # existingSecret: temporal-visibility-store
           maxConns: 20
+          maxIdleConns: 20
           maxConnLifetime: "1h"
           # tls:
           #  enabled: true
