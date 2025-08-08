@@ -3,6 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
+  namespace: {{ $.Release.Namespace }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
 spec:
