@@ -82,7 +82,6 @@
   value: {{ $driverConfig.host }}
 - name: ES_PORT
   value: {{ $driverConfig.port | quote }}
-{{- if $driverConfig.username -}}
 - name: ES_USER
   value: {{ $driverConfig.username | quote }}
 - name: ES_PWD
@@ -90,7 +89,6 @@
     secretKeyRef:
       name: {{ include "temporal.persistence.secretName" (list $global $store) }}
       key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
-{{- end }}
 - name: ES_VERSION
   value: {{ $driverConfig.version }}
 - name: ES_VISIBILITY_INDEX
