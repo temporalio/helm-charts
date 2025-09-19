@@ -58,7 +58,7 @@ spec:
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
               {{- if eq $driver "cassandra" }}
-          command: ['temporal-cassandra-tool', 'create', '-k', '{{ $storeConfig.cassandra.keyspace }}', '--replication-factor', '{{ $storeConfig.cassandra.replicationFactor }}']
+          command: ['temporal-cassandra-tool', 'create', '-k', '{{ $storeConfig.cassandra.keyspace }}', '--replication-factor', '{{ $storeConfig.cassandra.replicationFactor }}'{{- if $storeConfig.cassandra.datacenter }}, '--datacenter', '{{ $storeConfig.cassandra.datacenter }}'{{- end }}]
               {{- else if eq $driver "sql" }}
           command: ['temporal-sql-tool', 'create-database']
               {{- end }}
