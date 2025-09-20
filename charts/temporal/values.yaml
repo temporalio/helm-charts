@@ -445,6 +445,12 @@ schema:
   update:
     enabled: true
     backoffLimit: 100
+  # Annotations applied to the schema Job. When using Argo CD, enabling Helm hook annotations
+  # prevents the schema Job from being considered part of the steady state and avoids perpetual
+  # OutOfSync after the job completes.
+  annotations:
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
   podAnnotations: {}
   podLabels: {}
   resources: {}
