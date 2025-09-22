@@ -8,6 +8,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
+  namespace: {{ $.Release.Namespace }}
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
     {{- with (default $.Values.server.metrics.serviceMonitor.additionalLabels $serviceValues.metrics.serviceMonitor.additionalLabels) }}
