@@ -1,2 +1,20 @@
 /Chart.lock
 /.idea
+
+# Python
+*.py
+__pycache__/
+*.pyc
+
+# Test artifacts
+test-*.yaml
+test_*.py
+
+# Logs
+logs
+*.log
+
+# Temporary files
+*.tmp
+*~
+.DS_Store

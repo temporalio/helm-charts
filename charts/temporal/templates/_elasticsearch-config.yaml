@@ -1,0 +1,74 @@
+{{/*
+Helper templates for Elasticsearch configuration
+*/}}
+
+{{/*
+Determine if we need to use HTTPS based on Elasticsearch configuration
+*/}}
+{{- define "temporal.elasticsearch.scheme" -}}
+{{- $elasticsearch := .Values.elasticsearch -}}
+{{- if $elasticsearch.tls.enabled -}}
+https
+{{- else -}}
+{{ $elasticsearch.scheme | default "http" }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get Elasticsearch version for compatibility checks
+*/}}
+{{- define "temporal.elasticsearch.majorVersion" -}}
+{{- $version := .Values.elasticsearch.version | default "v7" -}}
+{{- if hasPrefix "v8" $version -}}
+8
+{{- else if hasPrefix "v9" $version -}}
+9
+{{- else -}}
+7
+{{- end -}}
+{{- end -}}
+
+{{/*
+Check if Elasticsearch security is likely enabled (ES 8+)
+*/}}
+{{- define "temporal.elasticsearch.securityEnabled" -}}
+{{- $majorVersion := include "temporal.elasticsearch.majorVersion" . | atoi -}}
+{{- $elasticsearch := .Values.elasticsearch -}}
+{{- if ge $majorVersion 8 -}}
+{{- if not $elasticsearch.esConfig -}}
+true
+{{- else if $elasticsearch.esConfig -}}
+{{- $config := $elasticsearch.esConfig | toYaml -}}
+{{- if contains "xpack.security.enabled: false" $config -}}
+false
+{{- else -}}
+true
+{{- end -}}
+{{- end -}}
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate additional Elasticsearch configuration for visibility store
+*/}}
+{{- define "temporal.elasticsearch.additionalConfig" -}}
+{{- $majorVersion := include "temporal.elasticsearch.majorVersion" . | atoi -}}
+{{- $securityEnabled := include "temporal.elasticsearch.securityEnabled" . -}}
+{{- $elasticsearch := .Values.elasticsearch -}}
+{{- if ge $majorVersion 8 -}}
+{{- if eq $securityEnabled "true" -}}
+{{- if $elasticsearch.tls.enabled }}
+            tls:
+              enabled: true
+              {{- with $elasticsearch.tls.certificateSecret }}
+              certificateSecret: {{ . }}
+              {{- end }}
+              {{- with $elasticsearch.tls.caData }}
+              caData: {{ . }}
+              {{- end }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

@@ -1,0 +1,30 @@
+# Test values for Elasticsearch 8.x (default configuration)
+server:
+  replicaCount: 1
+
+cassandra:
+  config:
+    cluster_size: 1
+
+elasticsearch:
+  replicas: 1
+  imageTag: 8.19.2
+  version: "v8"
+  scheme: https
+  # ES 8+ uses roles and security enabled by default
+  roles:
+    - master
+    - data
+    - data_content
+    - ingest
+  # Accept ES 8.x default security settings
+  username: "elastic"
+  password: "fhWYbFFvFRtJTyh8"
+  tls:
+    enabled: true
+
+prometheus:
+  enabled: false
+
+grafana:
+  enabled: false

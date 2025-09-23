@@ -52,7 +52,7 @@ data:
           elasticsearch:
             version: "{{ $elasticsearch.version }}"
             url:
-                scheme: "{{ $elasticsearch.scheme }}"
+                scheme: "{{ include "temporal.elasticsearch.scheme" $ }}"
                 host: "{{ $elasticsearch.host }}:{{ $elasticsearch.port }}"
             username: "{{ $elasticsearch.username }}"
             password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
@@ -63,6 +63,7 @@ data:
             tls:
               {{- toYaml . | nindent 16 }}
             {{- end }}
+            {{- include "temporal.elasticsearch.additionalConfig" $ | nindent 12 }}
         {{- else if eq (include "temporal.persistence.driver" (list $ "visibility")) "sql" }}
           sql:
             pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"
