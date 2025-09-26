@@ -41,7 +41,7 @@ spec:
         - name: check-elasticsearch
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
+          command: ['sh', '-c', 'until temporal-elasticsearch-tool ping; do echo waiting for elasticsearch to start; sleep 1; done;']
           env:
             {{- include "temporal.admintools-env" (list $ "visibility") | nindent 12 }}
           {{- with $.Values.schema.containerSecurityContext }}
@@ -91,11 +91,7 @@ spec:
             {{- else if eq $driver "sql" }}
           command: ['temporal-sql-tool', 'setup-schema', '-v', '0.0']
             {{- else if eq $driver "elasticsearch" }}
-          command: ['sh', '-c']
-          args:
-            - 'curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&
-              curl --head --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1 ||
-              curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1'
+          command: ['sh', '-c', 'temporal-elasticsearch-tool setup-schema && temporal-elasticsearch-tool create-index']
             {{- end }}
           env:
             {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
@@ -118,7 +114,6 @@ spec:
             {{- $storeConfig := index $.Values.server.config.persistence $store }}
             {{- $driver := include "temporal.persistence.driver" (list $ $store) }}
             {{- $schema := include "temporal.persistence.schema" $store }}
-            {{- if ne $driver "elasticsearch" }}
         - name: update-{{ $store }}-store
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
@@ -131,6 +126,8 @@ spec:
                 {{- else if or (eq $plugin "postgres12") (eq $plugin "postgres12_pgx") }}
           command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v12/{{ $schema }}/versioned']
                 {{- end }}
+              {{- else if eq $driver "elasticsearch" }}
+          command: ['temporal-elasticsearch-tool', 'update-schema']
               {{- end }}
           env:
               {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
@@ -146,7 +143,6 @@ spec:
           securityContext:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
-            {{- end }}
           {{- end }}
         {{- end }}
         {{- if $.Values.server.config.namespaces.create }}
