@@ -211,6 +211,8 @@ server:
       # Evaluated as template
       annotations: {}
       type: ClusterIP
+      # loadBalancerIP:
+      # loadBalancerClass:
       port: 7233
       membershipPort: 6933
       httpPort: 7243
@@ -374,6 +376,7 @@ web:
     port: 8080
     annotations: {}
     # loadBalancerIP:
+    # loadBalancerClass:
   ingress:
     enabled: false
     # className:

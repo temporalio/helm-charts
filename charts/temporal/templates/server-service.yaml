@@ -10,6 +10,14 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.server.frontend.service.type }}
+  {{- if eq .Values.server.frontend.service.type "LoadBalancer" }}
+  {{- with .Values.server.frontend.service.loadBalancerIP }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
+  {{- with .Values.server.frontend.service.loadBalancerClass }}
+  loadBalancerClass: {{ . }}
+  {{- end }}
+  {{- end }}
   ports:
     - port: {{ .Values.server.frontend.service.port }}
       targetPort: rpc
