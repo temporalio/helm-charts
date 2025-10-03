@@ -18,6 +18,7 @@ data:
       visibilityStore: visibility
       numHistoryShards: {{ $server.config.numHistoryShards }}
       datastores:
+        {{- if ne (include "temporal.persistence.driver" (list $ "default")) "custom" }}
         default:
           {{- if eq (include "temporal.persistence.driver" (list $ "default")) "cassandra" }}
           cassandra:
@@ -44,6 +45,7 @@ data:
           faultInjection:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+        {{- end }}
         {{- with $server.config.persistence.additionalStores }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
