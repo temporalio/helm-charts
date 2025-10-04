@@ -1,0 +1,21 @@
+# Test values for Elasticsearch 9.x (experimental)
+server:
+  replicaCount: 1
+
+cassandra:
+  config:
+    cluster_size: 1
+
+elasticsearch:
+  replicas: 1
+  imageTag: 9.0.0
+  version: "v9"
+  scheme: http
+  # ES 9.x uses same role structure as ES 8.x
+  # Use default roles and security settings from values.yaml
+
+prometheus:
+  enabled: false
+
+grafana:
+  enabled: false

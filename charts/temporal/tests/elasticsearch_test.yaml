@@ -1,0 +1,28 @@
+suite: test elasticsearch integration
+templates:
+  - templates/server-configmap.yaml
+tests:
+  - it: should use correct elasticsearch scheme for v8
+    set:
+      elasticsearch.enabled: true
+      elasticsearch.version: v8
+      elasticsearch.scheme: http
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: 'scheme: "http"'
+
+  - it: should render elasticsearch configuration for v8
+    set:
+      elasticsearch.enabled: true
+      elasticsearch.version: v8
+    asserts:
+      - hasDocuments:
+          count: 1
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: 'version: "v8"'
