@@ -352,7 +352,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: 1.29
+    tag: "1.29"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
