@@ -10,8 +10,10 @@ metadata:
 data:
   config_template.yaml: |-
     log:
-      stdout: true
+      stdout: {{ $server.config.logstdOut | default true }}
       level: {{ $server.config.logLevel | quote }}
+      outputFile: {{ $server.config.logOutputFile | quote }}
+      format: {{ $server.config.logFormat | quote }}
 
     persistence:
       defaultStore: {{ $server.config.persistence.defaultStore }}
