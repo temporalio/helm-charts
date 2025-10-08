@@ -436,6 +436,7 @@ web:
   securityContext: {}
   topologySpreadConstraints: []
   podDisruptionBudget: {}
+  useInternalFrontend: false
 schema:
   createDatabase:
     enabled: true
