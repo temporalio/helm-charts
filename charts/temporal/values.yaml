@@ -3,7 +3,7 @@ fullnameOverride: ""
 # Chart debug mode
 # (eg. disable helm hook delete policy)
 debug: false
-imagePullSecrets: {}
+imagePullSecrets: []
 # Custom Service account management
 serviceAccount:
   # Whether to create service account or not
