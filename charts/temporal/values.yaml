@@ -436,6 +436,8 @@ web:
   securityContext: {}
   topologySpreadConstraints: []
   podDisruptionBudget: {}
+  # Set to true to have the web UI connect to the internal-frontend service.
+  bypassAuth: false
 schema:
   createDatabase:
     enabled: true
