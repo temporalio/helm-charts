@@ -437,6 +437,11 @@ web:
   topologySpreadConstraints: []
   podDisruptionBudget: {}
 schema:
+  garbageCollection:
+    # Enable or disable the job garbage collection
+    enabled: true
+    # If enabled, time before the job is removed in seconds. Default 86400
+    ttlSeconds: 86400
   createDatabase:
     enabled: true
   setup:

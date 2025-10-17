@@ -7,7 +7,11 @@ metadata:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
+  {{- if and $.Values.schema.garbageCollection $.Values.schema.garbageCollection.enabled }}
+  ttlSecondsAfterFinished: {{ $.Values.schema.garbageCollection.ttlSeconds | default 86400 }}
+  {{- else if not $.Values.schema.garbageCollection }}
   ttlSecondsAfterFinished: 86400
+  {{- end }}
   template:
     metadata:
       name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
