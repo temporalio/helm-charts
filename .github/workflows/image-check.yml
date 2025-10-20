@@ -1,0 +1,62 @@
+name: Check image tags
+
+on: pull_request
+
+jobs:
+  check-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4.2.0
+        with:
+          version: v3.14.4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          check-latest: true
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'charts/temporal/tests/go.mod'
+
+      - name: Add dependency repos
+        run: |
+          helm repo add incubator https://charts.helm.sh/incubator
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add elastic https://helm.elastic.co
+          helm repo add grafana https://grafana.github.io/helm-charts
+      
+      - name: Build Helm Chart
+        run: |
+          helm dependency build charts/temporal
+
+      - name: Run default image check
+        run: |
+          helm template charts/temporal \
+          | yq e -r -N '.. | select(tag == "!!map" and has("image")) | .image' - \
+          | sort -u \
+          | while IFS= read -r img; do \
+              [ -z "$img" ] && continue; \
+              echo "Inspecting image: $img"; \
+              docker manifest inspect "$img" >/dev/null || echo "Invalid image: $img"; \
+          done
+      
+      - name: Run +mysql image check
+        run: |
+          helm template charts/temporal \
+            --set mysql.enabled=true \
+            --set cassandra.enabled=false \
+            --set server.config.persistence.default.driver="sql" \
+          | yq e -r -N '.. | select(tag == "!!map" and has("image")) | .image' - \
+          | sort -u \
+          | while IFS= read -r img; do \
+              [ -z "$img" ] && continue; \
+              echo "Inspecting image: $img"; \
+              docker manifest inspect "$img" >/dev/null || echo "Invalid image: $img"; \
+          done
