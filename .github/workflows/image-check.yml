@@ -44,7 +44,7 @@ jobs:
           | while IFS= read -r img; do \
               [ -z "$img" ] && continue; \
               echo "Inspecting image: $img"; \
-              docker manifest inspect "$img" >/dev/null || echo "Invalid image: $img"; \
+              docker manifest inspect "$img" >/dev/null || echo "Invalid image: $img"; exit 2; \
           done
       
       - name: Run +mysql image check
@@ -58,5 +58,5 @@ jobs:
           | while IFS= read -r img; do \
               [ -z "$img" ] && continue; \
               echo "Inspecting image: $img"; \
-              docker manifest inspect "$img" >/dev/null || echo "Invalid image: $img"; \
+              docker manifest inspect "$img" >/dev/null || echo "Invalid image: $img"; exit 2; \
           done
