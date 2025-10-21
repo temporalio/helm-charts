@@ -32,12 +32,42 @@ data:
           sql:
             pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "default") }}"
             driverName: "{{ include "temporal.persistence.sql.driver" (list $ "default") }}"
+            {{- if eq (include "temporal.persistence.sql.hasSecretRef" (list $ "default")) "true" }}
+              {{- if eq (include "temporal.persistence.sql.hasDatabaseKey" (list $ "default")) "true" }}
+            databaseName: {{ `{{ .Env.TEMPORAL_STORE_DATABASE }}` }}
+              {{- else }}
+            databaseName: "{{ $server.config.persistence.default.sql.database }}"
+              {{- end }}
+              {{- $useHostFromSecret := eq (include "temporal.persistence.sql.hasHostKey" (list $ "default")) "true" -}}
+              {{- $usePortFromSecret := eq (include "temporal.persistence.sql.hasPortKey" (list $ "default")) "true" -}}
+              {{- if and $useHostFromSecret $usePortFromSecret }}
+            connectAddr: {{ `{{ .Env.TEMPORAL_STORE_HOST }}` }}:{{ `{{ .Env.TEMPORAL_STORE_PORT }}` }}
+              {{- else if $useHostFromSecret }}
+            connectAddr: {{ `{{ .Env.TEMPORAL_STORE_HOST }}` }}:{{ include "temporal.persistence.sql.port" (list $ "default") }}
+              {{- else if $usePortFromSecret }}
+            connectAddr: {{ include "temporal.persistence.sql.host" (list $ "default") }}:{{ `{{ .Env.TEMPORAL_STORE_PORT }}` }}
+              {{- else }}
+            connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "default") }}:{{ include "temporal.persistence.sql.port" (list $ "default") }}"
+              {{- end }}
+            connectProtocol: "tcp"
+              {{- if eq (include "temporal.persistence.sql.hasUserKey" (list $ "default")) "true" }}
+            user: {{ `{{ .Env.TEMPORAL_STORE_USER }}` }}
+              {{- else }}
+            user: {{ include "temporal.persistence.sql.user" (list $ "default") }}
+              {{- end }}
+              {{- if eq (include "temporal.persistence.sql.hasPasswordKey" (list $ "default")) "true" }}
+            password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
+              {{- else }}
+            password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
+              {{- end }}
+            {{- else }}
             databaseName: "{{ $server.config.persistence.default.sql.database }}"
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "default") }}:{{ include "temporal.persistence.sql.port" (list $ "default") }}"
             connectProtocol: "tcp"
             user: {{ include "temporal.persistence.sql.user" (list $ "default") }}
             password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
-            {{- with (omit $server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
+            {{- end }}
+            {{- with (omit $server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret" "secretName" "secretRef") }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
@@ -69,12 +99,42 @@ data:
           sql:
             pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"
             driverName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"
+            {{- if eq (include "temporal.persistence.sql.hasSecretRef" (list $ "visibility")) "true" }}
+              {{- if eq (include "temporal.persistence.sql.hasDatabaseKey" (list $ "visibility")) "true" }}
+            databaseName: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_DATABASE }}` }}
+              {{- else }}
+            databaseName: "{{ $server.config.persistence.visibility.sql.database }}"
+              {{- end }}
+              {{- $useHostFromSecret := eq (include "temporal.persistence.sql.hasHostKey" (list $ "visibility")) "true" -}}
+              {{- $usePortFromSecret := eq (include "temporal.persistence.sql.hasPortKey" (list $ "visibility")) "true" -}}
+              {{- if and $useHostFromSecret $usePortFromSecret }}
+            connectAddr: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_HOST }}` }}:{{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PORT }}` }}
+              {{- else if $useHostFromSecret }}
+            connectAddr: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_HOST }}` }}:{{ include "temporal.persistence.sql.port" (list $ "visibility") }}
+              {{- else if $usePortFromSecret }}
+            connectAddr: {{ include "temporal.persistence.sql.host" (list $ "visibility") }}:{{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PORT }}` }}
+              {{- else }}
+            connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "visibility") }}:{{ include "temporal.persistence.sql.port" (list $ "visibility") }}"
+              {{- end }}
+            connectProtocol: "tcp"
+              {{- if eq (include "temporal.persistence.sql.hasUserKey" (list $ "visibility")) "true" }}
+            user: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_USER }}` }}
+              {{- else }}
+            user: "{{ include "temporal.persistence.sql.user" (list $ "visibility") }}"
+              {{- end }}
+              {{- if eq (include "temporal.persistence.sql.hasPasswordKey" (list $ "visibility")) "true" }}
+            password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
+              {{- else }}
+            password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
+              {{- end }}
+            {{- else }}
             databaseName: "{{ $server.config.persistence.visibility.sql.database }}"
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "visibility") }}:{{ include "temporal.persistence.sql.port" (list $ "visibility") }}"
             connectProtocol: "tcp"
             user: "{{ include "temporal.persistence.sql.user" (list $ "visibility") }}"
             password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
-            {{- with (omit $server.config.persistence.visibility.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
+            {{- end }}
+            {{- with (omit $server.config.persistence.visibility.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret" "secretName" "secretRef") }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
         {{- end }}
