@@ -34,6 +34,89 @@
     {{- end }}
   {{- end }}
 {{- else if eq $driver "sql" -}}
+  {{- if eq (include "temporal.persistence.sql.hasSecretRef" (list $global $store)) "true" }}
+- name: SQL_PLUGIN
+  value: {{ include "temporal.persistence.sql.driver" (list $global $store) }}
+    {{- if eq (include "temporal.persistence.sql.hasHostKey" (list $global $store)) "true" }}
+- name: SQL_HOST
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "temporal.persistence.sql.secretRefName" (list $global $store) }}
+      key: {{ $driverConfig.secretRef.hostKey }}
+    {{- else }}
+- name: SQL_HOST
+  value: {{ include "temporal.persistence.sql.host" (list $global $store) }}
+    {{- end }}
+    {{- if eq (include "temporal.persistence.sql.hasPortKey" (list $global $store)) "true" }}
+- name: SQL_PORT
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "temporal.persistence.sql.secretRefName" (list $global $store) }}
+      key: {{ $driverConfig.secretRef.portKey }}
+    {{- else }}
+- name: SQL_PORT
+  value: {{ include "temporal.persistence.sql.port" (list $global $store) | quote }}
+    {{- end }}
+    {{- if eq (include "temporal.persistence.sql.hasDatabaseKey" (list $global $store)) "true" }}
+- name: SQL_DATABASE
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "temporal.persistence.sql.secretRefName" (list $global $store) }}
+      key: {{ $driverConfig.secretRef.databaseKey }}
+    {{- else }}
+- name: SQL_DATABASE
+  value: {{ include "temporal.persistence.sql.database" (list $global $store) }}
+    {{- end }}
+    {{- if eq (include "temporal.persistence.sql.hasUserKey" (list $global $store)) "true" }}
+- name: SQL_USER
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "temporal.persistence.sql.secretRefName" (list $global $store) }}
+      key: {{ $driverConfig.secretRef.userKey }}
+    {{- else }}
+- name: SQL_USER
+  value: {{ $driverConfig.user }}
+    {{- end }}
+    {{- if eq (include "temporal.persistence.sql.hasPasswordKey" (list $global $store)) "true" }}
+- name: SQL_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "temporal.persistence.sql.secretRefName" (list $global $store) }}
+      key: {{ $driverConfig.secretRef.passwordKey }}
+    {{- else }}
+- name: SQL_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "temporal.persistence.secretName" (list $global $store) }}
+      key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
+    {{- end }}
+    {{- with $driverConfig.connectAttributes }}
+- name: SQL_CONNECT_ATTRIBUTES
+  value: {{ include "temporal.persistence.sql.connectAttributes" (list $global $store) | quote }}
+    {{- end }}
+    {{- with $driverConfig.tls }}
+- name: SQL_TLS
+  value: {{ .enabled | quote }}
+      {{- with .caFile }}
+- name: SQL_TLS_CA_FILE
+  value: {{ . }}
+      {{- end }}
+      {{- if and .certFile .keyFile }}
+- name: SQL_TLS_CERT_FILE
+  value: {{ .certFile }}
+- name: SQL_TLS_KEY_FILE
+  value: {{ .keyFile }}
+      {{- end }}
+      {{- with .serverName }}
+- name: SQL_TLS_SERVER_NAME
+  value: {{ . }}
+      {{- end }}
+      {{- if hasKey . "enableHostVerification" }}
+- name: SQL_TLS_DISABLE_HOST_VERIFICATION
+  value: {{ not .enableHostVerification | quote }}
+      {{- end }}
+    {{- end }}
+  {{- else }}
 - name: SQL_PLUGIN
   value: {{ include "temporal.persistence.sql.driver" (list $global $store) }}
 - name: SQL_HOST
@@ -49,30 +132,31 @@
     secretKeyRef:
       name: {{ include "temporal.persistence.secretName" (list $global $store) }}
       key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
-  {{- with $driverConfig.connectAttributes }}
+    {{- with $driverConfig.connectAttributes }}
 - name: SQL_CONNECT_ATTRIBUTES
   value: {{ include "temporal.persistence.sql.connectAttributes" (list $global $store) | quote }}
-  {{- end }}
-  {{- with $driverConfig.tls }}
+    {{- end }}
+    {{- with $driverConfig.tls }}
 - name: SQL_TLS
   value: {{ .enabled | quote }}
-    {{- with .caFile }}
+      {{- with .caFile }}
 - name: SQL_TLS_CA_FILE
   value: {{ . }}
-    {{- end }}
-    {{- if and .certFile .keyFile }}
+      {{- end }}
+      {{- if and .certFile .keyFile }}
 - name: SQL_TLS_CERT_FILE
   value: {{ .certFile }}
 - name: SQL_TLS_KEY_FILE
   value: {{ .keyFile }}
-    {{- end }}
-    {{- with .serverName }}
+      {{- end }}
+      {{- with .serverName }}
 - name: SQL_TLS_SERVER_NAME
   value: {{ . }}
-    {{- end }}
-    {{- if hasKey . "enableHostVerification" }}
+      {{- end }}
+      {{- if hasKey . "enableHostVerification" }}
 - name: SQL_TLS_DISABLE_HOST_VERIFICATION
   value: {{ not .enableHostVerification | quote }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- else if eq $driver "elasticsearch" -}}
