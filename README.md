@@ -470,6 +470,10 @@ $ kubectl get secret --namespace default temporaltest-grafana -o jsonpath="{.dat
 t7EqZQpiB6BztZV321dEDppXbeisdpiEAMgnu6yy%
 ```
 
+> [! NOTE]
+> You can skip this by specifying an adminPassword
+> `--set grafana.adminPassword="temporal"`
+
 2. Set up port forwarding, so you can access Grafana from your host:
 
 ```
@@ -480,6 +484,23 @@ Forwarding from [::1]:8081 -> 3000
 ```
 
 3. Navigate to the forwarded Grafana port in your browser (http://localhost:8081/), login as `admin` (using the password from step 1), and click on the "Home" button (upper left corner) to see available dashboards.
+
+
+### Adding logging to Grafana
+A basic implementation of Grafana Loki + Promtail can be enabled to capture real-time logs from the Temporal service pods and display them within the Grafana dashboard. 
+
+Enable by setting `loki` and `promtail` enabled to `true.
+
+Example:
+```bash
+helm install \
+  --repo https://go.temporal.io/helm-charts \
+  --set loki.enabled=true \
+  --set promtail.enabled=true \
+  temporaltest temporal \
+  --timeout 15m \
+  --wait
+```
 
 ### Updating Dynamic Configs
 
@@ -586,6 +607,37 @@ helm upgrade \
   --wait \
   --timeout 15m
 ```
+
+# FAQ
+### ElasticSearch fails to start on a single node kubernetes cluster. 
+Elasticsearch cannot form a cluster. The default values deploy a 3-master Elasticsearch cluster but only elasticsearch-master-0 ever comes up. On a single-node kind cluster, the Elasticsearch chart’s default hard pod anti-affinity prevents master-1 and master-2 from being scheduled on the same node, so they stay Pending. With only one master pod running, discovery has no peers to connect to, so you get MasterNotDiscoveredException and Temporal’s visibility index creation keeps timing out.
+
+Error example:
+```bash
+{"type": "server", "timestamp": "2025-10-22T20:45:20,750Z", "level": "WARN", "component": "o.e.c.c.ClusterFormationFailureHelper", "cluster.name": "elasticsearch", "node.name": "elasticsearch-master-0", "message": "master not discovered yet, this node has not previously joined a bootstrapped (v7+) cluster, and this node must discover master-eligible nodes [elasticsearch-master-0, elasticsearch-master-1, elasticsearch-master-2] to bootstrap a cluster: have discovered [{elasticsearch-master-0}{-5Yxc8dWTgmrb2-fw0Pcbw}{KzM7vJHKRE2ghjPESI9Pfg}{10.244.0.9}{10.244.0.9:9300}{cdfhilmrstw}]; discovery will continue using [] from hosts providers and [{elasticsearch-master-0}{-5Yxc8dWTgmrb2-fw0Pcbw}{KzM7vJHKRE2ghjPESI9Pfg}{10.244.0.9}{10.244.0.9:9300}{cdfhilmrstw}] from last-known cluster state; node term 0, last-accepted version 0 in term 0" }
+{"type": "server", "timestamp": "2025-10-22T20:45:27,777Z", "level": "WARN", "component": "r.suppressed", "cluster.name": "elasticsearch", "node.name": "elasticsearch-master-0", "message": "path: /_cluster/health, params: {wait_for_status=green, timeout=1s}",
+"stacktrace": ["org.elasticsearch.discovery.MasterNotDiscoveredException: null",
+"at org.elasticsearch.action.support.master.TransportMasterNodeAction$AsyncSingleAction$2.onTimeout(TransportMasterNodeAction.java:297) [elasticsearch-7.17.3.jar:7.17.3]",
+"at org.elasticsearch.cluster.ClusterStateObserver$ContextPreservingListener.onTimeout(ClusterStateObserver.java:345) [elasticsearch-7.17.3.jar:7.17.3]",
+"at org.elasticsearch.cluster.ClusterStateObserver$ObserverClusterStateListener.onTimeout(ClusterStateObserver.java:263) [elasticsearch-7.17.3.jar:7.17.3]",
+"at org.elasticsearch.cluster.service.ClusterApplierService$NotifyTimeout.run(ClusterApplierService.java:660) [elasticsearch-7.17.3.jar:7.17.3]",
+"at org.elasticsearch.common.util.concurrent.ThreadContext$ContextPreservingRunnable.run(ThreadContext.java:718) [elasticsearch-7.17.3.jar:7.17.3]",
+"at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) [?:?]",
+"at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) [?:?]",
+"at java.lang.Thread.run(Thread.java:833) [?:?]"] }
+```
+
+In order to address this it's recommended that you reduce the replica count to 1:
+
+```yaml
+elasticsearch:
+  replicas: 1
+  antiAffinity: soft
+  esConfig:
+    "elasticsearch.yml": ""
+```
+
+
 
 # Contributing
 

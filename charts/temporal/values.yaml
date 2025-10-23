@@ -468,6 +468,122 @@ prometheus:
   enabled: true
   nodeExporter:
     enabled: false
+
+loki:
+  enabled: enable
+  deploymentMode: SingleBinary
+  singleBinary:
+    replicas: 1
+  minio:
+    enabled: true
+  backend:
+    replicas: 0
+  read:
+    replicas: 0
+  write:
+    replicas: 0
+  ingester:
+    replicas: 0
+  querier:
+    replicas: 0
+  queryFrontend:
+    replicas: 0
+  queryScheduler:
+    replicas: 0
+  distributor:
+    replicas: 0
+  compactor:
+    replicas: 0
+  indexGateway:
+    replicas: 0
+  bloomCompactor:
+    replicas: 0
+  bloomGateway:
+    replicas: 0
+  chunksCache:
+    allocatedMemory: 1024
+  persistence:
+    enabled: false
+  loki:
+    auth_enabled: false
+    commonConfig:
+      replication_factor: 1
+    storage:
+      type: filesystem
+      bucketNames:
+        chunks: loki-chunks
+        ruler: loki-ruler
+        admin: loki-admin
+      filesystem:
+        chunks_directory: /var/loki/chunks
+        rules_directory: /var/loki/rules
+    schemaConfig:
+      configs:
+        - from: "2024-01-01"
+          store: tsdb
+          object_store: filesystem
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+    pattern_ingester:
+      enabled: true
+    limits_config:
+      allow_structured_metadata: true
+      volume_enabled: true
+    ruler:
+      enable_api: true
+
+promtail:
+  enabled: enable
+  config:
+    clients:
+      - url: http://{{ .Release.Name }}-loki-gateway/loki/api/v1/push
+    snippets: 
+      scrapeConfigs: |
+        - job_name: kubernetes-pods
+          pipeline_stages:
+            {{- toYaml .Values.config.snippets.pipelineStages | nindent 4 }}
+          kubernetes_sd_configs:
+            - role: pod
+          relabel_configs:
+            # Only keep core Temporal pods
+            - action: keep
+              source_labels:
+                - __meta_kubernetes_pod_label_app_kubernetes_io_component
+              regex: frontend|history|matching|worker|web
+
+            # Copy component into labels
+            - source_labels:
+                - __meta_kubernetes_pod_label_app_kubernetes_io_component
+              action: replace
+              target_label: temporal_service_name
+
+            - source_labels:
+                - temporal_service_name
+              action: replace
+              target_label: service_name
+
+            - source_labels:
+                - temporal_service_name
+              action: replace
+              target_label: app
+
+            # Drop everything else (optional safety net)
+            - action: drop
+              source_labels:
+                - service_name
+              regex: ""
+
+            # standard pod log path
+            - action: replace
+              replacement: /var/log/pods/*$1/*.log
+              separator: /
+              source_labels:
+                - __meta_kubernetes_pod_uid
+                - __meta_kubernetes_pod_container_name
+              target_label: __path__
+
 grafana:
   enabled: true
   replicas: 1
@@ -489,6 +605,7 @@ grafana:
           editable: true
           options:
             path: /var/lib/grafana/dashboards/default
+  
   datasources:
     datasources.yaml:
       apiVersion: 1
@@ -498,6 +615,12 @@ grafana:
           url: http://{{ .Release.Name }}-prometheus-server
           access: proxy
           isDefault: true
+        - name: Loki
+          type: loki
+          access: proxy
+          url: http://{{ .Release.Name }}-loki:3100
+          jsonData:
+            maxLines: 1000
   dashboards:
     default:
       server-general-github:
