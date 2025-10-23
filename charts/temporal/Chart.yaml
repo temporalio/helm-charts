@@ -26,8 +26,16 @@ dependencies:
     condition: elasticsearch.enabled
   - name: grafana
     repository: https://grafana.github.io/helm-charts
-    version: 8.0.2
+    version: 10.1.2
     condition: grafana.enabled
+  - name: loki
+    repository: https://grafana.github.io/helm-charts
+    version: 6.43.0
+    condition: loki.enabled
+  - name: promtail
+    repository: https://grafana.github.io/helm-charts
+    version: 6.17.0
+    condition: promtail.enabled
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives
