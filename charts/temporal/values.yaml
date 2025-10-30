@@ -20,7 +20,7 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.29.0
+    tag: 1.29.1
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -352,7 +352,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: "1.29"
+    tag: "1.29.1-tctl-1.18.4-cli-1.5.0"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -381,7 +381,7 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.40.1
+    tag: 2.42.1
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
