@@ -1,0 +1,36 @@
+# Test values for Elasticsearch 8.x without TLS
+server:
+  replicaCount: 1
+
+cassandra:
+  config:
+    cluster_size: 1
+
+elasticsearch:
+  replicas: 1
+  imageTag: 8.19.2
+  version: "v8"
+  scheme: http
+  # ES 8+ configuration for development without TLS
+  protocol: http
+  createCert: false
+  roles:
+    - master
+    - data
+    - data_content
+    - ingest
+  esConfig:
+    elasticsearch.yml: |
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
+      xpack.security.http.ssl.enabled: false
+      xpack.security.transport.ssl.enabled: false
+  extraEnvs:
+    - name: xpack.security.enabled
+      value: "false"
+
+prometheus:
+  enabled: false
+
+grafana:
+  enabled: false
