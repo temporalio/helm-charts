@@ -30,6 +30,27 @@ Feel free to submit a draft PR early if you need feedback or assistance during t
 
 Note: When you submit your first PR, you will be asked to sign the [Temporal Contributor License Agreement (CLA)](https://cla-assistant.io/temporalio/helm-charts) before we merge your PR.
 
+## Types of Changes We Accept
+
+We prioritize and accept changes that enable customization required for Temporal to run on specific Kubernetes platforms or to meet security requirements. Examples of acceptable changes include:
+
+- **Security configurations**: Adding or enhancing security contexts, pod security policies, network policies, or other security-related Kubernetes resources
+- **Credential management**: Supporting credential retrieval from Kubernetes secrets (e.g., fetching database credentials from a secret instead of a ConfigMap)
+- **Platform-specific requirements**: Adaptations needed for specific Kubernetes distributions, cloud providers, or managed Kubernetes services
+- **Service account and RBAC customization**: Enhancements to service accounts, roles, and role bindings to meet organizational security policies
+- **Resource management**: Customizations to resource limits, requests, or scheduling constraints required by platform policies
+- **Monitoring and observability**: Integration with platform-specific monitoring, logging, or observability solutions
+- **CI/CD system compatibility**: Changes that enable the chart to work with GitOps tools and CI/CD systems (e.g., ArgoCD, Flux). These changes must be configuration-driven and optional to preserve a good manual installation experience
+
+### Changes We Don't Accept
+
+To keep the charts focused and maintainable, we generally do not accept:
+
+- **Persistence backend sub-charts**: We are removing the use of sub-charts for persistence backends (e.g., MySQL, PostgreSQL, Cassandra). Users should configure Temporal to connect to existing database infrastructure rather than deploying databases via sub-charts.
+- **Integration with unsupported technologies**: Changes required to integrate Temporal with technologies that Temporal does not support. Such changes will only be accepted if they provide benefits in a wider context beyond the specific integration.
+- **Feature additions unrelated to platform compatibility or security**: New features that don't address Kubernetes platform requirements or security needs
+- **Cosmetic or stylistic changes**: UI, naming, or formatting changes that don't affect functionality or configurability
+
 
 ## Issues and Pull Requests Lifecycle
 
