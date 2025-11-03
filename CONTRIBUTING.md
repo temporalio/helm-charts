@@ -41,6 +41,7 @@ We prioritize and accept changes that enable customization required for Temporal
 - **Resource management**: Customizations to resource limits, requests, or scheduling constraints required by platform policies
 - **Monitoring and observability**: Integration with platform-specific monitoring, logging, or observability solutions
 - **CI/CD system compatibility**: Changes that enable the chart to work with GitOps tools and CI/CD systems (e.g., ArgoCD, Flux). These changes must be configuration-driven and optional to preserve a good manual installation experience
+- **Testing infrastructure and reliability**: Improvements to the testing infrastructure or changes that make the chart more reliable and robust
 
 ### Changes We Don't Accept
 
