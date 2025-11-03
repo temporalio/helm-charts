@@ -32,7 +32,7 @@ Note: When you submit your first PR, you will be asked to sign the [Temporal Con
 
 ## Types of Changes We Accept
 
-We prioritize and accept changes that enable customization required for Temporal to run on specific Kubernetes platforms or to meet security requirements. Changes that we are likely to accept include:
+We prioritize and accept changes that enable customization required for Temporal to run on specific Kubernetes platforms, to meet security requirements, or enable use of Temporal Server features. Changes that we are likely to accept include:
 
 - **Security configurations**: Adding or enhancing security contexts, pod security policies, network policies, or other security-related Kubernetes resources
 - **Credential management**: Supporting credential retrieval from Kubernetes secrets (e.g., fetching database credentials from a secret instead of a ConfigMap)
