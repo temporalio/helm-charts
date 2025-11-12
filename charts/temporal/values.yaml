@@ -210,8 +210,11 @@ server:
       annotations: {}
       type: ClusterIP
       port: 7233
+      appProtocol: tcp
       membershipPort: 6933
+      membershipAppProtocol: tcp
       httpPort: 7243
+      httpAppProtocol: http
     ingress:
       enabled: false
       # className:
@@ -254,8 +257,11 @@ server:
       annotations: {}
       type: ClusterIP
       port: 7236
+      appProtocol: tcp
       membershipPort: 6936
+      membershipAppProtocol: tcp
       httpPort: 7246
+      httpAppProtocol: http
     metrics:
       annotations:
         enabled: true
@@ -279,7 +285,9 @@ server:
     service:
       # type: ClusterIP
       port: 7234
+      appProtocol: tcp
       membershipPort: 6934
+      membershipAppProtocol: tcp
     metrics:
       annotations:
         enabled: true
@@ -304,7 +312,9 @@ server:
     service:
       # type: ClusterIP
       port: 7235
+      appProtocol: tcp
       membershipPort: 6935
+      membershipAppProtocol: tcp
     metrics:
       annotations:
         enabled: false
@@ -328,7 +338,9 @@ server:
     service:
       # type: ClusterIP
       port: 7239
+      appProtocol: tcp
       membershipPort: 6939
+      membershipAppProtocol: tcp
     metrics:
       annotations:
         enabled: true
@@ -391,6 +403,7 @@ web:
     # Note that this requires the web.service.type to be the default ClusterIP value.
     # clusterIP:
     port: 8080
+    appProtocol: http
     annotations: {}
     # loadBalancerIP:
   ingress:
