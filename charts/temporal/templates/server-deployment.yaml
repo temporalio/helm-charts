@@ -136,9 +136,9 @@ spec:
               protocol: TCP
           {{- if ne $service "worker" }}
           livenessProbe:
-             initialDelaySeconds: 150
-             tcpSocket:
-               port: rpc
+            initialDelaySeconds: 150
+            tcpSocket:
+              port: rpc
           {{- end }}
           volumeMounts:
             - name: config
@@ -187,6 +187,9 @@ spec:
     {{- with $serviceValues.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with $serviceValues.minReadySeconds }}
+      minReadySeconds: {{ . }}
     {{- end }}
 ---
 {{- end }}
