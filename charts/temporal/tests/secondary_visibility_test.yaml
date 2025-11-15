@@ -1,0 +1,149 @@
+suite: test secondary visibility configuration
+templates:
+  - server-configmap.yaml
+tests:
+  - it: configures secondaryVisibilityStore when set
+    set:
+      server:
+        config:
+          persistence:
+            secondaryVisibilityStore: mysql-visibility
+    asserts:
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "secondaryVisibilityStore: mysql-visibility"
+
+  - it: includes additionalStores in persistence configuration
+    set:
+      server:
+        config:
+          persistence:
+            additionalStores:
+              mysql-visibility:
+                sql:
+                  pluginName: 'mysql8'
+                  driverName: 'mysql8'
+                  host: 'mysql-secondary'
+                  port: 3306
+                  database: 'temporal_visibility_secondary'
+                  user: 'temporal'
+                  password: 'temporal'
+                  maxConns: 20
+                  maxConnLifetime: '1h'
+    asserts:
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "mysql-visibility:"
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "pluginName: mysql8"
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "host: mysql-secondary"
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "database: temporal_visibility_secondary"
+
+  - it: configures both secondaryVisibilityStore and additionalStores together
+    set:
+      server:
+        config:
+          persistence:
+            secondaryVisibilityStore: mysql-visibility
+            additionalStores:
+              mysql-visibility:
+                sql:
+                  pluginName: 'mysql8'
+                  driverName: 'mysql8'
+                  host: 'mysql-secondary'
+                  port: 3306
+                  database: 'temporal_visibility_secondary'
+                  user: 'temporal'
+    asserts:
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "secondaryVisibilityStore: mysql-visibility"
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "mysql-visibility:"
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "pluginName: mysql8"
+
+  - it: supports secondary visibility index in Elasticsearch
+    set:
+      elasticsearch:
+        enabled: true
+        host: elasticsearch-master-headless
+        scheme: http
+        port: 9200
+        version: "v7"
+        visibilityIndex: "temporal_visibility_v1"
+        secondaryVisibilityIndex: "temporal_visibility_v2"
+    asserts:
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "visibility: \"temporal_visibility_v1\""
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "secondary_visibility: \"temporal_visibility_v2\""
+
+  - it: omits secondaryVisibilityStore when not configured
+    asserts:
+      - notMatchRegex:
+          path: data["config_template.yaml"]
+          pattern: "secondaryVisibilityStore:"
+
+  - it: omits additionalStores key when not configured (store name absent)
+    asserts:
+      - notMatchRegex:
+          path: data["config_template.yaml"]
+          pattern: "mysql-visibility:"
+
+  - it: omits secondary visibility index when not configured
+    set:
+      elasticsearch:
+        enabled: true
+        host: elasticsearch-master-headless
+        scheme: http
+        port: 9200
+        version: "v7"
+        visibilityIndex: "temporal_visibility_v1"
+    asserts:
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "visibility: \"temporal_visibility_v1\""
+      - notMatchRegex:
+          path: data["config_template.yaml"]
+          pattern: "secondary_visibility:"
+
+  - it: supports multiple additional stores
+    set:
+      server:
+        config:
+          persistence:
+            secondaryVisibilityStore: mysql-visibility
+            additionalStores:
+              mysql-visibility:
+                sql:
+                  pluginName: 'mysql8'
+                  host: 'mysql-secondary'
+                  database: 'temporal_visibility_secondary'
+              postgres-visibility:
+                sql:
+                  pluginName: 'postgres12'
+                  host: 'postgres-secondary'
+                  database: 'temporal_visibility_pg'
+    asserts:
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "mysql-visibility:"
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "postgres-visibility:"
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "pluginName: mysql8"
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "pluginName: postgres12"
