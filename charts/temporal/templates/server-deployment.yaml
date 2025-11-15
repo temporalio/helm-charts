@@ -48,6 +48,10 @@ spec:
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
           command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+          {{- with $.Values.server.initContainerResources}}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with $serviceValues.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
@@ -56,6 +60,10 @@ spec:
           image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
           imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
           command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$; do echo waiting for default keyspace to become ready; sleep 1; done;']
+          {{- with $.Values.server.initContainerResources}}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with $serviceValues.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
@@ -68,6 +76,10 @@ spec:
           command: ['sh', '-c', 'until curl --silent --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
           env:
             {{- include "temporal.admintools-env" (list $ "visibility") | nindent 12 }}
+          {{- with $.Values.server.initContainerResources}}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with $serviceValues.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
