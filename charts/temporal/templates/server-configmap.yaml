@@ -16,6 +16,9 @@ data:
     persistence:
       defaultStore: {{ $server.config.persistence.defaultStore }}
       visibilityStore: visibility
+      {{- with $server.config.persistence.secondaryVisibilityStore }}
+      secondaryVisibilityStore: {{ . }}
+      {{- end }}
       numHistoryShards: {{ $server.config.numHistoryShards }}
       datastores:
         {{- if ne (include "temporal.persistence.driver" (list $ "default")) "custom" }}
@@ -61,6 +64,9 @@ data:
             logLevel: "{{ $elasticsearch.logLevel }}"
             indices:
                 visibility: "{{ $elasticsearch.visibilityIndex }}"
+                {{- with $elasticsearch.secondaryVisibilityIndex }}
+                secondary_visibility: "{{ . }}"
+                {{- end }}
             {{- with $elasticsearch.tls }}
             tls:
               {{- toYaml . | nindent 16 }}

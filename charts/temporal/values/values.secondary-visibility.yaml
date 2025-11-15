@@ -1,0 +1,41 @@
+# Example configuration for secondary Visibility store
+# This demonstrates dual visibility configuration for migration scenarios
+
+server:
+  config:
+    persistence:
+      # visibilityStore: visibility <- The default visibility store
+      # Define a secondary visibility store for migration
+      # This should reference a datastore defined in additionalStores
+      secondaryVisibilityStore: mysql-visibility
+
+      # Define additional datastores here
+      additionalStores:
+        # Secondary visibility store using MySQL
+        mysql-visibility:
+          sql:
+            pluginName: 'mysql8'
+            driverName: 'mysql8'
+            host: 'mysql-secondary'
+            port: 3306
+            database: 'temporal_visibility_secondary'
+            user: 'temporal'
+            password: 'temporal'
+            existingSecret: ''
+            maxConns: 20
+            maxConnLifetime: '1h'
+
+# Enable Elasticsearch as primary visibility store
+elasticsearch:
+  enabled: true
+  host: elasticsearch-master-headless
+  scheme: http
+  port: 9200
+  version: "v7"
+  logLevel: "error"
+  username: ""
+  password: ""
+  visibilityIndex: "temporal_visibility_v1"
+  # Optionally configure secondary index within same Elasticsearch cluster
+  # secondaryVisibilityIndex: "temporal_visibility_v2"
+

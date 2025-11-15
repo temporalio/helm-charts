@@ -136,6 +136,18 @@ server:
     persistence:
       defaultStore: default
       additionalStores: {}
+      # To configure a secondary Visibility store for dual visibility migration, define additional stores here
+      # and set secondaryVisibilityStore to reference it (see https://docs.temporal.io/self-hosted-guide/visibility#dual-visibility)
+      # secondaryVisibilityStore: mysql-visibility
+      # additionalStores:
+      #   mysql-visibility:
+      #     sql:
+      #       pluginName: 'mysql8'
+      #       databaseName: 'temporal_secondary_visibility'
+      #       connectAddr: '127.0.0.1:3306'
+      #       connectProtocol: 'tcp'
+      #       user: 'temporal'
+      #       password: 'temporal'
       default:
         driver: "cassandra"
         cassandra:
@@ -477,6 +489,7 @@ elasticsearch:
   username: ""
   password: ""
   visibilityIndex: "temporal_visibility_v1_dev"
+  # secondaryVisibilityIndex: "temporal_visibility_v1_new"  # To configure Elasticsearch as both your primary and secondary store
 prometheus:
   enabled: true
   nodeExporter:
