@@ -146,6 +146,7 @@ extraObjects:
           property: password
 ```
 
+
 #### Example with SealedSecrets
 
 ```yaml
