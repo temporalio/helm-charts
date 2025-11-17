@@ -458,6 +458,7 @@ schema:
   update:
     enabled: true
     backoffLimit: 100
+  annotations: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}

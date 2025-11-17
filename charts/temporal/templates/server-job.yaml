@@ -5,6 +5,14 @@ metadata:
   name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
+  annotations:
+    # When using Argo CD, enabling Helm hook annotations prevents the schema Job from being 
+    # considered part of the steady state and avoids perpetual OutOfSync after the job completes.
+    helm.sh/hook: "post-install,post-upgrade"
+    helm.sh/hook-delete-policy: "before-hook-creation,hook-succeeded"
+    {{- with $.Values.schema.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
   ttlSecondsAfterFinished: 86400
