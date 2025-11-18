@@ -1,0 +1,101 @@
+# Production overlay values for PostgreSQL on AKS
+# These values override/extend the base configuration
+
+## Enable HA replication architecture
+architecture: replication
+
+## Primary configuration
+primary:
+  ## Increased resources for production
+  resources:
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+    requests:
+      cpu: 2000m
+      memory: 4Gi
+
+  ## Larger persistence for production
+  persistence:
+    size: 500Gi
+
+  ## Production-grade PDB
+  pdb:
+    create: true
+    minAvailable: 1
+
+## Read Replicas configuration for HA
+readReplicas:
+  replicaCount: 2
+
+  resources:
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+    requests:
+      cpu: 2000m
+      memory: 4Gi
+
+  persistence:
+    enabled: true
+    storageClass: "managed-csi-premium"
+    size: 500Gi
+
+  pdb:
+    create: true
+    minAvailable: 1
+
+  ## Security contexts
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+    seccompProfile:
+      type: RuntimeDefault
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    privileged: false
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
+  ## Network policy for read replicas
+  networkPolicy:
+    enabled: true
+    allowExternal: false
+
+## Replication settings
+replication:
+  synchronousCommit: "on"
+  numSynchronousReplicas: 1
+
+## Enhanced backup for production
+backup:
+  enabled: true
+  cronjob:
+    schedule: "0 */6 * * *"  # Every 6 hours
+    storage:
+      size: 500Gi
+
+## Enable TLS in production
+tls:
+  enabled: true
+  certificatesSecret: "postgres-tls-certs"
+  certFilename: "tls.crt"
+  certKeyFilename: "tls.key"
+  certCAFilename: "ca.crt"
+
+## Enhanced monitoring
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 10s

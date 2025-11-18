@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: postgres
+
+resources:
+  - namespace.yaml
+
+helmCharts:
+  - name: postgresql
+    repo: oci://registry-1.docker.io/bitnamicharts
+    version: 18.1.10
+    releaseName: postgres
+    namespace: postgres
+    valuesFile: values.yaml
+    includeCRDs: true

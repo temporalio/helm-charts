@@ -1,0 +1,30 @@
+# Ignore actual secrets (never commit to git)
+**/secret.yaml
+**/secrets.yaml
+**/*-secret.yaml
+
+# Ignore generated files
+kustomization-generated.yaml
+build/
+
+# Ignore local test files
+*.local.yaml
+test-*.yaml
+
+# Ignore backup files
+*.backup
+*.bak
+*~
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore Helm build artifacts
+charts/
+Chart.lock
+
+# Ignore kubectl generated files
+*.generated.yaml

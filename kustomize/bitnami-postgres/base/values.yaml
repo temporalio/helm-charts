@@ -1,0 +1,303 @@
+# Bitnami PostgreSQL Helm Chart Values for AKS
+# Chart Version: 18.1.10
+# Following AKS best practices for production deployment
+
+## Global parameters
+global:
+  # Use Azure Container Registry or Docker Hub
+  imageRegistry: ""
+  imagePullSecrets: []
+  defaultStorageClass: "managed-csi-premium"
+
+  postgresql:
+    auth:
+      # Credentials should be managed via Azure Key Vault or Kubernetes Secrets
+      # postgresPassword: ""  # Set via sealed-secrets or external-secrets
+      # password: ""           # Set via sealed-secrets or external-secrets
+      database: "appdb"
+      username: "appuser"
+      existingSecret: "postgres-credentials"
+
+## PostgreSQL Architecture
+# Use 'replication' for HA in production
+architecture: standalone
+
+## Authentication
+auth:
+  enablePostgresUser: true
+  # Passwords should be injected via sealed-secrets or Azure Key Vault
+  existingSecret: "postgres-credentials"
+  secretKeys:
+    adminPasswordKey: "postgres-password"
+    userPasswordKey: "password"
+    replicationPasswordKey: "replication-password"
+  usePasswordFiles: true
+
+## Primary PostgreSQL configuration
+primary:
+  ## Resource management - Essential for AKS production workloads
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+
+  ## Pod Security Context - AKS best practice
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+    fsGroupChangePolicy: "Always"
+    supplementalGroups: []
+    seccompProfile:
+      type: RuntimeDefault
+
+  ## Container Security Context - Non-root, read-only filesystem
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    privileged: false
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
+  ## Pod Disruption Budget for HA
+  pdb:
+    create: true
+    minAvailable: 1
+
+  ## Persistence - Azure Disk Premium SSD
+  persistence:
+    enabled: true
+    storageClass: "managed-csi-premium"  # Azure Premium SSD
+    accessModes:
+      - ReadWriteOnce
+    size: 100Gi
+    annotations:
+      volume.beta.kubernetes.io/storage-class: "managed-csi-premium"
+    labels:
+      app.kubernetes.io/component: database
+
+  ## Service configuration
+  service:
+    type: ClusterIP
+    ports:
+      postgresql: 5432
+    annotations:
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+
+  ## Network Policy - Restrict traffic
+  networkPolicy:
+    enabled: true
+    allowExternal: false
+    allowExternalEgress: true
+    ingressNSMatchLabels: {}
+    ingressNSPodMatchLabels: {}
+
+  ## PostgreSQL configuration
+  extendedConfiguration: |
+    # Connection settings
+    max_connections = 200
+    shared_buffers = 1GB
+    effective_cache_size = 3GB
+    maintenance_work_mem = 256MB
+    checkpoint_completion_target = 0.9
+    wal_buffers = 16MB
+    default_statistics_target = 100
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    work_mem = 5242kB
+    min_wal_size = 1GB
+    max_wal_size = 4GB
+    max_worker_processes = 4
+    max_parallel_workers_per_gather = 2
+    max_parallel_workers = 4
+    max_parallel_maintenance_workers = 2
+
+    # Logging configuration
+    log_destination = 'stderr'
+    logging_collector = on
+    log_directory = '/opt/bitnami/postgresql/logs'
+    log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+    log_truncate_on_rotation = off
+    log_rotation_age = 1d
+    log_rotation_size = 100MB
+    log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+    log_timezone = 'UTC'
+
+    # Performance and tuning
+    shared_preload_libraries = 'pg_stat_statements'
+
+  ## Health probes
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+
+  startupProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 1
+    failureThreshold: 15
+    successThreshold: 1
+
+  ## Pod affinity/anti-affinity for AKS zones
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: postgresql
+                app.kubernetes.io/component: primary
+            topologyKey: kubernetes.io/hostname
+        - weight: 50
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: postgresql
+                app.kubernetes.io/component: primary
+            topologyKey: topology.kubernetes.io/zone
+
+  ## Node selector for specific node pools if needed
+  nodeSelector: {}
+    # agentpool: database
+
+  ## Tolerations for dedicated node pools
+  tolerations: []
+    # - key: "database"
+    #   operator: "Equal"
+    #   value: "true"
+    #   effect: "NoSchedule"
+
+  ## Topology spread constraints for better distribution
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: postgresql
+          app.kubernetes.io/component: primary
+
+## Metrics configuration for Azure Monitor / Prometheus
+metrics:
+  enabled: true
+  image:
+    registry: registry-1.docker.io
+    repository: bitnami/postgres-exporter
+    pullPolicy: IfNotPresent
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    privileged: false
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
+  service:
+    type: ClusterIP
+    ports:
+      metrics: 9187
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9187"
+      prometheus.io/path: "/metrics"
+
+  serviceMonitor:
+    enabled: true
+    namespace: postgres
+    interval: 30s
+    scrapeTimeout: 10s
+    labels:
+      prometheus: kube-prometheus
+
+## Backup configuration
+backup:
+  enabled: true
+  cronjob:
+    schedule: "0 2 * * *"  # Daily at 2 AM UTC
+    concurrencyPolicy: Forbid
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 1
+    restartPolicy: OnFailure
+
+    storage:
+      enabled: true
+      storageClass: "managed-csi"
+      size: 100Gi
+      mountPath: /backup/pgdump
+      annotations:
+        backup.velero.io/backup-volumes: "backup"
+
+## Volume permissions init container
+volumePermissions:
+  enabled: false  # Not needed with proper security contexts
+
+## ServiceAccount configuration
+serviceAccount:
+  create: true
+  name: "postgres-sa"
+  automountServiceAccountToken: false
+  annotations:
+    # azure.workload.identity/client-id: "<WORKLOAD_IDENTITY_CLIENT_ID>"  # For Azure Workload Identity
+
+## RBAC
+rbac:
+  create: true
+
+## Audit logging
+audit:
+  logHostname: true
+  logConnections: true
+  logDisconnections: true
+  pgAuditLog: "write, ddl"
+  pgAuditLogCatalog: "off"
+  clientMinMessages: "error"
+  logLinePrefix: "%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h "
+
+## TLS/SSL Configuration
+tls:
+  enabled: false  # Enable in production with proper certificates
+  # certificatesSecret: "postgres-tls-certs"
+  # certFilename: "tls.crt"
+  # certKeyFilename: "tls.key"
+  # certCAFilename: "ca.crt"
+
+## PostgreSQL shared preload libraries
+postgresqlSharedPreloadLibraries: "pgaudit, pg_stat_statements"
