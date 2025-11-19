@@ -4,6 +4,18 @@ templates:
   - server-configmap.yaml
 set:
   server:
+    enabled: true
+    config:
+      persistence:
+        defaultStore: default
+        visibilityStore: visibility
+        datastores:
+          default:
+            sql:
+              password: "secret"
+          visibility:
+            sql:
+              password: "secret"
     replicaCount: 2
     resources:
       requests:

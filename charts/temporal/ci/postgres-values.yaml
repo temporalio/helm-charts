@@ -3,35 +3,30 @@ server:
   config:
     persistence:
       defaultStore: default
-      default:
-        driver: "sql"
-        sql:
-          driver: "postgres12"
-          host: "postgres-postgresql.postgres"
-          port: 5432
-          database: "temporal"
-          user: "temporal"
-          password: "temporal"
-          maxConns: 20
-          maxIdleConns: 20
-          maxConnLifetime: "1h"
-      visibility:
-        driver: "sql"
-        sql:
-          driver: "postgres12"
-          host: "postgres-postgresql.postgres"
-          port: 5432
-          database: "temporal"
-          user: "temporal"
-          password: "temporal"
-          maxConns: 20
-          maxIdleConns: 20
-          maxConnLifetime: "1h"
-cassandra:
-  enabled: false
-elasticsearch:
-  enabled: false
-prometheus:
-  enabled: false
-grafana:
-  enabled: false
+      visibilityStore: visibility
+      numHistoryShards: 512
+      datastores:
+        default:
+          sql:
+            pluginName: postgres12
+            driverName: postgres12
+            databaseName: temporal
+            connectAddr: "postgres-postgresql.postgres:5432"
+            # connectProtocol defaults to "tcp" if not specified
+            user: temporal
+            password: temporal
+            maxConns: 20
+            maxIdleConns: 20
+            maxConnLifetime: "1h"
+        visibility:
+          sql:
+            pluginName: postgres12
+            driverName: postgres12
+            databaseName: temporal
+            connectAddr: "postgres-postgresql.postgres:5432"
+            # connectProtocol defaults to "tcp" if not specified
+            user: temporal
+            password: temporal
+            maxConns: 20
+            maxIdleConns: 20
+            maxConnLifetime: "1h"

@@ -136,286 +136,99 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- end -}}
 {{- end -}}
 
-{{/*
-Call nested templates.
-Source: https://stackoverflow.com/a/52024583/3027614
-*/}}
-{{- define "call-nested" }}
-{{- $dot := index . 0 }}
-{{- $subchart := index . 1 }}
-{{- $template := index . 2 }}
-{{- include $template (dict "Chart" (dict "Name" $subchart) "Values" (index $dot.Values $subchart) "Release" $dot.Release "Capabilities" $dot.Capabilities) }}
-{{- end }}
+{{- define "temporal.persistence.filterConfig" -}}
+{{- $config := deepCopy . -}}
+{{- $defaultStore := $config.defaultStore -}}
+{{- $visibilityStore := $config.visibilityStore -}}
+{{- $patchedDatastores := dict -}}
+{{- range $name, $ds := $config.datastores -}}
+  {{- $dsCopy := deepCopy $ds -}}
+  {{- range $storeType := list "sql" "cassandra" "elasticsearch" -}}
+    {{- if hasKey $dsCopy $storeType -}}
+      {{- $storeConfig := get $dsCopy $storeType -}}
+      {{- if hasKey $storeConfig "password" -}}
+        {{- if eq $name $defaultStore -}}
+          {{- $_ := set $storeConfig "password" "{{ .Env.TEMPORAL_DEFAULT_STORE_PASSWORD | quote }}" -}}
+        {{- else if eq $name $visibilityStore -}}
+          {{- $_ := set $storeConfig "password" "{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD | quote }}" -}}
+        {{- else -}}
+          {{- $_ := unset $storeConfig "password" -}}
+        {{- end -}}
+      {{- end -}}
+      {{- $_ :=set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey") -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $_ := set $patchedDatastores $name $dsCopy -}}
+{{- end -}}
+{{- $_ := set $config "datastores" $patchedDatastores -}}
+{{- $config | toYaml -}}
+{{- end -}}
+
+{{- define "temporal.persistence.eachStore" -}}
+{{- $stores := dict -}}
+{{- $_ := set $stores "default" (include "temporal.persistence.getStoreByType" (list $ "default") | fromYaml) -}}
+{{- $_ := set $stores "visibility" (include "temporal.persistence.getStoreByType" (list $ "visibility") | fromYaml) -}}
+{{- $stores | toYaml -}}
+{{- end -}}
+
+{{- define "temporal.persistence.getStore" -}}
+{{- $root := index . 0 -}}
+{{- $storeName := index . 1 -}}
+{{- $datastores := $root.Values.server.config.persistence.datastores }}
+{{- $store := dict "name" $storeName -}}
+{{- $config := get $datastores $storeName -}}
+{{- if hasKey $config "sql" -}}
+    {{- $_ := set $store "driver" "sql" -}}
+    {{- $_ := set $store "config" (get $config "sql") -}}
+{{- else if hasKey $config "cassandra" -}}
+    {{- $_ := set $store "driver" "cassandra" -}}
+    {{- $_ := set $store "config" (get $config "cassandra") -}}
+{{- else if hasKey $config "elasticsearch" -}}
+    {{- $_ := set $store "driver" "elasticsearch" -}}
+    {{- $_ := set $store "config" (get $config "elasticsearch") -}}
+{{- else -}}
+    {{- fail (printf "No valid driver configured for %s store" $store.name) -}}
+{{- end -}}
+{{- $store | toYaml -}}
+{{- end -}}
+
+{{- define "temporal.persistence.getStoreByType" -}}
+{{- $root := index . 0 -}}
+{{- $type := index . 1 -}}
+{{- $storeName := get $root.Values.server.config.persistence (printf "%sStore" $type) -}}
+{{- include "temporal.persistence.getStore" (list $root $storeName) -}}
+{{- end -}}
 
 {{- define "temporal.persistence.schema" -}}
-{{- if eq . "default" -}}
+{{- $store := . -}}
+{{- if eq $store.config.schema "default" -}}
 {{- print "temporal" -}}
 {{- else -}}
-{{- print . -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.driver" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if and (eq $store "default") $global.Values.cassandra.enabled -}}
-{{- print "cassandra" -}}
-{{- else if and (eq $store "visibility") (or $global.Values.elasticsearch.enabled $global.Values.elasticsearch.external) -}}
-{{- print "elasticsearch" -}}
-{{- else if $global.Values.mysql.enabled -}}
-{{- print "sql" -}}
-{{- else if $global.Values.postgresql.enabled -}}
-{{- print "sql" -}}
-{{- else if $storeConfig.driver -}}
-{{- $storeConfig.driver -}}
-{{- else -}}
-{{- required (printf "Please specify persistence driver for %s store" $store) $storeConfig.driver -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.cassandra.hosts" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.cassandra.hosts -}}
-{{- $storeConfig.cassandra.hosts | join "," -}}
-{{- else if and $global.Values.cassandra.enabled (eq (include "temporal.persistence.driver" (list $global $store)) "cassandra") -}}
-{{- include "cassandra.hosts" $global -}}
-{{- else -}}
-{{- required (printf "Please specify cassandra hosts for %s store" $store) $storeConfig.cassandra.hosts -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.cassandra.port" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.cassandra.port -}}
-{{- $storeConfig.cassandra.port -}}
-{{- else if and $global.Values.cassandra.enabled (eq (include "temporal.persistence.driver" (list $global $store)) "cassandra") -}}
-{{- $global.Values.cassandra.config.ports.cql -}}
-{{- else -}}
-{{- required (printf "Please specify cassandra port for %s store" $store) $storeConfig.cassandra.port -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.cassandra.secretName" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- $driverConfig := $storeConfig.cassandra -}}
-{{- if $driverConfig.existingSecret -}}
-{{- $driverConfig.existingSecret -}}
-{{- else if $driverConfig.password -}}
-{{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
-{{- else -}}
-{{/* Cassandra password is optional, but we will create an empty secret for it */}}
-{{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.cassandra.secretKey" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- $driverConfig := $storeConfig.cassandra -}}
-{{- with $driverConfig.secretKey -}}
-{{- print . -}}
-{{- else -}}
-{{/* Cassandra password is optional, but we will create an empty secret for it */}}
-{{- print "password" -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.sql.database" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.sql.database -}}
-{{- $storeConfig.sql.database -}}
-{{- else -}}
-{{- required (printf "Please specify database for %s store" $store) -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.sql.driver" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.sql.driver -}}
-{{- $storeConfig.sql.driver -}}
-{{- else if $global.Values.mysql.enabled -}}
-{{- print "mysql8" -}}
-{{- else if $global.Values.postgresql.enabled -}}
-{{- print "postgres12" -}}
-{{- else -}}
-{{- required (printf "Please specify sql driver for %s store" $store) $storeConfig.sql.host -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.sql.host" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.sql.host -}}
-{{- $storeConfig.sql.host -}}
-{{- else if $global.Values.mysql.enabled -}}
-{{- include "mysql.primary.fullname" $global.Subcharts.mysql -}}
-{{- else if and $global.Values.postgresql.enabled -}}
-{{- include "postgresql.host" $global -}}
-{{- else -}}
-{{- required (printf "Please specify sql host for %s store" $store) $storeConfig.sql.host -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.sql.port" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.sql.port -}}
-{{- $storeConfig.sql.port -}}
-{{- else if $global.Values.mysql.enabled -}}
-{{- $global.Subcharts.mysql.Values.primary.service.ports.mysql -}}
-{{- else if $global.Values.postgresql.enabled -}}
-{{- $global.Values.postgresql.service.port -}}
-{{- else -}}
-{{- required (printf "Please specify sql port for %s store" $store) $storeConfig.sql.port -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.sql.user" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.sql.user -}}
-{{- $storeConfig.sql.user -}}
-{{- else if $global.Values.mysql.enabled -}}
-{{- default "root" $global.Subcharts.mysql.Values.auth.username -}}
-{{- else if $global.Values.postgresql.enabled -}}
-{{- $global.Values.postgresql.postgresqlUser -}}
-{{- else -}}
-{{- required (printf "Please specify sql user for %s store" $store) $storeConfig.sql.user -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.sql.password" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- if $storeConfig.sql.password -}}
-{{- $storeConfig.sql.password -}}
-{{- else if $global.Values.mysql.enabled -}}
-{{- default $global.Subcharts.mysql.Values.auth.rootPassword $global.Subcharts.mysql.auth.password -}}
-{{- else if $global.Values.postgresql.enabled -}}
-{{- $global.Values.postgresql.postgresqlPassword -}}
-{{- else -}}
-{{- required (printf "Please specify sql password for %s store" $store) $storeConfig.sql.password -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.sql.secretName" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- $driverConfig := $storeConfig.sql -}}
-{{- if $driverConfig.existingSecret -}}
-{{- $driverConfig.existingSecret -}}
-{{- else if $driverConfig.secretName -}}
-{{- print $driverConfig.secretName -}}
-{{- else if $global.Values.mysql.enabled -}}
-{{- include "mysql.secretName" $global.Subcharts.mysql -}}
-{{- else if $storeConfig.sql.password -}}
-{{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
-{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres12")) -}}
-{{- include "call-nested" (list $global "postgresql" "postgresql.secretName") -}}
-{{- else -}}
-{{- required (printf "Please specify sql password or existing secret for %s store" $store) $storeConfig.sql.existingSecret -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.sql.secretKey" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- $driverConfig := $storeConfig.sql -}}
-{{- if $driverConfig.secretKey -}}
-{{- print $driverConfig.secretKey -}}
-{{- else if or $driverConfig.existingSecret $driverConfig.password -}}
-{{- print "password" -}}
-{{- else if $global.Values.mysql.enabled -}}
-{{- if eq "root" (include "temporal.persistence.sql.user" (list $global $store)) -}}{{- print "mysql-root-password" -}}{{- else -}}{{- print "mysql-password" -}}{{- end -}}
-{{- else if and $global.Values.postgresql.enabled (and (eq (include "temporal.persistence.driver" (list $global $store)) "sql") (eq (include "temporal.persistence.sql.driver" (list $global $store)) "postgres12")) -}}
-{{- print "postgresql-password" -}}
-{{- else -}}
-{{- fail (printf "Please specify sql password or existing secret for %s store" $store) -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.sql.connectAttributes" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- $driverConfig := $storeConfig.sql -}}
-{{- $result := list -}}
-{{- range $key, $value := $driverConfig.connectAttributes -}}
-  {{- $result = append $result (printf "%s=%v" $key $value) -}}
-{{- end -}}
-{{- join "&" $result -}}
-{{- end -}}
-
-{{- define "temporal.persistence.elasticsearch.secretName" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $driverConfig := $global.Values.elasticsearch -}}
-{{- if $driverConfig.existingSecret -}}
-{{- print $driverConfig.existingSecret -}}
-{{- else if $driverConfig.secretName -}}
-{{- print $driverConfig.secretName -}}
-{{- else -}}
-{{- include "temporal.componentname" (list $global (printf "%s-store" $store)) -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.elasticsearch.secretKey" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- $driverConfig := $global.Values.elasticsearch -}}
-{{- if $driverConfig.secretKey -}}
-{{- print $driverConfig.secretKey -}}
-{{- else -}}
-{{- "password" -}}
+{{- print $store.config.schema -}}
 {{- end -}}
 {{- end -}}
 
 {{- define "temporal.persistence.secretName" -}}
-{{- $global := index . 0 -}}
+{{- $root := index . 0 -}}
 {{- $store := index . 1 -}}
-{{- include (printf "temporal.persistence.%s.secretName" (include "temporal.persistence.driver" (list $global $store))) (list $global $store) -}}
+{{- if $store.config.existingSecret -}}
+{{- $store.config.existingSecret -}}
+{{- else if $store.config.password -}}
+{{- include "temporal.componentname" (list $root (printf "%s-store" $store.name)) -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.persistence.secretKey" -}}
-{{- $global := index . 0 -}}
-{{- $store := index . 1 -}}
-{{- include (printf "temporal.persistence.%s.secretKey" (include "temporal.persistence.driver" (list $global $store))) (list $global $store) -}}
+{{- $store := index . 0 -}}
+{{- $store.config.secretKey | default "password" -}}
 {{- end -}}
 
-{{/*
-All Cassandra hosts.
-*/}}
-{{- define "cassandra.hosts" -}}
-{{- range $i := (until (int .Values.cassandra.config.cluster_size)) }}
-{{- $cassandraName := include "call-nested" (list $ "cassandra" "cassandra.fullname") -}}
-{{- printf "%s.%s," $cassandraName $.Release.Namespace -}}
-{{- end }}
+{{- define "temporal.persistence.sql.connectAttributes" -}}
+{{- $result := list -}}
+{{- range $key, $value := . -}}
+  {{- $result = append $result (printf "%s=%v" $key $value) -}}
 {{- end -}}
-
-{{/*
-The first Cassandra host in the stateful set.
-*/}}
-{{- define "cassandra.host" -}}
-{{- $cassandraName := include "call-nested" (list . "cassandra" "cassandra.fullname") -}}
-{{- printf "%s.%s" $cassandraName .Release.Namespace -}}
+{{- join "&" $result -}}
 {{- end -}}
 
 {{/*
@@ -444,20 +257,3 @@ To modify camelCase to hyphenated internal-frontend service name
     {{- end }}
 {{- end -}}
 
-{{- define "postgresql.fullname" -}}
-{{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "postgresql.host" -}}
-{{- $postgresqlName := include "call-nested" (list . "postgresql" "postgresql.fullname") -}}
-{{- printf "%s.%s" $postgresqlName .Release.Namespace -}}
-{{- end -}}

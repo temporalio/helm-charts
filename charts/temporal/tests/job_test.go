@@ -27,14 +27,22 @@ func TestAdminToolsSqlConnectAttributes(t *testing.T) {
 
 	options := &helm.Options{
 		SetValues: map[string]string{
-			"cassandra.enabled":                        "false",
-			"mysql.enabled":                            "true",
-			"server.config.persistence.default.driver": "sql",
-			"server.config.persistence.default.sql.connectAttributes.one": "test",
-			"server.config.persistence.default.sql.connectAttributes.two": "3",
+			"server.config.persistence.datastores.default.sql.pluginName": "mysql8",
+			"server.config.persistence.datastores.default.sql.driverName": "mysql8",
+			"server.config.persistence.datastores.default.sql.databaseName": "temporal",
+			"server.config.persistence.datastores.default.sql.connectAddr": "mysql.example.com:3306",
+			"server.config.persistence.datastores.default.sql.user": "temporal",
+			"server.config.persistence.datastores.default.sql.password": "password",
+			"server.config.persistence.datastores.default.sql.connectAttributes.one": "test",
+			"server.config.persistence.datastores.default.sql.connectAttributes.two": "3",
+			"server.config.persistence.datastores.visibility.sql.pluginName": "mysql8",
+			"server.config.persistence.datastores.visibility.sql.driverName": "mysql8",
+			"server.config.persistence.datastores.visibility.sql.databaseName": "temporal_visibility",
+			"server.config.persistence.datastores.visibility.sql.connectAddr": "mysql.example.com:3306",
+			"server.config.persistence.datastores.visibility.sql.user": "temporal",
+			"server.config.persistence.datastores.visibility.sql.password": "password",
 		},
-		KubectlOptions:    k8s.NewKubectlOptions("", "", namespaceName),
-		BuildDependencies: true,
+		KubectlOptions: k8s.NewKubectlOptions("", "", namespaceName),
 	}
 
 	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/server-job.yaml"})
