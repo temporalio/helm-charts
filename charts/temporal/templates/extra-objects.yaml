@@ -1,0 +1,10 @@
+{{- $extraObjects := .Values.extraObjects | default (list) -}}
+
+{{- if kindIs "map" $extraObjects -}}
+  {{- $extraObjects = values $extraObjects -}}
+{{- end -}}
+
+{{- range $extraObjects }}
+---
+{{ toYaml . }}
+{{- end }}

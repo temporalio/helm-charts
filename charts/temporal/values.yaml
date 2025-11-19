@@ -16,6 +16,8 @@ serviceAccount:
   extraAnnotations:
 additionalAnnotations: {}
 additionalLabels: {}
+# Array of extra K8s manifests to deploy
+extraObjects: []
 server:
   enabled: true
   image:
