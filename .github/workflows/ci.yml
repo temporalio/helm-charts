@@ -2,6 +2,9 @@ name: Lint Charts
 
 on: pull_request
 
+permissions:
+  contents: read
+
 jobs:
   lint-test:
     runs-on: ubuntu-latest

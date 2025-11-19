@@ -13,7 +13,6 @@ data:
       level: {{ $server.config.logLevel | quote }}
 
     persistence:
-      {{- required "numHistoryShards must be specified in server.config.persistence.numHistoryShards" $server.config.persistence.numHistoryShards -}}
       {{- include "temporal.persistence.filterConfig" $server.config.persistence | nindent 6 }}
 
     global:
