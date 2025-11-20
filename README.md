@@ -377,10 +377,10 @@ $ kubectl exec -it services/temporaltest-admintools /bin/bash
 bash-5.0#
 ```
 
-From there, you can use `tctl` or the [`temporal` CLI](https://docs.temporal.io/cli):
+From there, you can use the [`temporal` CLI](https://docs.temporal.io/cli):
 
 ```
-bash-5.0# tctl namespace list
+bash-5.0# temporal operator namespace list
 Name: temporal-system
 Id: 32049b68-7872-4094-8e63-d0dd59896a83
 Description: Temporal internal system namespace
@@ -401,16 +401,16 @@ Bad binaries to reset:
 ```
 
 ```
-bash-5.0# tctl --namespace nonesuch namespace desc
+bash-5.0# temporal operator namespace describe --namespace nonesuch
 Error: Namespace nonesuch does not exist.
 Error Details: Namespace nonesuch does not exist.
 ```
 ```
-bash-5.0# tctl --namespace nonesuch namespace re
+bash-5.0# temporal operator namespace create --namespace nonesuch
 Namespace nonesuch successfully registered.
 ```
 ```
-bash-5.0# tctl --namespace nonesuch namespace desc
+bash-5.0# temporal operator namespace describe --namespace nonesuch
 Name: nonesuch
 UUID: 465bb575-8c01-43f8-a67d-d676e1ae5eae
 Description:
