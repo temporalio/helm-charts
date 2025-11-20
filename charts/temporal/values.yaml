@@ -455,6 +455,7 @@ schema:
   setup:
     enabled: true
     backoffLimit: 100
+    ttlSecondsAfterFinished: 86400
   update:
     enabled: true
     backoffLimit: 100
