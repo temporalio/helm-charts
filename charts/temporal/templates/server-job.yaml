@@ -41,7 +41,7 @@ spec:
         - name: check-elasticsearch
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
+          command: ['sh', '-c', 'until curl --insecure --silent --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
           env:
             {{- include "temporal.admintools-env" (list $ "visibility") | nindent 12 }}
           {{- with $.Values.schema.containerSecurityContext }}

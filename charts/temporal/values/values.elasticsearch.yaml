@@ -1,8 +1,26 @@
+# server:
+#   # Additional volumes and volume mounts for Elasticsearch TLS certificates
+#   additionalVolumes:
+#     - name: temporal-es-tls
+#       secret:
+#         secretName: temporal-visibility-es-http-certs-internal
+
+#   additionalVolumeMounts:
+#     - name: temporal-es-tls
+#       mountPath: /etc/temporal/es/tls/
+
 elasticsearch:
   enabled: false
   external: true
   host: "elasticsearch-master-headless"
   port: "9200"
   version: "v7"
-  scheme: "http"
+  scheme: "http" # or "https" if TLS is enabled
   logLevel: "error"
+  # tls:
+  #  enabled: true
+  #  enableHostVerification: true
+  #  serverName: temporal-visibility-es-http
+  #  caFile: /etc/temporal/es/tls/ca.crt
+  #  certFile: /etc/temporal/es/tls/tls.crt
+  #  keyFile: /etc/temporal/es/tls/tls.key
