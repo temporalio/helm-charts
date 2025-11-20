@@ -248,6 +248,7 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
+    minReadySeconds: 0
     podDisruptionBudget: {}
   internalFrontend:
     # Enable this to create internal-frontend
@@ -280,6 +281,7 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
+    minReadySeconds: 0
     podDisruptionBudget: {}
   history:
     service:
@@ -307,6 +309,7 @@ server:
     additionalEnvSecretName: ""
     containerSecurityContext: {}
     topologySpreadConstraints: []
+    minReadySeconds: 0
     podDisruptionBudget: {}
   matching:
     service:
@@ -333,6 +336,7 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
+    minReadySeconds: 0
     podDisruptionBudget: {}
   worker:
     service:
@@ -359,6 +363,7 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
+    minReadySeconds: 0
     podDisruptionBudget: {}
 admintools:
   enabled: true
@@ -386,6 +391,7 @@ admintools:
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
+  minReadySeconds: 0
   podDisruptionBudget: {}
 web:
   # additionalInitContainers: []
@@ -448,6 +454,7 @@ web:
   containerSecurityContext: {}
   securityContext: {}
   topologySpreadConstraints: []
+  minReadySeconds: 0
   podDisruptionBudget: {}
 schema:
   createDatabase:
