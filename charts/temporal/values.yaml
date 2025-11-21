@@ -241,6 +241,7 @@ server:
     deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
+    livenessProbe: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -299,6 +300,7 @@ server:
     deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
+    livenessProbe: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -326,6 +328,7 @@ server:
     deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}
+    livenessProbe: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
