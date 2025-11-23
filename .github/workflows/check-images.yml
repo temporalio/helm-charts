@@ -1,0 +1,113 @@
+name: Check Helm Chart Images
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Extract and validate images
+        run: |
+          set -e
+
+          VALUES_FILE="charts/temporal/values.yaml"
+          FAILED_IMAGES=()
+          declare -A SEEN_IMAGES
+
+          echo "Extracting images from $VALUES_FILE..."
+          echo ""
+
+          # Function to extract and check images
+          extract_images() {
+            local path_prefix="$1"
+
+            # Find all paths that have .image.repository or .image.repo
+            local repo_paths=$(yq eval ".. | select(has(\"image\")) | path | join(\".\")" "$VALUES_FILE" 2>/dev/null | sort -u || true)
+
+            while IFS= read -r path; do
+              if [ -z "$path" ]; then
+                continue
+              fi
+
+              # Try to get repository (most common)
+              local repo=$(yq eval ".$path.image.repository" "$VALUES_FILE" 2>/dev/null)
+              local tag=$(yq eval ".$path.image.tag" "$VALUES_FILE" 2>/dev/null)
+
+              # If repository doesn't exist, try 'repo' (used by cassandra)
+              if [ "$repo" = "null" ] || [ -z "$repo" ]; then
+                repo=$(yq eval ".$path.image.repo" "$VALUES_FILE" 2>/dev/null)
+              fi
+
+              # If we found both repo and tag, add to list
+              if [ "$repo" != "null" ] && [ -n "$repo" ] && [ "$tag" != "null" ] && [ -n "$tag" ]; then
+                local full_image="$repo:$tag"
+                # Use associative array to avoid duplicates
+                if [ -z "${SEEN_IMAGES[$full_image]}" ]; then
+                  SEEN_IMAGES[$full_image]=1
+                fi
+              fi
+            done <<< "$repo_paths"
+          }
+
+          # Extract all images
+          extract_images
+
+          # Convert associative array to regular array
+          IMAGES=()
+          for img in "${!SEEN_IMAGES[@]}"; do
+            IMAGES+=("$img")
+          done
+
+          # Sort images for consistent output
+          IFS=$'\n' IMAGES=($(sort <<<"${IMAGES[*]}"))
+          unset IFS
+
+          if [ ${#IMAGES[@]} -eq 0 ]; then
+            echo "⚠ No images found in $VALUES_FILE"
+            exit 1
+          fi
+
+          echo "Found ${#IMAGES[@]} image(s) to validate:"
+          for img in "${IMAGES[@]}"; do
+            echo "  - $img"
+          done
+          echo ""
+
+          # Pull each image and track failures
+          for image in "${IMAGES[@]}"; do
+            echo "Pulling $image..."
+            if docker pull "$image"; then
+              echo "✓ Successfully pulled $image"
+            else
+              echo "✗ Failed to pull $image"
+              FAILED_IMAGES+=("$image")
+            fi
+            echo ""
+          done
+
+          # Report results
+          if [ ${#FAILED_IMAGES[@]} -eq 0 ]; then
+            echo "=========================================="
+            echo "SUCCESS: All ${#IMAGES[@]} image(s) are accessible!"
+            echo "=========================================="
+            exit 0
+          else
+            echo "=========================================="
+            echo "FAILURE: ${#FAILED_IMAGES[@]} of ${#IMAGES[@]} image(s) could not be pulled:"
+            for img in "${FAILED_IMAGES[@]}"; do
+              echo "  ✗ $img"
+            done
+            echo "=========================================="
+            exit 1
+          fi
