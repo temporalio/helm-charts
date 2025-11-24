@@ -20,7 +20,7 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.29.0
+    tag: 1.29.1
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -234,8 +234,11 @@ server:
       annotations: {}
       type: ClusterIP
       port: 7233
+      appProtocol: tcp
       membershipPort: 6933
+      membershipAppProtocol: tcp
       httpPort: 7243
+      httpAppProtocol: http
     ingress:
       enabled: false
       # className:
@@ -278,8 +281,11 @@ server:
       annotations: {}
       type: ClusterIP
       port: 7236
+      appProtocol: tcp
       membershipPort: 6936
+      membershipAppProtocol: tcp
       httpPort: 7246
+      httpAppProtocol: http
     metrics:
       annotations:
         enabled: true
@@ -303,7 +309,9 @@ server:
     service:
       # type: ClusterIP
       port: 7234
+      appProtocol: tcp
       membershipPort: 6934
+      membershipAppProtocol: tcp
     metrics:
       annotations:
         enabled: true
@@ -328,7 +336,9 @@ server:
     service:
       # type: ClusterIP
       port: 7235
+      appProtocol: tcp
       membershipPort: 6935
+      membershipAppProtocol: tcp
     metrics:
       annotations:
         enabled: false
@@ -352,7 +362,9 @@ server:
     service:
       # type: ClusterIP
       port: 7239
+      appProtocol: tcp
       membershipPort: 6939
+      membershipAppProtocol: tcp
     metrics:
       annotations:
         enabled: true
@@ -376,7 +388,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: "1.29"
+    tag: "1.29.1-tctl-1.18.4-cli-1.5.0"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -405,7 +417,7 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.40.1
+    tag: 2.42.1
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
@@ -415,6 +427,7 @@ web:
     # Note that this requires the web.service.type to be the default ClusterIP value.
     # clusterIP:
     port: 8080
+    appProtocol: http
     annotations: {}
     # loadBalancerIP:
   ingress:
