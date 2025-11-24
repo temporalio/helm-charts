@@ -372,6 +372,94 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- join "&" $result -}}
 {{- end -}}
 
+{{- define "temporal.persistence.sql.hasSecretRef" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if and $driverConfig.secretRef $driverConfig.secretRef.name -}}
+  {{- $hasAtLeastOneKey := or $driverConfig.secretRef.hostKey $driverConfig.secretRef.portKey $driverConfig.secretRef.databaseKey $driverConfig.secretRef.userKey $driverConfig.secretRef.passwordKey -}}
+  {{- if not $hasAtLeastOneKey -}}
+    {{- fail (printf "secretRef.name is set for %s store but no keys are specified. At least one of hostKey, portKey, databaseKey, userKey, or passwordKey must be specified" $store) -}}
+  {{- end -}}
+  {{- print "true" -}}
+{{- else -}}
+{{- print "false" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.secretRefName" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if and $driverConfig.secretRef $driverConfig.secretRef.name -}}
+{{- print $driverConfig.secretRef.name -}}
+{{- else -}}
+{{- fail (printf "Please specify secretRef.name for %s store" $store) -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.hasHostKey" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if and $driverConfig.secretRef $driverConfig.secretRef.hostKey -}}
+{{- print "true" -}}
+{{- else -}}
+{{- print "false" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.hasPortKey" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if and $driverConfig.secretRef $driverConfig.secretRef.portKey -}}
+{{- print "true" -}}
+{{- else -}}
+{{- print "false" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.hasDatabaseKey" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if and $driverConfig.secretRef $driverConfig.secretRef.databaseKey -}}
+{{- print "true" -}}
+{{- else -}}
+{{- print "false" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.hasUserKey" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if and $driverConfig.secretRef $driverConfig.secretRef.userKey -}}
+{{- print "true" -}}
+{{- else -}}
+{{- print "false" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.persistence.sql.hasPasswordKey" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- if and $driverConfig.secretRef $driverConfig.secretRef.passwordKey -}}
+{{- print "true" -}}
+{{- else -}}
+{{- print "false" -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "temporal.persistence.elasticsearch.secretName" -}}
 {{- $global := index . 0 -}}
 {{- $store := index . 1 -}}

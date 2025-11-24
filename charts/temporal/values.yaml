@@ -160,8 +160,20 @@ server:
           database: "temporal"
           user: "temporal"
           password: "temporal"
+          # DEPRECATED: Use secretRef instead. existingSecret only stores password.
           existingSecret: ""
+          # DEPRECATED: Use secretRef instead. secretName only stores password.
           secretName: ""
+          secretRef: {}
+          # Flexible secret reference - specify which secret keys contain connection parameters
+          # At least one key must be specified. Unspecified keys will use values from above.
+          # Example:
+          #  name: my-postgres-secret
+          #  hostKey: host              # Optional - if set, read host from secret
+          #  portKey: port              # Optional - if set, read port from secret
+          #  databaseKey: database      # Optional - if set, read database from secret
+          #  userKey: user              # Optional - if set, read user from secret
+          #  passwordKey: password      # Optional - if set, read password from secret
           maxConns: 20
           maxIdleConns: 20
           maxConnLifetime: "1h"
@@ -191,8 +203,20 @@ server:
           database: "temporal_visibility"
           user: "temporal"
           password: "temporal"
+          # DEPRECATED: Use secretRef instead. existingSecret only stores password.
           existingSecret: ""
+          # DEPRECATED: Use secretRef instead. secretName only stores password.
           secretName: ""
+          secretRef: {}
+          # Flexible secret reference - specify which secret keys contain connection parameters
+          # At least one key must be specified. Unspecified keys will use values from above.
+          # Example:
+          #  name: my-postgres-secret
+          #  hostKey: host              # Optional - if set, read host from secret
+          #  portKey: port              # Optional - if set, read port from secret
+          #  databaseKey: database      # Optional - if set, read database from secret
+          #  userKey: user              # Optional - if set, read user from secret
+          #  passwordKey: password      # Optional - if set, read password from secret
           maxConns: 20
           maxIdleConns: 20
           maxConnLifetime: "1h"

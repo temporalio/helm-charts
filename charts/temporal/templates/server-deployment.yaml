@@ -88,18 +88,94 @@ spec:
             - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
               value: /etc/temporal/config/config_template.yaml
             {{- if ne (include "temporal.persistence.driver" (list $ "default")) "custom" }}
+              {{- if and (eq (include "temporal.persistence.driver" (list $ "default")) "sql") (eq (include "temporal.persistence.sql.hasSecretRef" (list $ "default")) "true") }}
+                {{- if eq (include "temporal.persistence.sql.hasHostKey" (list $ "default")) "true" }}
+            - name: TEMPORAL_STORE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.sql.secretRefName" (list $ "default") }}
+                  key: {{ $.Values.server.config.persistence.default.sql.secretRef.hostKey }}
+                {{- end }}
+                {{- if eq (include "temporal.persistence.sql.hasPortKey" (list $ "default")) "true" }}
+            - name: TEMPORAL_STORE_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.sql.secretRefName" (list $ "default") }}
+                  key: {{ $.Values.server.config.persistence.default.sql.secretRef.portKey }}
+                {{- end }}
+                {{- if eq (include "temporal.persistence.sql.hasDatabaseKey" (list $ "default")) "true" }}
+            - name: TEMPORAL_STORE_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.sql.secretRefName" (list $ "default") }}
+                  key: {{ $.Values.server.config.persistence.default.sql.secretRef.databaseKey }}
+                {{- end }}
+                {{- if eq (include "temporal.persistence.sql.hasUserKey" (list $ "default")) "true" }}
+            - name: TEMPORAL_STORE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.sql.secretRefName" (list $ "default") }}
+                  key: {{ $.Values.server.config.persistence.default.sql.secretRef.userKey }}
+                {{- end }}
+                {{- if eq (include "temporal.persistence.sql.hasPasswordKey" (list $ "default")) "true" }}
+            - name: TEMPORAL_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.sql.secretRefName" (list $ "default") }}
+                  key: {{ $.Values.server.config.persistence.default.sql.secretRef.passwordKey }}
+                {{- end }}
+              {{- else }}
             - name: TEMPORAL_STORE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "default") }}
                   key: {{ include "temporal.persistence.secretKey" (list $ "default") }}
+              {{- end }}
             {{- end }}
             {{- if ne (include "temporal.persistence.driver" (list $ "visibility")) "custom" }}
+              {{- if and (eq (include "temporal.persistence.driver" (list $ "visibility")) "sql") (eq (include "temporal.persistence.sql.hasSecretRef" (list $ "visibility")) "true") }}
+                {{- if eq (include "temporal.persistence.sql.hasHostKey" (list $ "visibility")) "true" }}
+            - name: TEMPORAL_VISIBILITY_STORE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.sql.secretRefName" (list $ "visibility") }}
+                  key: {{ $.Values.server.config.persistence.visibility.sql.secretRef.hostKey }}
+                {{- end }}
+                {{- if eq (include "temporal.persistence.sql.hasPortKey" (list $ "visibility")) "true" }}
+            - name: TEMPORAL_VISIBILITY_STORE_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.sql.secretRefName" (list $ "visibility") }}
+                  key: {{ $.Values.server.config.persistence.visibility.sql.secretRef.portKey }}
+                {{- end }}
+                {{- if eq (include "temporal.persistence.sql.hasDatabaseKey" (list $ "visibility")) "true" }}
+            - name: TEMPORAL_VISIBILITY_STORE_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.sql.secretRefName" (list $ "visibility") }}
+                  key: {{ $.Values.server.config.persistence.visibility.sql.secretRef.databaseKey }}
+                {{- end }}
+                {{- if eq (include "temporal.persistence.sql.hasUserKey" (list $ "visibility")) "true" }}
+            - name: TEMPORAL_VISIBILITY_STORE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.sql.secretRefName" (list $ "visibility") }}
+                  key: {{ $.Values.server.config.persistence.visibility.sql.secretRef.userKey }}
+                {{- end }}
+                {{- if eq (include "temporal.persistence.sql.hasPasswordKey" (list $ "visibility")) "true" }}
+            - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.sql.secretRefName" (list $ "visibility") }}
+                  key: {{ $.Values.server.config.persistence.visibility.sql.secretRef.passwordKey }}
+                {{- end }}
+              {{- else }}
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
                   key: {{ include "temporal.persistence.secretKey" (list $ "visibility") }}
+              {{- end }}
             {{- end }}
           {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
             - name: USE_INTERNAL_FRONTEND
