@@ -22,8 +22,6 @@ server:
     repository: temporalio/server
     tag: 1.29.1
     pullPolicy: IfNotPresent
-  # Global default settings (can be overridden per service)
-  replicaCount: 1
   metrics:
     # Annotate pods directly with Prometheus annotations.
     # Use this if you installed Prometheus from a Helm chart.
@@ -390,7 +388,6 @@ admintools:
 web:
   # additionalInitContainers: []
   enabled: true
-  replicaCount: 1
   image:
     repository: temporalio/ui
     tag: 2.42.1
