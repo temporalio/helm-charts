@@ -184,6 +184,9 @@ spec:
               {{- end }}
           {{- end }}
         {{- end }}
+        {{- with $.Values.schema.postInitContainers }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
       containers:
         - name: done
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"

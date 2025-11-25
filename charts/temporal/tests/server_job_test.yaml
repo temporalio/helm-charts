@@ -19,6 +19,15 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].name
           value: my-init-container
+  - it: includes postInit containers
+    set:
+      schema:
+        postInitContainers:
+          - name: my-post-init-container
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[-1].name
+          value: my-post-init-container
   - it: includes additional volumes
     set:
       admintools:
