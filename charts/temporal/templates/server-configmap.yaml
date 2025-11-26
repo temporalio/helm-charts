@@ -25,7 +25,7 @@ data:
           cassandra:
             hosts: "{{ include "temporal.persistence.cassandra.hosts" (list $ "default") }}"
             port: {{ include "temporal.persistence.cassandra.port" (list $ "default") }}
-            password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
+            password: {{ `{{ env "TEMPORAL_STORE_PASSWORD" | quote }}` }}
             {{- with (omit $server.config.persistence.default.cassandra "hosts" "port" "password" "existingSecret") }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -37,7 +37,7 @@ data:
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "default") }}:{{ include "temporal.persistence.sql.port" (list $ "default") }}"
             connectProtocol: "tcp"
             user: {{ include "temporal.persistence.sql.user" (list $ "default") }}
-            password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
+            password: {{ `{{ env "TEMPORAL_STORE_PASSWORD" | quote }}` }}
             {{- with (omit $server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -58,7 +58,7 @@ data:
                 scheme: "{{ $elasticsearch.scheme }}"
                 host: "{{ $elasticsearch.host }}:{{ $elasticsearch.port }}"
             username: "{{ $elasticsearch.username }}"
-            password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
+            password: {{ `{{ env "TEMPORAL_VISIBILITY_STORE_PASSWORD" | quote }}` }}
             logLevel: "{{ $elasticsearch.logLevel }}"
             indices:
                 visibility: "{{ $elasticsearch.visibilityIndex }}"
@@ -74,7 +74,7 @@ data:
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "visibility") }}:{{ include "temporal.persistence.sql.port" (list $ "visibility") }}"
             connectProtocol: "tcp"
             user: "{{ include "temporal.persistence.sql.user" (list $ "visibility") }}"
-            password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
+            password: {{ `{{ env "TEMPORAL_VISIBILITY_STORE_PASSWORD" | quote }}` }}
             {{- with (omit $server.config.persistence.visibility.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -84,14 +84,15 @@ data:
       membership:
         name: temporal
         maxJoinDuration: 30s
-        broadcastAddress: {{ `{{ default .Env.POD_IP "0.0.0.0" }}` }}
+        # TODO: validate broadcast address can work with 0.0.0.0
+        broadcastAddress: {{ `{{ env "POD_IP" | default "" }}` }}
 
       pprof:
         port: 7936
 
       metrics:
         tags:
-          type: {{ `{{ .Env.SERVICES }}` }}
+          type: {{ `{{ env "TEMPORAL_SERVICES" }}` }}
           {{- with $server.metrics.tags }}
             {{- toYaml . | nindent 10 }}
           {{- end }}
