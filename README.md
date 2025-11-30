@@ -529,7 +529,10 @@ helm uninstall temporaltest
 
 ## Upgrading
 
-To upgrade your cluster, upgrade your database schema (if the release includes schema changes), and then use `helm upgrade` command to perform a rolling upgrade of your installation.
+To upgrade your cluster:
+
+* Upgrade your database schema (if `schema.update.enabled` is `false`)
+* Run `helm upgrade` command to perform a rolling upgrade of your installation
 
 Note:
 * Not supported: running newer binaries with an older schema.
@@ -538,6 +541,8 @@ Note:
 Example:
 
 ### Upgrade Schema
+
+**These steps are only required if `schema.update.enabled` is `false`**. If schema update is enabled the Helm chart will do this for you.
 
 Here are examples of commands you can use to upgrade the "default" schema in your "bring your own" Cassandra database.
 
