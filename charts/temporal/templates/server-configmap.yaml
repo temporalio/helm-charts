@@ -18,7 +18,6 @@ data:
       visibilityStore: visibility
       numHistoryShards: {{ $server.config.numHistoryShards }}
       datastores:
-        {{- if ne (include "temporal.persistence.driver" (list $ "default")) "custom" }}
         default:
           {{- if eq (include "temporal.persistence.driver" (list $ "default")) "cassandra" }}
           cassandra:
@@ -35,7 +34,7 @@ data:
             databaseName: "{{ $server.config.persistence.default.sql.database }}"
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "default") }}:{{ include "temporal.persistence.sql.port" (list $ "default") }}"
             connectProtocol: "tcp"
-            user: {{ include "temporal.persistence.sql.user" (list $ "default") }}
+            user: {{ include "temporal.persistence.sql.user" (list $ "default") | quote }}
             password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
             {{- with (omit $server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
               {{- toYaml . | nindent 12 }}
@@ -45,7 +44,6 @@ data:
           faultInjection:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- end }}
         {{- with $server.config.persistence.additionalStores }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -72,7 +70,7 @@ data:
             databaseName: "{{ $server.config.persistence.visibility.sql.database }}"
             connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "visibility") }}:{{ include "temporal.persistence.sql.port" (list $ "visibility") }}"
             connectProtocol: "tcp"
-            user: "{{ include "temporal.persistence.sql.user" (list $ "visibility") }}"
+            user: {{ include "temporal.persistence.sql.user" (list $ "visibility") | quote }}
             password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
             {{- with (omit $server.config.persistence.visibility.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
               {{- toYaml . | nindent 12 }}

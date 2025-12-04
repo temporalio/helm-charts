@@ -16,18 +16,14 @@ dependencies:
     version: "0.14.3"
     repository: https://charts.helm.sh/incubator
     condition: cassandra.enabled
-  - name: prometheus
-    repository: https://prometheus-community.github.io/helm-charts
-    version: 25.22.0
-    condition: prometheus.enabled
   - name: elasticsearch
     repository: https://helm.elastic.co
     version: 7.17.3
     condition: elasticsearch.enabled
-  - name: grafana
-    repository: https://grafana.github.io/helm-charts
-    version: 8.0.2
-    condition: grafana.enabled
+  - name: mysql
+    repository: https://charts.bitnami.com/bitnami
+    version: 13.0.0
+    condition: mysql.enabled
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives
@@ -39,7 +35,7 @@ dependencies:
 type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
-version: 0.72.0
+version: 0.64.0
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
-appVersion: 1.29.1
+appVersion: 1.28.0

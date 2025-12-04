@@ -20,13 +20,16 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.29.1
+    tag: 1.28.0
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
   metrics:
-    # Annotate pods directly with Prometheus annotations.
-    # Use this if you installed Prometheus from a Helm chart.
+    # Annotate pods and services directly with the following Prometheus annotations.
+    # prometheus.io/job
+    # prometheus.io/port
+    # prometheus.io/scheme
+    # prometheus.io/scrape
     annotations:
       enabled: true
     # Additional tags to be added to Prometheus metrics
@@ -137,7 +140,7 @@ server:
       defaultStore: default
       additionalStores: {}
       default:
-        driver: "cassandra"
+        driver: "sql"
         cassandra:
           hosts: []
           # port: 9042
@@ -154,12 +157,12 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
         sql:
-          driver: "mysql8"
-          host: "mysql"
-          port: 3306
+          driver: ""
+          host: ""
+          port:
           database: "temporal"
-          user: "temporal"
-          password: "temporal"
+          user: ""
+          password: ""
           existingSecret: ""
           secretName: ""
           maxConns: 20
@@ -168,7 +171,7 @@ server:
           # connectAttributes:
           # tx_isolation: 'READ-COMMITTED'
       visibility:
-        driver: "cassandra"
+        driver: "sql"
         cassandra:
           hosts: []
           # port: 9042
@@ -185,12 +188,12 @@ server:
               consistency: "local_quorum"
               serialConsistency: "local_serial"
         sql:
-          driver: "mysql8"
-          host: "mysql"
+          driver: ""
+          host: ""
           port: 3306
           database: "temporal_visibility"
-          user: "temporal"
-          password: "temporal"
+          user: ""
+          password: ""
           existingSecret: ""
           secretName: ""
           maxConns: 20
@@ -210,11 +213,8 @@ server:
       annotations: {}
       type: ClusterIP
       port: 7233
-      appProtocol: tcp
       membershipPort: 6933
-      membershipAppProtocol: tcp
       httpPort: 7243
-      httpAppProtocol: http
     ingress:
       enabled: false
       # className:
@@ -257,11 +257,8 @@ server:
       annotations: {}
       type: ClusterIP
       port: 7236
-      appProtocol: tcp
       membershipPort: 6936
-      membershipAppProtocol: tcp
       httpPort: 7246
-      httpAppProtocol: http
     metrics:
       annotations:
         enabled: true
@@ -285,9 +282,7 @@ server:
     service:
       # type: ClusterIP
       port: 7234
-      appProtocol: tcp
       membershipPort: 6934
-      membershipAppProtocol: tcp
     metrics:
       annotations:
         enabled: true
@@ -312,9 +307,7 @@ server:
     service:
       # type: ClusterIP
       port: 7235
-      appProtocol: tcp
       membershipPort: 6935
-      membershipAppProtocol: tcp
     metrics:
       annotations:
         enabled: false
@@ -338,9 +331,7 @@ server:
     service:
       # type: ClusterIP
       port: 7239
-      appProtocol: tcp
       membershipPort: 6939
-      membershipAppProtocol: tcp
     metrics:
       annotations:
         enabled: true
@@ -364,7 +355,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: "1.29.1-tctl-1.18.4-cli-1.5.0"
+    tag: 1.28.0-tctl-1.18.2-cli-1.3.0
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -393,7 +384,7 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.42.1
+    tag: 2.38.3
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
@@ -403,7 +394,6 @@ web:
     # Note that this requires the web.service.type to be the default ClusterIP value.
     # clusterIP:
     port: 8080
-    appProtocol: http
     annotations: {}
     # loadBalancerIP:
   ingress:
@@ -464,8 +454,8 @@ schema:
   containerSecurityContext: {}
   securityContext: {}
 elasticsearch:
-  enabled: true
-  replicas: 3
+  enabled: false
+  replicas: 1
   persistence:
     enabled: false
   imageTag: 7.17.3
@@ -477,68 +467,8 @@ elasticsearch:
   username: ""
   password: ""
   visibilityIndex: "temporal_visibility_v1_dev"
-prometheus:
-  enabled: true
-  nodeExporter:
-    enabled: false
-grafana:
-  enabled: true
-  replicas: 1
-  testFramework:
-    enabled: false
-  rbac:
-    create: false
-    pspEnabled: false
-    namespaced: true
-  dashboardProviders:
-    dashboardproviders.yaml:
-      apiVersion: 1
-      providers:
-        - name: "default"
-          orgId: 1
-          folder: ""
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /var/lib/grafana/dashboards/default
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      datasources:
-        - name: TemporalMetrics
-          type: prometheus
-          url: http://{{ .Release.Name }}-prometheus-server
-          access: proxy
-          isDefault: true
-  dashboards:
-    default:
-      server-general-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/server/server-general.json
-        datasource: TemporalMetrics
-      sdk-general-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/sdk/sdk-general.json
-        datasource: TemporalMetrics
-      misc-advanced-visibility-specific-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/advanced-visibility-specific.json
-        datasource: TemporalMetrics
-      misc-clustermonitoring-kubernetes-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/clustermonitoring-kubernetes.json
-        datasource: TemporalMetrics
-      misc-frontend-service-specific-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/frontend-service-specific.json
-        datasource: TemporalMetrics
-      misc-history-service-specific-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/history-service-specific.json
-        datasource: TemporalMetrics
-      misc-matching-service-specific-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/matching-service-specific.json
-        datasource: TemporalMetrics
-      misc-worker-service-specific-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json
-        datasource: TemporalMetrics
 cassandra:
-  enabled: true
+  enabled: false
   persistence:
     enabled: false
   image:
@@ -556,4 +486,8 @@ cassandra:
   service:
     type: ClusterIP
 mysql:
+  enabled: true
+  auth:
+    rootPassword: "sekret"
+postgresql:
   enabled: false
