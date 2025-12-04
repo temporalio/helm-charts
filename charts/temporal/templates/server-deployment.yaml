@@ -86,6 +86,8 @@ spec:
                   fieldPath: status.podIP
             - name: SERVICES
               value: {{ $service }}
+            - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
+              value: /etc/temporal/config/config_template.yaml
             - name: TEMPORAL_STORE_PASSWORD
               valueFrom:
                 secretKeyRef:
