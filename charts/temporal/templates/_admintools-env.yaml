@@ -76,12 +76,8 @@
     {{- end }}
   {{- end }}
 {{- else if eq $driver "elasticsearch" -}}
-- name: ES_SCHEME
-  value: {{ $driverConfig.scheme }}
-- name: ES_HOST
-  value: {{ $driverConfig.host }}
-- name: ES_PORT
-  value: {{ $driverConfig.port | quote }}
+- name: ES_SERVER
+  value: {{ $driverConfig.scheme }}://{{ $driverConfig.host }}:{{ $driverConfig.port }}
 - name: ES_USER
   value: {{ $driverConfig.username | quote }}
 - name: ES_PWD
@@ -89,8 +85,6 @@
     secretKeyRef:
       name: {{ include "temporal.persistence.secretName" (list $global $store) }}
       key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
-- name: ES_VERSION
-  value: {{ $driverConfig.version }}
 - name: ES_VISIBILITY_INDEX
   value: {{ $driverConfig.visibilityIndex }}
 {{- end }}

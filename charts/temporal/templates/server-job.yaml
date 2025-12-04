@@ -37,12 +37,11 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         {{- end }}
-        # TODO: Use temporal-elasticsearch-tool if available. curl will not be part of the image in the future.
         {{- if or $.Values.elasticsearch.enabled }}
         - name: check-elasticsearch
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
+          command: ['sh', '-c', 'until temporal-elasticsearch-tool ping --quiet 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
           env:
             {{- include "temporal.admintools-env" (list $ "visibility") | nindent 12 }}
           {{- with $.Values.schema.containerSecurityContext }}
@@ -92,11 +91,7 @@ spec:
             {{- else if eq $driver "sql" }}
           command: ['temporal-sql-tool', 'setup-schema', '-v', '0.0']
             {{- else if eq $driver "elasticsearch" }}
-          command: ['sh', '-c']
-          args:
-            - 'curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&
-              curl --head --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1 ||
-              curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1'
+          command: ['sh', '-c', 'temporal-elasticsearch-tool setup-schema && temporal-elasticsearch-tool create-index']
             {{- end }}
           env:
             {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
@@ -119,34 +114,34 @@ spec:
             {{- $storeConfig := index $.Values.server.config.persistence $store }}
             {{- $driver := include "temporal.persistence.driver" (list $ $store) }}
             {{- $schema := include "temporal.persistence.schema" $store }}
-            {{- if ne $driver "elasticsearch" }}
         - name: update-{{ $store }}-store
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-              {{- if eq $driver "cassandra" }}
+            {{- if eq $driver "cassandra" }}
           command: ['temporal-cassandra-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/cassandra/{{ $schema }}/versioned']
-              {{- else if eq $driver "sql" }}
-                {{- $plugin := include "temporal.persistence.sql.driver" (list $ $store) }}
-                {{- if eq $plugin "mysql8" }}
+            {{- else if eq $driver "sql" }}
+              {{- $plugin := include "temporal.persistence.sql.driver" (list $ $store) }}
+              {{- if eq $plugin "mysql8" }}
           command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v8/{{ $schema }}/versioned']
-                {{- else if or (eq $plugin "postgres12") (eq $plugin "postgres12_pgx") }}
+              {{- else if or (eq $plugin "postgres12") (eq $plugin "postgres12_pgx") }}
           command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v12/{{ $schema }}/versioned']
-                {{- end }}
               {{- end }}
+            {{- else if eq $driver "elasticsearch" }}
+          command: ['temporal-elasticsearch-tool', 'update-schema', '--index', '{{ $storeConfig.elasticsearch.visibilityIndex }}']
+            {{- end }}
           env:
-              {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-              {{- with $.Values.admintools.additionalVolumeMounts }}
+            {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
+            {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.resources }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $.Values.schema.resources }}
           resources:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.containerSecurityContext }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $.Values.schema.containerSecurityContext }}
           securityContext:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
+              {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
         {{- end }}
