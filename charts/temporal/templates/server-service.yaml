@@ -16,11 +16,6 @@ spec:
   ports:
     - port: {{ $serviceValues.service.port }}
       targetPort: rpc
-      # For Istio service mesh - make sure all ports are defined here and in the deployment:
-      # Also for Istio - make sure to set the `appProtocol` property, see:
-      # https://istio.io/latest/docs/ops/configuration/traffic-management/protocol-selection/#explicit-protocol-selection
-      # Note when two services expose the same port, it is necessary that the appProtocol of both is the same.
-      appProtocol: {{ $serviceValues.service.appProtocol }}
       protocol: TCP
       name: grpc-rpc
       {{- if hasKey $serviceValues.service "nodePort" }}
@@ -28,7 +23,6 @@ spec:
       {{- end }}
     - port: {{ $serviceValues.service.httpPort }}
       targetPort: http
-      appProtocol: {{ $serviceValues.service.httpAppProtocol }}
       protocol: TCP
       name: http
       # TODO: Allow customizing the node HTTP port
@@ -80,12 +74,12 @@ spec:
   ports:
     - port: {{ $serviceValues.service.port }}
       targetPort: rpc
-      appProtocol: {{ $serviceValues.service.appProtocol }}
+      appProtocol: tcp
       protocol: TCP
       name: grpc-rpc
     - port: {{ $serviceValues.service.membershipPort }}
       targetPort: membership
-      appProtocol: {{ $serviceValues.service.membershipAppProtocol }}
+      appProtocol: tcp
       protocol: TCP
       name: grpc-membership
     - port: 9090
