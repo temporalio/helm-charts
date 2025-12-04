@@ -2,17 +2,11 @@ dependencies:
 - name: cassandra
   repository: https://charts.helm.sh/incubator
   version: 0.14.3
-- name: prometheus
-  repository: https://prometheus-community.github.io/helm-charts
-  version: 25.22.0
 - name: elasticsearch
   repository: https://helm.elastic.co
   version: 7.17.3
-- name: grafana
-  repository: https://grafana.github.io/helm-charts
-  version: 8.0.2
 - name: mysql
   repository: https://charts.bitnami.com/bitnami
   version: 13.0.0
-digest: sha256:7ca2a3e14c1ac8098ba5cf6cdbf215bb8921308cd7d3dc515fa6099f23d5cd91
-generated: "2025-06-04T09:45:27.959622-04:00"
+digest: sha256:f442a524e10a58f6fb0854e6026fa6baa73d0fd4c3fa25252c36bc5bca058753
+generated: "2025-12-04T13:17:49.381489-06:00"
