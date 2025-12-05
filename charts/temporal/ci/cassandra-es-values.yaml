@@ -13,17 +13,11 @@ server:
             keyspace: temporal
             user: user
             password: password
-            replicationFactor: 1
-            consistency:
-              default:
-                consistency: "local_quorum"
-                serialConsistency: "local_serial"
         visibility:
           elasticsearch:
             version: v7
             url:
               scheme: http
-              host: "elasticsearch-master-headless:9200"
-            logLevel: error
+              host: "elasticsearch.default.svc.cluster.local:9200"
             indices:
               visibility: temporal_visibility_v1

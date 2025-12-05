@@ -8,6 +8,50 @@ permissions:
 jobs:
   lint-test:
     runs-on: ubuntu-latest
+
+    services:
+      cassandra:
+        image: cassandra:4.1
+        env:
+          CASSANDRA_CLUSTER_NAME: test-cluster
+          CASSANDRA_DC: dc1
+          CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+        ports:
+          - 9042:9042
+        options: >-
+          --health-cmd "cqlsh -e 'describe cluster'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 30
+
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: temporal
+          POSTGRES_PASSWORD: temporal
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      elasticsearch:
+        image: elasticsearch:8.11.0
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: false
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd "curl -f http://localhost:9200/_cluster/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -27,17 +71,8 @@ jobs:
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.6.1
 
-      - name: Run chart-testing (list-changed)
-        id: list-changed
-        run: |
-          changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
-          if [[ -n "$changed" ]]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Run chart-testing (lint)
-        if: steps.list-changed.outputs.changed == 'true'
-        run: ct lint --check-version-increment=false --target-branch ${{ github.event.repository.default_branch }}
+        run: ct lint --check-version-increment=false --target-branch v1
 
       - name: Install helm-unittest
         run: helm plugin install https://github.com/helm-unittest/helm-unittest.git
@@ -45,3 +80,24 @@ jobs:
       - name: Run helm-unittest
         working-directory: charts/temporal
         run: helm unittest .
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1.13.0
+
+      - name: Create Cassandra service
+        run: |
+          CASSANDRA_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${{ job.services.cassandra.id }})
+          kubectl create service externalname cassandra --external-name=$CASSANDRA_IP --namespace=default
+
+      - name: Create Postgres service
+        run: |
+          POSTGRES_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${{ job.services.postgres.id }})
+          kubectl create service externalname postgres --external-name=$POSTGRES_IP --namespace=default
+
+      - name: Create Elasticsearch service
+        run: |
+          ELASTICSEARCH_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${{ job.services.elasticsearch.id }})
+          kubectl create service externalname elasticsearch --external-name=$ELASTICSEARCH_IP --namespace=default
+
+      - name: Run chart-testing (install)
+        run: ct install --target-branch v1

@@ -9,22 +9,14 @@ server:
         default:
           sql:
             pluginName: postgres12
-            driverName: postgres12
             databaseName: temporal
-            connectAddr: "postgres-postgresql.postgres:5432"
+            connectAddr: "postgres.default.svc.cluster.local:5432"
             user: temporal
             password: temporal
-            maxConns: 20
-            maxIdleConns: 20
-            maxConnLifetime: "1h"
         visibility:
           sql:
             pluginName: postgres12
-            driverName: postgres12
-            databaseName: temporal
-            connectAddr: "postgres-postgresql.postgres:5432"
+            databaseName: temporal_visibility
+            connectAddr: "postgres.default.svc.cluster.local:5432"
             user: temporal
             password: temporal
-            maxConns: 20
-            maxIdleConns: 20
-            maxConnLifetime: "1h"

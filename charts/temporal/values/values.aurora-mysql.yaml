@@ -8,7 +8,6 @@ server:
         default:
           sql:
             pluginName: mysql8
-            driverName: mysql8
             databaseName: temporal
             connectAddr: "_HOST_:3306"
             # connectProtocol defaults to "tcp" if not specified
@@ -22,7 +21,6 @@ server:
         visibility:
           sql:
             pluginName: mysql8
-            driverName: mysql8
             databaseName: temporal_visibility
             connectAddr: "_HOST_:3306"
             # connectProtocol defaults to "tcp" if not specified
