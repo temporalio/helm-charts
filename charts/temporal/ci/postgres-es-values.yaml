@@ -12,7 +12,6 @@ server:
             driverName: postgres12
             databaseName: temporal
             connectAddr: "postgres-postgresql.postgres:5432"
-            # connectProtocol defaults to "tcp" if not specified
             user: temporal
             password: temporal
             maxConns: 20
@@ -29,7 +28,3 @@ server:
             logLevel: error
             indices:
               visibility: temporal_visibility_v1
-prometheus:
-  enabled: false
-grafana:
-  enabled: false

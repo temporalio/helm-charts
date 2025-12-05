@@ -12,7 +12,6 @@ server:
             driverName: postgres12
             databaseName: temporal
             connectAddr: "postgres-postgresql.postgres:5432"
-            # connectProtocol defaults to "tcp" if not specified
             user: temporal
             password: temporal
             maxConns: 20
@@ -24,7 +23,6 @@ server:
             driverName: postgres12
             databaseName: temporal
             connectAddr: "postgres-postgresql.postgres:5432"
-            # connectProtocol defaults to "tcp" if not specified
             user: temporal
             password: temporal
             maxConns: 20

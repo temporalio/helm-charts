@@ -3,16 +3,16 @@
 {{- $store := index . 1 -}}
 {{- if eq $store.driver "cassandra" -}}
 - name: CASSANDRA_HOST
-  value: {{ splitList "," (required (printf "Please specify hosts for %s store" $store.name) $store.config.cassandra.hosts) | first }}
+  value: {{ splitList "," (required (printf "Please specify hosts for %s store" $store.name) $store.config.hosts) | first }}
 - name: CASSANDRA_PORT
-  value: {{ $store.config.cassandra.port | quote }}
+  value: {{ $store.config.port | quote }}
 - name: CASSANDRA_KEYSPACE
-  value: {{ required (printf "Please specify keyspace for %s store" $store.name) $store.config.cassandra.keyspace }}
+  value: {{ required (printf "Please specify keyspace for %s store" $store.name) $store.config.keyspace }}
 - name: CASSANDRA_USER
-  value: {{ $store.config.cassandra.user }}
+  value: {{ $store.config.user }}
 - name: CASSANDRA_PASSWORD
   {{- include "temporal.password-env" (list $root $store) | nindent 2 }}
-  {{- with $store.config.cassandra.tls }}
+  {{- with $store.config.tls }}
 - name: CASSANDRA_ENABLE_TLS
   value: {{ .enabled | quote }}
     {{- with .caFile }}

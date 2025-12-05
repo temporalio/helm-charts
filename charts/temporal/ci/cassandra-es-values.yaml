@@ -24,12 +24,6 @@ server:
             url:
               scheme: http
               host: "elasticsearch-master-headless:9200"
-            username: ""
-            password: ""
             logLevel: error
             indices:
               visibility: temporal_visibility_v1
-prometheus:
-  enabled: false
-grafana:
-  enabled: false
