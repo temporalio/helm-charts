@@ -1,10 +1,10 @@
-{{- if and .Values.server.enabled (or (eq .Values.server.configMapsToMount "both") (eq .Values.server.configMapsToMount "legacy")) -}}
+{{- if and .Values.server.enabled (or (eq .Values.server.configMapsToMount "both") (eq .Values.server.configMapsToMount "modern")) -}}
 {{- $server := .Values.server -}}
 {{- $elasticsearch := .Values.elasticsearch -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: "{{ include "temporal.fullname" $ }}-legacy-config"
+  name: "{{ include "temporal.fullname" $ }}-modern-config"
   labels:
     {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
 data:
@@ -86,7 +86,7 @@ data:
         port: 7936
       metrics:
         tags:
-          type: {{ env "SERVICES" }}
+          type: {{ env "TEMPORAL_SERVICES" }}
           {{- with $server.metrics.tags }}
             {{- toYaml . | nindent 10 }}
           {{- end }}
