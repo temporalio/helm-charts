@@ -60,7 +60,7 @@ server:
             pluginName: mysql8  # or postgres12, postgres12_pgx
             driverName: mysql8
             databaseName: temporal
-            connectAddr: "mysql.example.com:3306"  # or use host/port separately
+            connectAddr: "mysql.example.com:3306"
             connectProtocol: tcp
             user: temporal_user
             password: ""  # Use existingSecret in production
@@ -83,8 +83,8 @@ server:
 
 **Key points:**
 - Driver is determined by which key is present (`sql:`, `cassandra:`, or `elasticsearch:`)
-- For SQL, you can use either `connectAddr: "host:port"` or separate `host:` and `port:` fields
 - Helm-specific fields (`existingSecret`, `secretKey`) are stripped before rendering to server config
+- Password fields are stored in Kubernetes secrets and the server configuration reads them from the environment
 - All other fields pass through directly to the Temporal server config
 
 See the example values files in the `values/` directory for complete examples.
