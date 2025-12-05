@@ -1,0 +1,202 @@
+{{- if and .Values.server.enabled .Values.server.useLegacyConfig -}}
+{{- $server := .Values.server -}}
+{{- $elasticsearch := .Values.elasticsearch -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ include "temporal.fullname" $ }}-legacy-config"
+  labels:
+    {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
+data:
+  config_template.yaml: |-
+    log:
+      stdout: true
+      level: {{ $server.config.logLevel | quote }}
+
+    persistence:
+      defaultStore: {{ $server.config.persistence.defaultStore }}
+      visibilityStore: visibility
+      numHistoryShards: {{ $server.config.numHistoryShards }}
+      datastores:
+        {{- if ne (include "temporal.persistence.driver" (list $ "default")) "custom" }}
+        default:
+          {{- if eq (include "temporal.persistence.driver" (list $ "default")) "cassandra" }}
+          cassandra:
+            hosts: "{{ include "temporal.persistence.cassandra.hosts" (list $ "default") }}"
+            port: {{ include "temporal.persistence.cassandra.port" (list $ "default") }}
+            password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
+            {{- with (omit $server.config.persistence.default.cassandra "hosts" "port" "password" "existingSecret") }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- else if eq (include "temporal.persistence.driver" (list $ "default")) "sql" }}
+          sql:
+            pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "default") }}"
+            driverName: "{{ include "temporal.persistence.sql.driver" (list $ "default") }}"
+            databaseName: "{{ $server.config.persistence.default.sql.database }}"
+            connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "default") }}:{{ include "temporal.persistence.sql.port" (list $ "default") }}"
+            connectProtocol: "tcp"
+            user: {{ include "temporal.persistence.sql.user" (list $ "default") }}
+            password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
+            {{- with (omit $server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          {{- with $server.config.persistence.default.faultInjection}}
+          faultInjection:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- with $server.config.persistence.additionalStores }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        visibility:
+        {{- if or $elasticsearch.enabled $elasticsearch.external }}
+          elasticsearch:
+            version: "{{ $elasticsearch.version }}"
+            url:
+                scheme: "{{ $elasticsearch.scheme }}"
+                host: "{{ $elasticsearch.host }}:{{ $elasticsearch.port }}"
+            username: "{{ $elasticsearch.username }}"
+            password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
+            logLevel: "{{ $elasticsearch.logLevel }}"
+            indices:
+                visibility: "{{ $elasticsearch.visibilityIndex }}"
+            {{- with $elasticsearch.tls }}
+            tls:
+              {{- toYaml . | nindent 16 }}
+            {{- end }}
+        {{- else if eq (include "temporal.persistence.driver" (list $ "visibility")) "sql" }}
+          sql:
+            pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"
+            driverName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"
+            databaseName: "{{ $server.config.persistence.visibility.sql.database }}"
+            connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "visibility") }}:{{ include "temporal.persistence.sql.port" (list $ "visibility") }}"
+            connectProtocol: "tcp"
+            user: "{{ include "temporal.persistence.sql.user" (list $ "visibility") }}"
+            password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
+            {{- with (omit $server.config.persistence.visibility.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- end }}
+
+    global:
+      membership:
+        name: temporal
+        maxJoinDuration: 30s
+        broadcastAddress: {{ `{{ default .Env.POD_IP "0.0.0.0" }}` }}
+
+      pprof:
+        port: 7936
+
+      metrics:
+        tags:
+          type: {{ `{{ .Env.SERVICES }}` }}
+          {{- with $server.metrics.tags }}
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+        {{- with $server.metrics.excludeTags }}
+        excludeTags:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with $server.metrics.prefix }}
+        prefix: "{{- . }}"
+        {{- end }}
+        {{- with $server.config.prometheus }}
+        prometheus:
+          {{- toYaml . | nindent 10 }}
+        {{- else }}
+        prometheus:
+          timerType: histogram
+          listenAddress: "0.0.0.0:9090"
+        {{- end }}
+
+      {{- with $server.config.tls }}
+      tls:
+        {{- toYaml . | nindent 10 }}
+      {{- end }}
+
+      {{- with $server.config.authorization }}
+      authorization:
+        {{- toYaml . | nindent 10 }}
+      {{- end }}
+
+    services:
+      frontend:
+        rpc:
+          grpcPort: {{ $server.frontend.service.port }}
+          httpPort: {{ $server.frontend.service.httpPort }}
+          membershipPort: {{ $server.frontend.service.membershipPort }}
+          bindOnIP: "0.0.0.0"
+
+      {{- if and (hasKey .Values.server "internalFrontend") .Values.server.internalFrontend.enabled }}
+      internal-frontend:
+        rpc:
+          grpcPort: {{ $server.internalFrontend.service.port }}
+          httpPort: {{ $server.internalFrontend.service.httpPort }}
+          membershipPort: {{ $server.internalFrontend.service.membershipPort }}
+          bindOnIP: "0.0.0.0"
+      {{- end }}
+
+      history:
+        rpc:
+          grpcPort: {{ $server.history.service.port }}
+          membershipPort: {{ $server.history.service.membershipPort }}
+          bindOnIP: "0.0.0.0"
+
+      matching:
+        rpc:
+          grpcPort: {{ $server.matching.service.port }}
+          membershipPort: {{ $server.matching.service.membershipPort }}
+          bindOnIP: "0.0.0.0"
+
+      worker:
+        rpc:
+          membershipPort: {{ $server.worker.service.membershipPort }}
+          bindOnIP: "0.0.0.0"
+
+    clusterMetadata:
+    {{- with $server.config.clusterMetadata }}
+      {{- toYaml . | nindent 8 }}
+    {{- else }}
+      enableGlobalDomain: false
+      failoverVersionIncrement: 10
+      masterClusterName: "active"
+      currentClusterName: "active"
+      clusterInformation:
+        active:
+          enabled: true
+          initialFailoverVersion: 1
+          rpcName: "temporal-frontend"
+          rpcAddress: "127.0.0.1:{{ $server.frontend.service.port }}"
+          httpAddress: "127.0.0.1:{{ $server.frontend.service.httpPort }}"
+    {{- end }}
+
+    dcRedirectionPolicy:
+    {{- with $server.config.dcRedirectionPolicy }}
+      {{- toYaml . | nindent 8 }}
+    {{- else }}
+      policy: "noop"
+      toDC: ""
+    {{- end }}
+
+    archival:
+    {{- with $server.archival }}
+      {{- toYaml . | nindent 6 }}
+    {{- else }}
+      status: "disabled"
+    {{- end }}
+
+    {{- with $server.namespaceDefaults }}
+    namespaceDefaults:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+
+    {{- if not (and (hasKey .Values.server "internalFrontend") .Values.server.internalFrontend.enabled) }}
+    publicClient:
+      hostPort: "{{ include "temporal.componentname" (list $ "frontend") }}:{{ $server.frontend.service.port }}"
+    {{- end }}
+
+    dynamicConfigClient:
+      filepath: "/etc/temporal/dynamic_config/dynamic_config.yaml"
+      pollInterval: "10s"
+{{- end }}

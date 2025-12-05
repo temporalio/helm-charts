@@ -22,6 +22,12 @@ server:
     repository: temporalio/server
     tag: 1.29.1
     pullPolicy: IfNotPresent
+  # Use config processor init container to pre-process config templates with dockerize
+  # Set to false to use the image's default entrypoint and config handling
+  useConfigProcessor: true
+  # Use legacy config format (with template expressions that will be processed by image's dockerize)
+  # Set to false to use modern config format
+  useLegacyConfig: false
   # Global default settings (can be overridden per service)
   replicaCount: 1
   metrics:

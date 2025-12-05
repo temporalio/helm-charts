@@ -38,44 +38,17 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- end }}
-      {{- if or (or $.Values.server.additionalInitContainers $.Values.cassandra.enabled) (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external)}}
+      {{- if or (or $.Values.server.additionalInitContainers $.Values.cassandra.enabled) (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external) $.Values.server.useConfigProcessor }}
       initContainers:
+        {{- if $.Values.server.useConfigProcessor }}
         - name: config-processor
-          image: "alpine@sha256:1e42bbe2508154c9126d48c2b8a75420c3544343bf86fd041fb7527e017a4b4a"  # alpine:3.21
+          image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
+          imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
           command: ['/bin/sh', '-c']
           args:
             - |
               set -e
-              echo "Installing dockerize..."
-              apk add --no-cache wget ca-certificates
-
-              # Detect architecture
-              ARCH=$(uname -m)
-              case "$ARCH" in
-                x86_64)
-                  DOCKERIZE_ARCH="alpine-linux-amd64"
-                  DOCKERIZE_SHA256="4b8c624ddb6f85ec04e1a57742901257edfa25db776fca4f6922d8058ad88a8a"
-                  ;;
-                aarch64)
-                  DOCKERIZE_ARCH="linux-arm64"
-                  DOCKERIZE_SHA256="a8f0a541b089ebf96e26e0398261923bc1862a51e4aacbb6371c279eae4c639e"
-                  ;;
-                *)
-                  echo "Unsupported architecture: $ARCH"
-                  exit 1
-                  ;;
-              esac
-
-              DOCKERIZE_VERSION=v0.9.0
-              DOCKERIZE_URL="https://github.com/jwilder/dockerize/releases/download/${DOCKERIZE_VERSION}/dockerize-${DOCKERIZE_ARCH}-${DOCKERIZE_VERSION}.tar.gz"
-
-              echo "Downloading dockerize ${DOCKERIZE_VERSION} for ${ARCH} (${DOCKERIZE_ARCH})..."
-              wget -O /tmp/dockerize.tar.gz "${DOCKERIZE_URL}"
-              echo "${DOCKERIZE_SHA256}  /tmp/dockerize.tar.gz" | sha256sum -c -
-              tar -C /usr/local/bin -xzvf /tmp/dockerize.tar.gz
-              rm /tmp/dockerize.tar.gz
-
-              echo "Processing config template..."
+              echo "Processing config template with dockerize..."
               dockerize -template /config-template/config_template.yaml:/config-processed/docker.yaml
               echo "Config processing complete"
           volumeMounts:
@@ -88,6 +61,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+        {{- end }}
         {{- with $.Values.server.additionalInitContainers }}
           {{- toYaml . | nindent 8}}
         {{- end }}
@@ -147,10 +121,12 @@ spec:
         - name: {{ $.Chart.Name }}-{{ $service }}
           image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
           imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
+          {{- if $.Values.server.useConfigProcessor }}
           command: ['/bin/sh', '-c']
           args:
             - |
               exec temporal-server --config /etc/temporal/config start --service="{{ $service }}"
+          {{- end }}
           env:
             - name: POD_IP
               valueFrom:
@@ -161,7 +137,11 @@ spec:
             - name: TEMPORAL_SERVICES
               value: {{ $service }}
             - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
+              {{- if $.Values.server.useConfigProcessor }}
               value: /etc/temporal/config/docker.yaml
+              {{- else }}
+              value: /etc/temporal/config/config_template.yaml
+              {{- end }}
             {{- if ne (include "temporal.persistence.driver" (list $ "default")) "custom" }}
             - name: TEMPORAL_STORE_PASSWORD
               valueFrom:
@@ -218,9 +198,15 @@ spec:
                port: rpc
           {{- end }}
           volumeMounts:
+            {{- if $.Values.server.useConfigProcessor }}
             - name: config-processed
               mountPath: /etc/temporal/config
               readOnly: true
+            {{- else }}
+            - name: config
+              mountPath: /etc/temporal/config/config_template.yaml
+              subPath: config_template.yaml
+            {{- end }}
             - name: dynamic-config
               mountPath: /etc/temporal/dynamic_config
             {{- if $.Values.server.additionalVolumeMounts }}
@@ -239,9 +225,15 @@ spec:
       volumes:
         - name: config
           configMap:
+            {{- if $.Values.server.useLegacyConfig }}
+            name: "{{ include "temporal.fullname" $ }}-legacy-config"
+            {{- else }}
             name: "{{ include "temporal.fullname" $ }}-config"
+            {{- end }}
+        {{- if $.Values.server.useConfigProcessor }}
         - name: config-processed
           emptyDir: {}
+        {{- end }}
         - name: dynamic-config
           configMap:
             name: "{{ include "temporal.fullname" $ }}-dynamic-config"
