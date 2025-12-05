@@ -3,9 +3,9 @@
 
 Temporal is a distributed, scalable, durable, and highly available orchestration engine designed to execute asynchronous long-running business logic in a resilient way.
 
-This repo contains a V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. This Helm chart installs only the Temporal server components. You must provide external persistence (databases) for Temporal to use - the chart does not install any database sub-charts.
+This repo contains a V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. This Helm chart installs only the Temporal server components. You must provide persistence (databases) for Temporal to use - the chart does not install any database sub-charts.
 
-The persistence configuration follows the raw Temporal server config format, allowing you to configure external MySQL, PostgreSQL, Cassandra, or Elasticsearch databases directly.
+The persistence configuration follows the raw Temporal server config format, allowing you to configure MySQL, PostgreSQL, Cassandra, or Elasticsearch databases directly.
 
 This Helm Chart code is tested by a dedicated test pipeline. It is also used extensively by other Temporal pipelines for testing various aspects of Temporal systems. Our test pipeline currently uses Helm 3.1.1.
 
@@ -33,11 +33,11 @@ The second way of installing the Temporal chart is to clone this git repo and in
 
 ## Install Temporal with Helm Chart
 
-This Helm chart deploys only the Temporal server components. You must provide external persistence (databases) for Temporal to use. The chart does not install any database sub-charts.
+This Helm chart deploys only the Temporal server components. You must provide persistence (databases) for Temporal to use. The chart does not install any database sub-charts.
 
-The sections that follow describe various deployment configurations using external persistence.
+The sections that follow describe various deployment configurations using persistence.
 
-### External Persistence Configuration
+### Persistence Configuration
 
 Temporal requires persistence stores for:
 - **Default store**: Stores workflow execution data (history, tasks, etc.)
@@ -99,9 +99,9 @@ For an example, review the values for Google's `cloud sql proxy` in the `values/
 helm install --repo https://go.temporal.io/helm-charts -f values/values.cloudsqlproxy.yaml temporal temporal --timeout 900s
 ```
 
-### Install with External MySQL
+### Install with MySQL
 
-To use an external MySQL database, copy the [MySQL values file](values/values.mysql.yaml) locally and edit it with your database connection details:
+To use a MySQL database, copy the [MySQL values file](values/values.mysql.yaml) locally and edit it with your database connection details:
 
 ```yaml
 server:
@@ -136,9 +136,9 @@ Then install:
 helm install --repo https://go.temporal.io/helm-charts -f mysql.values.yaml temporal temporal --timeout 900s
 ```
 
-### Install with External PostgreSQL
+### Install with PostgreSQL
 
-To use an external PostgreSQL database, copy the [PostgreSQL values file](values/values.postgresql.yaml) locally and edit it with your database connection details:
+To use a PostgreSQL database, copy the [PostgreSQL values file](values/values.postgresql.yaml) locally and edit it with your database connection details:
 
 ```yaml
 server:
@@ -171,9 +171,9 @@ Then install:
 helm install --repo https://go.temporal.io/helm-charts -f postgresql.values.yaml temporal temporal --timeout 900s
 ```
 
-### Install with External Cassandra
+### Install with Cassandra
 
-To use an external Cassandra cluster, copy the [Cassandra values file](values/values.cassandra.yaml) locally and edit it with your cluster connection details.
+To use a Cassandra cluster, copy the [Cassandra values file](values/values.cassandra.yaml) locally and edit it with your cluster connection details.
 
 **Note:** Cassandra cannot be used for the visibility store. You must use SQL or Elasticsearch for visibility.
 
@@ -208,9 +208,9 @@ Then install:
 helm install --repo https://go.temporal.io/helm-charts -f cassandra.values.yaml temporal temporal --timeout 900s
 ```
 
-### Install with External Elasticsearch
+### Install with Elasticsearch
 
-To use an external Elasticsearch cluster for visibility, copy the [Elasticsearch values file](values/values.elasticsearch.yaml) locally and edit it:
+To use an Elasticsearch cluster for visibility, copy the [Elasticsearch values file](values/values.elasticsearch.yaml) locally and edit it:
 
 ```yaml
 server:
