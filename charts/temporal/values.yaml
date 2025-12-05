@@ -138,7 +138,7 @@ server:
       defaultStore: default
       visibilityStore: visibility
       # Important: numHistoryShards cannot be changed after the initial deployment.
-      numHistoryShards: 512 
+      numHistoryShards: 512
       # Persistence configuration follows the raw Temporal server config format.
       # Driver is determined by which top-level key is present (cassandra vs sql).
       # For SQL stores, you can use either connectAddr: "host:port" or separate host/port fields.
