@@ -155,7 +155,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
           {{- $_ := unset $storeConfig "password" -}}
         {{- end -}}
       {{- end -}}
-      {{- $_ :=set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey") -}}
+      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey") -}}
     {{- end -}}
   {{- end -}}
   {{- $_ := set $patchedDatastores $name $dsCopy -}}
@@ -201,10 +201,10 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 
 {{- define "temporal.persistence.schema" -}}
 {{- $store := . -}}
-{{- if eq $store.config.schema "default" -}}
+{{- if eq $store.name "default" -}}
 {{- print "temporal" -}}
 {{- else -}}
-{{- print $store.config.schema -}}
+{{- print $store.name -}}
 {{- end -}}
 {{- end -}}
 
@@ -216,11 +216,6 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- else -}}
 {{- include "temporal.componentname" (list $root (printf "%s-store" $store.name)) -}}
 {{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.secretKey" -}}
-{{- $store := index . 0 -}}
-{{- $store.config.secretKey | default "password" -}}
 {{- end -}}
 
 {{- define "temporal.persistence.sql.connectAttributes" -}}
