@@ -148,9 +148,9 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
       {{- $storeConfig := get $dsCopy $storeType -}}
       {{- if hasKey $storeConfig "password" -}}
         {{- if eq $name $defaultStore -}}
-          {{- $_ := set $storeConfig "password" "{{ .Env.TEMPORAL_DEFAULT_STORE_PASSWORD | quote }}" -}}
+          {{- $_ := set $storeConfig "password" "{{ env \"TEMPORAL_DEFAULT_STORE_PASSWORD\" | quote }}" -}}
         {{- else if eq $name $visibilityStore -}}
-          {{- $_ := set $storeConfig "password" "{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD | quote }}" -}}
+          {{- $_ := set $storeConfig "password" "{{ env \"TEMPORAL_VISIBILITY_STORE_PASSWORD\" | quote }}" -}}
         {{- else -}}
           {{- $_ := unset $storeConfig "password" -}}
         {{- end -}}

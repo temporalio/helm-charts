@@ -71,21 +71,20 @@ spec:
             - 'curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&
               curl --head --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1 ||
               curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1'
-              {{- end }}
+            {{- end }}
           env:
-              {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-              {{- with $.Values.admintools.additionalVolumeMounts }}
+            {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
+            {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.resources }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $.Values.schema.resources }}
           resources:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.containerSecurityContext }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $.Values.schema.containerSecurityContext }}
           securityContext:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
+              {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
         {{- end }}
