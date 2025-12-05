@@ -95,49 +95,122 @@ jobs:
         run: |
           HOST_IP="${{ steps.docker.outputs.host_ip }}"
 
-          kubectl create service clusterip cassandra --tcp=9042:9042 --clusterip=None
+          echo "Using HOST_IP: $HOST_IP"
+
           cat <<EOF | kubectl apply -f -
           apiVersion: v1
-          kind: Endpoints
+          kind: Service
           metadata:
             name: cassandra
             namespace: default
-          subsets:
+          spec:
+            ports:
+              - port: 9042
+                protocol: TCP
+                targetPort: 9042
+            clusterIP: None
+          ---
+          apiVersion: discovery.k8s.io/v1
+          kind: EndpointSlice
+          metadata:
+            name: cassandra-1
+            namespace: default
+            labels:
+              kubernetes.io/service-name: cassandra
+          addressType: IPv4
+          ports:
+            - port: 9042
+              protocol: TCP
+          endpoints:
             - addresses:
-                - ip: ${HOST_IP}
-              ports:
-                - port: 9042
-                  protocol: TCP
+                - ${HOST_IP}
           EOF
 
-          kubectl create service clusterip postgres --tcp=5432:5432 --clusterip=None
           cat <<EOF | kubectl apply -f -
           apiVersion: v1
-          kind: Endpoints
+          kind: Service
           metadata:
             name: postgres
             namespace: default
-          subsets:
+          spec:
+            ports:
+              - port: 5432
+                protocol: TCP
+                targetPort: 5432
+            clusterIP: None
+          ---
+          apiVersion: discovery.k8s.io/v1
+          kind: EndpointSlice
+          metadata:
+            name: postgres-1
+            namespace: default
+            labels:
+              kubernetes.io/service-name: postgres
+          addressType: IPv4
+          ports:
+            - port: 5432
+              protocol: TCP
+          endpoints:
             - addresses:
-                - ip: ${HOST_IP}
-              ports:
-                - port: 5432
-                  protocol: TCP
+                - ${HOST_IP}
           EOF
 
-          kubectl create service clusterip elasticsearch --tcp=9200:9200 --clusterip=None
           cat <<EOF | kubectl apply -f -
           apiVersion: v1
-          kind: Endpoints
+          kind: Service
+          metadata:
+            name: mysql
+            namespace: default
+          spec:
+            ports:
+              - port: 3306
+                protocol: TCP
+                targetPort: 3306
+            clusterIP: None
+          ---
+          apiVersion: discovery.k8s.io/v1
+          kind: EndpointSlice
+          metadata:
+            name: mysql-1
+            namespace: default
+            labels:
+              kubernetes.io/service-name: mysql
+          addressType: IPv4
+          ports:
+            - port: 3306
+              protocol: TCP
+          endpoints:
+            - addresses:
+                - ${HOST_IP}
+          EOF
+
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Service
           metadata:
             name: elasticsearch
             namespace: default
-          subsets:
+          spec:
+            ports:
+              - port: 9200
+                protocol: TCP
+                targetPort: 9200
+            clusterIP: None
+          ---
+          apiVersion: discovery.k8s.io/v1
+          kind: EndpointSlice
+          metadata:
+            name: elasticsearch-1
+            namespace: default
+            labels:
+              kubernetes.io/service-name: elasticsearch
+          addressType: IPv4
+          ports:
+            - port: 9200
+              protocol: TCP
+          endpoints:
             - addresses:
-                - ip: ${HOST_IP}
-              ports:
-                - port: 9200
-                  protocol: TCP
+                - ${HOST_IP}
           EOF
 
       - name: Run chart-testing (install)
