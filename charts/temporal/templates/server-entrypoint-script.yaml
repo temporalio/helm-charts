@@ -1,0 +1,58 @@
+{{- if and .Values.server.enabled .Values.server.useEntrypointScript -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ include "temporal.fullname" $ }}-entrypoint-script"
+  labels:
+    {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
+data:
+  entrypoint.sh: |-
+    #!/bin/sh
+    set -e
+
+    echo "Temporal server entrypoint script starting..."
+
+    # Determine which config to use based on configMapsToMount setting
+    {{- if eq .Values.server.configMapsToMount "legacy" }}
+    CONFIG_TYPE="legacy"
+    {{- else if eq .Values.server.configMapsToMount "modern" }}
+    CONFIG_TYPE="modern"
+    {{- else }}
+    # configMapsToMount is "both" - use useLegacyConfig to decide
+    {{- if .Values.server.useLegacyConfig }}
+    CONFIG_TYPE="legacy"
+    {{- else }}
+    CONFIG_TYPE="modern"
+    {{- end }}
+    {{- end }}
+
+    echo "Using ${CONFIG_TYPE} config"
+
+    # Detect if dockerize is available
+    if command -v dockerize >/dev/null 2>&1; then
+      echo "dockerize found - processing config template..."
+
+      SOURCE_CONFIG="/etc/temporal/config-source/${CONFIG_TYPE}/config_template.yaml"
+      TARGET_CONFIG="/etc/temporal/config/docker.yaml"
+
+      echo "Processing ${SOURCE_CONFIG} -> ${TARGET_CONFIG}"
+      dockerize -template "${SOURCE_CONFIG}:${TARGET_CONFIG}"
+      echo "Config processing complete"
+
+      echo "Starting temporal-server with processed config"
+      echo "Service: ${TEMPORAL_SERVICES}"
+
+      # With dockerize, just use start command (config already processed)
+      exec temporal-server --config /etc/temporal/config --env docker start --service="${TEMPORAL_SERVICES}"
+    else
+      echo "dockerize not found - using config template directly"
+
+      CONFIG_FILE="/etc/temporal/config-source/${CONFIG_TYPE}/config_template.yaml"
+
+      echo "Starting temporal-server with config: ${CONFIG_FILE}"
+      echo "Service: ${TEMPORAL_SERVICES}"
+
+      # Without dockerize, specify all parameters explicitly
+      exec temporal-server start
+    fi
+{{- end }}

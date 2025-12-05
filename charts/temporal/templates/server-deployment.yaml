@@ -38,30 +38,8 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- end }}
-      {{- if or (or $.Values.server.additionalInitContainers $.Values.cassandra.enabled) (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external) $.Values.server.useConfigProcessor }}
+      {{- if or $.Values.server.additionalInitContainers $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external) }}
       initContainers:
-        {{- if $.Values.server.useConfigProcessor }}
-        - name: config-processor
-          image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
-          imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
-          command: ['/bin/sh', '-c']
-          args:
-            - |
-              set -e
-              echo "Processing config template with dockerize..."
-              dockerize -template /config-template/config_template.yaml:/config-processed/docker.yaml
-              echo "Config processing complete"
-          volumeMounts:
-            - name: config
-              mountPath: /config-template
-              readOnly: true
-            - name: config-processed
-              mountPath: /config-processed
-          {{- with $serviceValues.containerSecurityContext }}
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-        {{- end }}
         {{- with $.Values.server.additionalInitContainers }}
           {{- toYaml . | nindent 8}}
         {{- end }}
@@ -121,11 +99,8 @@ spec:
         - name: {{ $.Chart.Name }}-{{ $service }}
           image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
           imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
-          {{- if $.Values.server.useConfigProcessor }}
-          command: ['/bin/sh', '-c']
-          args:
-            - |
-              exec temporal-server --config /etc/temporal/config start --service="{{ $service }}"
+          {{- if $.Values.server.useEntrypointScript }}
+          command: ['/entrypoint/entrypoint.sh']
           {{- end }}
           env:
             - name: POD_IP
@@ -136,12 +111,14 @@ spec:
               value: {{ $service }}
             - name: TEMPORAL_SERVICES
               value: {{ $service }}
+            {{- if not $.Values.server.useEntrypointScript }}
             - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
-              {{- if $.Values.server.useConfigProcessor }}
-              value: /etc/temporal/config/docker.yaml
+              {{- if $.Values.server.useLegacyConfig }}
+              value: /etc/temporal/config/config_template.yaml
               {{- else }}
               value: /etc/temporal/config/config_template.yaml
               {{- end }}
+            {{- end }}
             {{- if ne (include "temporal.persistence.driver" (list $ "default")) "custom" }}
             - name: TEMPORAL_STORE_PASSWORD
               valueFrom:
@@ -198,14 +175,32 @@ spec:
                port: rpc
           {{- end }}
           volumeMounts:
-            {{- if $.Values.server.useConfigProcessor }}
+            {{- if $.Values.server.useEntrypointScript }}
+            {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "legacy") }}
+            - name: config-legacy
+              mountPath: /etc/temporal/config-source/legacy
+              readOnly: true
+            {{- end }}
+            {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "modern") }}
+            - name: config-modern
+              mountPath: /etc/temporal/config-source/modern
+              readOnly: true
+            {{- end }}
+            - name: entrypoint-script
+              mountPath: /entrypoint
+              readOnly: true
             - name: config-processed
               mountPath: /etc/temporal/config
-              readOnly: true
             {{- else }}
-            - name: config
+            {{- if or (eq $.Values.server.configMapsToMount "legacy") (and (eq $.Values.server.configMapsToMount "both") $.Values.server.useLegacyConfig) }}
+            - name: config-legacy
               mountPath: /etc/temporal/config/config_template.yaml
               subPath: config_template.yaml
+            {{- else }}
+            - name: config-modern
+              mountPath: /etc/temporal/config/config_template.yaml
+              subPath: config_template.yaml
+            {{- end }}
             {{- end }}
             - name: dynamic-config
               mountPath: /etc/temporal/dynamic_config
@@ -223,14 +218,21 @@ spec:
       {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        - name: config
+        {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "legacy") }}
+        - name: config-legacy
           configMap:
-            {{- if $.Values.server.useLegacyConfig }}
             name: "{{ include "temporal.fullname" $ }}-legacy-config"
-            {{- else }}
+        {{- end }}
+        {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "modern") }}
+        - name: config-modern
+          configMap:
             name: "{{ include "temporal.fullname" $ }}-config"
-            {{- end }}
-        {{- if $.Values.server.useConfigProcessor }}
+        {{- end }}
+        {{- if $.Values.server.useEntrypointScript }}
+        - name: entrypoint-script
+          configMap:
+            name: "{{ include "temporal.fullname" $ }}-entrypoint-script"
+            defaultMode: 0755
         - name: config-processed
           emptyDir: {}
         {{- end }}

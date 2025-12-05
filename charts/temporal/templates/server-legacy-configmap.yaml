@@ -1,4 +1,4 @@
-{{- if and .Values.server.enabled .Values.server.useLegacyConfig -}}
+{{- if and .Values.server.enabled (or (eq .Values.server.configMapsToMount "both") (eq .Values.server.configMapsToMount "legacy")) -}}
 {{- $server := .Values.server -}}
 {{- $elasticsearch := .Values.elasticsearch -}}
 apiVersion: v1
