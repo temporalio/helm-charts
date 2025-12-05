@@ -93,7 +93,7 @@ jobs:
 
       - name: Create Kubernetes services and endpoints
         run: |
-          HOST_IP="${{ steps.docker.host_ip }}"
+          HOST_IP="${{ steps.docker.outputs.host_ip }}"
 
           kubectl create service clusterip cassandra --tcp=9042:9042 --clusterip=None
           cat <<EOF | kubectl apply -f -
