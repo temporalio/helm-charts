@@ -8,6 +8,7 @@ metadata:
     {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
 data:
   config_template.yaml: |-
+    # enable-template
     log:
       stdout: true
       level: {{ $server.config.logLevel | quote }}
@@ -19,14 +20,14 @@ data:
       membership:
         name: temporal
         maxJoinDuration: 30s
-        broadcastAddress: {{ `{{ default .Env.POD_IP "0.0.0.0" }}` }}
+        broadcastAddress: {{ `{{ env "POD_IP" | quote }}` }}
 
       pprof:
         port: 7936
 
       metrics:
         tags:
-          type: {{ `{{ .Env.SERVICES }}` }}
+          type: {{ `{{ env "TEMPORAL_SERVICES" | quote }}` }}
           {{- with $server.metrics.tags }}
             {{- toYaml . | nindent 10 }}
           {{- end }}

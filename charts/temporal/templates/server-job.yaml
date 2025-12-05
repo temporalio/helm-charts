@@ -65,6 +65,7 @@ spec:
             {{- else if eq $store.driver "sql" }}
           command: ['temporal-sql-tool', 'setup-schema', '-v', '0.0']
             {{- else if eq $store.driver "elasticsearch" }}
+          # TODO: Use temporal-elasticsearch-tool if available. curl will not be part of the image in the future.
           command: ['sh', '-c']
           args:
             - 'curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&

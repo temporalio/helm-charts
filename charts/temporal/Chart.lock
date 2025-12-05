@@ -1,0 +1,12 @@
+dependencies:
+- name: cassandra
+  repository: https://charts.helm.sh/incubator
+  version: 0.14.3
+- name: elasticsearch
+  repository: https://helm.elastic.co
+  version: 7.17.3
+- name: mysql
+  repository: https://charts.bitnami.com/bitnami
+  version: 13.0.0
+digest: sha256:f442a524e10a58f6fb0854e6026fa6baa73d0fd4c3fa25252c36bc5bca058753
+generated: "2025-12-04T13:17:49.381489-06:00"

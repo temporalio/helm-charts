@@ -56,6 +56,8 @@ spec:
                   fieldPath: status.podIP
             - name: SERVICES
               value: {{ $service }}
+            - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
+              value: /etc/temporal/config/config_template.yaml
             - name: TEMPORAL_DEFAULT_STORE_PASSWORD
               {{- include "temporal.password-env" (list $ $defaultStore) | nindent 14 }}
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
