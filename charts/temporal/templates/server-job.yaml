@@ -37,6 +37,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         {{- end }}
+        # TODO: Use temporal-elasticsearch-tool if available. curl will not be part of the image in the future.
         {{- if or $.Values.elasticsearch.enabled }}
         - name: check-elasticsearch
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
