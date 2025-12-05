@@ -11,6 +11,7 @@ server:
             pluginName: postgres12
             databaseName: temporal
             connectAddr: "postgres.default.svc.cluster.local:5432"
+            connectProtocol: "tcp"
             user: temporal
             password: temporal
         visibility:
