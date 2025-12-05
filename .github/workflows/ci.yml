@@ -84,20 +84,61 @@ jobs:
       - name: Create kind cluster
         uses: helm/kind-action@v1.13.0
 
-      - name: Create Cassandra service
+      - name: Get Docker host gateway IP
+        id: docker
         run: |
-          CASSANDRA_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${{ job.services.cassandra.id }})
-          kubectl create service externalname cassandra --external-name=$CASSANDRA_IP --namespace=default
+          HOST_IP=$(docker network inspect bridge -f '{{range .IPAM.Config}}{{.Gateway}}{{end}}')
+          echo "host_ip=$HOST_IP" >> $GITHUB_OUTPUT
+          echo "Docker host IP: $HOST_IP"
 
-      - name: Create Postgres service
+      - name: Create Kubernetes services and endpoints
         run: |
-          POSTGRES_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${{ job.services.postgres.id }})
-          kubectl create service externalname postgres --external-name=$POSTGRES_IP --namespace=default
+          HOST_IP="${{ steps.docker.host_ip }}"
 
-      - name: Create Elasticsearch service
-        run: |
-          ELASTICSEARCH_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${{ job.services.elasticsearch.id }})
-          kubectl create service externalname elasticsearch --external-name=$ELASTICSEARCH_IP --namespace=default
+          kubectl create service clusterip cassandra --tcp=9042:9042 --clusterip=None
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Endpoints
+          metadata:
+            name: cassandra
+            namespace: default
+          subsets:
+            - addresses:
+                - ip: ${HOST_IP}
+              ports:
+                - port: 9042
+                  protocol: TCP
+          EOF
+
+          kubectl create service clusterip postgres --tcp=5432:5432 --clusterip=None
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Endpoints
+          metadata:
+            name: postgres
+            namespace: default
+          subsets:
+            - addresses:
+                - ip: ${HOST_IP}
+              ports:
+                - port: 5432
+                  protocol: TCP
+          EOF
+
+          kubectl create service clusterip elasticsearch --tcp=9200:9200 --clusterip=None
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Endpoints
+          metadata:
+            name: elasticsearch
+            namespace: default
+          subsets:
+            - addresses:
+                - ip: ${HOST_IP}
+              ports:
+                - port: 9200
+                  protocol: TCP
+          EOF
 
       - name: Run chart-testing (install)
         run: ct install --target-branch v1
