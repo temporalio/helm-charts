@@ -64,7 +64,10 @@
     {{- end }}
   {{- end }}
 {{- else if eq $store.driver "elasticsearch" -}}
-{{- $url := default (index $store.config.urls 0) $store.config.url }}
+{{- $url := $store.config.url }}
+{{- if and (hasKey $store.config "urls") $store.config.urls }}
+{{- $url = index $store.config.urls 0 }}
+{{- end }}
 - name: ES_SCHEME
   value: {{ $url.scheme }}
 - name: ES_HOST

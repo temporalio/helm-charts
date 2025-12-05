@@ -213,7 +213,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- $store := index . 1 -}}
 {{- if $store.config.existingSecret -}}
 {{- $store.config.existingSecret -}}
-{{- else if $store.config.password -}}
+{{- else -}}
 {{- include "temporal.componentname" (list $root (printf "%s-store" $store.name)) -}}
 {{- end -}}
 {{- end -}}
