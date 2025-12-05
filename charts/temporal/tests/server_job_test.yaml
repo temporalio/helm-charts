@@ -6,12 +6,40 @@ tests:
     set:
       server:
         enabled: false
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
     asserts:
       - containsDocument:
           kind: Job
           apiVersion: batch/v1
   - it: includes additional init containers
     set:
+      server:
+        enabled: false
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
       admintools:
         additionalInitContainers:
           - name: my-init-container
@@ -21,6 +49,21 @@ tests:
           value: my-init-container
   - it: includes additional volumes
     set:
+      server:
+        enabled: false
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
       admintools:
         additionalVolumes:
           - name: my-volume
@@ -30,6 +73,21 @@ tests:
           value: my-volume
   - it: includes additional volume mounts
     set:
+      server:
+        enabled: false
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
       admintools:
         additionalVolumeMounts:
           - name: my-volume
@@ -39,6 +97,21 @@ tests:
           value: my-volume
   - it: includes resource limits and requests on initContainers
     set:
+      server:
+        enabled: false
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
       schema:
         resources:
           requests:
