@@ -1,0 +1,99 @@
+suite: test server configmap
+templates:
+  - server-configmap.yaml
+tests:
+  - it: replaces passwords with environment variables in persistence config
+    set:
+      server:
+        enabled: true
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            numHistoryShards: 512
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  driverName: mysql8
+                  databaseName: temporal
+                  connectAddr: "mysql.example.com:3306"
+                  user: temporal_user
+                  password: "secret"
+                  maxConns: 20
+                  maxIdleConns: 20
+                  maxConnLifetime: "1h"
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  driverName: mysql8
+                  databaseName: temporal_visibility
+                  connectAddr: "mysql.example.com:3306"
+                  user: temporal_user
+                  password: "secret"
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "password: {{ .Env.TEMPORAL_DEFAULT_STORE_PASSWORD | quote }}"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "password: {{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD | quote }}"
+
+  - it: handles additional stores
+    set:
+      server:
+        enabled: true
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            numHistoryShards: 512
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  driverName: mysql8
+                  databaseName: temporal
+                  connectAddr: "mysql.example.com:3306"
+                  user: temporal_user
+                  password: "secret"
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  driverName: mysql8
+                  databaseName: temporal_visibility
+                  connectAddr: "mysql.example.com:3306"
+                  user: temporal_user
+                  password: "secret"
+              archive:
+                sql:
+                  pluginName: postgres12
+                  driverName: postgres12
+                  databaseName: temporal_archive
+                  connectAddr: "postgres.example.com:5432"
+                  user: temporal_user
+                  password: "secret"
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "archive:"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "databaseName: temporal_archive"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "pluginName: postgres12"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "connectAddr: postgres.example.com:5432"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "password: {{ .Env.TEMPORAL_DEFAULT_STORE_PASSWORD | quote }}"
