@@ -113,11 +113,7 @@ spec:
               value: {{ $service }}
             {{- if not $.Values.server.useEntrypointScript }}
             - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
-              {{- if $.Values.server.useLegacyConfig }}
               value: /etc/temporal/config/config_template.yaml
-              {{- else }}
-              value: /etc/temporal/config/config_template.yaml
-              {{- end }}
             {{- end }}
             {{- if ne (include "temporal.persistence.driver" (list $ "default")) "custom" }}
             - name: TEMPORAL_STORE_PASSWORD
@@ -192,7 +188,7 @@ spec:
             - name: config-processed
               mountPath: /etc/temporal/config
             {{- else }}
-            {{- if or (eq $.Values.server.configMapsToMount "legacy") (and (eq $.Values.server.configMapsToMount "both") $.Values.server.useLegacyConfig) }}
+            {{- if eq $.Values.server.configMapsToMount "legacy" }}
             - name: config-legacy
               mountPath: /etc/temporal/config/config_template.yaml
               subPath: config_template.yaml
@@ -226,7 +222,7 @@ spec:
         {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "modern") }}
         - name: config-modern
           configMap:
-            name: "{{ include "temporal.fullname" $ }}-config"
+            name: "{{ include "temporal.fullname" $ }}-modern-config"
         {{- end }}
         {{- if $.Values.server.useEntrypointScript }}
         - name: entrypoint-script

@@ -15,22 +15,24 @@ data:
     # Determine which config to use based on configMapsToMount setting
     {{- if eq .Values.server.configMapsToMount "legacy" }}
     CONFIG_TYPE="legacy"
+    echo "Using legacy config (configMapsToMount=legacy)"
     {{- else if eq .Values.server.configMapsToMount "modern" }}
     CONFIG_TYPE="modern"
+    echo "Using modern config (configMapsToMount=modern)"
     {{- else }}
-    # configMapsToMount is "both" - use useLegacyConfig to decide
-    {{- if .Values.server.useLegacyConfig }}
-    CONFIG_TYPE="legacy"
-    {{- else }}
-    CONFIG_TYPE="modern"
-    {{- end }}
-    {{- end }}
-
-    echo "Using ${CONFIG_TYPE} config"
-
-    # Detect if dockerize is available
+    # configMapsToMount is "both" - auto-detect based on dockerize presence
     if command -v dockerize >/dev/null 2>&1; then
-      echo "dockerize found - processing config template..."
+      CONFIG_TYPE="legacy"
+      echo "Using legacy config (dockerize detected)"
+    else
+      CONFIG_TYPE="modern"
+      echo "Using modern config (no dockerize)"
+    fi
+    {{- end }}
+
+    # Process config with dockerize if available
+    if command -v dockerize >/dev/null 2>&1; then
+      echo "Processing config template with dockerize..."
 
       SOURCE_CONFIG="/etc/temporal/config-source/${CONFIG_TYPE}/config_template.yaml"
       TARGET_CONFIG="/etc/temporal/config/docker.yaml"

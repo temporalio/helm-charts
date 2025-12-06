@@ -27,14 +27,10 @@ server:
   useEntrypointScript: true
   # Control which config ConfigMaps to mount
   # Options: "both", "legacy", "modern"
-  # - "both": mounts both ConfigMaps (default), uses useLegacyConfig to decide which to use
-  # - "legacy": mounts only legacy config, always uses legacy format
-  # - "modern": mounts only modern config, always uses modern format
+  # - "both": mounts both ConfigMaps (requires useEntrypointScript: true), auto-detects which to use based on dockerize presence
+  # - "legacy": mounts only legacy config (for old images with dockerize)
+  # - "modern": mounts only modern config (for new images without dockerize)
   configMapsToMount: "both"
-  # Use legacy config format (with template expressions that will be processed by dockerize if available)
-  # Set to false to use modern config format
-  # Note: Only applies when configMapsToMount is "both"
-  useLegacyConfig: false
   # Global default settings (can be overridden per service)
   replicaCount: 1
   metrics:
