@@ -1,0 +1,396 @@
+suite: test server entrypoint and config mounting
+templates:
+  - server-deployment.yaml
+  - server-configmap.yaml
+  - server-legacy-configmap.yaml
+  - server-entrypoint-script.yaml
+tests:
+  # Test entrypoint script ConfigMap creation
+  - it: creates entrypoint script ConfigMap when useEntrypointScript is true
+    template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-entrypoint-script
+      - exists:
+          path: data["entrypoint.sh"]
+
+  - it: does not create entrypoint script ConfigMap when useEntrypointScript is false
+    template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # Test configMapsToMount: "both" (default)
+  - it: creates both ConfigMaps when configMapsToMount is both
+    templates:
+      - templates/server-configmap.yaml
+      - templates/server-legacy-configmap.yaml
+    set:
+      server:
+        enabled: true
+        configMapsToMount: "both"
+    asserts:
+      - template: templates/server-configmap.yaml
+        isKind:
+          of: ConfigMap
+      - template: templates/server-legacy-configmap.yaml
+        isKind:
+          of: ConfigMap
+
+  - it: mounts both config volumes when configMapsToMount is both with entrypoint
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "both"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-legacy
+            configMap:
+              name: RELEASE-NAME-temporal-legacy-config
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-modern
+            configMap:
+              name: RELEASE-NAME-temporal-modern-config
+
+  - it: mounts both configs to config-source paths when useEntrypointScript is true
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "both"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: config-legacy
+            mountPath: /etc/temporal/config-source/legacy
+            readOnly: true
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: config-modern
+            mountPath: /etc/temporal/config-source/modern
+            readOnly: true
+
+  # Test configMapsToMount: "legacy"
+  - it: creates only legacy ConfigMap when configMapsToMount is legacy
+    templates:
+      - templates/server-configmap.yaml
+      - templates/server-legacy-configmap.yaml
+    set:
+      server:
+        enabled: true
+        configMapsToMount: "legacy"
+    asserts:
+      - template: templates/server-configmap.yaml
+        hasDocuments:
+          count: 0
+      - template: templates/server-legacy-configmap.yaml
+        isKind:
+          of: ConfigMap
+
+  - it: mounts only legacy config volume when configMapsToMount is legacy
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "legacy"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-legacy
+            configMap:
+              name: RELEASE-NAME-temporal-legacy-config
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-modern
+
+  # Test configMapsToMount: "modern"
+  - it: creates only modern ConfigMap when configMapsToMount is modern
+    templates:
+      - templates/server-configmap.yaml
+      - templates/server-legacy-configmap.yaml
+    set:
+      server:
+        enabled: true
+        configMapsToMount: "modern"
+    asserts:
+      - template: templates/server-configmap.yaml
+        isKind:
+          of: ConfigMap
+      - template: templates/server-legacy-configmap.yaml
+        hasDocuments:
+          count: 0
+
+  - it: mounts only modern config volume when configMapsToMount is modern
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "modern"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-modern
+            configMap:
+              name: RELEASE-NAME-temporal-modern-config
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-legacy
+
+  # Test entrypoint command override
+  - it: overrides command to use entrypoint script when useEntrypointScript is true
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/entrypoint/entrypoint.sh"]
+
+  - it: does not override command when useEntrypointScript is false
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: false
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].command
+
+  # Test entrypoint script volume mount
+  - it: mounts entrypoint script volume when useEntrypointScript is true
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: entrypoint-script
+            configMap:
+              name: RELEASE-NAME-temporal-entrypoint-script
+              defaultMode: 493  # 0755 in decimal
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: entrypoint-script
+            mountPath: /entrypoint
+            readOnly: true
+
+  # Test config-processed emptyDir volume
+  - it: creates config-processed emptyDir volume when useEntrypointScript is true
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-processed
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: config-processed
+            mountPath: /etc/temporal/config
+
+  # Test backward compatibility (useEntrypointScript: false)
+  - it: mounts config directly when useEntrypointScript is false with legacy config
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: false
+        configMapsToMount: "legacy"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: config-legacy
+            mountPath: /etc/temporal/config/config_template.yaml
+            subPath: config_template.yaml
+
+  - it: mounts config directly when useEntrypointScript is false with modern config
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: false
+        configMapsToMount: "modern"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: config-modern
+            mountPath: /etc/temporal/config/config_template.yaml
+            subPath: config_template.yaml
+
+  # Test environment variables
+  - it: does not set TEMPORAL_SERVER_CONFIG_FILE_PATH when useEntrypointScript is true
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_SERVER_CONFIG_FILE_PATH
+
+  - it: sets TEMPORAL_SERVER_CONFIG_FILE_PATH when useEntrypointScript is false
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_SERVER_CONFIG_FILE_PATH
+            value: /etc/temporal/config/config_template.yaml
+
+  # Test entrypoint script content for auto-detection
+  - it: entrypoint script contains dockerize detection logic for both configs
+    template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "both"
+    asserts:
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: "if command -v dockerize"
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: "CONFIG_TYPE=\"legacy\""
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: "CONFIG_TYPE=\"modern\""
+
+  - it: entrypoint script uses legacy config when configMapsToMount is legacy
+    template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "legacy"
+    asserts:
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'CONFIG_TYPE="legacy"'
+      - notMatchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'CONFIG_TYPE="modern"'
+
+  - it: entrypoint script uses modern config when configMapsToMount is modern
+    template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "modern"
+    asserts:
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'CONFIG_TYPE="modern"'
+      - notMatchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'CONFIG_TYPE="legacy"'
+
+  # Test all services get the same configuration
+  - it: applies entrypoint configuration to all server services
+    template: templates/server-deployment.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "both"
+    asserts:
+      - hasDocuments:
+          count: 4  # frontend, history, matching, worker (internalFrontend is disabled by default)
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/entrypoint/entrypoint.sh"]
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/entrypoint/entrypoint.sh"]
+        documentIndex: 1
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/entrypoint/entrypoint.sh"]
+        documentIndex: 2
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["/entrypoint/entrypoint.sh"]
+        documentIndex: 3

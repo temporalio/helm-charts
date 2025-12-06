@@ -41,7 +41,27 @@ spec:
         - name: check-elasticsearch
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT 2>&1 > /dev/null; do echo waiting for elasticsearch to start; sleep 1; done;']
+          command: ['/bin/sh', '-c']
+          args:
+            - |
+              set -e
+              echo "Waiting for Elasticsearch to become available..."
+
+              if command -v curl >/dev/null 2>&1; then
+                echo "Using curl for Elasticsearch health check"
+                until curl --silent --fail --user "$ES_USER:$ES_PWD" "$ES_SCHEME://$ES_HOST:$ES_PORT" 2>&1 > /dev/null; do
+                  sleep 1
+                done
+              elif [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
+                echo "Using temporal-elasticsearch-tool for Elasticsearch health check"
+                until temporal-elasticsearch-tool ping --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" --user "$ES_USER" --password "$ES_PWD" 2>&1 > /dev/null; do
+                  sleep 1
+                done
+              else
+                echo "ERROR: Neither curl nor temporal-elasticsearch-tool found"
+                exit 1
+              fi
+              echo "Elasticsearch is ready"
           env:
             {{- include "temporal.admintools-env" (list $ "visibility") | nindent 12 }}
           {{- with $.Values.schema.containerSecurityContext }}
@@ -92,11 +112,54 @@ spec:
               {{- else if eq $driver "sql" }}
           command: ['temporal-sql-tool', 'setup-schema', '-v', '0.0']
               {{- else if eq $driver "elasticsearch" }}
-          command: ['sh', '-c']
+          command: ['/bin/sh', '-c']
           args:
-            - 'curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&
-              curl --head --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1 ||
-              curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1'
+            - |
+              set -e
+              echo "Setting up Elasticsearch visibility store..."
+
+              if command -v curl >/dev/null 2>&1; then
+                echo "Using curl for Elasticsearch setup"
+
+                echo "Creating index template: temporal_visibility_v1_template"
+                curl -X PUT --fail --user "$ES_USER:$ES_PWD" \
+                  "$ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template" \
+                  -H "Content-Type: application/json" \
+                  --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json"
+
+                echo "Checking if index exists: $ES_VISIBILITY_INDEX"
+                if ! curl --head --fail --user "$ES_USER:$ES_PWD" \
+                  "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX" 2>&1 > /dev/null; then
+                  echo "Creating index: $ES_VISIBILITY_INDEX"
+                  curl -X PUT --fail --user "$ES_USER:$ES_PWD" \
+                    "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX"
+                else
+                  echo "Index already exists"
+                fi
+
+              elif [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
+                echo "Using temporal-elasticsearch-tool for Elasticsearch setup"
+
+                echo "Setting up cluster settings and index template"
+                temporal-elasticsearch-tool setup-schema \
+                  --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" \
+                  --user "$ES_USER" \
+                  --password "$ES_PWD"
+
+                echo "Creating visibility index: $ES_VISIBILITY_INDEX"
+                temporal-elasticsearch-tool create-index \
+                  --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" \
+                  --user "$ES_USER" \
+                  --password "$ES_PWD" \
+                  --index "$ES_VISIBILITY_INDEX" \
+                  --fail
+
+              else
+                echo "ERROR: Neither curl nor temporal-elasticsearch-tool found"
+                exit 1
+              fi
+
+              echo "Elasticsearch setup completed successfully"
               {{- end }}
           env:
               {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
