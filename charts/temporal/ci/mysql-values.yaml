@@ -1,0 +1,24 @@
+server:
+  replicaCount: 1
+  config:
+    persistence:
+      defaultStore: default
+      visibilityStore: visibility
+      numHistoryShards: 512
+      datastores:
+        default:
+          sql:
+            pluginName: mysql8
+            databaseName: temporal
+            connectAddr: "mysql.default.svc.cluster.local:3306"
+            connectProtocol: "tcp"
+            user: temporal
+            password: temporal
+        visibility:
+          sql:
+            pluginName: mysql
+            databaseName: temporal_visibility
+            connectAddr: "mysql.default.svc.cluster.local:3306"
+            connectProtocol: "tcp"
+            user: temporal
+            password: temporal
