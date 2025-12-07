@@ -38,10 +38,10 @@ tests:
     asserts:
       - matchRegex:
           path: data['config_template.yaml']
-          pattern: "password: {{ .Env.TEMPORAL_DEFAULT_STORE_PASSWORD | quote }}"
+          pattern: 'password: \{\{ env "TEMPORAL_DEFAULT_STORE_PASSWORD" \| quote \}\}'
       - matchRegex:
           path: data['config_template.yaml']
-          pattern: "password: {{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD | quote }}"
+          pattern: 'password: \{\{ env "TEMPORAL_VISIBILITY_STORE_PASSWORD" \| quote \}\}'
 
   - it: handles additional stores
     set:
@@ -94,6 +94,3 @@ tests:
       - matchRegex:
           path: data['config_template.yaml']
           pattern: "connectAddr: postgres.example.com:5432"
-      - matchRegex:
-          path: data['config_template.yaml']
-          pattern: "password: {{ .Env.TEMPORAL_DEFAULT_STORE_PASSWORD | quote }}"

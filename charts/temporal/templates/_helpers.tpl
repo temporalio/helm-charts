@@ -148,9 +148,9 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
       {{- $storeConfig := get $dsCopy $storeType -}}
       {{- if hasKey $storeConfig "password" -}}
         {{- if eq $name $defaultStore -}}
-          {{- $_ := set $storeConfig "password" "{{ env \"TEMPORAL_DEFAULT_STORE_PASSWORD\" }}" -}}
+          {{- $_ := set $storeConfig "password" "__ENV_TEMPORAL_DEFAULT_STORE_PASSWORD__" -}}
         {{- else if eq $name $visibilityStore -}}
-          {{- $_ := set $storeConfig "password" "{{ env \"TEMPORAL_VISIBILITY_STORE_PASSWORD\" }}" -}}
+          {{- $_ := set $storeConfig "password" "__ENV_TEMPORAL_VISIBILITY_STORE_PASSWORD__" -}}
         {{- else -}}
           {{- $_ := unset $storeConfig "password" -}}
         {{- end -}}
@@ -161,7 +161,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
   {{- $_ := set $patchedDatastores $name $dsCopy -}}
 {{- end -}}
 {{- $_ := set $config "datastores" $patchedDatastores -}}
-{{- $config | toYaml -}}
+{{- regexReplaceAll "__ENV_(TEMPORAL_.+)__" ($config | toYaml) "{{ env \"$1\" | quote }}" -}}
 {{- end -}}
 
 {{- define "temporal.persistence.eachStore" -}}
