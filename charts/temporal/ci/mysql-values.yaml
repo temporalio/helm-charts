@@ -12,7 +12,7 @@ server:
             databaseName: temporal
             connectAddr: "mysql.default.svc.cluster.local:3306"
             connectProtocol: "tcp"
-            user: temporal
+            user: root
             password: temporal
         visibility:
           sql:
@@ -20,5 +20,5 @@ server:
             databaseName: temporal_visibility
             connectAddr: "mysql.default.svc.cluster.local:3306"
             connectProtocol: "tcp"
-            user: temporal
+            user: root
             password: temporal

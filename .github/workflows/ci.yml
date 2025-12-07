@@ -41,7 +41,7 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: password
+          MYSQL_ROOT_PASSWORD: temporal
           MYSQL_DATABASE: temporal
           MYSQL_USER: temporal
           MYSQL_PASSWORD: temporal
