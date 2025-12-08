@@ -9,6 +9,7 @@ metadata:
     {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
 data:
   config_template.yaml: |-
+    # enable-template
     log:
       stdout: true
       level: {{ $server.config.logLevel | quote }}

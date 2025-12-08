@@ -119,7 +119,7 @@ spec:
               if [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
                 echo "Using temporal-elasticsearch-tool to check index: $ES_VISIBILITY_INDEX"
                 # Use ping to verify ES is accessible, assuming index was created by setup job
-                until temporal-elasticsearch-tool ping --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" --user "$ES_USER" --password "$ES_PWD" 2>&1 > /dev/null; do
+                until temporal-elasticsearch-tool --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" --user "$ES_USER" --password "$ES_PWD" ping 2>&1 > /dev/null; do
                   sleep 1
                 done
               elif command -v curl >/dev/null 2>&1; then

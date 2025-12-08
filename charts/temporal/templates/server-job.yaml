@@ -49,7 +49,7 @@ spec:
 
               if [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
                 echo "Using temporal-elasticsearch-tool for Elasticsearch health check"
-                until temporal-elasticsearch-tool ping --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" --user "$ES_USER" --password "$ES_PWD" 2>&1 > /dev/null; do
+                until temporal-elasticsearch-tool --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" --user "$ES_USER" --password "$ES_PWD" ping 2>&1 > /dev/null; do
                   sleep 1
                 done
               elif command -v curl >/dev/null 2>&1; then
@@ -141,16 +141,18 @@ spec:
                 echo "Using temporal-elasticsearch-tool for Elasticsearch setup"
 
                 echo "Setting up cluster settings and index template"
-                temporal-elasticsearch-tool setup-schema \
-                  --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" \
-                  --user "$ES_USER" \
-                  --password "$ES_PWD"
-
-                echo "Creating visibility index: $ES_VISIBILITY_INDEX"
-                temporal-elasticsearch-tool create-index \
+                temporal-elasticsearch-tool \
                   --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" \
                   --user "$ES_USER" \
                   --password "$ES_PWD" \
+                  setup-schema
+
+                echo "Creating visibility index: $ES_VISIBILITY_INDEX"
+                temporal-elasticsearch-tool \
+                  --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" \
+                  --user "$ES_USER" \
+                  --password "$ES_PWD" \
+                  create-index \
                   --index "$ES_VISIBILITY_INDEX" \
                   --fail
 
