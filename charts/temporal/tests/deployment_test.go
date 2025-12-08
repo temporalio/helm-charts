@@ -200,7 +200,7 @@ func TestTemplateServerEntrypointScriptConfigMap(t *testing.T) {
 	require.Contains(t, output, "ConfigMap")
 	require.Contains(t, output, "entrypoint.sh")
 	require.Contains(t, output, "dockerize")
-	require.Contains(t, output, "CONFIG_TYPE")
+	require.Contains(t, output, "temporal-server")
 }
 
 func TestTemplateServerDeploymentWithEntrypointScript(t *testing.T) {

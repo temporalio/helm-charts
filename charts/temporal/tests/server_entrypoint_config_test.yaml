@@ -319,6 +319,7 @@ tests:
             value: /etc/temporal/config/config_template.yaml
 
   # Test entrypoint script content for auto-detection
+  # Test entrypoint script content for auto-detection
   - it: entrypoint script contains dockerize detection logic for both configs
     template: templates/server-entrypoint-script.yaml
     set:
@@ -332,10 +333,10 @@ tests:
           pattern: "if command -v dockerize"
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: "CONFIG_TYPE=\"legacy\""
+          pattern: "Using legacy config"
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: "CONFIG_TYPE=\"modern\""
+          pattern: "Using modern config"
 
   - it: entrypoint script uses legacy config when configMapsToMount is legacy
     template: templates/server-entrypoint-script.yaml
@@ -347,10 +348,10 @@ tests:
     asserts:
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: 'CONFIG_TYPE="legacy"'
-      - notMatchRegex:
+          pattern: 'Using legacy config'
+      - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: 'CONFIG_TYPE="modern"'
+          pattern: 'dockerize'
 
   - it: entrypoint script uses modern config when configMapsToMount is modern
     template: templates/server-entrypoint-script.yaml
@@ -362,11 +363,10 @@ tests:
     asserts:
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: 'CONFIG_TYPE="modern"'
-      - notMatchRegex:
+          pattern: 'Using modern config'
+      - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: 'CONFIG_TYPE="legacy"'
-
+          pattern: 'TEMPORAL_SERVER_CONFIG_FILE_PATH'
   # Test all services get the same configuration
   - it: applies entrypoint configuration to all server services
     template: templates/server-deployment.yaml

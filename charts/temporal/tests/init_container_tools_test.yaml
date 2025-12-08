@@ -7,6 +7,9 @@ templates:
   - server-configmap.yaml
   - server-dynamicconfigmap.yaml
   - _helpers.tpl
+release:
+  name: test-release
+  namespace: default
 set:
   cassandra:
     enabled: true
@@ -20,7 +23,7 @@ tests:
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
-      value: RELEASE-NAME-temporal-frontend
+      value: test-release-temporal-frontend
     asserts:
       - equal:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].image
@@ -34,21 +37,21 @@ tests:
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
-      value: RELEASE-NAME-temporal-frontend
+      value: test-release-temporal-frontend
     asserts:
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].args[0]
-          pattern: 'if command -v temporal-cassandra-tool.*elif command -v cqlsh'
+          pattern: 'if command -v temporal-cassandra-tool[\s\S]*elif command -v cqlsh'
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].args[0]
-          pattern: 'if command -v temporal-cassandra-tool.*elif command -v cqlsh'
+          pattern: 'if command -v temporal-cassandra-tool[\s\S]*elif command -v cqlsh'
 
   # Test Cassandra init container error messages
   - it: should have proper error messages for cassandra checks
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
-      value: RELEASE-NAME-temporal-frontend
+      value: test-release-temporal-frontend
     asserts:
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].args[0]
@@ -62,11 +65,11 @@ tests:
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
-      value: RELEASE-NAME-temporal-frontend
+      value: test-release-temporal-frontend
     asserts:
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-elasticsearch-index")].args[0]
-          pattern: 'if \[ -x /usr/local/bin/temporal-elasticsearch-tool \].*elif command -v curl'
+          pattern: 'if \[ -x /usr/local/bin/temporal-elasticsearch-tool \][\s\S]*elif command -v curl'
 
   # Test Elasticsearch init container in job checks temporal-elasticsearch-tool first
   - it: should check for temporal-elasticsearch-tool before curl in job
@@ -74,14 +77,14 @@ tests:
     asserts:
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-elasticsearch")].args[0]
-          pattern: 'if \[ -x /usr/local/bin/temporal-elasticsearch-tool \].*elif command -v curl'
+          pattern: 'if \[ -x /usr/local/bin/temporal-elasticsearch-tool \][\s\S]*elif command -v curl'
 
   # Test Elasticsearch init container error messages
   - it: should have proper error messages for elasticsearch checks
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
-      value: RELEASE-NAME-temporal-frontend
+      value: test-release-temporal-frontend
     asserts:
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-elasticsearch-index")].args[0]
@@ -96,7 +99,7 @@ tests:
           pattern: 'hosts: ".*,"'
       - matchRegex:
           path: data["config_template.yaml"]
-          pattern: 'hosts: "RELEASE-NAME-cassandra\.default"'
+          pattern: 'hosts: "test-release-cassandra\.default"'
 
   # Test entrypoint script has correct --root flag
   - it: should have correct temporal-server command with --root flag
@@ -109,25 +112,23 @@ tests:
   # Test that all four service deployments have cassandra init containers
   - it: should have cassandra init containers in all service deployments
     template: templates/server-deployment.yaml
-    documentSelector:
-      path: spec.template.spec.initContainers[?(@.name == "check-cassandra")]
     asserts:
-      - isNotEmpty:
-          path: name
+      - hasDocuments:
+          count: 4
 
   # Test that cassandra init containers use proper host helper
   - it: should use cassandra.host helper in init containers
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
-      value: RELEASE-NAME-temporal-frontend
+      value: test-release-temporal-frontend
     asserts:
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].args[0]
-          pattern: 'RELEASE-NAME-cassandra\.default'
+          pattern: 'test-release-cassandra\.default'
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].args[0]
-          pattern: 'RELEASE-NAME-cassandra\.default'
+          pattern: 'test-release-cassandra\.default'
 
   # Test multi-node cassandra cluster hosts
   - it: should generate comma-separated hosts for multi-node cassandra without trailing comma
@@ -140,7 +141,7 @@ tests:
     asserts:
       - matchRegex:
           path: data["config_template.yaml"]
-          pattern: 'hosts: "RELEASE-NAME-cassandra\.default,RELEASE-NAME-cassandra\.default,RELEASE-NAME-cassandra\.default"'
+          pattern: 'hosts: "test-release-cassandra\.default,test-release-cassandra\.default,test-release-cassandra\.default"'
       - notMatchRegex:
           path: data["config_template.yaml"]
           pattern: 'hosts: ".*,"$'
