@@ -1,0 +1,146 @@
+suite: test init container tool checks
+templates:
+  - server-deployment.yaml
+  - server-job.yaml
+  - server-entrypoint-script.yaml
+  - server-legacy-configmap.yaml
+  - server-configmap.yaml
+  - server-dynamicconfigmap.yaml
+  - _helpers.tpl
+set:
+  cassandra:
+    enabled: true
+    config:
+      cluster_size: 1
+  elasticsearch:
+    enabled: true
+tests:
+  # Test Cassandra init container uses admintools image
+  - it: should use admintools image for cassandra init containers
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].image
+          value: "temporalio/admin-tools:1.29.1-tctl-1.18.4-cli-1.5.0"
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].image
+          value: "temporalio/admin-tools:1.29.1-tctl-1.18.4-cli-1.5.0"
+
+  # Test Cassandra init container checks temporal-cassandra-tool first
+  - it: should check for temporal-cassandra-tool before cqlsh
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].args[0]
+          pattern: 'if command -v temporal-cassandra-tool.*elif command -v cqlsh'
+      - matchRegex:
+          path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].args[0]
+          pattern: 'if command -v temporal-cassandra-tool.*elif command -v cqlsh'
+
+  # Test Cassandra init container error messages
+  - it: should have proper error messages for cassandra checks
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].args[0]
+          pattern: 'ERROR: Neither temporal-cassandra-tool nor cqlsh found'
+      - matchRegex:
+          path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].args[0]
+          pattern: 'ERROR: Neither temporal-cassandra-tool nor cqlsh found'
+
+  # Test Elasticsearch init container checks temporal-elasticsearch-tool first
+  - it: should check for temporal-elasticsearch-tool before curl in deployment
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.initContainers[?(@.name == "check-elasticsearch-index")].args[0]
+          pattern: 'if \[ -x /usr/local/bin/temporal-elasticsearch-tool \].*elif command -v curl'
+
+  # Test Elasticsearch init container in job checks temporal-elasticsearch-tool first
+  - it: should check for temporal-elasticsearch-tool before curl in job
+    template: templates/server-job.yaml
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.initContainers[?(@.name == "check-elasticsearch")].args[0]
+          pattern: 'if \[ -x /usr/local/bin/temporal-elasticsearch-tool \].*elif command -v curl'
+
+  # Test Elasticsearch init container error messages
+  - it: should have proper error messages for elasticsearch checks
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.initContainers[?(@.name == "check-elasticsearch-index")].args[0]
+          pattern: 'ERROR: Neither temporal-elasticsearch-tool nor curl found'
+
+  # Test Cassandra hosts without trailing comma
+  - it: should not have trailing comma in cassandra hosts
+    template: templates/server-legacy-configmap.yaml
+    asserts:
+      - notMatchRegex:
+          path: data["config_template.yaml"]
+          pattern: 'hosts: ".*,"'
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: 'hosts: "RELEASE-NAME-cassandra\.default"'
+
+  # Test entrypoint script has correct --root flag
+  - it: should have correct temporal-server command with --root flag
+    template: templates/server-entrypoint-script.yaml
+    asserts:
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'temporal-server --root / --config etc/temporal/config --env docker start'
+
+  # Test that all four service deployments have cassandra init containers
+  - it: should have cassandra init containers in all service deployments
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: spec.template.spec.initContainers[?(@.name == "check-cassandra")]
+    asserts:
+      - isNotEmpty:
+          path: name
+
+  # Test that cassandra init containers use proper host helper
+  - it: should use cassandra.host helper in init containers
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].args[0]
+          pattern: 'RELEASE-NAME-cassandra\.default'
+      - matchRegex:
+          path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].args[0]
+          pattern: 'RELEASE-NAME-cassandra\.default'
+
+  # Test multi-node cassandra cluster hosts
+  - it: should generate comma-separated hosts for multi-node cassandra without trailing comma
+    set:
+      cassandra:
+        enabled: true
+        config:
+          cluster_size: 3
+    template: templates/server-legacy-configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: 'hosts: "RELEASE-NAME-cassandra\.default,RELEASE-NAME-cassandra\.default,RELEASE-NAME-cassandra\.default"'
+      - notMatchRegex:
+          path: data["config_template.yaml"]
+          pattern: 'hosts: ".*,"$'

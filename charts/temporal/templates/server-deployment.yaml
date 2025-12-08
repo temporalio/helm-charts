@@ -45,17 +45,62 @@ spec:
         {{- end }}
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra
-          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
-          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['/bin/sh', '-c']
+          args:
+            - |
+              set -e
+              echo "Waiting for Cassandra to become available..."
+
+              if command -v temporal-cassandra-tool >/dev/null 2>&1; then
+                echo "Using temporal-cassandra-tool to check Cassandra availability"
+                until temporal-cassandra-tool --ep {{ include "cassandra.host" $ }} --port {{ $.Values.cassandra.config.ports.cql }} validate-health 2>&1 > /dev/null; do
+                  echo "waiting for cassandra to start"
+                  sleep 1
+                done
+              elif command -v cqlsh >/dev/null 2>&1; then
+                echo "Using cqlsh to check Cassandra availability"
+                until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SHOW VERSION" 2>&1 > /dev/null; do
+                  echo "waiting for cassandra to start"
+                  sleep 1
+                done
+              else
+                echo "ERROR: Neither temporal-cassandra-tool nor cqlsh found"
+                exit 1
+              fi
+              echo "Cassandra is ready"
           {{- with $serviceValues.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         - name: check-cassandra-temporal-schema
-          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
-          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$; do echo waiting for default keyspace to become ready; sleep 1; done;']
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['/bin/sh', '-c']
+          args:
+            - |
+              set -e
+              echo "Waiting for Cassandra keyspace to become ready..."
+
+              if command -v temporal-cassandra-tool >/dev/null 2>&1; then
+                echo "Using temporal-cassandra-tool to check keyspace: {{ $.Values.server.config.persistence.default.cassandra.keyspace }}"
+                # temporal-cassandra-tool doesn't have a direct keyspace check, so we validate health and assume schema job created it
+                until temporal-cassandra-tool --ep {{ include "cassandra.host" $ }} --port {{ $.Values.cassandra.config.ports.cql }} --keyspace {{ $.Values.server.config.persistence.default.cassandra.keyspace }} validate-health 2>&1 > /dev/null; do
+                  echo "waiting for default keyspace to become ready"
+                  sleep 1
+                done
+              elif command -v cqlsh >/dev/null 2>&1; then
+                echo "Using cqlsh to check keyspace: {{ $.Values.server.config.persistence.default.cassandra.keyspace }}"
+                until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$ 2>&1 > /dev/null; do
+                  echo "waiting for default keyspace to become ready"
+                  sleep 1
+                done
+              else
+                echo "ERROR: Neither temporal-cassandra-tool nor cqlsh found"
+                exit 1
+              fi
+              echo "Cassandra keyspace is ready"
           {{- with $serviceValues.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
@@ -71,19 +116,19 @@ spec:
               set -e
               echo "Waiting for Elasticsearch index to become ready..."
 
-              if command -v curl >/dev/null 2>&1; then
-                echo "Using curl to check index: $ES_VISIBILITY_INDEX"
-                until curl --silent --fail --user "$ES_USER:$ES_PWD" "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX" 2>&1 > /dev/null; do
-                  sleep 1
-                done
-              elif [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
+              if [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
                 echo "Using temporal-elasticsearch-tool to check index: $ES_VISIBILITY_INDEX"
                 # Use ping to verify ES is accessible, assuming index was created by setup job
                 until temporal-elasticsearch-tool ping --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" --user "$ES_USER" --password "$ES_PWD" 2>&1 > /dev/null; do
                   sleep 1
                 done
+              elif command -v curl >/dev/null 2>&1; then
+                echo "Using curl to check index: $ES_VISIBILITY_INDEX"
+                until curl --silent --fail --user "$ES_USER:$ES_PWD" "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX" 2>&1 > /dev/null; do
+                  sleep 1
+                done
               else
-                echo "ERROR: Neither curl nor temporal-elasticsearch-tool found"
+                echo "ERROR: Neither temporal-elasticsearch-tool nor curl found"
                 exit 1
               fi
               echo "Elasticsearch index is ready"

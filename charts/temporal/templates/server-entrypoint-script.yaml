@@ -45,7 +45,7 @@ data:
       echo "Service: ${TEMPORAL_SERVICES}"
 
       # With dockerize, just use start command (config already processed)
-      exec temporal-server --config /etc/temporal/config --env docker start --service="${TEMPORAL_SERVICES}"
+      exec temporal-server --root / --config etc/temporal/config --env docker start --service="${TEMPORAL_SERVICES}"
     else
       echo "dockerize not found - using config template directly"
 

@@ -47,18 +47,18 @@ spec:
               set -e
               echo "Waiting for Elasticsearch to become available..."
 
-              if command -v curl >/dev/null 2>&1; then
-                echo "Using curl for Elasticsearch health check"
-                until curl --silent --fail --user "$ES_USER:$ES_PWD" "$ES_SCHEME://$ES_HOST:$ES_PORT" 2>&1 > /dev/null; do
-                  sleep 1
-                done
-              elif [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
+              if [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
                 echo "Using temporal-elasticsearch-tool for Elasticsearch health check"
                 until temporal-elasticsearch-tool ping --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" --user "$ES_USER" --password "$ES_PWD" 2>&1 > /dev/null; do
                   sleep 1
                 done
+              elif command -v curl >/dev/null 2>&1; then
+                echo "Using curl for Elasticsearch health check"
+                until curl --silent --fail --user "$ES_USER:$ES_PWD" "$ES_SCHEME://$ES_HOST:$ES_PORT" 2>&1 > /dev/null; do
+                  sleep 1
+                done
               else
-                echo "ERROR: Neither curl nor temporal-elasticsearch-tool found"
+                echo "ERROR: Neither temporal-elasticsearch-tool nor curl found"
                 exit 1
               fi
               echo "Elasticsearch is ready"
