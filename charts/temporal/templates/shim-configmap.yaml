@@ -1,3 +1,5 @@
+{{- if semverCompare "~1.29.0" $.Values.server.image.tag -}}
+{{- /* To simplify the helm chart during the transition from 1.29.* to 1.30.0 we polyfill dockerize and temporal-elasticsearch-tool for 1.29.* */ -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -38,3 +40,4 @@ data:
 
         echo "Skipped dockerize, copied $SRC to $DST"
     fi
+{{- end -}}
