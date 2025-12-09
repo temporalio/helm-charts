@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/server-configmap.yaml") $ | sha256sum }}
+        checksum/config: {{ include (print $.Template.BasePath "/server-sprig-configmap.yaml") $ | sha256sum }}-{{ include (print $.Template.BasePath "/server-dockerize-configmap.yaml") $ | sha256sum }}
         {{- if (dig "metrics" "annotations" "enabled" $.Values.server.metrics.annotations.enabled $serviceValues) }}
         prometheus.io/job: {{ $.Chart.Name }}-{{ $service }}
         prometheus.io/scrape: 'true'

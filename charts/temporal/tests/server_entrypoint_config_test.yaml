@@ -1,8 +1,8 @@
 suite: test server entrypoint and config mounting
 templates:
   - server-deployment.yaml
-  - server-configmap.yaml
-  - server-legacy-configmap.yaml
+  - server-sprig-configmap.yaml
+  - server-dockerize-configmap.yaml
   - server-entrypoint-script.yaml
 tests:
   # Test entrypoint script ConfigMap creation
@@ -34,17 +34,17 @@ tests:
   # Test configMapsToMount: "both" (default)
   - it: creates both ConfigMaps when configMapsToMount is both
     templates:
-      - templates/server-configmap.yaml
-      - templates/server-legacy-configmap.yaml
+      - templates/server-sprig-configmap.yaml
+      - templates/server-dockerize-configmap.yaml
     set:
       server:
         enabled: true
         configMapsToMount: "both"
     asserts:
-      - template: templates/server-configmap.yaml
+      - template: templates/server-sprig-configmap.yaml
         isKind:
           of: ConfigMap
-      - template: templates/server-legacy-configmap.yaml
+      - template: templates/server-dockerize-configmap.yaml
         isKind:
           of: ConfigMap
 
@@ -62,15 +62,15 @@ tests:
       - contains:
           path: spec.template.spec.volumes
           content:
-            name: config-legacy
+            name: config-dockerize
             configMap:
-              name: RELEASE-NAME-temporal-legacy-config
+              name: RELEASE-NAME-temporal-dockerize-config
       - contains:
           path: spec.template.spec.volumes
           content:
-            name: config-modern
+            name: config-sprig
             configMap:
-              name: RELEASE-NAME-temporal-modern-config
+              name: RELEASE-NAME-temporal-sprig-config
 
   - it: mounts both configs to config-source paths when useEntrypointScript is true
     template: templates/server-deployment.yaml
@@ -86,34 +86,34 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].volumeMounts
           content:
-            name: config-legacy
-            mountPath: /etc/temporal/config-source/legacy
+            name: config-dockerize
+            mountPath: /etc/temporal/config-source/dockerize
             readOnly: true
       - contains:
           path: spec.template.spec.containers[0].volumeMounts
           content:
-            name: config-modern
-            mountPath: /etc/temporal/config-source/modern
+            name: config-sprig
+            mountPath: /etc/temporal/config-source/sprig
             readOnly: true
 
-  # Test configMapsToMount: "legacy"
-  - it: creates only legacy ConfigMap when configMapsToMount is legacy
+  # Test configMapsToMount: "dockerize"
+  - it: creates only dockerize ConfigMap when configMapsToMount is dockerize
     templates:
-      - templates/server-configmap.yaml
-      - templates/server-legacy-configmap.yaml
+      - templates/server-sprig-configmap.yaml
+      - templates/server-dockerize-configmap.yaml
     set:
       server:
         enabled: true
-        configMapsToMount: "legacy"
+        configMapsToMount: "dockerize"
     asserts:
-      - template: templates/server-configmap.yaml
+      - template: templates/server-sprig-configmap.yaml
         hasDocuments:
           count: 0
-      - template: templates/server-legacy-configmap.yaml
+      - template: templates/server-dockerize-configmap.yaml
         isKind:
           of: ConfigMap
 
-  - it: mounts only legacy config volume when configMapsToMount is legacy
+  - it: mounts only dockerize config volume when configMapsToMount is dockerize
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
@@ -122,37 +122,37 @@ tests:
       server:
         enabled: true
         useEntrypointScript: true
-        configMapsToMount: "legacy"
+        configMapsToMount: "dockerize"
     asserts:
       - contains:
           path: spec.template.spec.volumes
           content:
-            name: config-legacy
+            name: config-dockerize
             configMap:
-              name: RELEASE-NAME-temporal-legacy-config
+              name: RELEASE-NAME-temporal-dockerize-config
       - notContains:
           path: spec.template.spec.volumes
           content:
-            name: config-modern
+            name: config-sprig
 
-  # Test configMapsToMount: "modern"
-  - it: creates only modern ConfigMap when configMapsToMount is modern
+  # Test configMapsToMount: "sprig"
+  - it: creates only sprig ConfigMap when configMapsToMount is sprig
     templates:
-      - templates/server-configmap.yaml
-      - templates/server-legacy-configmap.yaml
+      - templates/server-sprig-configmap.yaml
+      - templates/server-dockerize-configmap.yaml
     set:
       server:
         enabled: true
-        configMapsToMount: "modern"
+        configMapsToMount: "sprig"
     asserts:
-      - template: templates/server-configmap.yaml
+      - template: templates/server-sprig-configmap.yaml
         isKind:
           of: ConfigMap
-      - template: templates/server-legacy-configmap.yaml
+      - template: templates/server-dockerize-configmap.yaml
         hasDocuments:
           count: 0
 
-  - it: mounts only modern config volume when configMapsToMount is modern
+  - it: mounts only sprig config volume when configMapsToMount is sprig
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
@@ -161,18 +161,18 @@ tests:
       server:
         enabled: true
         useEntrypointScript: true
-        configMapsToMount: "modern"
+        configMapsToMount: "sprig"
     asserts:
       - contains:
           path: spec.template.spec.volumes
           content:
-            name: config-modern
+            name: config-sprig
             configMap:
-              name: RELEASE-NAME-temporal-modern-config
+              name: RELEASE-NAME-temporal-sprig-config
       - notContains:
           path: spec.template.spec.volumes
           content:
-            name: config-legacy
+            name: config-dockerize
 
   # Test entrypoint command override
   - it: overrides command to use entrypoint script when useEntrypointScript is true
@@ -250,7 +250,7 @@ tests:
             mountPath: /etc/temporal/config
 
   # Test backward compatibility (useEntrypointScript: false)
-  - it: mounts config directly when useEntrypointScript is false with legacy config
+  - it: mounts config directly when useEntrypointScript is false with dockerize config
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
@@ -259,16 +259,16 @@ tests:
       server:
         enabled: true
         useEntrypointScript: false
-        configMapsToMount: "legacy"
+        configMapsToMount: "dockerize"
     asserts:
       - contains:
           path: spec.template.spec.containers[0].volumeMounts
           content:
-            name: config-legacy
+            name: config-dockerize
             mountPath: /etc/temporal/config/config_template.yaml
             subPath: config_template.yaml
 
-  - it: mounts config directly when useEntrypointScript is false with modern config
+  - it: mounts config directly when useEntrypointScript is false with sprig config
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
@@ -277,12 +277,12 @@ tests:
       server:
         enabled: true
         useEntrypointScript: false
-        configMapsToMount: "modern"
+        configMapsToMount: "sprig"
     asserts:
       - contains:
           path: spec.template.spec.containers[0].volumeMounts
           content:
-            name: config-modern
+            name: config-sprig
             mountPath: /etc/temporal/config/config_template.yaml
             subPath: config_template.yaml
 
@@ -333,37 +333,37 @@ tests:
           pattern: "if command -v dockerize"
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: "Using legacy config"
+          pattern: "Using dockerize config"
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: "Using modern config"
+          pattern: "Using sprig config"
 
-  - it: entrypoint script uses legacy config when configMapsToMount is legacy
+  - it: entrypoint script uses dockerize config when configMapsToMount is dockerize
     template: templates/server-entrypoint-script.yaml
     set:
       server:
         enabled: true
         useEntrypointScript: true
-        configMapsToMount: "legacy"
+        configMapsToMount: "dockerize"
     asserts:
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: 'Using legacy config'
+          pattern: 'Using dockerize config'
       - matchRegex:
           path: data["entrypoint.sh"]
           pattern: 'dockerize'
 
-  - it: entrypoint script uses modern config when configMapsToMount is modern
+  - it: entrypoint script uses sprig config when configMapsToMount is sprig
     template: templates/server-entrypoint-script.yaml
     set:
       server:
         enabled: true
         useEntrypointScript: true
-        configMapsToMount: "modern"
+        configMapsToMount: "sprig"
     asserts:
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: 'Using modern config'
+          pattern: 'Using sprig config'
       - matchRegex:
           path: data["entrypoint.sh"]
           pattern: 'TEMPORAL_SERVER_CONFIG_FILE_PATH'

@@ -3,8 +3,8 @@ templates:
   - server-deployment.yaml
   - server-job.yaml
   - server-entrypoint-script.yaml
-  - server-legacy-configmap.yaml
-  - server-configmap.yaml
+  - server-dockerize-configmap.yaml
+  - server-sprig-configmap.yaml
   - server-dynamicconfigmap.yaml
   - _helpers.tpl
 release:
@@ -32,8 +32,8 @@ tests:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].image
           value: "temporalio/admin-tools:1.29.1-tctl-1.18.4-cli-1.5.0"
 
-  # Test Cassandra init container checks temporal-cassandra-tool first
-  - it: should check for temporal-cassandra-tool before cqlsh
+  # Test Cassandra init container uses temporal-cassandra-tool directly
+  - it: should use temporal-cassandra-tool for cassandra checks
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
@@ -41,24 +41,10 @@ tests:
     asserts:
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].args[0]
-          pattern: 'if command -v temporal-cassandra-tool[\s\S]*elif command -v cqlsh'
+          pattern: 'temporal-cassandra-tool --ep.*validate-health'
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].args[0]
-          pattern: 'if command -v temporal-cassandra-tool[\s\S]*elif command -v cqlsh'
-
-  # Test Cassandra init container error messages
-  - it: should have proper error messages for cassandra checks
-    template: templates/server-deployment.yaml
-    documentSelector:
-      path: metadata.name
-      value: test-release-temporal-frontend
-    asserts:
-      - matchRegex:
-          path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].args[0]
-          pattern: 'ERROR: Neither temporal-cassandra-tool nor cqlsh found'
-      - matchRegex:
-          path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].args[0]
-          pattern: 'ERROR: Neither temporal-cassandra-tool nor cqlsh found'
+          pattern: 'temporal-cassandra-tool --ep.*--keyspace.*validate-health'
 
   # Test Elasticsearch init container checks temporal-elasticsearch-tool first
   - it: should check for temporal-elasticsearch-tool before curl in deployment
@@ -92,7 +78,7 @@ tests:
 
   # Test Cassandra hosts without trailing comma
   - it: should not have trailing comma in cassandra hosts
-    template: templates/server-legacy-configmap.yaml
+    template: templates/server-dockerize-configmap.yaml
     asserts:
       - notMatchRegex:
           path: data["config_template.yaml"]
@@ -137,7 +123,7 @@ tests:
         enabled: true
         config:
           cluster_size: 3
-    template: templates/server-legacy-configmap.yaml
+    template: templates/server-dockerize-configmap.yaml
     asserts:
       - matchRegex:
           path: data["config_template.yaml"]
