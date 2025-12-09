@@ -177,15 +177,13 @@ func TestTemplateServerDeploymentLabels(t *testing.T) {
 	require.Equal(t, "zero", deployment.Spec.Template.ObjectMeta.Labels["zero"])
 }
 
-func TestTemplateServerEntrypointScriptConfigMap(t *testing.T) {
-	// t.Parallel()
 
+func TestTemplateServerEntrypointScript(t *testing.T) {
 	helmChartPath, err := filepath.Abs("../")
-	releaseName := "temporal"
 	require.NoError(t, err)
-
+	
 	namespaceName := "temporal-" + strings.ToLower(random.UniqueId())
-
+	
 	options := &helm.Options{
 		SetValues: map[string]string{
 			"server.useEntrypointScript": "true",
@@ -193,10 +191,9 @@ func TestTemplateServerEntrypointScriptConfigMap(t *testing.T) {
 		KubectlOptions:    k8s.NewKubectlOptions("", "", namespaceName),
 		BuildDependencies: true,
 	}
-
-	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/server-entrypoint-script.yaml"})
-
-	// Verify the output contains expected script elements
+	
+	output := helm.RenderTemplate(t, options, helmChartPath, "temporal", []string{"templates/server-entrypoint-script.yaml"})
+	
 	require.Contains(t, output, "ConfigMap")
 	require.Contains(t, output, "entrypoint.sh")
 	require.Contains(t, output, "dockerize")
@@ -204,115 +201,61 @@ func TestTemplateServerEntrypointScriptConfigMap(t *testing.T) {
 }
 
 func TestTemplateServerDeploymentWithEntrypointScript(t *testing.T) {
-	// t.Parallel()
-
 	helmChartPath, err := filepath.Abs("../")
-	releaseName := "temporal"
 	require.NoError(t, err)
-
+	
 	namespaceName := "temporal-" + strings.ToLower(random.UniqueId())
-
-	var deployment appsv1.Deployment
-
-	options := &helm.Options{
-		SetValues: map[string]string{
-			"server.useEntrypointScript": "true",
-			"server.configMapsToMount":   "both",
-		},
-		KubectlOptions:    k8s.NewKubectlOptions("", "", namespaceName),
-		BuildDependencies: true,
+	
+	testCases := []struct {
+		name              string
+		configMapsToMount string
+		expectDockerize   bool
+		expectSprig       bool
+	}{
+		{"both configs", "both", true, true},
+		{"dockerize only", "dockerize", true, false},
+		{"sprig only", "sprig", false, true},
 	}
+	
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var deployment appsv1.Deployment
+			
+			options := &helm.Options{
+				SetValues: map[string]string{
+					"server.useEntrypointScript": "true",
+					"server.configMapsToMount":   tc.configMapsToMount,
+				},
+				KubectlOptions:    k8s.NewKubectlOptions("", "", namespaceName),
+				BuildDependencies: true,
+			}
+			
+			output := helm.RenderTemplate(t, options, helmChartPath, "temporal", []string{"templates/server-deployment.yaml"})
+			helm.UnmarshalK8SYaml(t, output, &deployment)
+			
+			// Verify command override
+			require.Equal(t, []string{"/entrypoint/entrypoint.sh"}, deployment.Spec.Template.Spec.Containers[0].Command)
+			
+			// Verify volume configuration
+			volumeNames := make([]string, len(deployment.Spec.Template.Spec.Volumes))
+			for i, vol := range deployment.Spec.Template.Spec.Volumes {
+				volumeNames[i] = vol.Name
+			}
+			
+			require.Contains(t, volumeNames, "entrypoint-script")
+			require.Contains(t, volumeNames, "config-processed")
+			
+			if tc.expectDockerize {
+				require.Contains(t, volumeNames, "config-dockerize")
+			} else {
+				require.NotContains(t, volumeNames, "config-dockerize")
+			}
 
-	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/server-deployment.yaml"})
-
-	helm.UnmarshalK8SYaml(t, output, &deployment)
-
-	// Verify command override
-	require.Equal(t, []string{"/entrypoint/entrypoint.sh"}, deployment.Spec.Template.Spec.Containers[0].Command)
-
-	// Verify volumes include entrypoint-script
-	volumeNames := make([]string, len(deployment.Spec.Template.Spec.Volumes))
-	for i, vol := range deployment.Spec.Template.Spec.Volumes {
-		volumeNames[i] = vol.Name
+			if tc.expectSprig {
+				require.Contains(t, volumeNames, "config-sprig")
+			} else {
+				require.NotContains(t, volumeNames, "config-sprig")
+			}
+		})
 	}
-	require.Contains(t, volumeNames, "entrypoint-script")
-	require.Contains(t, volumeNames, "config-legacy")
-	require.Contains(t, volumeNames, "config-modern")
-	require.Contains(t, volumeNames, "config-processed")
-
-	// Verify volume mounts
-	volumeMountNames := make([]string, len(deployment.Spec.Template.Spec.Containers[0].VolumeMounts))
-	for i, mount := range deployment.Spec.Template.Spec.Containers[0].VolumeMounts {
-		volumeMountNames[i] = mount.Name
-	}
-	require.Contains(t, volumeMountNames, "entrypoint-script")
-	require.Contains(t, volumeMountNames, "config-legacy")
-	require.Contains(t, volumeMountNames, "config-modern")
-	require.Contains(t, volumeMountNames, "config-processed")
-}
-
-func TestTemplateServerDeploymentConfigMapsToMountLegacy(t *testing.T) {
-	// t.Parallel()
-
-	helmChartPath, err := filepath.Abs("../")
-	releaseName := "temporal"
-	require.NoError(t, err)
-
-	namespaceName := "temporal-" + strings.ToLower(random.UniqueId())
-
-	var deployment appsv1.Deployment
-
-	options := &helm.Options{
-		SetValues: map[string]string{
-			"server.useEntrypointScript": "true",
-			"server.configMapsToMount":   "legacy",
-		},
-		KubectlOptions:    k8s.NewKubectlOptions("", "", namespaceName),
-		BuildDependencies: true,
-	}
-
-	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/server-deployment.yaml"})
-
-	helm.UnmarshalK8SYaml(t, output, &deployment)
-
-	// Verify volumes only include legacy config
-	volumeNames := make([]string, len(deployment.Spec.Template.Spec.Volumes))
-	for i, vol := range deployment.Spec.Template.Spec.Volumes {
-		volumeNames[i] = vol.Name
-	}
-	require.Contains(t, volumeNames, "config-legacy")
-	require.NotContains(t, volumeNames, "config-modern")
-}
-
-func TestTemplateServerDeploymentConfigMapsToMountModern(t *testing.T) {
-	// t.Parallel()
-
-	helmChartPath, err := filepath.Abs("../")
-	releaseName := "temporal"
-	require.NoError(t, err)
-
-	namespaceName := "temporal-" + strings.ToLower(random.UniqueId())
-
-	var deployment appsv1.Deployment
-
-	options := &helm.Options{
-		SetValues: map[string]string{
-			"server.useEntrypointScript": "true",
-			"server.configMapsToMount":   "modern",
-		},
-		KubectlOptions:    k8s.NewKubectlOptions("", "", namespaceName),
-		BuildDependencies: true,
-	}
-
-	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/server-deployment.yaml"})
-
-	helm.UnmarshalK8SYaml(t, output, &deployment)
-
-	// Verify volumes only include modern config
-	volumeNames := make([]string, len(deployment.Spec.Template.Spec.Volumes))
-	for i, vol := range deployment.Spec.Template.Spec.Volumes {
-		volumeNames[i] = vol.Name
-	}
-	require.Contains(t, volumeNames, "config-modern")
-	require.NotContains(t, volumeNames, "config-legacy")
 }
