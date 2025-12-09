@@ -11,7 +11,6 @@ server:
         default:
           sql:
             pluginName: postgres12
-            driverName: postgres12
             databaseName: temporal
             connectAddr: "_HOST_:5432"  # or use separate host/port fields
             # host: _HOST_
@@ -36,7 +35,6 @@ server:
         visibility:
           sql:
             pluginName: postgres12
-            driverName: postgres12
             databaseName: temporal_visibility
             connectAddr: "_HOST_:5432"
             # connectProtocol defaults to "tcp" if not specified

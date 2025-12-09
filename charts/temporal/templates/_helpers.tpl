@@ -148,20 +148,20 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
       {{- $storeConfig := get $dsCopy $storeType -}}
       {{- if hasKey $storeConfig "password" -}}
         {{- if eq $name $defaultStore -}}
-          {{- $_ := set $storeConfig "password" "{{ env \"TEMPORAL_DEFAULT_STORE_PASSWORD\" | quote }}" -}}
+          {{- $_ := set $storeConfig "password" "__ENV_TEMPORAL_DEFAULT_STORE_PASSWORD__" -}}
         {{- else if eq $name $visibilityStore -}}
-          {{- $_ := set $storeConfig "password" "{{ env \"TEMPORAL_VISIBILITY_STORE_PASSWORD\" | quote }}" -}}
+          {{- $_ := set $storeConfig "password" "__ENV_TEMPORAL_VISIBILITY_STORE_PASSWORD__" -}}
         {{- else -}}
           {{- $_ := unset $storeConfig "password" -}}
         {{- end -}}
       {{- end -}}
-      {{- $_ :=set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey") -}}
+      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey") -}}
     {{- end -}}
   {{- end -}}
   {{- $_ := set $patchedDatastores $name $dsCopy -}}
 {{- end -}}
 {{- $_ := set $config "datastores" $patchedDatastores -}}
-{{- $config | toYaml -}}
+{{- regexReplaceAll "__ENV_(TEMPORAL_.+)__" ($config | toYaml) "{{ env \"$1\" | quote }}" -}}
 {{- end -}}
 
 {{- define "temporal.persistence.eachStore" -}}
@@ -201,10 +201,10 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 
 {{- define "temporal.persistence.schema" -}}
 {{- $store := . -}}
-{{- if eq $store.config.schema "default" -}}
+{{- if eq $store.name "default" -}}
 {{- print "temporal" -}}
 {{- else -}}
-{{- print $store.config.schema -}}
+{{- print $store.name -}}
 {{- end -}}
 {{- end -}}
 
@@ -216,11 +216,6 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- else -}}
 {{- include "temporal.componentname" (list $root (printf "%s-store" $store.name)) -}}
 {{- end -}}
-{{- end -}}
-
-{{- define "temporal.persistence.secretKey" -}}
-{{- $store := index . 0 -}}
-{{- $store.config.secretKey | default "password" -}}
 {{- end -}}
 
 {{- define "temporal.persistence.sql.connectAttributes" -}}
