@@ -29,9 +29,18 @@ spec:
         {{- end }}
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra
-          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
-          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['/bin/sh', '-c']
+          args:
+            - |
+              set -e
+              echo "Waiting for Cassandra to become available..."
+              until temporal-cassandra-tool --ep {{ include "cassandra.host" $ }} --port {{ $.Values.cassandra.config.ports.cql }} validate-health 2>&1 > /dev/null; do
+                echo "waiting for cassandra to start"
+                sleep 1
+              done
+              echo "Cassandra is ready"
           {{- with $.Values.schema.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
@@ -58,7 +67,7 @@ spec:
                   sleep 1
                 done
               else
-                echo "ERROR: Neither temporal-elasticsearch-tool nor curl found"
+                echo "ERROR: Neither temporal-elasticsearch-tool nor curl found" >&2
                 exit 1
               fi
               echo "Elasticsearch is ready"
@@ -157,7 +166,7 @@ spec:
                   --fail
 
               else
-                echo "ERROR: Neither curl nor temporal-elasticsearch-tool found"
+                echo "ERROR: Neither curl nor temporal-elasticsearch-tool found" >&2
                 exit 1
               fi
 

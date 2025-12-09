@@ -52,23 +52,10 @@ spec:
             - |
               set -e
               echo "Waiting for Cassandra to become available..."
-
-              if command -v temporal-cassandra-tool >/dev/null 2>&1; then
-                echo "Using temporal-cassandra-tool to check Cassandra availability"
-                until temporal-cassandra-tool --ep {{ include "cassandra.host" $ }} --port {{ $.Values.cassandra.config.ports.cql }} validate-health 2>&1 > /dev/null; do
-                  echo "waiting for cassandra to start"
-                  sleep 1
-                done
-              elif command -v cqlsh >/dev/null 2>&1; then
-                echo "Using cqlsh to check Cassandra availability"
-                until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SHOW VERSION" 2>&1 > /dev/null; do
-                  echo "waiting for cassandra to start"
-                  sleep 1
-                done
-              else
-                echo "ERROR: Neither temporal-cassandra-tool nor cqlsh found"
-                exit 1
-              fi
+              until temporal-cassandra-tool --ep {{ include "cassandra.host" $ }} --port {{ $.Values.cassandra.config.ports.cql }} validate-health 2>&1 > /dev/null; do
+                echo "waiting for cassandra to start"
+                sleep 1
+              done
               echo "Cassandra is ready"
           {{- with $serviceValues.containerSecurityContext }}
           securityContext:
@@ -81,25 +68,12 @@ spec:
           args:
             - |
               set -e
-              echo "Waiting for Cassandra keyspace to become ready..."
-
-              if command -v temporal-cassandra-tool >/dev/null 2>&1; then
-                echo "Using temporal-cassandra-tool to check keyspace: {{ $.Values.server.config.persistence.default.cassandra.keyspace }}"
-                # temporal-cassandra-tool doesn't have a direct keyspace check, so we validate health and assume schema job created it
-                until temporal-cassandra-tool --ep {{ include "cassandra.host" $ }} --port {{ $.Values.cassandra.config.ports.cql }} --keyspace {{ $.Values.server.config.persistence.default.cassandra.keyspace }} validate-health 2>&1 > /dev/null; do
-                  echo "waiting for default keyspace to become ready"
-                  sleep 1
-                done
-              elif command -v cqlsh >/dev/null 2>&1; then
-                echo "Using cqlsh to check keyspace: {{ $.Values.server.config.persistence.default.cassandra.keyspace }}"
-                until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$ 2>&1 > /dev/null; do
-                  echo "waiting for default keyspace to become ready"
-                  sleep 1
-                done
-              else
-                echo "ERROR: Neither temporal-cassandra-tool nor cqlsh found"
-                exit 1
-              fi
+              echo "Waiting for Cassandra keyspace to become ready: {{ $.Values.server.config.persistence.default.cassandra.keyspace }}"
+              # temporal-cassandra-tool doesn't have a direct keyspace check, so we validate health and assume schema job created it
+              until temporal-cassandra-tool --ep {{ include "cassandra.host" $ }} --port {{ $.Values.cassandra.config.ports.cql }} --keyspace {{ $.Values.server.config.persistence.default.cassandra.keyspace }} validate-health 2>&1 > /dev/null; do
+                echo "waiting for default keyspace to become ready"
+                sleep 1
+              done
               echo "Cassandra keyspace is ready"
           {{- with $serviceValues.containerSecurityContext }}
           securityContext:
@@ -128,7 +102,7 @@ spec:
                   sleep 1
                 done
               else
-                echo "ERROR: Neither temporal-elasticsearch-tool nor curl found"
+                echo "ERROR: Neither temporal-elasticsearch-tool nor curl found" >&2
                 exit 1
               fi
               echo "Elasticsearch index is ready"
@@ -217,14 +191,14 @@ spec:
           {{- end }}
           volumeMounts:
             {{- if $.Values.server.useEntrypointScript }}
-            {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "legacy") }}
-            - name: config-legacy
-              mountPath: /etc/temporal/config-source/legacy
+            {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "dockerize") }}
+            - name: config-dockerize
+              mountPath: /etc/temporal/config-source/dockerize
               readOnly: true
             {{- end }}
-            {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "modern") }}
-            - name: config-modern
-              mountPath: /etc/temporal/config-source/modern
+            {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "sprig") }}
+            - name: config-sprig
+              mountPath: /etc/temporal/config-source/sprig
               readOnly: true
             {{- end }}
             - name: entrypoint-script
@@ -233,12 +207,12 @@ spec:
             - name: config-processed
               mountPath: /etc/temporal/config
             {{- else }}
-            {{- if eq $.Values.server.configMapsToMount "legacy" }}
-            - name: config-legacy
+            {{- if eq $.Values.server.configMapsToMount "dockerize" }}
+            - name: config-dockerize
               mountPath: /etc/temporal/config/config_template.yaml
               subPath: config_template.yaml
             {{- else }}
-            - name: config-modern
+            - name: config-sprig
               mountPath: /etc/temporal/config/config_template.yaml
               subPath: config_template.yaml
             {{- end }}
@@ -259,15 +233,15 @@ spec:
       {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "legacy") }}
-        - name: config-legacy
+        {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "dockerize") }}
+        - name: config-dockerize
           configMap:
-            name: "{{ include "temporal.fullname" $ }}-legacy-config"
+            name: "{{ include "temporal.fullname" $ }}-dockerize-config"
         {{- end }}
-        {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "modern") }}
-        - name: config-modern
+        {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "sprig") }}
+        - name: config-sprig
           configMap:
-            name: "{{ include "temporal.fullname" $ }}-modern-config"
+            name: "{{ include "temporal.fullname" $ }}-sprig-config"
         {{- end }}
         {{- if $.Values.server.useEntrypointScript }}
         - name: entrypoint-script

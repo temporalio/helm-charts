@@ -26,10 +26,11 @@ server:
   # Set to false to use the image's default entrypoint
   useEntrypointScript: true
   # Control which config ConfigMaps to mount
-  # Options: "both", "legacy", "modern"
+  # Options: "both", "dockerize", "sprig"
   # - "both": mounts both ConfigMaps (requires useEntrypointScript: true), auto-detects which to use based on dockerize presence
-  # - "legacy": mounts only legacy config (for old images with dockerize)
-  # - "modern": mounts only modern config (for new images without dockerize)
+  # - "dockerize": mounts only dockerize config (DEPRECATED - for old images with dockerize, use temporalio/server:1.29.x or earlier)
+  # - "sprig": mounts only sprig config (RECOMMENDED - for new images temporalio/server:1.30.0+, uses built-in sprig templating)
+  # We recommend upgrading to "sprig" config format for better security and smaller images
   configMapsToMount: "both"
   # Global default settings (can be overridden per service)
   replicaCount: 1

@@ -10,69 +10,40 @@ data:
     #!/bin/sh
     set -e
 
-    echo "Temporal server entrypoint script starting..."
+    echo "Temporal entrypoint override - starting ${TEMPORAL_SERVICES}"
 
     {{- if eq .Values.server.configMapsToMount "both" }}
-    # Auto-detect based on dockerize presence when both configs are mounted
+    # Auto-detect config format based on dockerize availability
     if command -v dockerize >/dev/null 2>&1; then
-      echo "Using legacy config (dockerize detected)"
-
-      echo "Processing config template with dockerize..."
-      SOURCE_CONFIG="/etc/temporal/config-source/legacy/config_template.yaml"
+      echo "Using dockerize config"
+      SOURCE_CONFIG="/etc/temporal/config-source/dockerize/config_template.yaml"
       TARGET_CONFIG="/etc/temporal/config/docker.yaml"
-
-      echo "Processing ${SOURCE_CONFIG} -> ${TARGET_CONFIG}"
       dockerize -template "${SOURCE_CONFIG}:${TARGET_CONFIG}"
-      echo "Config processing complete"
-
-      echo "Starting temporal-server with processed config"
-      echo "Service: ${TEMPORAL_SERVICES}"
-
       exec temporal-server --root / --config etc/temporal/config --env docker start --service="${TEMPORAL_SERVICES}"
     else
-      echo "Using modern config (no dockerize)"
-
-      CONFIG_FILE="/etc/temporal/config-source/modern/config_template.yaml"
-
-      echo "Starting temporal-server with config: ${CONFIG_FILE}"
-      echo "Service: ${TEMPORAL_SERVICES}"
-
-      export TEMPORAL_SERVER_CONFIG_FILE_PATH="${CONFIG_FILE}"
+      echo "Using sprig config"
+      export TEMPORAL_SERVER_CONFIG_FILE_PATH="/etc/temporal/config-source/sprig/config_template.yaml"
       exec temporal-server start
     fi
-    {{- else if eq .Values.server.configMapsToMount "legacy" }}
-    echo "Using legacy config"
-
+    {{- else if eq .Values.server.configMapsToMount "dockerize" }}
     if ! command -v dockerize >/dev/null 2>&1; then
-      echo "ERROR: Legacy config requires dockerize but it was not found"
+      echo "ERROR: dockerize config requires dockerize but it was not found" >&2
+      echo "Either install an image with dockerize or use configMapsToMount: sprig" >&2
       exit 1
     fi
 
-    echo "Processing config template with dockerize..."
-    SOURCE_CONFIG="/etc/temporal/config-source/legacy/config_template.yaml"
+    echo "Using dockerize config"
+    SOURCE_CONFIG="/etc/temporal/config-source/dockerize/config_template.yaml"
     TARGET_CONFIG="/etc/temporal/config/docker.yaml"
-
-    echo "Processing ${SOURCE_CONFIG} -> ${TARGET_CONFIG}"
     dockerize -template "${SOURCE_CONFIG}:${TARGET_CONFIG}"
-    echo "Config processing complete"
-
-    echo "Starting temporal-server with processed config"
-    echo "Service: ${TEMPORAL_SERVICES}"
-
     exec temporal-server --root / --config etc/temporal/config --env docker start --service="${TEMPORAL_SERVICES}"
-    {{- else if eq .Values.server.configMapsToMount "modern" }}
-    echo "Using modern config"
-
-    CONFIG_FILE="/etc/temporal/config-source/modern/config_template.yaml"
-
-    echo "Starting temporal-server with config: ${CONFIG_FILE}"
-    echo "Service: ${TEMPORAL_SERVICES}"
-
-    export TEMPORAL_SERVER_CONFIG_FILE_PATH="${CONFIG_FILE}"
+    {{- else if eq .Values.server.configMapsToMount "sprig" }}
+    echo "Using sprig config"
+    export TEMPORAL_SERVER_CONFIG_FILE_PATH="/etc/temporal/config-source/sprig/config_template.yaml"
     exec temporal-server start
     {{- else }}
-    echo "ERROR: Invalid configMapsToMount value: {{ .Values.server.configMapsToMount }}"
-    echo "Must be one of: both, legacy, modern"
+    echo "ERROR: Invalid configMapsToMount value: {{ .Values.server.configMapsToMount }}" >&2
+    echo "Must be one of: both, dockerize, sprig" >&2
     exit 1
     {{- end }}
 {{- end }}
