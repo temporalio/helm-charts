@@ -18,8 +18,8 @@ set:
   elasticsearch:
     enabled: true
 tests:
-  # Test Cassandra init container uses admintools image
-  - it: should use admintools image for cassandra init containers
+  # Test Cassandra init container uses cassandra image
+  - it: should use cassandra image for cassandra init containers
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
@@ -27,24 +27,24 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].image
-          value: "temporalio/admin-tools:1.29.1-tctl-1.18.4-cli-1.5.0"
+          value: "cassandra:3.11.3"
       - equal:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].image
-          value: "temporalio/admin-tools:1.29.1-tctl-1.18.4-cli-1.5.0"
+          value: "cassandra:3.11.3"
 
-  # Test Cassandra init container uses temporal-cassandra-tool directly
-  - it: should use temporal-cassandra-tool for cassandra checks
+  # Test Cassandra init container uses cqlsh commands
+  - it: should use cqlsh for cassandra checks
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
       value: test-release-temporal-frontend
     asserts:
       - matchRegex:
-          path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].args[0]
-          pattern: 'temporal-cassandra-tool --ep.*validate-health'
+          path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].command[2]
+          pattern: 'cqlsh.*SHOW VERSION'
       - matchRegex:
-          path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].args[0]
-          pattern: 'temporal-cassandra-tool --ep.*--keyspace.*validate-health'
+          path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].command[2]
+          pattern: 'cqlsh.*SELECT keyspace_name FROM system_schema.keyspaces'
 
   # Test Elasticsearch init container checks temporal-elasticsearch-tool first
   - it: should check for temporal-elasticsearch-tool before curl in deployment
@@ -110,10 +110,10 @@ tests:
       value: test-release-temporal-frontend
     asserts:
       - matchRegex:
-          path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].args[0]
+          path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].command[2]
           pattern: 'test-release-cassandra\.default'
       - matchRegex:
-          path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].args[0]
+          path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].command[2]
           pattern: 'test-release-cassandra\.default'
 
   # Test multi-node cassandra cluster hosts

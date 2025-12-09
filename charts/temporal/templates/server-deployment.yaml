@@ -45,36 +45,17 @@ spec:
         {{- end }}
         {{- if $.Values.cassandra.enabled }}
         - name: check-cassandra
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
-          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['/bin/sh', '-c']
-          args:
-            - |
-              set -e
-              echo "Waiting for Cassandra to become available..."
-              until temporal-cassandra-tool --ep {{ include "cassandra.host" $ }} --port {{ $.Values.cassandra.config.ports.cql }} validate-health 2>&1 > /dev/null; do
-                echo "waiting for cassandra to start"
-                sleep 1
-              done
-              echo "Cassandra is ready"
+          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
+          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
+          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
           {{- with $serviceValues.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         - name: check-cassandra-temporal-schema
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
-          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['/bin/sh', '-c']
-          args:
-            - |
-              set -e
-              echo "Waiting for Cassandra keyspace to become ready: {{ $.Values.server.config.persistence.default.cassandra.keyspace }}"
-              # temporal-cassandra-tool doesn't have a direct keyspace check, so we validate health and assume schema job created it
-              until temporal-cassandra-tool --ep {{ include "cassandra.host" $ }} --port {{ $.Values.cassandra.config.ports.cql }} --keyspace {{ $.Values.server.config.persistence.default.cassandra.keyspace }} validate-health 2>&1 > /dev/null; do
-                echo "waiting for default keyspace to become ready"
-                sleep 1
-              done
-              echo "Cassandra keyspace is ready"
+          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
+          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
+          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$; do echo waiting for default keyspace to become ready; sleep 1; done;']
           {{- with $serviceValues.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
