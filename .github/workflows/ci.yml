@@ -106,127 +106,48 @@ jobs:
           echo "host_ip=$HOST_IP" >> $GITHUB_OUTPUT
           echo "Docker host IP: $HOST_IP"
 
-      - name: Create Kubernetes services and endpoints
+      - name: Expose persistence backend services to Kubernetes
         run: |
           HOST_IP="${{ steps.docker.outputs.host_ip }}"
-
           echo "Using HOST_IP: $HOST_IP"
 
-          cat <<EOF | kubectl apply -f -
+          create_service() {
+            local name=$1
+            local port=$2
+            cat <<EOF | kubectl apply -f -
           apiVersion: v1
           kind: Service
           metadata:
-            name: cassandra
+            name: ${name}
             namespace: default
           spec:
             ports:
-              - port: 9042
+              - port: ${port}
                 protocol: TCP
-                targetPort: 9042
+                targetPort: ${port}
             clusterIP: None
           ---
           apiVersion: discovery.k8s.io/v1
           kind: EndpointSlice
           metadata:
-            name: cassandra-1
+            name: ${name}-1
             namespace: default
             labels:
-              kubernetes.io/service-name: cassandra
+              kubernetes.io/service-name: ${name}
           addressType: IPv4
           ports:
-            - port: 9042
+            - port: ${port}
               protocol: TCP
           endpoints:
             - addresses:
                 - ${HOST_IP}
           EOF
+          }
 
-          cat <<EOF | kubectl apply -f -
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: postgres
-            namespace: default
-          spec:
-            ports:
-              - port: 5432
-                protocol: TCP
-                targetPort: 5432
-            clusterIP: None
-          ---
-          apiVersion: discovery.k8s.io/v1
-          kind: EndpointSlice
-          metadata:
-            name: postgres-1
-            namespace: default
-            labels:
-              kubernetes.io/service-name: postgres
-          addressType: IPv4
-          ports:
-            - port: 5432
-              protocol: TCP
-          endpoints:
-            - addresses:
-                - ${HOST_IP}
-          EOF
-
-          cat <<EOF | kubectl apply -f -
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: mysql
-            namespace: default
-          spec:
-            ports:
-              - port: 3306
-                protocol: TCP
-                targetPort: 3306
-            clusterIP: None
-          ---
-          apiVersion: discovery.k8s.io/v1
-          kind: EndpointSlice
-          metadata:
-            name: mysql-1
-            namespace: default
-            labels:
-              kubernetes.io/service-name: mysql
-          addressType: IPv4
-          ports:
-            - port: 3306
-              protocol: TCP
-          endpoints:
-            - addresses:
-                - ${HOST_IP}
-          EOF
-
-          cat <<EOF | kubectl apply -f -
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: elasticsearch
-            namespace: default
-          spec:
-            ports:
-              - port: 9200
-                protocol: TCP
-                targetPort: 9200
-            clusterIP: None
-          ---
-          apiVersion: discovery.k8s.io/v1
-          kind: EndpointSlice
-          metadata:
-            name: elasticsearch-1
-            namespace: default
-            labels:
-              kubernetes.io/service-name: elasticsearch
-          addressType: IPv4
-          ports:
-            - port: 9200
-              protocol: TCP
-          endpoints:
-            - addresses:
-                - ${HOST_IP}
-          EOF
+          create_service cassandra 9042
+          create_service postgres 5432
+          create_service mysql 3306
+          create_service elasticsearch 9200
 
       - name: Run chart-testing (install)
         run: ct install --target-branch v1
