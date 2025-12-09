@@ -111,10 +111,8 @@ spec:
               value: {{ $service }}
             - name: TEMPORAL_SERVICES
               value: {{ $service }}
-            {{- if not $.Values.server.useEntrypointScript }}
             - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
               value: /etc/temporal/config/config_template.yaml
-            {{- end }}
             {{- if ne (include "temporal.persistence.driver" (list $ "default")) "custom" }}
             - name: TEMPORAL_STORE_PASSWORD
               valueFrom:
