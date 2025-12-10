@@ -41,10 +41,10 @@ tests:
     asserts:
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra")].command[2]
-          pattern: 'cqlsh.*SHOW VERSION'
+          pattern: "cqlsh.*SHOW VERSION"
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-cassandra-temporal-schema")].command[2]
-          pattern: 'cqlsh.*SELECT keyspace_name FROM system_schema.keyspaces'
+          pattern: "cqlsh.*SELECT keyspace_name FROM system_schema.keyspaces"
 
   # Test Elasticsearch init container checks temporal-elasticsearch-tool first
   - it: should check for temporal-elasticsearch-tool before curl in deployment
@@ -74,7 +74,7 @@ tests:
     asserts:
       - matchRegex:
           path: spec.template.spec.initContainers[?(@.name == "check-elasticsearch-index")].args[0]
-          pattern: 'ERROR: Neither temporal-elasticsearch-tool nor curl found'
+          pattern: "ERROR: Neither temporal-elasticsearch-tool nor curl found"
 
   # Test Cassandra hosts without trailing comma
   - it: should not have trailing comma in cassandra hosts
@@ -90,10 +90,13 @@ tests:
   # Test entrypoint script has correct --root flag
   - it: should have correct temporal-server command with --root flag
     template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        useEntrypointScript: true
     asserts:
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: 'temporal-server --root / --config etc/temporal/config --env docker start'
+          pattern: "temporal-server --root / --config etc/temporal/config --env docker start"
 
   # Test that all four service deployments have cassandra init containers
   - it: should have cassandra init containers in all service deployments

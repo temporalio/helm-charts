@@ -118,26 +118,7 @@ spec:
               set -e
               echo "Setting up Elasticsearch visibility store..."
 
-              if command -v curl >/dev/null 2>&1; then
-                echo "Using curl for Elasticsearch setup"
-
-                echo "Creating index template: temporal_visibility_v1_template"
-                curl -X PUT --fail --user "$ES_USER:$ES_PWD" \
-                  "$ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template" \
-                  -H "Content-Type: application/json" \
-                  --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json"
-
-                echo "Checking if index exists: $ES_VISIBILITY_INDEX"
-                if ! curl --head --fail --user "$ES_USER:$ES_PWD" \
-                  "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX" 2>&1 > /dev/null; then
-                  echo "Creating index: $ES_VISIBILITY_INDEX"
-                  curl -X PUT --fail --user "$ES_USER:$ES_PWD" \
-                    "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX"
-                else
-                  echo "Index already exists"
-                fi
-
-              elif [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
+              if [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
                 echo "Using temporal-elasticsearch-tool for Elasticsearch setup"
 
                 echo "Setting up cluster settings and index template"
@@ -156,8 +137,27 @@ spec:
                   --index "$ES_VISIBILITY_INDEX" \
                   --fail
 
+              elif command -v curl >/dev/null 2>&1; then
+                echo "Using curl for Elasticsearch setup"
+
+                echo "Creating index template: temporal_visibility_v1_template"
+                curl -X PUT --fail --user "$ES_USER:$ES_PWD" \
+                  "$ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template" \
+                  -H "Content-Type: application/json" \
+                  --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json"
+
+                echo "Checking if index exists: $ES_VISIBILITY_INDEX"
+                if ! curl --head --fail --user "$ES_USER:$ES_PWD" \
+                  "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX" 2>&1 > /dev/null; then
+                  echo "Creating index: $ES_VISIBILITY_INDEX"
+                  curl -X PUT --fail --user "$ES_USER:$ES_PWD" \
+                    "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX"
+                else
+                  echo "Index already exists"
+                fi
+
               else
-                echo "ERROR: Neither curl nor temporal-elasticsearch-tool found" >&2
+                echo "ERROR: Neither temporal-elasticsearch-tool nor curl found" >&2
                 exit 1
               fi
 

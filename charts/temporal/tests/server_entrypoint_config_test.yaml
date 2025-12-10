@@ -219,7 +219,7 @@ tests:
             name: entrypoint-script
             configMap:
               name: RELEASE-NAME-temporal-entrypoint-script
-              defaultMode: 493  # 0755 in decimal
+              defaultMode: 493 # 0755 in decimal
       - contains:
           path: spec.template.spec.containers[0].volumeMounts
           content:
@@ -348,10 +348,10 @@ tests:
     asserts:
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: 'Using dockerize config'
+          pattern: "Using dockerize config"
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: 'dockerize'
+          pattern: "dockerize"
 
   - it: entrypoint script uses sprig config when configMapsToMount is sprig
     template: templates/server-entrypoint-script.yaml
@@ -363,10 +363,125 @@ tests:
     asserts:
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: 'Using sprig config'
+          pattern: "Using sprig config"
       - matchRegex:
           path: data["entrypoint.sh"]
-          pattern: 'TEMPORAL_SERVER_CONFIG_FILE_PATH'
+          pattern: "TEMPORAL_SERVER_CONFIG_FILE_PATH"
+
+  # Test entrypoint script command-line arguments and paths
+  - it: entrypoint script uses correct temporal-server args for both/dockerize mode
+    template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "both"
+    asserts:
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'temporal-server --root / --config etc/temporal/config --env docker start --service="\$\{TEMPORAL_SERVICES\}"'
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'SOURCE_CONFIG="/etc/temporal/config-source/dockerize/config_template.yaml"'
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'TARGET_CONFIG="/etc/temporal/config/docker.yaml"'
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'dockerize -template "\$\{SOURCE_CONFIG\}:\$\{TARGET_CONFIG\}"'
+
+  - it: entrypoint script uses simple temporal-server start for sprig mode
+    template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "sprig"
+    asserts:
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: "exec temporal-server start$"
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'export TEMPORAL_SERVER_CONFIG_FILE_PATH="/etc/temporal/config-source/sprig/config_template.yaml"'
+
+  - it: entrypoint script uses correct args for dockerize-only mode
+    template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "dockerize"
+    asserts:
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'temporal-server --root / --config etc/temporal/config --env docker start --service="\$\{TEMPORAL_SERVICES\}"'
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'dockerize -template "\$\{SOURCE_CONFIG\}:\$\{TARGET_CONFIG\}"'
+
+  # Test error handling in entrypoint script
+  - it: entrypoint script checks for dockerize when configMapsToMount is dockerize
+    template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "dockerize"
+    asserts:
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: "if ! command -v dockerize"
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: "ERROR: dockerize config requires dockerize but it was not found"
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: "Either install an image with dockerize or use configMapsToMount: sprig"
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: "exit 1"
+
+  - it: entrypoint script does not check for dockerize when configMapsToMount is both
+    template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "both"
+    asserts:
+      - notMatchRegex:
+          path: data["entrypoint.sh"]
+          pattern: "ERROR: dockerize config requires dockerize"
+
+  - it: entrypoint script does not check for dockerize when configMapsToMount is sprig
+    template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "sprig"
+    asserts:
+      - notMatchRegex:
+          path: data["entrypoint.sh"]
+          pattern: "ERROR: dockerize config requires dockerize"
+
+  # Test entrypoint script uses TEMPORAL_SERVICES variable
+  - it: entrypoint script references TEMPORAL_SERVICES environment variable
+    template: templates/server-entrypoint-script.yaml
+    set:
+      server:
+        enabled: true
+        useEntrypointScript: true
+        configMapsToMount: "both"
+    asserts:
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: 'echo "Temporal entrypoint override - starting \$\{TEMPORAL_SERVICES\}"'
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: '--service="\$\{TEMPORAL_SERVICES\}"'
+
   # Test all services get the same configuration
   - it: applies entrypoint configuration to all server services
     template: templates/server-deployment.yaml
@@ -377,7 +492,7 @@ tests:
         configMapsToMount: "both"
     asserts:
       - hasDocuments:
-          count: 4  # frontend, history, matching, worker (internalFrontend is disabled by default)
+          count: 4 # frontend, history, matching, worker (internalFrontend is disabled by default)
       - equal:
           path: spec.template.spec.containers[0].command
           value: ["/entrypoint/entrypoint.sh"]
