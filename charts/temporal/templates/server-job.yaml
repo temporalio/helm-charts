@@ -77,12 +77,12 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
           env:
             {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
           volumeMounts:
-            - name: shims
-              mountPath: /usr/local/sbin/temporal-elasticsearch-tool
-              subPath: temporal-elasticsearch-tool
             {{- with $.Values.admintools.additionalVolumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
+            - name: shims
+              mountPath: /usr/local/sbin/temporal-elasticsearch-tool
+              subPath: temporal-elasticsearch-tool
             {{- with $.Values.schema.resources }}
           resources:
               {{- toYaml . | nindent 12 }}
@@ -157,11 +157,11 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
       {{- end }}
       {{- if or $.Values.admintools.additionalVolumes true }}
       volumes:
+        {{- with $.Values.admintools.additionalVolumes }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
         - name: shims
           configMap:
             name: "{{ include "temporal.fullname" $ }}-shims"
             defaultMode: 0555
-        {{- with $.Values.admintools.additionalVolumes }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
       {{- end }}
