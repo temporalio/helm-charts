@@ -87,4 +87,7 @@ spec:
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+    {{- with .Values.web.minReadySeconds }}
+      minReadySeconds: {{ . }}
+    {{- end }}
   {{- end }}
