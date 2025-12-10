@@ -37,7 +37,7 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
             {{- else if eq $store.driver "sql" }}
           command: ['temporal-sql-tool', 'create-database']
             {{- else -}}
-            {{- fail (printf "createDatabase is not supported for %s store" $store.driver) -}}
+              {{- fail (printf "createDatabase is not supported for %s store" $store.driver) -}}
             {{- end }}
           env:
             {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
@@ -69,7 +69,7 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
               {{- else if or (eq $store.config.pluginName "postgres12") (eq $store.config.pluginName "postgres12_pgx") }}
             - temporal-sql-tool setup-schema -v 0.0 && temporal-sql-tool update-schema --schema-dir /etc/temporal/schema/postgresql/v12/{{ $schema }}/versioned
               {{- else -}}
-                {{- fail (printf "manageSchema is not supported for %s plugin" $store.config.pluginName) -}}
+                {{- fail (printf "manageSchema is not supported for %s SQL database plugin" $store.config.pluginName) -}}
               {{- end }}
             {{- else if eq $store.driver "elasticsearch" }}
             - temporal-elasticsearch-tool setup-schema && temporal-elasticsearch-tool create-index && temporal-elasticsearch-tool update-schema --index "$ES_VISIBILITY_INDEX"

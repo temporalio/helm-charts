@@ -14,8 +14,6 @@ server:
             connectProtocol: "tcp"
             user: temporal
             password: temporal
-            createDatabase: true
-            manageSchema: true
         visibility:
           sql:
             pluginName: postgres12
@@ -24,5 +22,3 @@ server:
             connectProtocol: "tcp"
             user: temporal
             password: temporal
-            createDatabase: true
-            manageSchema: true

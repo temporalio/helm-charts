@@ -14,8 +14,6 @@ server:
             connectProtocol: "tcp"
             user: root
             password: temporal
-            createDatabase: true
-            manageSchema: true
         visibility:
           sql:
             pluginName: mysql8
@@ -24,5 +22,3 @@ server:
             connectProtocol: "tcp"
             user: root
             password: temporal
-            createDatabase: true
-            manageSchema: true

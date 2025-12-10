@@ -14,8 +14,6 @@ server:
             connectProtocol: "tcp"
             user: temporal
             password: temporal
-            createDatabase: true
-            manageSchema: true
         visibility:
           elasticsearch:
             version: v7
@@ -25,4 +23,3 @@ server:
             logLevel: error
             indices:
               visibility: temporal_visibility_v1
-            manageSchema: true
