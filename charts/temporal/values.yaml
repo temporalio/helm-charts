@@ -449,14 +449,7 @@ web:
   topologySpreadConstraints: []
   podDisruptionBudget: {}
 schema:
-  createDatabase:
-    enabled: true
-  setup:
-    enabled: true
-    backoffLimit: 100
-  update:
-    enabled: true
-    backoffLimit: 100
+  backoffLimit: 100
   podAnnotations: {}
   podLabels: {}
   resources: {}

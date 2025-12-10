@@ -11,6 +11,8 @@ server:
             hosts: "cassandra.default.svc.cluster.local"
             port: 9042
             keyspace: temporal
+            createDatabase: true
+            manageSchema: true
         visibility:
           elasticsearch:
             version: v7
@@ -19,3 +21,4 @@ server:
               host: "elasticsearch.default.svc.cluster.local:9200"
             indices:
               visibility: temporal_visibility_v1
+            manageSchema: true
