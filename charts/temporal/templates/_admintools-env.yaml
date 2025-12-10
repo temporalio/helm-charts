@@ -74,6 +74,8 @@
   value: {{ splitList ":" $url.host | first }}
 - name: ES_PORT
   value: {{ splitList ":" $url.host | last | quote }}
+- name: ES_SERVER
+  value: {{ urlJoin $url }}
 - name: ES_USER
   value: {{ $store.config.username | quote }}
 - name: ES_PWD

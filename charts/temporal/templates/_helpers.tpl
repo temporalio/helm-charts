@@ -155,7 +155,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
           {{- $_ := unset $storeConfig "password" -}}
         {{- end -}}
       {{- end -}}
-      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey") -}}
+      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey" "createDatabase" "manageSchema") -}}
     {{- end -}}
   {{- end -}}
   {{- $_ := set $patchedDatastores $name $dsCopy -}}
@@ -179,13 +179,31 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- $config := get $datastores $storeName -}}
 {{- if hasKey $config "sql" -}}
     {{- $_ := set $store "driver" "sql" -}}
-    {{- $_ := set $store "config" (get $config "sql") -}}
+    {{- $storeConfig := get $config "sql" -}}
+    {{- if not (hasKey $storeConfig "createDatabase") -}}
+        {{- $_ := set $storeConfig "createDatabase" true -}}
+    {{- end -}}
+    {{- if not (hasKey $storeConfig "manageSchema") -}}
+        {{- $_ := set $storeConfig "manageSchema" true -}}
+    {{- end -}}
+    {{- $_ := set $store "config" $storeConfig -}}
 {{- else if hasKey $config "cassandra" -}}
     {{- $_ := set $store "driver" "cassandra" -}}
-    {{- $_ := set $store "config" (get $config "cassandra") -}}
+    {{- $storeConfig := get $config "cassandra" -}}
+    {{- if not (hasKey $storeConfig "createDatabase") -}}
+        {{- $_ := set $storeConfig "createDatabase" true -}}
+    {{- end -}}
+    {{- if not (hasKey $storeConfig "manageSchema") -}}
+        {{- $_ := set $storeConfig "manageSchema" true -}}
+    {{- end -}}
+    {{- $_ := set $store "config" $storeConfig -}}
 {{- else if hasKey $config "elasticsearch" -}}
     {{- $_ := set $store "driver" "elasticsearch" -}}
-    {{- $_ := set $store "config" (get $config "elasticsearch") -}}
+    {{- $storeConfig := get $config "elasticsearch" -}}
+    {{- if not (hasKey $storeConfig "manageSchema") -}}
+        {{- $_ := set $storeConfig "manageSchema" true -}}
+    {{- end -}}
+    {{- $_ := set $store "config" $storeConfig -}}
 {{- else -}}
     {{- fail (printf "No valid driver configured for %s store" $store.name) -}}
 {{- end -}}

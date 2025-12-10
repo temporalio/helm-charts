@@ -26,7 +26,6 @@ tests:
   - it: includes additional init containers
     set:
       server:
-        enabled: false
         config:
           persistence:
             datastores:
@@ -50,7 +49,6 @@ tests:
   - it: includes additional volumes
     set:
       server:
-        enabled: false
         config:
           persistence:
             datastores:
@@ -74,7 +72,6 @@ tests:
   - it: includes additional volume mounts
     set:
       server:
-        enabled: false
         config:
           persistence:
             datastores:
@@ -98,7 +95,6 @@ tests:
   - it: includes resource limits and requests on initContainers
     set:
       server:
-        enabled: false
         config:
           persistence:
             datastores:
