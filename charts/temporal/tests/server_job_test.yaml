@@ -14,13 +14,11 @@ tests:
                   pluginName: mysql8
                   connectAddr: "temporal-persistence:3306"
                   databaseName: temporal
-                  createDatabase: true
               visibility:
                 sql:
                   pluginName: mysql8
                   connectAddr: "temporal-visibility:3306"
                   databaseName: temporal_visibility
-                  createDatabase: true
     asserts:
       - containsDocument:
           kind: Job
@@ -36,13 +34,11 @@ tests:
                   pluginName: mysql8
                   connectAddr: "temporal-persistence:3306"
                   databaseName: temporal
-                  createDatabase: true
               visibility:
                 sql:
                   pluginName: mysql8
                   connectAddr: "temporal-visibility:3306"
                   databaseName: temporal_visibility
-                  createDatabase: true
       admintools:
         additionalInitContainers:
           - name: my-init-container
@@ -61,13 +57,11 @@ tests:
                   pluginName: mysql8
                   connectAddr: "temporal-persistence:3306"
                   databaseName: temporal
-                  createDatabase: true
               visibility:
                 sql:
                   pluginName: mysql8
                   connectAddr: "temporal-visibility:3306"
                   databaseName: temporal_visibility
-                  createDatabase: true
       admintools:
         additionalVolumes:
           - name: my-volume
@@ -86,13 +80,11 @@ tests:
                   pluginName: mysql8
                   connectAddr: "temporal-persistence:3306"
                   databaseName: temporal
-                  createDatabase: true
               visibility:
                 sql:
                   pluginName: mysql8
                   connectAddr: "temporal-visibility:3306"
                   databaseName: temporal_visibility
-                  createDatabase: true
       admintools:
         additionalVolumeMounts:
           - name: my-volume
@@ -111,13 +103,11 @@ tests:
                   pluginName: mysql8
                   connectAddr: "temporal-persistence:3306"
                   databaseName: temporal
-                  createDatabase: true
               visibility:
                 sql:
                   pluginName: mysql8
                   connectAddr: "temporal-visibility:3306"
                   databaseName: temporal_visibility
-                  createDatabase: true
       schema:
         resources:
           requests:
