@@ -1,7 +1,8 @@
 suite: test server deployment
 templates:
   - server-deployment.yaml
-  - server-configmap.yaml
+  - server-sprig-configmap.yaml
+  - server-dockerize-configmap.yaml
 set:
   server:
     replicaCount: 2

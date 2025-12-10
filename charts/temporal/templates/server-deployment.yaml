@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/server-configmap.yaml") $ | sha256sum }}
+        checksum/config: {{ include (print $.Template.BasePath "/server-sprig-configmap.yaml") $ | sha256sum }}-{{ include (print $.Template.BasePath "/server-dockerize-configmap.yaml") $ | sha256sum }}
         {{- if (dig "metrics" "annotations" "enabled" $.Values.server.metrics.annotations.enabled $serviceValues) }}
         prometheus.io/job: {{ $.Chart.Name }}-{{ $service }}
         prometheus.io/scrape: 'true'
@@ -38,7 +38,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- end }}
-      {{- if or (or $.Values.server.additionalInitContainers $.Values.cassandra.enabled) (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external)}}
+      {{- if or $.Values.server.additionalInitContainers $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external) }}
       initContainers:
         {{- with $.Values.server.additionalInitContainers }}
           {{- toYaml . | nindent 8}}
@@ -65,7 +65,28 @@ spec:
         - name: check-elasticsearch-index
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['sh', '-c', 'until curl --silent --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1 > /dev/null; do echo waiting for elasticsearch index to become ready; sleep 1; done;']
+          command: ['/bin/sh', '-c']
+          args:
+            - |
+              set -e
+              echo "Waiting for Elasticsearch index to become ready..."
+
+              if [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
+                echo "Using temporal-elasticsearch-tool to check index: $ES_VISIBILITY_INDEX"
+                # Use ping to verify ES is accessible, assuming index was created by setup job
+                until temporal-elasticsearch-tool --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" --user "$ES_USER" --password "$ES_PWD" ping 2>&1 > /dev/null; do
+                  sleep 1
+                done
+              elif command -v curl >/dev/null 2>&1; then
+                echo "Using curl to check index: $ES_VISIBILITY_INDEX"
+                until curl --silent --fail --user "$ES_USER:$ES_PWD" "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX" 2>&1 > /dev/null; do
+                  sleep 1
+                done
+              else
+                echo "ERROR: Neither temporal-elasticsearch-tool nor curl found" >&2
+                exit 1
+              fi
+              echo "Elasticsearch index is ready"
           env:
             {{- include "temporal.admintools-env" (list $ "visibility") | nindent 12 }}
           {{- with $serviceValues.containerSecurityContext }}
@@ -78,12 +99,17 @@ spec:
         - name: {{ $.Chart.Name }}-{{ $service }}
           image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
           imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
+          {{- if $.Values.server.useEntrypointScript }}
+          command: ['/entrypoint/entrypoint.sh']
+          {{- end }}
           env:
             - name: POD_IP
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
             - name: SERVICES
+              value: {{ $service }}
+            - name: TEMPORAL_SERVICES
               value: {{ $service }}
             - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
               value: /etc/temporal/config/config_template.yaml
@@ -143,9 +169,33 @@ spec:
                port: rpc
           {{- end }}
           volumeMounts:
-            - name: config
+            {{- if $.Values.server.useEntrypointScript }}
+            {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "dockerize") }}
+            - name: config-dockerize
+              mountPath: /etc/temporal/config-source/dockerize
+              readOnly: true
+            {{- end }}
+            {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "sprig") }}
+            - name: config-sprig
+              mountPath: /etc/temporal/config-source/sprig
+              readOnly: true
+            {{- end }}
+            - name: entrypoint-script
+              mountPath: /entrypoint
+              readOnly: true
+            - name: config-processed
+              mountPath: /etc/temporal/config
+            {{- else }}
+            {{- if eq $.Values.server.configMapsToMount "dockerize" }}
+            - name: config-dockerize
               mountPath: /etc/temporal/config/config_template.yaml
               subPath: config_template.yaml
+            {{- else }}
+            - name: config-sprig
+              mountPath: /etc/temporal/config/config_template.yaml
+              subPath: config_template.yaml
+            {{- end }}
+            {{- end }}
             - name: dynamic-config
               mountPath: /etc/temporal/dynamic_config
             {{- if $.Values.server.additionalVolumeMounts }}
@@ -162,9 +212,24 @@ spec:
       {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        - name: config
+        {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "dockerize") }}
+        - name: config-dockerize
           configMap:
-            name: "{{ include "temporal.fullname" $ }}-config"
+            name: "{{ include "temporal.fullname" $ }}-dockerize-config"
+        {{- end }}
+        {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "sprig") }}
+        - name: config-sprig
+          configMap:
+            name: "{{ include "temporal.fullname" $ }}-sprig-config"
+        {{- end }}
+        {{- if $.Values.server.useEntrypointScript }}
+        - name: entrypoint-script
+          configMap:
+            name: "{{ include "temporal.fullname" $ }}-entrypoint-script"
+            defaultMode: 0755
+        - name: config-processed
+          emptyDir: {}
+        {{- end }}
         - name: dynamic-config
           configMap:
             name: "{{ include "temporal.fullname" $ }}-dynamic-config"

@@ -412,10 +412,12 @@ Source: https://stackoverflow.com/a/52024583/3027614
 All Cassandra hosts.
 */}}
 {{- define "cassandra.hosts" -}}
-{{- range $i := (until (int .Values.cassandra.config.cluster_size)) }}
+{{- $hosts := list -}}
+{{- range $i := (until (int .Values.cassandra.config.cluster_size)) -}}
 {{- $cassandraName := include "call-nested" (list $ "cassandra" "cassandra.fullname") -}}
-{{- printf "%s.%s," $cassandraName $.Release.Namespace -}}
-{{- end }}
+{{- $hosts = append $hosts (printf "%s.%s" $cassandraName $.Release.Namespace) -}}
+{{- end -}}
+{{- join "," $hosts -}}
 {{- end -}}
 
 {{/*

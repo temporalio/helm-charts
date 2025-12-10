@@ -1,0 +1,425 @@
+suite: test server entrypoint and configmap variants
+templates:
+  - server-deployment.yaml
+  - server-entrypoint-script.yaml
+  - server-dockerize-configmap.yaml
+  - server-sprig-configmap.yaml
+  - _helpers.tpl
+release:
+  name: test-release
+  namespace: default
+tests:
+  # Test 1: Default configuration (useEntrypointScript: false, configMapsToMount: dockerize)
+  - it: should use default configuration (no entrypoint script, dockerize only)
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: test-release-temporal-frontend
+    asserts:
+      # Should not have entrypoint override (uses image default)
+      - notExists:
+          path: spec.template.spec.containers[0].command
+      # Should mount only dockerize configmap
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-dockerize
+            configMap:
+              name: test-release-temporal-dockerize-config
+      # Should NOT mount sprig configmap
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-sprig
+      # Should NOT mount entrypoint-script volume
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: entrypoint-script
+
+  - it: should not render entrypoint script with default configuration
+    template: templates/server-entrypoint-script.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render dockerize configmap with default configuration
+    template: templates/server-dockerize-configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - exists:
+          path: data["config_template.yaml"]
+
+  - it: should not render sprig configmap with default configuration
+    template: templates/server-sprig-configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # Test 2: useEntrypointScript: true, configMapsToMount: both
+  - it: should mount both configmaps when useEntrypointScript true and configMapsToMount both
+    set:
+      server:
+        useEntrypointScript: true
+        configMapsToMount: "both"
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: test-release-temporal-frontend
+    asserts:
+      # Should have entrypoint override
+      - equal:
+          path: spec.template.spec.containers[0].command[0]
+          value: /entrypoint/entrypoint.sh
+      # Should mount dockerize configmap
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-dockerize
+            configMap:
+              name: test-release-temporal-dockerize-config
+      # Should mount sprig configmap
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-sprig
+            configMap:
+              name: test-release-temporal-sprig-config
+      # Should mount entrypoint script
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: entrypoint-script
+            configMap:
+              name: test-release-temporal-entrypoint-script
+              defaultMode: 493
+
+  - it: should render entrypoint script when useEntrypointScript true and configMapsToMount both
+    set:
+      server:
+        useEntrypointScript: true
+        configMapsToMount: "both"
+    template: templates/server-entrypoint-script.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - exists:
+          path: data["entrypoint.sh"]
+      - matchRegex:
+          path: data["entrypoint.sh"]
+          pattern: "if command -v dockerize"
+
+  - it: should render both configmaps when useEntrypointScript true and configMapsToMount both
+    set:
+      server:
+        useEntrypointScript: true
+        configMapsToMount: "both"
+    template: templates/server-dockerize-configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: should render sprig configmap when useEntrypointScript true and configMapsToMount both
+    set:
+      server:
+        useEntrypointScript: true
+        configMapsToMount: "both"
+    template: templates/server-sprig-configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+      - exists:
+          path: data["config_template.yaml"]
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "# enable-template"
+
+  # Test 3: useEntrypointScript: true, configMapsToMount: dockerize
+  - it: should mount only dockerize configmap when useEntrypointScript true and configMapsToMount dockerize
+    set:
+      server:
+        useEntrypointScript: true
+        configMapsToMount: "dockerize"
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: test-release-temporal-frontend
+    asserts:
+      # Should have entrypoint override
+      - equal:
+          path: spec.template.spec.containers[0].command[0]
+          value: /entrypoint/entrypoint.sh
+      # Should mount dockerize configmap
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-dockerize
+            configMap:
+              name: test-release-temporal-dockerize-config
+      # Should mount entrypoint script
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: entrypoint-script
+            configMap:
+              name: test-release-temporal-entrypoint-script
+              defaultMode: 493
+      # Should NOT mount sprig configmap
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-sprig
+
+  - it: should render entrypoint script when useEntrypointScript true and configMapsToMount dockerize
+    set:
+      server:
+        useEntrypointScript: true
+        configMapsToMount: "dockerize"
+    template: templates/server-entrypoint-script.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: should render dockerize configmap when useEntrypointScript true and configMapsToMount dockerize
+    set:
+      server:
+        useEntrypointScript: true
+        configMapsToMount: "dockerize"
+    template: templates/server-dockerize-configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: should not render sprig configmap when useEntrypointScript true and configMapsToMount dockerize
+    set:
+      server:
+        useEntrypointScript: true
+        configMapsToMount: "dockerize"
+    template: templates/server-sprig-configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # Test 4: useEntrypointScript: true, configMapsToMount: sprig
+  - it: should mount only sprig configmap when useEntrypointScript true and configMapsToMount sprig
+    set:
+      server:
+        useEntrypointScript: true
+        configMapsToMount: "sprig"
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: test-release-temporal-frontend
+    asserts:
+      # Should have entrypoint override
+      - equal:
+          path: spec.template.spec.containers[0].command[0]
+          value: /entrypoint/entrypoint.sh
+      # Should mount sprig configmap
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-sprig
+            configMap:
+              name: test-release-temporal-sprig-config
+      # Should mount entrypoint script
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: entrypoint-script
+            configMap:
+              name: test-release-temporal-entrypoint-script
+              defaultMode: 493
+      # Should NOT mount dockerize configmap
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-dockerize
+
+  - it: should render entrypoint script when useEntrypointScript true and configMapsToMount sprig
+    set:
+      server:
+        useEntrypointScript: true
+        configMapsToMount: "sprig"
+    template: templates/server-entrypoint-script.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: should not render dockerize configmap when useEntrypointScript true and configMapsToMount sprig
+    set:
+      server:
+        useEntrypointScript: true
+        configMapsToMount: "sprig"
+    template: templates/server-dockerize-configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render sprig configmap when useEntrypointScript true and configMapsToMount sprig
+    set:
+      server:
+        useEntrypointScript: true
+        configMapsToMount: "sprig"
+    template: templates/server-sprig-configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  # Test 5: useEntrypointScript: false, configMapsToMount: both (both requires entrypoint, so falls back to dockerize)
+  - it: should mount both configmaps when useEntrypointScript false and configMapsToMount both
+    set:
+      server:
+        useEntrypointScript: false
+        configMapsToMount: "both"
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: test-release-temporal-frontend
+    asserts:
+      # Should not have entrypoint override
+      - notExists:
+          path: spec.template.spec.containers[0].command
+      # Should mount both configmaps
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-dockerize
+            configMap:
+              name: test-release-temporal-dockerize-config
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-sprig
+            configMap:
+              name: test-release-temporal-sprig-config
+      # Should NOT mount entrypoint-script volume
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: entrypoint-script
+
+  - it: should not render entrypoint script when useEntrypointScript false regardless of configMapsToMount
+    set:
+      server:
+        useEntrypointScript: false
+        configMapsToMount: "both"
+    template: templates/server-entrypoint-script.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # Test 6: useEntrypointScript: false, configMapsToMount: dockerize (default behavior)
+  - it: should mount only dockerize when useEntrypointScript false and configMapsToMount dockerize
+    set:
+      server:
+        useEntrypointScript: false
+        configMapsToMount: "dockerize"
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: test-release-temporal-frontend
+    asserts:
+      # Should not have entrypoint override
+      - notExists:
+          path: spec.template.spec.containers[0].command
+      # Should mount dockerize configmap
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-dockerize
+            configMap:
+              name: test-release-temporal-dockerize-config
+      # Should NOT mount sprig configmap
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-sprig
+      # Should NOT mount entrypoint-script volume
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: entrypoint-script
+
+  - it: should render dockerize configmap when useEntrypointScript false and configMapsToMount dockerize
+    set:
+      server:
+        useEntrypointScript: false
+        configMapsToMount: "dockerize"
+    template: templates/server-dockerize-configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: should not render sprig configmap when useEntrypointScript false and configMapsToMount dockerize
+    set:
+      server:
+        useEntrypointScript: false
+        configMapsToMount: "dockerize"
+    template: templates/server-sprig-configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # Test 7: useEntrypointScript: false, configMapsToMount: sprig
+  - it: should mount only sprig when useEntrypointScript false and configMapsToMount sprig
+    set:
+      server:
+        useEntrypointScript: false
+        configMapsToMount: "sprig"
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: test-release-temporal-frontend
+    asserts:
+      # Should not have entrypoint override (uses image default)
+      - notExists:
+          path: spec.template.spec.containers[0].command
+      # Should mount sprig configmap
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-sprig
+            configMap:
+              name: test-release-temporal-sprig-config
+      # Should NOT mount dockerize configmap
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: config-dockerize
+      # Should NOT mount entrypoint-script volume
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: entrypoint-script
+
+  - it: should not render entrypoint script when useEntrypointScript false and configMapsToMount sprig
+    set:
+      server:
+        useEntrypointScript: false
+        configMapsToMount: "sprig"
+    template: templates/server-entrypoint-script.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not render dockerize configmap when useEntrypointScript false and configMapsToMount sprig
+    set:
+      server:
+        useEntrypointScript: false
+        configMapsToMount: "sprig"
+    template: templates/server-dockerize-configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render sprig configmap when useEntrypointScript false and configMapsToMount sprig
+    set:
+      server:
+        useEntrypointScript: false
+        configMapsToMount: "sprig"
+    template: templates/server-sprig-configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
