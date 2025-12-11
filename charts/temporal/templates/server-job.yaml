@@ -1,16 +1,17 @@
 {{- if or $.Values.schema.createDatabase.enabled $.Values.schema.setup.enabled $.Values.schema.update.enabled }}
+{{- $semVer := semver $.Chart.AppVersion }}
+{{- $jobName := include "temporal.componentname" (list $ (printf "schema-%d-%d-rev-%d" $semVer.Major $semVer.Minor .Release.Revision)) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
+  name: {{ $jobName }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
-  ttlSecondsAfterFinished: 86400
   template:
     metadata:
-      name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
+      name: {{ $jobName }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 8 }}
         {{- with $.Values.schema.podLabels }}
