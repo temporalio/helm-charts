@@ -598,4 +598,3 @@ Many thanks to [Banzai Cloud](https://github.com/banzaicloud) whose [Cadence Hel
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts?ref=badge_large)
-

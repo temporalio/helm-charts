@@ -3,11 +3,6 @@
 {{- $service := include "serviceName" (list $rawService) }}
 {{- $serviceValues := index $.Values.server $rawService }}
 {{- if or (not (hasKey $serviceValues "enabled")) $serviceValues.enabled }}
-{{- $serviceValues := index $.Values.server $service }}
-{{- $replicaCount := $.Values.server.replicaCount }}
-{{- if and (hasKey $serviceValues "replicaCount") (kindIs "float64" $serviceValues.replicaCount) }}
-  {{- $replicaCount = $serviceValues.replicaCount }}
-{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,15 +12,7 @@ metadata:
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "deployment") | nindent 4 }}
 spec:
-  {{- if not $serviceValues.keda }}
-  replicas: {{ $replicaCount }}
-  strategy:
-    type: {{ $.Values.server.deploymentStrategy.type }}
-    {{- if eq $.Values.server.deploymentStrategy.type "RollingUpdate" }}
-    rollingUpdate:
-      maxSurge: {{ default "25%" $.Values.server.deploymentStrategy.maxSurge  }}
-      maxUnavailable: {{ default "25%" $.Values.server.deploymentStrategy.maxUnavailable }}
-    {{- end }}
+  replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "temporal.name" $ }}
@@ -139,13 +126,6 @@ spec:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
                   key: {{ include "temporal.persistence.secretKey" (list $ "visibility") }}
-            {{- if $.Values.server.config.persistence.secondaryVisibilityStore }}
-            - name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "temporal.persistence.secretName" (list $ "secondaryVisibility") }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ "secondaryVisibility") }}
-            {{- end }}      
             {{- end }}
           {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
             - name: USE_INTERNAL_FRONTEND
@@ -184,10 +164,6 @@ spec:
               protocol: TCP
           {{- if ne $service "worker" }}
           livenessProbe:
-             initialDelaySeconds: 150
-             tcpSocket:
-               port: rpc
-          readinessProbe:
              initialDelaySeconds: 150
              tcpSocket:
                port: rpc

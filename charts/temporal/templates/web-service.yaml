@@ -9,13 +9,8 @@ metadata:
   annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.web.service.annotations "context" $) | nindent 4 }}
   {{- end }}
 spec:
-  {{- if eq .Values.web.service.type "LoadBalancer" }}
   {{- with .Values.web.service.loadBalancerIP }}
   loadBalancerIP: {{.}}
-  {{- end }}
-  {{- with .Values.web.service.loadBalancerClass }}
-  loadBalancerClass: {{ . }}
-  {{- end }}
   {{- end }}
   type: {{ .Values.web.service.type }}
   {{- with .Values.web.service.clusterIP }}

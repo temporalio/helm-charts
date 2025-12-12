@@ -1,20 +1,16 @@
 {{- if or $.Values.schema.createDatabase.enabled $.Values.schema.setup.enabled $.Values.schema.update.enabled }}
-{{- $jobData := toJson $.Values }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  {{/* We append values hash because job-specs are immutable */}}
-  name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}-{{ $jobData | sha256sum | trunc 8 }}
+  name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "-10"
 spec:
   backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
   ttlSecondsAfterFinished: 86400
   template:
     metadata:
-      name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}-{{ $jobData | sha256sum | trunc 8 }}
+      name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 8 }}
         {{- with $.Values.schema.podLabels }}
@@ -102,27 +98,6 @@ spec:
               {{- end }}
             {{- end }}
           {{- end }}
-          {{- if $.Values.server.config.persistence.secondaryVisibilityStore }}
-            {{- $store := "secondaryVisibility" }}
-            {{- $storeConfig := index $.Values.server.config.persistence $store }}
-            {{- $driver := include "temporal.persistence.driver" (list $ $store) }}
-            {{- if ne $driver "elasticsearch" }}
-        - name: create-{{ $store | lower }}-store
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
-          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-              {{- if eq $driver "cassandra" }}
-          command: ['temporal-cassandra-tool', 'create', '-k', '{{ $storeConfig.cassandra.keyspace }}', '--replication-factor', '{{ $storeConfig.cassandra.replicationFactor }}']
-              {{- else if eq $driver "sql" }}
-          command: ['temporal-sql-tool', 'create-database']
-              {{- end }}
-          env:
-              {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-              {{- with $.Values.server.additionalVolumeMounts }}
-          volumeMounts:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-            {{- end }}
-          {{- end }}
         {{- end }}
         {{- if $.Values.schema.setup.enabled }}
           {{- range $store := (list "default" "visibility") }}
@@ -203,38 +178,6 @@ spec:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
             {{- end }}
-            {{- if $.Values.server.config.persistence.secondaryVisibilityStore }}
-            {{- $store := "secondaryVisibility" }}
-            {{- $storeConfig := index $.Values.server.config.persistence $store }}
-            {{- $driver := include "temporal.persistence.driver" (list $ $store) }}
-        - name: setup-{{ $store | lower }}-store
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
-          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-            {{- if eq $driver "cassandra" }}
-          command: ['temporal-cassandra-tool', 'setup-schema', '-v', '0.0']
-            {{- else if eq $driver "sql" }}
-          command: ['temporal-sql-tool', 'setup-schema', '-v', '0.0']
-            {{- else if eq $driver "elasticsearch" }}
-          command: ['sh', '-c']
-          args:
-            - 'curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template -H "Content-Type: application/json" --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json" 2>&1 &&
-              curl -X PUT --fail --user "$ES_USER:$ES_PWD" $ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX 2>&1'
-            {{- end }}
-          env:
-            {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-            {{- with $.Values.server.additionalVolumeMounts }}
-          volumeMounts:
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with $.Values.schema.resources }}
-          resources:
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with $.Values.schema.containerSecurityContext }}
-          securityContext:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-            {{- end }}
           {{- end }}
         {{- end }}
         {{- if $.Values.schema.update.enabled }}
@@ -259,41 +202,6 @@ spec:
           env:
               {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
               {{- with $.Values.admintools.additionalVolumeMounts }}
-          volumeMounts:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.resources }}
-          resources:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.containerSecurityContext }}
-          securityContext:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-            {{- end }}
-          {{- end }}
-          {{- if $.Values.server.config.persistence.secondaryVisibilityStore }}
-            {{- $store := "secondaryVisibility" }}
-            {{- $storeConfig := index $.Values.server.config.persistence $store }}
-            {{- $driver := include "temporal.persistence.driver" (list $ $store) }}
-            {{- $schema := include "temporal.persistence.schema" $store }}
-            {{- if ne $driver "elasticsearch" }}
-        - name: update-{{ $store | lower }}-store
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
-          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-              {{- if eq $driver "cassandra" }}
-          command: ['temporal-cassandra-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/cassandra/{{ $schema }}/versioned']
-              {{- else if eq $driver "sql" }}
-                {{- $plugin := include "temporal.persistence.sql.driver" (list $ $store) }}
-                {{- if eq $plugin "mysql8" }}
-          command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v8/{{ $schema }}/versioned']
-                {{- else if or (eq $plugin "postgres12") (eq $plugin "postgres12_pgx") }}
-          command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v12/{{ $schema }}/versioned']
-                {{- end }}
-              {{- end }}
-          env:
-              {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-              {{- with $.Values.server.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
               {{- end }}
