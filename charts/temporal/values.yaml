@@ -34,6 +34,8 @@ server:
   configMapsToMount: "dockerize"
   # Global default settings (can be overridden per service)
   replicaCount: 1
+  deploymentStrategy:
+    type: RollingUpdate
   metrics:
     # Annotate pods directly with Prometheus annotations.
     # Use this if you installed Prometheus from a Helm chart.
@@ -215,10 +217,21 @@ server:
         - name: default
           retention: 3d
   frontend:
+    # -- enable Keda autoscaler
+    keda: false
+
+    # -- Keda metrics
+    kedaMetrics: {}
+
+    # -- hpa scaling behavior
+    hpaBehavior: {}
+
     service:
       # Evaluated as template
       annotations: {}
       type: ClusterIP
+      # loadBalancerIP:
+      # loadBalancerClass:
       port: 7233
       appProtocol: tcp
       membershipPort: 6933
@@ -260,6 +273,15 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   internalFrontend:
+    # -- enable Keda autoscaler
+    keda: false
+
+    # -- Keda metrics
+    kedaMetrics: {}
+
+    # -- hpa scaling behavior
+    hpaBehavior: {}
+
     # Enable this to create internal-frontend
     enabled: false
     service:
@@ -292,6 +314,14 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   history:
+    # -- enable Keda autoscaler
+    keda: false
+
+    # -- Keda metrics
+    kedaMetrics: {}
+
+    # -- hpa scaling behavior
+    hpaBehavior: {}
     service:
       # type: ClusterIP
       port: 7234
@@ -319,6 +349,15 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   matching:
+    # -- enable Keda autoscaler
+    keda: false
+
+    # -- Keda metrics
+    kedaMetrics: {}
+
+    # -- hpa scaling behavior
+    hpaBehavior: {}
+
     service:
       # type: ClusterIP
       port: 7235
@@ -345,6 +384,15 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   worker:
+    # -- enable Keda autoscaler
+    keda: false
+
+    # -- Keda metrics
+    kedaMetrics: {}
+
+    # -- hpa scaling behavior
+    hpaBehavior: {}
+
     service:
       # type: ClusterIP
       port: 7239
@@ -412,6 +460,8 @@ web:
     # The below clusterIP setting can be set to "None" to make the temporal-web service headless.
     # Note that this requires the web.service.type to be the default ClusterIP value.
     # clusterIP:
+    # loadBalancerIP:
+    # loadBalancerClass:
     port: 8080
     appProtocol: http
     annotations: {}
@@ -567,3 +617,23 @@ cassandra:
     type: ClusterIP
 mysql:
   enabled: false
+
+# -- enable Keda autoscaler
+keda: false
+
+# -- Keda metrics
+kedaMetrics: {}
+
+# -- hpa scaling behavior
+hpaBehavior: {}
+
+# -- cert-manager Root CA lifetime settings
+# rootCaCertLifetimeHours: 2160 # 90d
+# rootCaCertRenewBeforeHours: 720 # 30d
+#
+# -- root CA bundle settings
+# secretStore: secret-store
+# secretStoreSecret: secret-store-secret # specify only for AWS Secrets Manager Store; omit for Azure Key Vault
+
+# --- tctl access settings
+tctlSecretStoreSecret: eks/temporal-tctl-certificate  # for Azure Key Vault backend, value must be changed to remove the "eks" prefix: "tctlSecretStoreSecret: temporal-tctl-certificate"

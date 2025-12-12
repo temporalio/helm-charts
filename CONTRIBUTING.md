@@ -73,4 +73,3 @@ If you would like to discuss the Temporal Helm Charts or seek advice about a pot
 ## Code of Conduct
 
 By participating in this project you agree to abide by the [Temporal Code of Conduct](https://temporal.io/code-of-conduct).
-

@@ -29,7 +29,7 @@ jobs:
           go-version-file: 'charts/temporal/tests/go.mod'
 
       - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2.6.1
+        uses: fairmoney/chart-testing-action@v2.6.1
 
       - name: Add dependency repos
         run: |
