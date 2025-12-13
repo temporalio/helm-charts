@@ -150,7 +150,7 @@ server:
         driver: "cassandra"
         cassandra:
           hosts: []
-          # port: 9042
+          port: 9042
           keyspace: "temporal"
           user: "user"
           password: "password"
@@ -181,7 +181,7 @@ server:
         driver: "cassandra"
         cassandra:
           hosts: []
-          # port: 9042
+          port: 9042
           keyspace: "temporal_visibility"
           user: "user"
           password: "password"
@@ -552,8 +552,8 @@ cassandra:
   persistence:
     enabled: false
   image:
-    repo: cassandra
-    tag: 3.11.3
+    repo: bitnami/cassandra
+    tag: 5.0.3
     pullPolicy: IfNotPresent
   config:
     cluster_size: 3
