@@ -20,7 +20,7 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.29.0
+    tag: 1.29.1
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -145,66 +145,66 @@ server:
       # Helm-specific fields (existingSecret, secretKey) are stripped before rendering to server config.
       datastores:
         default:
-          # Example SQL configuration:
-          # sql:
-          #   pluginName: mysql8  # or postgres12, postgres12_pgx
-          #   driverName: mysql8
-          #   databaseName: temporal
-          #   connectAddr: "mysql.example.com:3306"  # preferred format
-          #   # OR use separate host/port:
-          #   # host: mysql.example.com
-          #   # port: 3306
-          #   # connectProtocol defaults to "tcp" if not specified
-          #   user: temporal_user
-          #   password: ""  # optional, use existingSecret instead
-          #   existingSecret: temporal-db-secret  # Helm-specific, stripped before rendering
-          #   secretKey: password  # Helm-specific, default: password
-          #   maxConns: 20
-          #   maxIdleConns: 20
-          #   maxConnLifetime: "1h"
-          #   connectAttributes:
-          #     tx_isolation: "READ-COMMITTED"
-          #   tls:
-          #     enabled: true
-          #     caFile: /path/to/ca.pem
-          # Example Cassandra configuration:
-          # cassandra:
-          #   hosts: "host1,host2"  # or ["host1", "host2"]
-          #   port: 9042
-          #   keyspace: temporal
-          #   user: cassandra_user
-          #   password: ""  # optional, use existingSecret instead
-          #   existingSecret: temporal-cassandra-secret
-          #   secretKey: password
-          #   replicationFactor: 3
-          #   consistency:
-          #     default:
-          #       consistency: "local_quorum"
-          #       serialConsistency: "local_serial"
+        # Example SQL configuration:
+        # sql:
+        #   pluginName: mysql8  # or postgres12, postgres12_pgx
+        #   driverName: mysql8
+        #   databaseName: temporal
+        #   connectAddr: "mysql.example.com:3306"  # preferred format
+        #   # OR use separate host/port:
+        #   # host: mysql.example.com
+        #   # port: 3306
+        #   # connectProtocol defaults to "tcp" if not specified
+        #   user: temporal_user
+        #   password: ""  # optional, use existingSecret instead
+        #   existingSecret: temporal-db-secret  # Helm-specific, stripped before rendering
+        #   secretKey: password  # Helm-specific, default: password
+        #   maxConns: 20
+        #   maxIdleConns: 20
+        #   maxConnLifetime: "1h"
+        #   connectAttributes:
+        #     tx_isolation: "READ-COMMITTED"
+        #   tls:
+        #     enabled: true
+        #     caFile: /path/to/ca.pem
+        # Example Cassandra configuration:
+        # cassandra:
+        #   hosts: "host1,host2"  # or ["host1", "host2"]
+        #   port: 9042
+        #   keyspace: temporal
+        #   user: cassandra_user
+        #   password: ""  # optional, use existingSecret instead
+        #   existingSecret: temporal-cassandra-secret
+        #   secretKey: password
+        #   replicationFactor: 3
+        #   consistency:
+        #     default:
+        #       consistency: "local_quorum"
+        #       serialConsistency: "local_serial"
         visibility:
-          # Example SQL configuration (same structure as default.sql):
-          # sql:
-          #   pluginName: mysql8
-          #   driverName: mysql8
-          #   databaseName: temporal_visibility
-          #   connectAddr: "mysql.example.com:3306"
-          #   # connectProtocol defaults to "tcp" if not specified
-          #   user: temporal_user
-          #   existingSecret: temporal-db-secret
-          #   secretKey: password
-          # Example Elasticsearch configuration:
-          # elasticsearch:
-          #   version: v7
-          #   url:
-          #     scheme: http
-          #     host: "elasticsearch:9200"
-          #   username: ""
-          #   password: ""
-          #   existingSecret: temporal-es-secret
-          #   secretKey: password
-          #   logLevel: error
-          #   indices:
-          #     visibility: temporal_visibility_v1
+        # Example SQL configuration (same structure as default.sql):
+        # sql:
+        #   pluginName: mysql8
+        #   driverName: mysql8
+        #   databaseName: temporal_visibility
+        #   connectAddr: "mysql.example.com:3306"
+        #   # connectProtocol defaults to "tcp" if not specified
+        #   user: temporal_user
+        #   existingSecret: temporal-db-secret
+        #   secretKey: password
+        # Example Elasticsearch configuration:
+        # elasticsearch:
+        #   version: v7
+        #   url:
+        #     scheme: http
+        #     host: "elasticsearch:9200"
+        #   username: ""
+        #   password: ""
+        #   existingSecret: temporal-es-secret
+        #   secretKey: password
+        #   logLevel: error
+        #   indices:
+        #     visibility: temporal_visibility_v1
         # Additional stores can be added here and will pass through directly
         # archive:
         #   sql:
