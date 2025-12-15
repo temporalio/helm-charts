@@ -127,6 +127,13 @@ spec:
                   name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
                   key: {{ include "temporal.persistence.secretKey" (list $ "visibility") }}
             {{- end }}
+            {{- if $.Values.server.config.persistence.secondaryVisibilityStore }}
+            - name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "temporal.persistence.secretName" (list $ "secondaryVisibility") }}
+                  key: {{ include "temporal.persistence.secretKey" (list $ "secondaryVisibility") }}
+            {{- end }}
           {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
             - name: USE_INTERNAL_FRONTEND
               value: "1"
