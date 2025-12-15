@@ -1,9 +1,7 @@
 {{- if or $.Values.schema.createDatabase.enabled $.Values.schema.setup.enabled $.Values.schema.update.enabled }}
-{{- $jobData := toJson $.Values }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  {{/* We append values hash because job-specs are immutable */}}
   name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
