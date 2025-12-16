@@ -95,7 +95,7 @@ data:
     {{- with $server.config.clusterMetadata }}
       {{- toYaml . | nindent 8 }}
     {{- else }}
-      enableGlobalDomain: false
+      enableGlobalNamespace: false
       failoverVersionIncrement: 10
       masterClusterName: "active"
       currentClusterName: "active"
