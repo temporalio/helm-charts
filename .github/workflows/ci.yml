@@ -74,9 +74,9 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Helm
-        uses: azure/setup-helm@v4.2.0
+        uses: azure/setup-helm@v4
         with:
-          version: v3.14.4
+          version: v3.19.2
 
       - uses: actions/setup-python@v5
         with:
@@ -90,7 +90,7 @@ jobs:
         run: ct lint --check-version-increment=false --target-branch v1
 
       - name: Install helm-unittest
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version v1.0.3
 
       - name: Run helm-unittest
         working-directory: charts/temporal
