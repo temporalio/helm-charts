@@ -1,6 +1,10 @@
 # Temporal Helm Chart
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts?ref=badge_shield)
 
+> **Note:** This version is currently an RC (release candidate). To install it, you must specify the version using `--version '1.0.0-0'` in your helm install command.
+
+> **For existing users:** If you're upgrading from a previous version of the Temporal Helm chart, please see [UPGRADING.md](UPGRADING.md) for important migration information and breaking changes.
+
 Temporal is a distributed, scalable, durable, and highly available orchestration engine designed to execute asynchronous long-running business logic in a resilient way.
 
 This repo contains a V3 [Helm](https://helm.sh) chart that deploys Temporal to a Kubernetes cluster. This Helm chart installs only the Temporal server components. You must provide persistence (databases) for Temporal to use - the chart does not install any database sub-charts.
