@@ -120,6 +120,51 @@ For an example, review the values for Google's `cloud sql proxy` in the `values/
 helm install --repo https://go.temporal.io/helm-charts -f values/values.cloudsqlproxy.yaml temporaltest temporal --timeout 900s
 ```
 
+### Install with extraObjects for external secret management
+
+You can inject additional Kubernetes manifests using the `extraObjects` configuration. This is particularly useful for GitOps scenarios where you want to manage secrets externally using tools like ExternalSecretOperator or SealedSecrets.
+
+The `extraObjects` field accepts an array of Kubernetes resource definitions that will be rendered alongside the Temporal chart.
+
+#### Example with ExternalSecretOperator
+
+```yaml
+extraObjects:
+  - apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: temporal-db-secret
+    spec:
+      secretStoreRef:
+        name: aws-secretsmanager
+        kind: SecretStore
+      target:
+        name: temporal-db-secret
+        creationPolicy: Owner
+      data:
+      - secretKey: password
+        remoteRef:
+          key: prod/temporal/db
+          property: password
+```
+
+
+#### Example with SealedSecrets
+
+```yaml
+extraObjects:
+  - apiVersion: bitnami.com/v1alpha1
+    kind: SealedSecret
+    metadata:
+      name: temporal-db-secret
+    spec:
+      encryptedData:
+        password: <encrypted-password>
+      template:
+        metadata:
+          name: temporal-db-secret
+```
+
 ### Install with your own Elasticsearch
 
 You might already be operating an instance of Elasticsearch that you want to use with Temporal.
