@@ -52,7 +52,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            - name: SERVICES
+            - name: TEMPORAL_SERVICES
               value: {{ $service }}
             - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
               value: /etc/temporal/config/config_template.yaml

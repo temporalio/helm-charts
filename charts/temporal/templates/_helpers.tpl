@@ -269,4 +269,3 @@ To modify camelCase to hyphenated internal-frontend service name
         {{- print $service }}
     {{- end }}
 {{- end -}}
-
