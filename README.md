@@ -330,57 +330,60 @@ $ kubectl exec -it services/temporal-admintools /bin/bash
 bash-5.0#
 ```
 
-From there, you can use `tctl` or the [`temporal` CLI](https://docs.temporal.io/cli):
+From there, you can use [`temporal` CLI](https://docs.temporal.io/cli):
 
 ```
-bash-5.0# tctl namespace list
-Name: temporal-system
-Id: 32049b68-7872-4094-8e63-d0dd59896a83
-Description: Temporal internal system namespace
-OwnerEmail: temporal-core@temporal.io
-NamespaceData: map[string]string(nil)
-Status: Registered
-RetentionInDays: 7
-EmitMetrics: true
-ActiveClusterName: active
-Clusters: active
-HistoryArchivalStatus: Disabled
-VisibilityArchivalStatus: Disabled
-Bad binaries to reset:
-+-----------------+----------+------------+--------+
-| BINARY CHECKSUM | OPERATOR | START TIME | REASON |
-+-----------------+----------+------------+--------+
-+-----------------+----------+------------+--------+
+bash-5.0# temporal operator namespace list
+  NamespaceInfo.Name                    temporal-system
+  NamespaceInfo.Id                      32049b68-7872-4094-8e63-d0dd59896a83
+  NamespaceInfo.Description             Temporal internal system namespace
+  NamespaceInfo.OwnerEmail              temporal-core@temporal.io
+  NamespaceInfo.State                   Registered
+  NamespaceInfo.Data                    map[]
+  Config.WorkflowExecutionRetentionTtl  168h0m0s
+  ReplicationConfig.ActiveClusterName   active
+  ReplicationConfig.Clusters            [{"clusterName":"active"}]
+  ReplicationConfig.State               Unspecified
+  Config.HistoryArchivalState           Disabled
+  Config.VisibilityArchivalState        Disabled
+  IsGlobalNamespace                     false
+  FailoverVersion                       0
+  FailoverHistory                       []
+  Config.HistoryArchivalUri
+  Config.VisibilityArchivalUri
+  Config.CustomSearchAttributeAliases   map[]
 ```
 
 ```
-bash-5.0# tctl --namespace nonesuch namespace desc
-Error: Namespace nonesuch does not exist.
-Error Details: Namespace nonesuch does not exist.
+bash-5.0# temporal operator namespace -n nonesuch describe
+time=2025-12-03T13:49:04.285 level=ERROR msg="unable to describe namespace nonesuch: Namespace nonesuch is not found."
 ```
+
 ```
-bash-5.0# tctl --namespace nonesuch namespace re
+bash-5.0# temporal operator namespace create -n nonesuch
 Namespace nonesuch successfully registered.
 ```
+
 ```
-bash-5.0# tctl --namespace nonesuch namespace desc
-Name: nonesuch
-UUID: 465bb575-8c01-43f8-a67d-d676e1ae5eae
-Description:
-OwnerEmail:
-NamespaceData: map[string]string(nil)
-Status: Registered
-RetentionInDays: 3
-EmitMetrics: false
-ActiveClusterName: active
-Clusters: active
-HistoryArchivalStatus: ArchivalStatusDisabled
-VisibilityArchivalStatus: ArchivalStatusDisabled
-Bad binaries to reset:
-+-----------------+----------+------------+--------+
-| BINARY CHECKSUM | OPERATOR | START TIME | REASON |
-+-----------------+----------+------------+--------+
-+-----------------+----------+------------+--------+
+bash-5.0# temporal operator namespace -n nonesuch describe
+  NamespaceInfo.Name                    nonesuch
+  NamespaceInfo.Id                      ab41501e-ee33-40d8-8b67-bf247e0bc0d2
+  NamespaceInfo.Description
+  NamespaceInfo.OwnerEmail
+  NamespaceInfo.State                   Registered
+  NamespaceInfo.Data                    map[]
+  Config.WorkflowExecutionRetentionTtl  72h0m0s
+  ReplicationConfig.ActiveClusterName   active
+  ReplicationConfig.Clusters            [{"clusterName":"active"}]
+  ReplicationConfig.State               Normal
+  Config.HistoryArchivalState           Disabled
+  Config.VisibilityArchivalState        Disabled
+  IsGlobalNamespace                     false
+  FailoverVersion                       0
+  FailoverHistory                       []
+  Config.HistoryArchivalUri
+  Config.VisibilityArchivalUri
+  Config.CustomSearchAttributeAliases   map[]
 ```
 
 ### Forwarding Your Machine's Local Port to Temporal Frontend
