@@ -1,57 +1,54 @@
+# This is an example of using an external Cassandra database for Temporal persistence.
+# Replace connection details with your Cassandra cluster information.
+
 server:
   config:
     logLevel: "debug,info"
-
-    numHistoryShards: 512
-
     persistence:
-      default:
-        driver: "cassandra"
+      defaultStore: default
+      visibilityStore: visibility
+      numHistoryShards: 512
+      datastores:
+        default:
+          cassandra:
+            hosts: "cassandra.default.svc.cluster.local"  # or ["host1", "host2"]
+            port: 9042
+            keyspace: temporal
+            user: "user"
+            password: "password"
+            # for a production deployment use this instead of `password` and provision the secret beforehand
+            # existingSecret: temporal-cassandra-secret
+            # secretKey: password
+            replicationFactor: 3
+            consistency:
+              default:
+                consistency: "local_quorum"
+                serialConsistency: "local_serial"
+          # faultInjection:
+          #   targets:
+          #     dataStores:
+          #       ExecutionStore:
+          #         methods:
+          #           GetCurrentExecution:
+          #             errors:
+          #               ResourceExhausted: 0.1
+          #           AppendHistoryNodes:
+          #             errors:
+          #               ResourceExhausted: 0.05
+          #           UpdateWorkflowExecution:
+          #             errors:
+          #               ResourceExhausted: 0.15
+          #           GetWorkflowExecution:
+          #             errors:
+          #               ResourceExhausted: 0.15
+        visibility:
+          # For visibility with Cassandra, use SQL or Elasticsearch
+          sql:
+            pluginName: mysql8
+            driverName: mysql8
+            databaseName: temporal_visibility
+            connectAddr: "mysql.example.com:3306"
+            # connectProtocol defaults to "tcp" if not specified
+            user: temporal
+            password: password
 
-#        faultInjection:
-#          targets:
-#            dataStores:
-#              ExecutionStore:
-#                methods:
-#                  GetCurrentExecution:
-#                    errors:
-#                      ResourceExhausted: 0.1
-#                  AppendHistoryNodes:
-#                    errors:
-#                      ResourceExhausted: 0.05
-#                  UpdateWorkflowExecution:
-#                    errors:
-#                      ResourceExhausted: 0.15
-#                  GetWorkflowExecution:
-#                    errors:
-#                      ResourceExhausted: 0.15
-
-        cassandra:
-          hosts: ["cassandra.default.svc.cluster.local"]
-          port: 9042
-          keyspace: temporal
-          user: "user"
-          password: "password"
-          existingSecret: ""
-          replicationFactor: 1
-          consistency:
-            default:
-              consistency: "local_quorum"
-              serialConsistency: "local_serial"
-
-cassandra:
-  enabled: false
-
-mysql:
-  enabled: false
-
-postgresql:
-  enabled: false
-
-schema:
-  createDatabase:
-    enabled: true
-  setup:
-    enabled: false
-  update:
-    enabled: false

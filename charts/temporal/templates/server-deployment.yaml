@@ -1,4 +1,6 @@
 {{- if $.Values.server.enabled }}
+{{- $defaultStore := include "temporal.persistence.getStoreByType" (list $ "default") | fromYaml -}}
+{{- $visibilityStore := include "temporal.persistence.getStoreByType" (list $ "visibility") | fromYaml -}}
 {{- range $rawService := (list "frontend" "internalFrontend" "history" "matching" "worker") }}
 {{- $service := include "serviceName" (list $rawService) }}
 {{- $serviceValues := index $.Values.server $rawService }}
@@ -21,10 +23,11 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/server-sprig-configmap.yaml") $ | sha256sum }}-{{ include (print $.Template.BasePath "/server-dockerize-configmap.yaml") $ | sha256sum }}
+        checksum/config: {{ include (print $.Template.BasePath "/server-configmap.yaml") $ | sha256sum }}
         {{- if (dig "metrics" "annotations" "enabled" $.Values.server.metrics.annotations.enabled $serviceValues) }}
         prometheus.io/job: {{ $.Chart.Name }}-{{ $service }}
         prometheus.io/scrape: 'true'
+        prometheus.io/scheme: http
         prometheus.io/port: '9090'
         {{- end }}
         {{- include "temporal.resourceAnnotations" (list $ $service "pod") | nindent 8 }}
@@ -32,101 +35,31 @@ spec:
         {{- include "temporal.resourceLabels" (list $ $service "pod") | nindent 8 }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
-      {{- if semverCompare ">=1.13.0" $.Chart.AppVersion}}
       {{- with $.Values.server.securityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- end }}
-      {{- if or $.Values.server.additionalInitContainers $.Values.cassandra.enabled (or $.Values.elasticsearch.enabled $.Values.elasticsearch.external) }}
+      {{- if $.Values.server.additionalInitContainers }}
       initContainers:
-        {{- with $.Values.server.additionalInitContainers }}
-          {{- toYaml . | nindent 8}}
-        {{- end }}
-        {{- if $.Values.cassandra.enabled }}
-        - name: check-cassandra
-          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
-          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
-          {{- with $serviceValues.containerSecurityContext }}
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-        - name: check-cassandra-temporal-schema
-          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
-          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SELECT keyspace_name FROM system_schema.keyspaces" | grep {{ $.Values.server.config.persistence.default.cassandra.keyspace }}$; do echo waiting for default keyspace to become ready; sleep 1; done;']
-          {{- with $serviceValues.containerSecurityContext }}
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-        {{- end }}
-        {{- if or $.Values.elasticsearch.enabled $.Values.elasticsearch.external }}
-        - name: check-elasticsearch-index
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
-          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['/bin/sh', '-c']
-          args:
-            - |
-              set -e
-              echo "Waiting for Elasticsearch index to become ready..."
-
-              if [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
-                echo "Using temporal-elasticsearch-tool to check index: $ES_VISIBILITY_INDEX"
-                # Use ping to verify ES is accessible, assuming index was created by setup job
-                until temporal-elasticsearch-tool --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" --user "$ES_USER" --password "$ES_PWD" ping 2>&1 > /dev/null; do
-                  sleep 1
-                done
-              elif command -v curl >/dev/null 2>&1; then
-                echo "Using curl to check index: $ES_VISIBILITY_INDEX"
-                until curl --silent --fail --user "$ES_USER:$ES_PWD" "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX" 2>&1 > /dev/null; do
-                  sleep 1
-                done
-              else
-                echo "ERROR: Neither temporal-elasticsearch-tool nor curl found" >&2
-                exit 1
-              fi
-              echo "Elasticsearch index is ready"
-          env:
-            {{- include "temporal.admintools-env" (list $ "visibility") | nindent 12 }}
-          {{- with $serviceValues.containerSecurityContext }}
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-        {{- end }}
+        {{- toYaml $.Values.server.additionalInitContainers | nindent 8 }}
       {{- end }}
       containers:
         - name: {{ $.Chart.Name }}-{{ $service }}
           image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
           imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
-          {{- if $.Values.server.useEntrypointScript }}
-          command: ['/entrypoint/entrypoint.sh']
-          {{- end }}
           env:
             - name: POD_IP
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            - name: SERVICES
-              value: {{ $service }}
             - name: TEMPORAL_SERVICES
               value: {{ $service }}
             - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
               value: /etc/temporal/config/config_template.yaml
-            {{- if ne (include "temporal.persistence.driver" (list $ "default")) "custom" }}
-            - name: TEMPORAL_STORE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "temporal.persistence.secretName" (list $ "default") }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ "default") }}
-            {{- end }}
-            {{- if ne (include "temporal.persistence.driver" (list $ "visibility")) "custom" }}
+            - name: TEMPORAL_DEFAULT_STORE_PASSWORD
+              {{- include "temporal.password-env" (list $ $defaultStore) | nindent 14 }}
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
-                  key: {{ include "temporal.persistence.secretKey" (list $ "visibility") }}
-            {{- end }}
+              {{- include "temporal.password-env" (list $ $visibilityStore) | nindent 14 }}
           {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
             - name: USE_INTERNAL_FRONTEND
               value: "1"
@@ -169,35 +102,14 @@ spec:
                port: rpc
           {{- end }}
           volumeMounts:
-            {{- if $.Values.server.useEntrypointScript }}
-            {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "dockerize") }}
-            - name: config-dockerize
-              mountPath: /etc/temporal/config-source/dockerize
-              readOnly: true
-            {{- end }}
-            {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "sprig") }}
-            - name: config-sprig
-              mountPath: /etc/temporal/config-source/sprig
-              readOnly: true
-            {{- end }}
-            - name: entrypoint-script
-              mountPath: /entrypoint
-              readOnly: true
-            - name: config-processed
-              mountPath: /etc/temporal/config
-            {{- else }}
-            {{- if eq $.Values.server.configMapsToMount "dockerize" }}
-            - name: config-dockerize
+            - name: config
               mountPath: /etc/temporal/config/config_template.yaml
               subPath: config_template.yaml
-            {{- else }}
-            - name: config-sprig
-              mountPath: /etc/temporal/config/config_template.yaml
-              subPath: config_template.yaml
-            {{- end }}
-            {{- end }}
             - name: dynamic-config
               mountPath: /etc/temporal/dynamic_config
+            - name: shims
+              mountPath: /usr/local/bin/dockerize
+              subPath: dockerize
             {{- if $.Values.server.additionalVolumeMounts }}
             {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12}}
             {{- end }}
@@ -212,24 +124,13 @@ spec:
       {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "dockerize") }}
-        - name: config-dockerize
+        - name: shims
           configMap:
-            name: "{{ include "temporal.fullname" $ }}-dockerize-config"
-        {{- end }}
-        {{- if or (eq $.Values.server.configMapsToMount "both") (eq $.Values.server.configMapsToMount "sprig") }}
-        - name: config-sprig
+            name: "{{ include "temporal.fullname" $ }}-shims"
+            defaultMode: 0555
+        - name: config
           configMap:
-            name: "{{ include "temporal.fullname" $ }}-sprig-config"
-        {{- end }}
-        {{- if $.Values.server.useEntrypointScript }}
-        - name: entrypoint-script
-          configMap:
-            name: "{{ include "temporal.fullname" $ }}-entrypoint-script"
-            defaultMode: 0755
-        - name: config-processed
-          emptyDir: {}
-        {{- end }}
+            name: "{{ include "temporal.fullname" $ }}-config"
         - name: dynamic-config
           configMap:
             name: "{{ include "temporal.fullname" $ }}-dynamic-config"

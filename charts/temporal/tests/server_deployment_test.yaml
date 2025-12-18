@@ -1,10 +1,21 @@
 suite: test server deployment
 templates:
   - server-deployment.yaml
-  - server-sprig-configmap.yaml
-  - server-dockerize-configmap.yaml
+  - server-configmap.yaml
 set:
   server:
+    enabled: true
+    config:
+      persistence:
+        defaultStore: default
+        visibilityStore: visibility
+        datastores:
+          default:
+            sql:
+              password: "secret"
+          visibility:
+            sql:
+              password: "secret"
     replicaCount: 2
     resources:
       requests:
