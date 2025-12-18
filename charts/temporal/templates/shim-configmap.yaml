@@ -1,0 +1,314 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ include "temporal.fullname" $ }}-shims"
+  labels:
+    {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
+data:
+  dockerize: |-
+    #!/bin/sh
+    set -e
+
+    # Parse command line arguments
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -template)
+                shift
+                TEMPLATE="$1"
+                shift
+                ;;
+            *)
+                # Ignore other arguments for compatibility
+                shift
+                ;;
+        esac
+    done
+
+    # Process template if specified
+    if [ -n "$TEMPLATE" ]; then
+        # Split on colon to get source:destination
+        SRC="${TEMPLATE%%:*}"
+        DST="${TEMPLATE#*:}"
+
+        # Create destination directory if it doesn't exist
+        mkdir -p "$(dirname "$DST")"
+
+        # Copy the file
+        cp "$SRC" "$DST"
+
+        echo "Skipped dockerize, copied $SRC to $DST"
+    fi
+  temporal-elasticsearch-tool: |-
+    #!/bin/sh
+    set -e
+
+    if [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
+        exec /usr/local/bin/temporal-elasticsearch-tool "$@"
+    fi
+
+    # Build base URL from environment variables
+    ES_URL="${ES_SCHEME}://${ES_HOST}:${ES_PORT}"
+
+    # Build curl auth string if credentials are provided
+    CURL_AUTH=""
+    if [ -n "$ES_USER" ] && [ -n "$ES_PWD" ]; then
+        CURL_AUTH="--user ${ES_USER}:${ES_PWD}"
+    fi
+
+    # Helper function to make curl requests
+    curl_request() {
+        local method="$1"
+        local path="$2"
+        local data_file="$3"
+        local fail_silently="$4"
+
+        local curl_cmd="curl -X ${method} --silent --show-error ${CURL_AUTH} ${ES_URL}${path}"
+
+        if [ -n "$data_file" ]; then
+            curl_cmd="${curl_cmd} -H 'Content-Type: application/json' --data-binary @${data_file}"
+        fi
+
+        if [ "$fail_silently" != "true" ]; then
+            curl_cmd="${curl_cmd} --fail"
+        fi
+
+        curl_cmd="${curl_cmd} 2>&1"
+
+        eval "$curl_cmd"
+    }
+
+    # Parse command
+    COMMAND="${1:-}"
+    shift || true
+
+    case "$COMMAND" in
+        setup-schema)
+            # Setup cluster settings and index template
+            if [ -z "$ES_VERSION" ]; then
+                echo "Error: ES_VERSION environment variable is required" >&2
+                exit 1
+            fi
+
+            CLUSTER_SETTINGS_FILE="schema/elasticsearch/visibility/cluster_settings_v7.json"
+            TEMPLATE_FILE="schema/elasticsearch/visibility/index_template_${ES_VERSION}.json"
+
+            if [ ! -f "$TEMPLATE_FILE" ]; then
+                echo "Error: Template file not found: $TEMPLATE_FILE" >&2
+                exit 1
+            fi
+
+            FAIL_SILENTLY="false"
+            while [ $# -gt 0 ]; do
+                case "$1" in
+                    --fail)
+                        FAIL_SILENTLY="true"
+                        shift
+                        ;;
+                    *)
+                        shift
+                        ;;
+                esac
+            done
+
+            # Setup cluster settings if file exists
+            if [ -f "$CLUSTER_SETTINGS_FILE" ]; then
+                echo "Setting up cluster settings..."
+                curl_request "PUT" "/_cluster/settings" "$CLUSTER_SETTINGS_FILE" "$FAIL_SILENTLY" >/dev/null
+                echo "Cluster settings setup complete"
+            else
+                echo "Warning: Cluster settings file not found: $CLUSTER_SETTINGS_FILE, skipping cluster settings"
+            fi
+
+            echo "Setting up index template..."
+            curl_request "PUT" "/_template/temporal_visibility_v1_template" "$TEMPLATE_FILE" "$FAIL_SILENTLY" >/dev/null
+            echo "Template setup complete"
+            ;;
+
+        update-schema)
+            # Update index template and optionally index mappings
+            if [ -z "$ES_VERSION" ]; then
+                echo "Error: ES_VERSION environment variable is required" >&2
+                exit 1
+            fi
+
+            TEMPLATE_FILE="schema/elasticsearch/visibility/index_template_${ES_VERSION}.json"
+            if [ ! -f "$TEMPLATE_FILE" ]; then
+                echo "Error: Template file not found: $TEMPLATE_FILE" >&2
+                exit 1
+            fi
+
+            INDEX_NAME=""
+            FAIL_SILENTLY="false"
+            while [ $# -gt 0 ]; do
+                case "$1" in
+                    --index)
+                        shift
+                        INDEX_NAME="$1"
+                        shift
+                        ;;
+                    --fail)
+                        FAIL_SILENTLY="true"
+                        shift
+                        ;;
+                    *)
+                        shift
+                        ;;
+                esac
+            done
+
+            echo "Updating index template..."
+            curl_request "PUT" "/_template/temporal_visibility_v1_template" "$TEMPLATE_FILE" "$FAIL_SILENTLY" >/dev/null
+
+            if [ -n "$INDEX_NAME" ]; then
+                echo "Updating index mappings for $INDEX_NAME..."
+
+                # Check if index exists
+                HTTP_CODE=$(curl --head --silent --write-out "%{http_code}" --output /dev/null ${CURL_AUTH} ${ES_URL}/${INDEX_NAME} 2>/dev/null)
+                if [ "$HTTP_CODE" != "200" ]; then
+                    echo "Error: Index $INDEX_NAME does not exist" >&2
+                    exit 1
+                fi
+
+                # Extract mappings from template using jq
+                MAPPINGS=$(jq -c '.mappings' "$TEMPLATE_FILE")
+                if [ -z "$MAPPINGS" ] || [ "$MAPPINGS" = "null" ]; then
+                    echo "Error: No mappings found in template file" >&2
+                    exit 1
+                fi
+
+                # Create temporary file with mappings
+                MAPPINGS_FILE=$(mktemp)
+                echo "$MAPPINGS" > "$MAPPINGS_FILE"
+
+                # Update index mappings
+                curl_request "PUT" "/${INDEX_NAME}/_mapping" "$MAPPINGS_FILE" "$FAIL_SILENTLY" >/dev/null
+
+                # Clean up temporary file
+                rm -f "$MAPPINGS_FILE"
+
+                echo "Index mappings updated successfully"
+            fi
+            echo "Schema update complete"
+            ;;
+
+        create-index)
+            # Create visibility index
+            INDEX_NAME=""
+            FAIL_SILENTLY="false"
+            while [ $# -gt 0 ]; do
+                case "$1" in
+                    --index)
+                        shift
+                        INDEX_NAME="$1"
+                        shift
+                        ;;
+                    --fail)
+                        FAIL_SILENTLY="true"
+                        shift
+                        ;;
+                    *)
+                        shift
+                        ;;
+                esac
+            done
+
+            # Use ES_VISIBILITY_INDEX env var if --index not provided
+            if [ -z "$INDEX_NAME" ]; then
+                INDEX_NAME="$ES_VISIBILITY_INDEX"
+            fi
+
+            if [ -z "$INDEX_NAME" ]; then
+                echo "Error: Index name required (use --index or ES_VISIBILITY_INDEX env var)" >&2
+                exit 1
+            fi
+
+            # Check if index already exists
+            HTTP_CODE=$(curl --head --silent --write-out "%{http_code}" --output /dev/null ${CURL_AUTH} ${ES_URL}/${INDEX_NAME} 2>/dev/null)
+            if [ "$HTTP_CODE" = "200" ]; then
+                echo "Index $INDEX_NAME already exists, skipping creation"
+                exit 0
+            fi
+
+            echo "Creating index $INDEX_NAME..."
+            # Create the index, handling the case where it already exists
+            # (as a fallback if the HEAD check above didn't catch it)
+            CREATE_OUTPUT=$(curl -X PUT --silent --show-error --write-out "\n%{http_code}" ${CURL_AUTH} ${ES_URL}/${INDEX_NAME} -H "Content-Type: application/json" 2>&1)
+            HTTP_CODE=$(echo "$CREATE_OUTPUT" | tail -n1)
+            CREATE_BODY=$(echo "$CREATE_OUTPUT" | head -n-1)
+
+            if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+                echo "Index created successfully"
+            elif [ "$HTTP_CODE" = "400" ] && echo "$CREATE_BODY" | jq -e '.error.type == "resource_already_exists_exception"' >/dev/null 2>&1; then
+                echo "Index $INDEX_NAME already exists, skipping creation"
+                exit 0
+            else
+                if [ "$FAIL_SILENTLY" != "true" ]; then
+                    echo "Error: Failed to create index (HTTP $HTTP_CODE): $CREATE_BODY" >&2
+                    exit 1
+                fi
+            fi
+            ;;
+
+        drop-index)
+            # Delete visibility index
+            INDEX_NAME=""
+            FAIL_SILENTLY="false"
+            while [ $# -gt 0 ]; do
+                case "$1" in
+                    --index)
+                        shift
+                        INDEX_NAME="$1"
+                        shift
+                        ;;
+                    --fail)
+                        FAIL_SILENTLY="true"
+                        shift
+                        ;;
+                    *)
+                        shift
+                        ;;
+                esac
+            done
+
+            # Use ES_VISIBILITY_INDEX env var if --index not provided
+            if [ -z "$INDEX_NAME" ]; then
+                INDEX_NAME="$ES_VISIBILITY_INDEX"
+            fi
+
+            if [ -z "$INDEX_NAME" ]; then
+                echo "Error: Index name required (use --index or ES_VISIBILITY_INDEX env var)" >&2
+                exit 1
+            fi
+
+            echo "Dropping index $INDEX_NAME..."
+            curl_request "DELETE" "/${INDEX_NAME}" "" "$FAIL_SILENTLY" >/dev/null
+            echo "Index dropped successfully"
+            ;;
+
+        ping)
+            # Ping elasticsearch host
+            echo "Pinging Elasticsearch at ${ES_URL}..."
+            if curl --fail --silent --show-error ${CURL_AUTH} ${ES_URL} >/dev/null 2>&1; then
+                echo "Pong - Elasticsearch is reachable"
+                exit 0
+            else
+                echo "Ping failed - Elasticsearch is not reachable" >&2
+                exit 1
+            fi
+            ;;
+
+        *)
+            echo "Usage: $0 {setup-schema|update-schema|create-index|drop-index|ping} [options]" >&2
+            echo "" >&2
+            echo "Commands:" >&2
+            echo "  setup-schema    Setup elasticsearch index template" >&2
+            echo "  update-schema   Update elasticsearch index template (and optionally index mappings with --index)" >&2
+            echo "  create-index    Create elasticsearch visibility index" >&2
+            echo "  drop-index      Delete elasticsearch visibility index" >&2
+            echo "  ping            Ping the elasticsearch host" >&2
+            echo "" >&2
+            echo "Environment variables:" >&2
+            echo "  ES_SCHEME, ES_HOST, ES_PORT, ES_USER, ES_PWD, ES_VERSION, ES_VISIBILITY_INDEX" >&2
+            exit 1
+            ;;
+    esac

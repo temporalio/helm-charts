@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: "{{ include "temporal.fullname" . }}-test-wfl"
+  name: "{{ include "temporal.fullname" . }}-test-cluster-health"
   labels:
     {{- include "temporal.resourceLabels" (list $ "test" "") | nindent 4 }}
   annotations:
@@ -9,7 +9,7 @@ metadata:
 spec:
   {{ include "temporal.serviceAccount" . }}
   containers:
-  - name: workflow-list
+  - name: cluster-health
     image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
     imagePullPolicy: {{ .Values.admintools.image.pullPolicy }}
     command: ["temporal", "operator", "cluster", "health"]

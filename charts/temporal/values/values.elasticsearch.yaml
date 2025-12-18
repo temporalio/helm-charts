@@ -1,8 +1,34 @@
-elasticsearch:
-  enabled: false
-  external: true
-  host: "elasticsearch-master-headless"
-  port: "9200"
-  version: "v7"
-  scheme: "http"
-  logLevel: "error"
+# This is an example of using an external Elasticsearch for Temporal visibility.
+# Replace connection details with your Elasticsearch cluster information.
+
+server:
+  config:
+    persistence:
+      defaultStore: default
+      visibilityStore: visibility
+      numHistoryShards: 512
+      datastores:
+        default:
+          # Configure your default store (SQL or Cassandra)
+          sql:
+            pluginName: mysql8
+            driverName: mysql8
+            databaseName: temporal
+            connectAddr: "mysql.example.com:3306"
+            # connectProtocol defaults to "tcp" if not specified
+            user: temporal
+            password: password
+        visibility:
+          elasticsearch:
+            version: v7
+            url:
+              scheme: http
+              host: "elasticsearch-master-headless:9200"
+            username: ""
+            password: ""
+            # for a production deployment use this instead of `password` and provision the secret beforehand
+            # existingSecret: temporal-es-secret
+            # secretKey: password
+            logLevel: error
+            indices:
+              visibility: temporal_visibility_v1

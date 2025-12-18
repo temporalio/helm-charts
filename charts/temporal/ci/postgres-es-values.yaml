@@ -3,24 +3,23 @@ server:
   config:
     persistence:
       defaultStore: default
-      default:
-        driver: "sql"
-        sql:
-          driver: "postgres12"
-          host: "postgres-postgresql.postgres"
-          port: 5432
-          database: "temporal"
-          user: "temporal"
-          password: "temporal"
-          maxConns: 20
-          maxIdleConns: 20
-          maxConnLifetime: "1h"
-elasticsearch:
-  enabled: true
-  replicas: 1
-cassandra:
-  enabled: false
-prometheus:
-  enabled: false
-grafana:
-  enabled: false
+      visibilityStore: visibility
+      numHistoryShards: 512
+      datastores:
+        default:
+          sql:
+            pluginName: postgres12
+            databaseName: temporal
+            connectAddr: "postgres.default.svc.cluster.local:5432"
+            connectProtocol: "tcp"
+            user: temporal
+            password: temporal
+        visibility:
+          elasticsearch:
+            version: v7
+            url:
+              scheme: http
+              host: "elasticsearch.default.svc.cluster.local:9200"
+            logLevel: error
+            indices:
+              visibility: temporal_visibility_v1

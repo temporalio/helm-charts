@@ -8,17 +8,17 @@ server:
       datastores:
         default:
           sql:
-            pluginName: postgres12
+            pluginName: mysql8
             databaseName: temporal
-            connectAddr: "postgres.default.svc.cluster.local:5432"
+            connectAddr: "mysql.default.svc.cluster.local:3306"
             connectProtocol: "tcp"
-            user: temporal
+            user: root
             password: temporal
         visibility:
           sql:
-            pluginName: postgres12
+            pluginName: mysql8
             databaseName: temporal_visibility
-            connectAddr: "postgres.default.svc.cluster.local:5432"
+            connectAddr: "mysql.default.svc.cluster.local:3306"
             connectProtocol: "tcp"
-            user: temporal
+            user: root
             password: temporal

@@ -1,4 +1,3 @@
-{{- if or $.Values.schema.createDatabase.enabled $.Values.schema.setup.enabled $.Values.schema.update.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -6,7 +5,7 @@ metadata:
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
 spec:
-  backoffLimit: {{ $.Values.schema.setup.backoffLimit }}
+  backoffLimit: {{ $.Values.schema.backoffLimit }}
   ttlSecondsAfterFinished: 86400
   template:
     metadata:
@@ -27,192 +26,70 @@ spec:
         {{- with $.Values.admintools.additionalInitContainers }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if $.Values.cassandra.enabled }}
-        - name: check-cassandra
-          image: "{{ $.Values.cassandra.image.repo }}:{{ $.Values.cassandra.image.tag }}"
-          imagePullPolicy: {{ $.Values.cassandra.image.pullPolicy }}
-          command: ['sh', '-c', 'until cqlsh {{ include "cassandra.host" $ }} {{ $.Values.cassandra.config.ports.cql }} -e "SHOW VERSION"; do echo waiting for cassandra to start; sleep 1; done;']
-          {{- with $.Values.schema.containerSecurityContext }}
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-        {{- end }}
-        {{- if or $.Values.elasticsearch.enabled }}
-        - name: check-elasticsearch
+        {{- range $_, $store := (include "temporal.persistence.eachStore" $ | fromYaml) }}
+          {{- if $store.config.createDatabase }}
+        - name: create-{{ $store.name }}-store
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['/bin/sh', '-c']
-          args:
-            - |
-              set -e
-              echo "Waiting for Elasticsearch to become available..."
-
-              if [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
-                echo "Using temporal-elasticsearch-tool for Elasticsearch health check"
-                until temporal-elasticsearch-tool --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" --user "$ES_USER" --password "$ES_PWD" ping 2>&1 > /dev/null; do
-                  sleep 1
-                done
-              elif command -v curl >/dev/null 2>&1; then
-                echo "Using curl for Elasticsearch health check"
-                until curl --silent --fail --user "$ES_USER:$ES_PWD" "$ES_SCHEME://$ES_HOST:$ES_PORT" 2>&1 > /dev/null; do
-                  sleep 1
-                done
-              else
-                echo "ERROR: Neither temporal-elasticsearch-tool nor curl found" >&2
-                exit 1
-              fi
-              echo "Elasticsearch is ready"
-          env:
-            {{- include "temporal.admintools-env" (list $ "visibility") | nindent 12 }}
-          {{- with $.Values.schema.containerSecurityContext }}
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-        {{- end }}
-        {{- if $.Values.schema.createDatabase.enabled }}
-          {{- range $store := (list "default" "visibility") }}
-            {{- $storeConfig := index $.Values.server.config.persistence $store }}
-            {{- $driver := include "temporal.persistence.driver" (list $ $store) }}
-            {{- if and (ne $driver "elasticsearch") (ne $driver "custom") }}
-        - name: create-{{ $store }}-store
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
-          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-              {{- if eq $driver "cassandra" }}
-          command: ['temporal-cassandra-tool', 'create', '-k', '{{ $storeConfig.cassandra.keyspace }}', '--replication-factor', '{{ $storeConfig.cassandra.replicationFactor }}'{{- if $storeConfig.cassandra.datacenter }}, '--datacenter', '{{ $storeConfig.cassandra.datacenter }}'{{- end }}]
-              {{- else if eq $driver "sql" }}
+            {{- if eq $store.driver "cassandra" }}
+          command: ['temporal-cassandra-tool', 'create', '-k', '{{ $store.config.keyspace }}', '--replication-factor', '{{ $store.config.replicationFactor | default 1 }}'{{- if $store.config.datacenter }}, '--
+datacenter', '{{ $store.config.datacenter }}'{{- end }}]
+            {{- else if eq $store.driver "sql" }}
           command: ['temporal-sql-tool', 'create-database']
-              {{- end }}
+            {{- else -}}
+              {{- fail (printf "createDatabase is not supported for %s store" $store.driver) -}}
+            {{- end }}
           env:
-              {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-              {{- with $.Values.admintools.additionalVolumeMounts }}
+            {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
+            {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.resources }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $.Values.schema.resources }}
           resources:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.containerSecurityContext }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $.Values.schema.containerSecurityContext }}
           securityContext:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
+              {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
-        {{- end }}
-        {{- if $.Values.schema.setup.enabled }}
-          {{- range $store := (list "default" "visibility") }}
-            {{- $storeConfig := index $.Values.server.config.persistence $store }}
-            {{- $driver := include "temporal.persistence.driver" (list $ $store) }}
-            {{- if ne $driver "custom" }}
-        - name: setup-{{ $store }}-store
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
-          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-              {{- if eq $driver "cassandra" }}
-          command: ['temporal-cassandra-tool', 'setup-schema', '-v', '0.0']
-              {{- else if eq $driver "sql" }}
-          command: ['temporal-sql-tool', 'setup-schema', '-v', '0.0']
-              {{- else if eq $driver "elasticsearch" }}
-          command: ['/bin/sh', '-c']
-          args:
-            - |
-              set -e
-              echo "Setting up Elasticsearch visibility store..."
-
-              if [ -x /usr/local/bin/temporal-elasticsearch-tool ]; then
-                echo "Using temporal-elasticsearch-tool for Elasticsearch setup"
-
-                echo "Setting up cluster settings and index template"
-                temporal-elasticsearch-tool \
-                  --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" \
-                  --user "$ES_USER" \
-                  --password "$ES_PWD" \
-                  setup-schema
-
-                echo "Creating visibility index: $ES_VISIBILITY_INDEX"
-                temporal-elasticsearch-tool \
-                  --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" \
-                  --user "$ES_USER" \
-                  --password "$ES_PWD" \
-                  create-index \
-                  --index "$ES_VISIBILITY_INDEX" \
-                  --fail
-
-              elif command -v curl >/dev/null 2>&1; then
-                echo "Using curl for Elasticsearch setup"
-
-                echo "Creating index template: temporal_visibility_v1_template"
-                curl -X PUT --fail --user "$ES_USER:$ES_PWD" \
-                  "$ES_SCHEME://$ES_HOST:$ES_PORT/_template/temporal_visibility_v1_template" \
-                  -H "Content-Type: application/json" \
-                  --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json"
-
-                echo "Checking if index exists: $ES_VISIBILITY_INDEX"
-                if ! curl --head --fail --user "$ES_USER:$ES_PWD" \
-                  "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX" 2>&1 > /dev/null; then
-                  echo "Creating index: $ES_VISIBILITY_INDEX"
-                  curl -X PUT --fail --user "$ES_USER:$ES_PWD" \
-                    "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX"
-                else
-                  echo "Index already exists"
-                fi
-
-              else
-                echo "ERROR: Neither temporal-elasticsearch-tool nor curl found" >&2
-                exit 1
-              fi
-
-              echo "Elasticsearch setup completed successfully"
-              {{- end }}
-          env:
-              {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-              {{- with $.Values.admintools.additionalVolumeMounts }}
-          volumeMounts:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.resources }}
-          resources:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.containerSecurityContext }}
-          securityContext:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-            {{- end }}
-          {{- end }}
-        {{- end }}
-        {{- if $.Values.schema.update.enabled }}
-          {{- range $store := (list "default" "visibility") }}
-            {{- $storeConfig := index $.Values.server.config.persistence $store }}
-            {{- $driver := include "temporal.persistence.driver" (list $ $store) }}
+          {{- if $store.config.manageSchema }}
             {{- $schema := include "temporal.persistence.schema" $store }}
-            {{- if and (ne $driver "elasticsearch") (ne $driver "custom") }}
-        - name: update-{{ $store }}-store
+        - name: manage-schema-{{ $store.name }}-store
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-              {{- if eq $driver "cassandra" }}
-          command: ['temporal-cassandra-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/cassandra/{{ $schema }}/versioned']
-              {{- else if eq $driver "sql" }}
-                {{- $plugin := include "temporal.persistence.sql.driver" (list $ $store) }}
-                {{- if eq $plugin "mysql8" }}
-          command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/mysql/v8/{{ $schema }}/versioned']
-                {{- else if or (eq $plugin "postgres12") (eq $plugin "postgres12_pgx") }}
-          command: ['temporal-sql-tool', 'update-schema', '--schema-dir', '/etc/temporal/schema/postgresql/v12/{{ $schema }}/versioned']
-                {{- end }}
+          command: ['sh', '-c']
+          args:
+            {{- if eq $store.driver "cassandra" }}
+            - temporal-cassandra-tool setup-schema -v 0.0 && temporal-cassandra-tool update-schema --schema-dir /etc/temporal/schema/cassandra/{{ $schema }}/versioned
+            {{- else if eq $store.driver "sql" }}
+              {{- if eq $store.config.pluginName "mysql8" }}
+            - temporal-sql-tool setup-schema -v 0.0 && temporal-sql-tool update-schema --schema-dir /etc/temporal/schema/mysql/v8/{{ $schema }}/versioned
+              {{- else if or (eq $store.config.pluginName "postgres12") (eq $store.config.pluginName "postgres12_pgx") }}
+            - temporal-sql-tool setup-schema -v 0.0 && temporal-sql-tool update-schema --schema-dir /etc/temporal/schema/postgresql/v12/{{ $schema }}/versioned
+              {{- else -}}
+                {{- fail (printf "manageSchema is not supported for %s SQL database plugin" $store.config.pluginName) -}}
               {{- end }}
+            {{- else if eq $store.driver "elasticsearch" }}
+            - temporal-elasticsearch-tool setup-schema && temporal-elasticsearch-tool create-index && temporal-elasticsearch-tool update-schema --index "$ES_VISIBILITY_INDEX"
+            {{- end }}
           env:
-              {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
-              {{- with $.Values.admintools.additionalVolumeMounts }}
+            {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
           volumeMounts:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.resources }}
+            {{- with $.Values.admintools.additionalVolumeMounts }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            - name: shims
+              mountPath: /usr/local/sbin/temporal-elasticsearch-tool
+              subPath: temporal-elasticsearch-tool
+            {{- with $.Values.schema.resources }}
           resources:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.containerSecurityContext }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $.Values.schema.containerSecurityContext }}
           securityContext:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
+              {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
         {{- end }}
@@ -278,8 +155,13 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $.Values.admintools.additionalVolumes }}
+      {{- if or $.Values.admintools.additionalVolumes true }}
       volumes:
-        {{- toYaml . | nindent 8 }}
+        {{- with $.Values.admintools.additionalVolumes }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        - name: shims
+          configMap:
+            name: "{{ include "temporal.fullname" $ }}-shims"
+            defaultMode: 0555
       {{- end }}
-{{- end -}}

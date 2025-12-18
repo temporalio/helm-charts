@@ -1,13 +1,21 @@
 server:
   replicaCount: 1
-cassandra:
-  enabled: true
   config:
-    cluster_size: 1
-elasticsearch:
-  enabled: true
-  replicas: 1
-prometheus:
-  enabled: false
-grafana:
-  enabled: false
+    persistence:
+      defaultStore: default
+      visibilityStore: visibility
+      numHistoryShards: 512
+      datastores:
+        default:
+          cassandra:
+            hosts: "cassandra.default.svc.cluster.local"
+            port: 9042
+            keyspace: temporal
+        visibility:
+          elasticsearch:
+            version: v7
+            url:
+              scheme: http
+              host: "elasticsearch.default.svc.cluster.local:9200"
+            indices:
+              visibility: temporal_visibility_v1
