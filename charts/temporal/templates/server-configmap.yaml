@@ -10,8 +10,18 @@ data:
   config_template.yaml: |-
     # enable-template
     log:
+      {{- if (hasKey $server.config "logstdOut") }}
+      stdout: {{ $server.config.logstdOut }}
+      {{- else }}
       stdout: true
+      {{- end }}
       level: {{ $server.config.logLevel | quote }}
+      {{- with $server.config.logOutputFile }}
+      outputFile: {{ . | quote }}
+      {{- end }}
+      {{- with $server.config.logFormat }}
+      format: {{ . | quote }}
+      {{- end }}
 
     persistence:
       {{- include "temporal.persistence.filterConfig" $server.config.persistence | nindent 6 }}
