@@ -28,7 +28,7 @@ server:
   # Whether to set TEMPORAL_SERVER_CONFIG_FILE_PATH environment variable
   # Must be true if useEntrypointScript is false and server version is >= 1.30
   # Set to false when using images that handle config path internally (e.g., with useEntrypointScript or custom entrypoints)
-  setConfigFilePath: true
+  setConfigFilePath: false
   # Control which config ConfigMaps to mount
   # Options: "both", "dockerize", "sprig"
   # - "both": mounts both ConfigMaps (requires useEntrypointScript: true), auto-detects which to use based on dockerize presence. setConfigFilePath must be false
