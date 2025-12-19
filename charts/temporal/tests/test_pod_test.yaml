@@ -1,0 +1,29 @@
+suite: test pod
+templates:
+  - test.yaml
+tests:
+  - it: has helm test hook annotation by default
+    asserts:
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: test
+  - it: does not have custom annotations by default
+    asserts:
+      - notExists:
+          path: metadata.annotations["sidecar.istio.io/inject"]
+  - it: includes custom pod annotations when specified
+    set:
+      test:
+        podAnnotations:
+          sidecar.istio.io/inject: "false"
+          custom-annotation: custom-value
+    asserts:
+      - equal:
+          path: metadata.annotations["sidecar.istio.io/inject"]
+          value: "false"
+      - equal:
+          path: metadata.annotations["custom-annotation"]
+          value: custom-value
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: test
