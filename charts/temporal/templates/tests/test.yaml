@@ -6,6 +6,9 @@ metadata:
     {{- include "temporal.resourceLabels" (list $ "test" "") | nindent 4 }}
   annotations:
     "helm.sh/hook": test
+    {{- with .Values.test.podAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   {{ include "temporal.serviceAccount" . }}
   containers:

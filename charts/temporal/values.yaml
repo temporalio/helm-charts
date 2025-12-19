@@ -468,3 +468,6 @@ schema:
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
+
+test:
+  podAnnotations: {}
