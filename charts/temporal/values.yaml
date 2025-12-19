@@ -32,7 +32,7 @@ server:
   # Control which config ConfigMaps to mount
   # Options: "both", "dockerize", "sprig"
   # - "both": mounts both ConfigMaps (requires useEntrypointScript: true), auto-detects which to use based on dockerize presence. setConfigFilePath must be false
-  # - "dockerize": mounts only dockerize config (DEPRECATED - for old images with dockerize, use temporalio/server:1.29.x or earlier) 
+  # - "dockerize": mounts only dockerize config (DEPRECATED - for old images with dockerize, use temporalio/server:1.29.x or earlier)
   # - "sprig": mounts only sprig config (RECOMMENDED - for new images temporalio/server:1.30.0+, uses built-in sprig templating) setConfigFilePath must be true
   configMapsToMount: "dockerize"
   # Global default settings (can be overridden per service)
