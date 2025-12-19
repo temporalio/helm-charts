@@ -150,4 +150,4 @@ jobs:
           create_service elasticsearch 9200
 
       - name: Run chart-testing (install)
-        run: ct install --target-branch ${{ github.ref_name }}
+        run: ct install --target-branch ${{ github.event.repository.default_branch }}
