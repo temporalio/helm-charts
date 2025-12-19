@@ -4,6 +4,10 @@ metadata:
   name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
+  {{- with $.Values.schema.jobAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   backoffLimit: {{ $.Values.schema.backoffLimit }}
   ttlSecondsAfterFinished: 86400
