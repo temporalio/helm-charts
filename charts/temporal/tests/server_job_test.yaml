@@ -129,4 +129,36 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[*].resources.limits.memory
           value: 16Gi
-
+  - it: includes custom annotations and labels for pod and job
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+      schema:
+        jobAnnotations:
+          custom-job-annotation: abc
+        podAnnotations:
+          custom-pod-annotation: def
+        podLabels:
+          custom-pod-label: ghi
+    asserts:
+      - equal:
+          path: metadata.annotations.custom-job-annotation
+          value: abc
+      - equal:
+          path: spec.template.metadata.annotations.custom-pod-annotation
+          value: def
+      - equal:
+          path: spec.template.metadata.labels.custom-pod-label
+          value: ghi
