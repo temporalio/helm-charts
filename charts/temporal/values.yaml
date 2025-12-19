@@ -25,12 +25,15 @@ server:
   # Use entrypoint script that detects dockerize and processes config if available
   # Set to false to use the image's default entrypoint
   useEntrypointScript: false
+  # Whether to set TEMPORAL_SERVER_CONFIG_FILE_PATH environment variable
+  # Must be true if useEntrypointScript is false and server version is >= 1.30
+  # Set to false when using images that handle config path internally (e.g., with useEntrypointScript or custom entrypoints)
+  setConfigFilePath: true
   # Control which config ConfigMaps to mount
   # Options: "both", "dockerize", "sprig"
-  # - "both": mounts both ConfigMaps (requires useEntrypointScript: true), auto-detects which to use based on dockerize presence
-  # - "dockerize": mounts only dockerize config (DEPRECATED - for old images with dockerize, use temporalio/server:1.29.x or earlier)
-  # - "sprig": mounts only sprig config (RECOMMENDED - for new images temporalio/server:1.30.0+, uses built-in sprig templating)
-  # We recommend upgrading to "sprig" config format for better security and smaller images
+  # - "both": mounts both ConfigMaps (requires useEntrypointScript: true), auto-detects which to use based on dockerize presence. setConfigFilePath must be false
+  # - "dockerize": mounts only dockerize config (DEPRECATED - for old images with dockerize, use temporalio/server:1.29.x or earlier) 
+  # - "sprig": mounts only sprig config (RECOMMENDED - for new images temporalio/server:1.30.0+, uses built-in sprig templating) setConfigFilePath must be true
   configMapsToMount: "dockerize"
   # Global default settings (can be overridden per service)
   replicaCount: 1
