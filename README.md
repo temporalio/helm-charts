@@ -9,7 +9,7 @@ This repo contains a V3 [Helm](https://helm.sh) chart that deploys Temporal to a
 
 The only portions of the helm chart that are considered production ready are the parts that configure and manage Temporal itself. Cassandra, Elasticsearch, Prometheus, and Grafana are all using minimal development configurations, and should be reconfigured in a production deployment.
 
-This Helm Chart code is tested by a dedicated test pipeline. It is also used extensively by other Temporal pipelines for testing various aspects of Temporal systems. Our test pipeline currently uses Helm 3.1.1.
+This Helm Chart code is tested by a dedicated test pipeline. It is also used extensively by other Temporal pipelines for testing various aspects of Temporal systems. Our test pipeline currently uses Helm 3.16.3.
 
 # Install Temporal service on a Kubernetes cluster
 
