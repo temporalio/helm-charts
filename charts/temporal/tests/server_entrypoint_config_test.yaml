@@ -287,7 +287,7 @@ tests:
             subPath: config_template.yaml
 
   # Test environment variables
-  - it: does not set TEMPORAL_SERVER_CONFIG_FILE_PATH when useEntrypointScript is true
+  - it: does not set TEMPORAL_SERVER_CONFIG_FILE_PATH by default
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
@@ -295,14 +295,13 @@ tests:
     set:
       server:
         enabled: true
-        useEntrypointScript: true
     asserts:
       - notContains:
           path: spec.template.spec.containers[0].env
           content:
             name: TEMPORAL_SERVER_CONFIG_FILE_PATH
 
-  - it: sets TEMPORAL_SERVER_CONFIG_FILE_PATH when useEntrypointScript is false
+  - it: does not set TEMPORAL_SERVER_CONFIG_FILE_PATH when setConfigFilePath is false
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
@@ -310,7 +309,22 @@ tests:
     set:
       server:
         enabled: true
-        useEntrypointScript: false
+        setConfigFilePath: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_SERVER_CONFIG_FILE_PATH
+
+  - it: sets TEMPORAL_SERVER_CONFIG_FILE_PATH when setConfigFilePath is true
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        enabled: true
+        setConfigFilePath: true
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
