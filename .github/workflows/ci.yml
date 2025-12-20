@@ -68,6 +68,10 @@ jobs:
           helm repo add elastic https://helm.elastic.co
           helm repo add grafana https://grafana.github.io/helm-charts
 
+      - name: Update chart dependencies
+        working-directory: charts/temporal
+        run: helm dependencies update
+
       - name: Run template tests
         working-directory: charts/temporal/tests
         run: go test
@@ -89,6 +93,10 @@ jobs:
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo add elastic https://helm.elastic.co
           helm repo add grafana https://grafana.github.io/helm-charts
+
+      - name: Update chart dependencies
+        working-directory: charts/temporal
+        run: helm dependencies update
 
       - name: Install helm-unittest
         run: helm plugin install https://github.com/helm-unittest/helm-unittest.git
