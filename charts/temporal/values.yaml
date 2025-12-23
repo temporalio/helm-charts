@@ -461,6 +461,7 @@ web:
   securityContext: {}
   topologySpreadConstraints: []
   podDisruptionBudget: {}
+  useInternalFrontend: false
 schema:
   backoffLimit: 100
   jobAnnotations: {}
