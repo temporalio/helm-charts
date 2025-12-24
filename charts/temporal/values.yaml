@@ -329,7 +329,7 @@ server:
       membershipAppProtocol: tcp
     metrics:
       annotations:
-        enabled: false
+        enabled: true
       serviceMonitor: {}
       # enabled: false
       prometheus: {}
