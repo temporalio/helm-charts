@@ -13,6 +13,9 @@ metadata:
   {{- end }}
 spec:
   type: {{ $serviceValues.service.type }}
+  {{- if hasKey $serviceValues.service "clusterIP" }}
+  clusterIP: {{ $serviceValues.service.clusterIP }}
+  {{- end }}
   ports:
     - port: {{ $serviceValues.service.port }}
       targetPort: rpc
