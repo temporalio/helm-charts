@@ -1,0 +1,38 @@
+suite: test server pdb
+templates:
+  - server-pdb.yaml
+set:
+  server:
+    frontend:
+      replicaCount: 1
+tests:
+  - it: creates pdb when specified
+    template: templates/server-pdb.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-pdb")].kind'
+      value: PodDisruptionBudget
+      matchMany: true
+    set:
+      server:
+        frontend:
+          podDisruptionBudget:
+            maxUnavailable: 1
+    asserts:
+      - equal:
+          path: spec.maxUnavailable
+          value: 1
+  - it: doesn't create pdb when replica count is 0
+    template: templates/server-pdb.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-pdb")].kind'
+      value: PodDisruptionBudget
+      matchMany: true
+    set:
+      server:
+        frontend:
+          replicaCount: 0
+          podDisruptionBudget:
+            maxUnavailable: 1
+    asserts:
+      - notExists:
+          path: kind
