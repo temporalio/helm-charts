@@ -85,3 +85,31 @@ tests:
           path: spec.template.metadata.annotations["prometheus.io/scrape"]
       - notExists:
           path: spec.template.metadata.annotations["prometheus.io/port"]
+  - it: minReadySeconds defaults to service wide resources
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        minReadySeconds: 10
+    asserts:
+      - equal:
+          path: spec.template.spec.minReadySeconds
+          value: 10
+  - it: minReadySeconds favours service specific resources
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        minReadySeconds: 10
+        frontend:
+          minReadySeconds: 30
+    asserts:
+      - equal:
+          path: spec.template.spec.minReadySeconds
+          value: 30
