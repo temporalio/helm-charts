@@ -87,6 +87,7 @@ server:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  minReadySeconds: 0
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
@@ -398,6 +399,7 @@ admintools:
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
+  minReadySeconds: 0
   podDisruptionBudget: {}
 web:
   # additionalInitContainers: []
@@ -460,6 +462,7 @@ web:
   containerSecurityContext: {}
   securityContext: {}
   topologySpreadConstraints: []
+  minReadySeconds: 0
   podDisruptionBudget: {}
 schema:
   backoffLimit: 100
