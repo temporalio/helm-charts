@@ -188,7 +188,7 @@ spec:
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with $serviceValues.minReadySeconds }}
+    {{- with (default $.Values.server.minReadySeconds $serviceValues.minReadySeconds) }}
       minReadySeconds: {{ . }}
     {{- end }}
 ---

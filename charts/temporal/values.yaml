@@ -84,6 +84,7 @@ server:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  minReadySeconds: 0
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
@@ -248,7 +249,6 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
-    minReadySeconds: 0
     podDisruptionBudget: {}
   internalFrontend:
     # Enable this to create internal-frontend
@@ -281,7 +281,6 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
-    minReadySeconds: 0
     podDisruptionBudget: {}
   history:
     service:
@@ -309,7 +308,6 @@ server:
     additionalEnvSecretName: ""
     containerSecurityContext: {}
     topologySpreadConstraints: []
-    minReadySeconds: 0
     podDisruptionBudget: {}
   matching:
     service:
@@ -336,7 +334,6 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
-    minReadySeconds: 0
     podDisruptionBudget: {}
   worker:
     service:
@@ -363,7 +360,6 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
-    minReadySeconds: 0
     podDisruptionBudget: {}
 admintools:
   enabled: true
