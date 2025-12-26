@@ -1,27 +1,18 @@
 {{- define "temporal.admintools-env" -}}
-{{- $global := index . 0 -}}
+{{- $root := index . 0 -}}
 {{- $store := index . 1 -}}
-{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
-{{- $driver := include "temporal.persistence.driver" (list $global $store) -}}
-{{- $driverConfig := index $storeConfig $driver }}
-{{- if eq $driver "elasticsearch" -}}
-{{- $driverConfig = $global.Values.elasticsearch -}}
-{{- end -}}
-{{- if eq $driver "cassandra" -}}
+{{- if eq $store.driver "cassandra" -}}
 - name: CASSANDRA_HOST
-  value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $global $store))) }}
+  value: {{ splitList "," (required (printf "Please specify hosts for %s store" $store.name) $store.config.hosts) | first }}
 - name: CASSANDRA_PORT
-  value: {{ include "temporal.persistence.cassandra.port" (list $global $store) | quote }}
+  value: {{ $store.config.port | quote }}
 - name: CASSANDRA_KEYSPACE
-  value: {{ $driverConfig.keyspace }}
+  value: {{ required (printf "Please specify keyspace for %s store" $store.name) $store.config.keyspace }}
 - name: CASSANDRA_USER
-  value: {{ $driverConfig.user }}
+  value: {{ $store.config.user }}
 - name: CASSANDRA_PASSWORD
-  valueFrom:
-    secretKeyRef:
-      name: {{ include "temporal.persistence.secretName" (list $global $store) }}
-      key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
-  {{- with $driverConfig.tls }}
+  {{- include "temporal.password-env" (list $root $store) | nindent 2 }}
+  {{- with $store.config.tls }}
 - name: CASSANDRA_ENABLE_TLS
   value: {{ .enabled | quote }}
     {{- with .caFile }}
@@ -33,27 +24,24 @@
   value: {{ not .enableHostVerification | quote }}
     {{- end }}
   {{- end }}
-{{- else if eq $driver "sql" -}}
+{{- else if eq $store.driver "sql" -}}
 - name: SQL_PLUGIN
-  value: {{ include "temporal.persistence.sql.driver" (list $global $store) }}
+  value: {{ required (printf "Please specify pluginName for %s store (e.g., mysql8, postgres12, postgres12_pgx)" $store.name) $store.config.pluginName }}
 - name: SQL_HOST
-  value: {{ include "temporal.persistence.sql.host" (list $global $store) }}
+  value: {{ required (printf "Please specify connectAddr for %s store" $store.name) $store.config.connectAddr | splitList ":" | first }}
 - name: SQL_PORT
-  value: {{ include "temporal.persistence.sql.port" (list $global $store) | quote }}
+  value: {{ required (printf "Please specify connectAddr for %s store" $store.name) $store.config.connectAddr | splitList ":" | last | quote }}
 - name: SQL_DATABASE
-  value: {{ include "temporal.persistence.sql.database" (list $global $store) }}
+  value: {{ required (printf "Please specify databaseName for %s store" $store.name) $store.config.databaseName }}
 - name: SQL_USER
-  value: {{ $driverConfig.user }}
+  value: {{ $store.config.user | quote }}
 - name: SQL_PASSWORD
-  valueFrom:
-    secretKeyRef:
-      name: {{ include "temporal.persistence.secretName" (list $global $store) }}
-      key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
-  {{- with $driverConfig.connectAttributes }}
+  {{- include "temporal.password-env" (list $root $store) | nindent 2 }}
+  {{- with $store.config.connectAttributes }}
 - name: SQL_CONNECT_ATTRIBUTES
-  value: {{ include "temporal.persistence.sql.connectAttributes" (list $global $store) | quote }}
+  value: {{ include "temporal.persistence.sql.connectAttributes" . | quote }}
   {{- end }}
-  {{- with $driverConfig.tls }}
+  {{- with $store.config.tls }}
 - name: SQL_TLS
   value: {{ .enabled | quote }}
     {{- with .caFile }}
@@ -75,23 +63,28 @@
   value: {{ not .enableHostVerification | quote }}
     {{- end }}
   {{- end }}
-{{- else if eq $driver "elasticsearch" -}}
-- name: ES_SCHEME
-  value: {{ $driverConfig.scheme }}
-- name: ES_HOST
-  value: {{ $driverConfig.host }}
-- name: ES_PORT
-  value: {{ $driverConfig.port | quote }}
-- name: ES_USER
-  value: {{ $driverConfig.username | quote }}
-- name: ES_PWD
-  valueFrom:
-    secretKeyRef:
-      name: {{ include "temporal.persistence.secretName" (list $global $store) }}
-      key: {{ include "temporal.persistence.secretKey" (list $global $store) }}
-- name: ES_VERSION
-  value: {{ $driverConfig.version }}
-- name: ES_VISIBILITY_INDEX
-  value: {{ $driverConfig.visibilityIndex }}
+{{- else if eq $store.driver "elasticsearch" -}}
+{{- $url := $store.config.url }}
+{{- if and (hasKey $store.config "urls") $store.config.urls }}
+{{- $url = index $store.config.urls 0 }}
 {{- end }}
+- name: ES_SCHEME
+  value: {{ $url.scheme }}
+- name: ES_HOST
+  value: {{ splitList ":" $url.host | first }}
+- name: ES_PORT
+  value: {{ splitList ":" $url.host | last | quote }}
+- name: ES_SERVER
+  value: {{ urlJoin $url }}
+- name: ES_USER
+  value: {{ $store.config.username | quote }}
+- name: ES_PWD
+  {{- include "temporal.password-env" (list $root $store) | nindent 2 }}
+- name: ES_VERSION
+  value: {{ $store.config.version }}
+- name: ES_VISIBILITY_INDEX
+  value: {{ $store.config.indices.visibility }}
+{{- else -}}
+    {{- fail (printf "No valid persistence driver configuration found for %s store" $store.name) -}}
+{{- end -}}
 {{- end -}}

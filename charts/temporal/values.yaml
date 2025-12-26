@@ -3,7 +3,7 @@ fullnameOverride: ""
 # Chart debug mode
 # (eg. disable helm hook delete policy)
 debug: false
-imagePullSecrets: {}
+imagePullSecrets: []
 # Custom Service account management
 serviceAccount:
   # Whether to create service account or not
@@ -20,13 +20,16 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.29.0
+    tag: 1.29.1
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
   metrics:
-    # Annotate pods directly with Prometheus annotations.
-    # Use this if you installed Prometheus from a Helm chart.
+    # Annotate pods and services directly with the following Prometheus annotations.
+    # prometheus.io/job
+    # prometheus.io/port
+    # prometheus.io/scheme
+    # prometheus.io/scrape
     annotations:
       enabled: true
     # Additional tags to be added to Prometheus metrics
@@ -95,8 +98,6 @@ server:
     runAsUser: 1000
   config:
     logLevel: "debug,info"
-    # IMPORTANT: This value cannot be changed, once it's set.
-    numHistoryShards: 512
     # Define your TLS configuration here. See https://docs.temporal.io/references/configuration#tls
     # for configuration options. You must also use `server.additionalVolumeMounts` and `server.additionalVolumes`
     # to mount certificates (from Secret or ConfigMap etc) to the path you use below.
@@ -136,69 +137,80 @@ server:
     #   claimMapper: default
     persistence:
       defaultStore: default
-      additionalStores: {}
-      default:
-        driver: "cassandra"
-        cassandra:
-          hosts: []
-          # port: 9042
-          keyspace: "temporal"
-          user: "user"
-          password: "password"
-          existingSecret: ""
-          replicationFactor: 1
-          # datacenter: "us-east-1a"
-          # maxQPS: 1000
-          # maxConns: 2
-          consistency:
-            default:
-              consistency: "local_quorum"
-              serialConsistency: "local_serial"
-        sql:
-          driver: "mysql8"
-          host: "mysql"
-          port: 3306
-          database: "temporal"
-          user: "temporal"
-          password: "temporal"
-          existingSecret: ""
-          secretName: ""
-          maxConns: 20
-          maxIdleConns: 20
-          maxConnLifetime: "1h"
-          # connectAttributes:
-          # tx_isolation: 'READ-COMMITTED'
-      visibility:
-        driver: "cassandra"
-        cassandra:
-          hosts: []
-          # port: 9042
-          keyspace: "temporal_visibility"
-          user: "user"
-          password: "password"
-          existingSecret: ""
-          # datacenter: "us-east-1a"
-          # maxQPS: 1000
-          # maxConns: 2
-          replicationFactor: 1
-          consistency:
-            default:
-              consistency: "local_quorum"
-              serialConsistency: "local_serial"
-        sql:
-          driver: "mysql8"
-          host: "mysql"
-          port: 3306
-          database: "temporal_visibility"
-          user: "temporal"
-          password: "temporal"
-          existingSecret: ""
-          secretName: ""
-          maxConns: 20
-          maxIdleConns: 20
-          maxConnLifetime: "1h"
-          # connectAttributes:
-          #   tx_isolation: 'READ-COMMITTED'
+      visibilityStore: visibility
+      # Important: numHistoryShards cannot be changed after the initial deployment.
+      numHistoryShards: 512
+      # Persistence configuration follows the raw Temporal server config format.
+      # Driver is determined by which top-level key is present (cassandra vs sql).
+      # For SQL stores, you can use either connectAddr: "host:port" or separate host/port fields.
+      # Helm-specific fields (existingSecret, secretKey) are stripped before rendering to server config.
+      datastores:
+        default:
+        # Example SQL configuration:
+        # sql:
+        #   pluginName: mysql8  # or postgres12, postgres12_pgx
+        #   driverName: mysql8
+        #   databaseName: temporal
+        #   connectAddr: "mysql.example.com:3306"  # preferred format
+        #   # OR use separate host/port:
+        #   # host: mysql.example.com
+        #   # port: 3306
+        #   # connectProtocol defaults to "tcp" if not specified
+        #   user: temporal_user
+        #   password: ""  # optional, use existingSecret instead
+        #   existingSecret: temporal-db-secret  # Helm-specific, stripped before rendering
+        #   secretKey: password  # Helm-specific, default: password
+        #   maxConns: 20
+        #   maxIdleConns: 20
+        #   maxConnLifetime: "1h"
+        #   connectAttributes:
+        #     tx_isolation: "READ-COMMITTED"
+        #   tls:
+        #     enabled: true
+        #     caFile: /path/to/ca.pem
+        # Example Cassandra configuration:
+        # cassandra:
+        #   hosts: "host1,host2"  # or ["host1", "host2"]
+        #   port: 9042
+        #   keyspace: temporal
+        #   user: cassandra_user
+        #   password: ""  # optional, use existingSecret instead
+        #   existingSecret: temporal-cassandra-secret
+        #   secretKey: password
+        #   replicationFactor: 3
+        #   consistency:
+        #     default:
+        #       consistency: "local_quorum"
+        #       serialConsistency: "local_serial"
+        visibility:
+        # Example SQL configuration (same structure as default.sql):
+        # sql:
+        #   pluginName: mysql8
+        #   driverName: mysql8
+        #   databaseName: temporal_visibility
+        #   connectAddr: "mysql.example.com:3306"
+        #   # connectProtocol defaults to "tcp" if not specified
+        #   user: temporal_user
+        #   existingSecret: temporal-db-secret
+        #   secretKey: password
+        # Example Elasticsearch configuration:
+        # elasticsearch:
+        #   version: v7
+        #   url:
+        #     scheme: http
+        #     host: "elasticsearch:9200"
+        #   username: ""
+        #   password: ""
+        #   existingSecret: temporal-es-secret
+        #   secretKey: password
+        #   logLevel: error
+        #   indices:
+        #     visibility: temporal_visibility_v1
+        # Additional stores can be added here and will pass through directly
+        # archive:
+        #   sql:
+        #     pluginName: postgres12
+        #     ...
     namespaces:
       # Enable this to create namespaces
       create: false
@@ -453,110 +465,13 @@ web:
   minReadySeconds: 0
   podDisruptionBudget: {}
 schema:
-  createDatabase:
-    enabled: true
-  setup:
-    enabled: true
-    backoffLimit: 100
-  update:
-    enabled: true
-    backoffLimit: 100
+  backoffLimit: 100
+  jobAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
-elasticsearch:
-  enabled: true
-  replicas: 3
-  persistence:
-    enabled: false
-  imageTag: 7.17.3
-  host: elasticsearch-master-headless
-  scheme: http
-  port: 9200
-  version: "v7"
-  logLevel: "error"
-  username: ""
-  password: ""
-  visibilityIndex: "temporal_visibility_v1_dev"
-prometheus:
-  enabled: true
-  nodeExporter:
-    enabled: false
-grafana:
-  enabled: true
-  replicas: 1
-  testFramework:
-    enabled: false
-  rbac:
-    create: false
-    pspEnabled: false
-    namespaced: true
-  dashboardProviders:
-    dashboardproviders.yaml:
-      apiVersion: 1
-      providers:
-        - name: "default"
-          orgId: 1
-          folder: ""
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /var/lib/grafana/dashboards/default
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      datasources:
-        - name: TemporalMetrics
-          type: prometheus
-          url: http://{{ .Release.Name }}-prometheus-server
-          access: proxy
-          isDefault: true
-  dashboards:
-    default:
-      server-general-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/server/server-general.json
-        datasource: TemporalMetrics
-      sdk-general-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/sdk/sdk-general.json
-        datasource: TemporalMetrics
-      misc-advanced-visibility-specific-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/advanced-visibility-specific.json
-        datasource: TemporalMetrics
-      misc-clustermonitoring-kubernetes-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/clustermonitoring-kubernetes.json
-        datasource: TemporalMetrics
-      misc-frontend-service-specific-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/frontend-service-specific.json
-        datasource: TemporalMetrics
-      misc-history-service-specific-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/history-service-specific.json
-        datasource: TemporalMetrics
-      misc-matching-service-specific-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/matching-service-specific.json
-        datasource: TemporalMetrics
-      misc-worker-service-specific-github:
-        url: https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json
-        datasource: TemporalMetrics
-cassandra:
-  enabled: true
-  persistence:
-    enabled: false
-  image:
-    repo: cassandra
-    tag: 3.11.3
-    pullPolicy: IfNotPresent
-  config:
-    cluster_size: 3
-    ports:
-      cql: 9042
-    num_tokens: 4
-    max_heap_size: 512M
-    heap_new_size: 128M
-    seed_size: 0
-  service:
-    type: ClusterIP
-mysql:
-  enabled: false
+
+test:
+  podAnnotations: {}
