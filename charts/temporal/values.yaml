@@ -22,8 +22,6 @@ server:
     repository: temporalio/server
     tag: 1.29.1
     pullPolicy: IfNotPresent
-  # Global default settings (can be overridden per service)
-  replicaCount: 1
   metrics:
     # Annotate pods and services directly with the following Prometheus annotations.
     # prometheus.io/job
@@ -404,7 +402,6 @@ admintools:
 web:
   # additionalInitContainers: []
   enabled: true
-  replicaCount: 1
   image:
     repository: temporalio/ui
     tag: 2.42.1
