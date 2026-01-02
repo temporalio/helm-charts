@@ -69,6 +69,7 @@ server:
       timerType: histogram
   deploymentLabels: {}
   deploymentAnnotations: {}
+  deploymentStrategy: {}
   podAnnotations: {}
   podLabels: {}
   secretLabels: {}
@@ -252,6 +253,7 @@ server:
       # timerType: histogram
     deploymentLabels: {}
     deploymentAnnotations: {}
+    deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -284,6 +286,7 @@ server:
       # timerType: histogram
     deploymentLabels: {}
     deploymentAnnotations: {}
+    deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -310,6 +313,7 @@ server:
       # timerType: histogram
     deploymentLabels: {}
     deploymentAnnotations: {}
+    deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -337,6 +341,7 @@ server:
       # timerType: histogram
     deploymentLabels: {}
     deploymentAnnotations: {}
+    deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -363,6 +368,7 @@ server:
       # timerType: histogram
     deploymentLabels: {}
     deploymentAnnotations: {}
+    deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
     resources: {}
@@ -385,6 +391,7 @@ admintools:
     annotations: {}
   deploymentLabels: {}
   deploymentAnnotations: {}
+  deploymentStrategy: {}
   podLabels: {}
   podAnnotations: {}
   nodeSelector: {}
@@ -437,6 +444,7 @@ web:
     #      - chart-example.local
   deploymentLabels: {}
   deploymentAnnotations: {}
+  deploymentStrategy: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}
