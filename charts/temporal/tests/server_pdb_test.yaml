@@ -22,11 +22,6 @@ tests:
           path: spec.maxUnavailable
           value: 1
   - it: doesn't create pdb when replica count is 0
-    template: templates/server-pdb.yaml
-    documentSelector:
-      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-pdb")].kind'
-      value: PodDisruptionBudget
-      matchMany: true
     set:
       server:
         frontend:
@@ -34,5 +29,8 @@ tests:
           podDisruptionBudget:
             maxUnavailable: 1
     asserts:
-      - notExists:
-          path: kind
+      - containsDocument:
+          kind: PodDisruptionBudget
+          apiVersion: policy/v1
+          name: RELEASE-NAME-temporal-frontend-pdb
+        not: true
