@@ -162,3 +162,52 @@ tests:
       - matchRegex:
           path: data["config_template.yaml"]
           pattern: 'format: "json"'
+  - it: deploymentStrategy defaults to service wide resources
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        deploymentStrategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 25%
+            maxUnavailable: 25%
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: RollingUpdate
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 25%
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 25%
+  - it: deploymentStrategy favours service specific resources
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        deploymentStrategy:
+          type: Recreate
+        frontend:
+          deploymentStrategy:
+            type: RollingUpdate
+            rollingUpdate:
+              maxSurge: 1
+              maxUnavailable: 0
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: RollingUpdate
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 1
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 0

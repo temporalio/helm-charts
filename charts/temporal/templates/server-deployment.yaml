@@ -15,6 +15,10 @@ metadata:
     {{- include "temporal.resourceLabels" (list $ $service "deployment") | nindent 4 }}
 spec:
   replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
+  {{- with (default $.Values.server.deploymentStrategy $serviceValues.deploymentStrategy) }}
+  strategy:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "temporal.name" $ }}
