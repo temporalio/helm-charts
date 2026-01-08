@@ -211,23 +211,16 @@ tests:
       - equal:
           path: spec.strategy.rollingUpdate.maxUnavailable
           value: 0
-  - it: readinessProbe defaults to service wide resources
+  - it: readinessProbe defaults to empty
     template: templates/server-deployment.yaml
     documentSelector:
-      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-worker")].kind'
       value: Deployment
       matchMany: true
-    set:
-      server:
-        readinessProbeDelaySeconds: 10
     asserts:
-      - equal:
-          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
-          value: 10
-      - equal:
-          path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
-          value: rpc
-  - it: readinessProbe favours service specific resources
+      - notExists:
+          path: spec.template.spec.containers[0].readinessProbe
+  - it: readinessProbe is set for frontend service
     template: templates/server-deployment.yaml
     documentSelector:
       path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
@@ -235,13 +228,35 @@ tests:
       matchMany: true
     set:
       server:
-        readinessProbeDelaySeconds: 15
         frontend:
-          readinessProbeDelaySeconds: 10
+          readinessProbe:
+            grpc:
+              port: 9999
+              service: WorkflowService
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.grpc.port
+          value: 9999
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.grpc.service
+          value: WorkflowService
+  - it: readinessProbe is set for history service
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-history")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        history:
+          readinessProbe:
+             initialDelaySeconds: 300
+             tcpSocket:
+               port: rpc
     asserts:
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
-          value: 10
+          value: 300
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
           value: rpc

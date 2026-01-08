@@ -24,7 +24,7 @@ server:
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
-  readinessProbeDelaySeconds: 0
+  readinessProbe: {}
   metrics:
     # Annotate pods and services directly with the following Prometheus annotations.
     # prometheus.io/job
@@ -230,6 +230,10 @@ server:
       membershipAppProtocol: tcp
       httpPort: 7243
       httpAppProtocol: http
+    readinessProbe:
+      grpc:
+        port: 7233
+        service: temporal.api.workflowservice.v1.WorkflowService
     ingress:
       enabled: false
       # className:
@@ -265,7 +269,6 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
-    readinessProbeDelaySeconds: 0
   internalFrontend:
     # Enable this to create internal-frontend
     enabled: false
@@ -279,6 +282,10 @@ server:
       membershipAppProtocol: tcp
       httpPort: 7246
       httpAppProtocol: http
+    readinessProbe:
+      grpc:
+        port: 7233
+        service: temporal.api.workflowservice.v1.WorkflowService
     metrics:
       annotations:
         enabled: true
@@ -299,7 +306,6 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
-    readinessProbeDelaySeconds: 0
   history:
     service:
       # type: ClusterIP
@@ -328,7 +334,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
-    readinessProbeDelaySeconds: 0
+    readinessProbe: {}
   matching:
     service:
       # type: ClusterIP
@@ -356,7 +362,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
-    readinessProbeDelaySeconds: 0
+    readinessProbe: {}
   worker:
     service:
       # type: ClusterIP
@@ -384,7 +390,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
-    readinessProbeDelaySeconds: 0
+    readinessProbe: {}
 admintools:
   enabled: true
   image:
