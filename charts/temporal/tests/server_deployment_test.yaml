@@ -229,17 +229,15 @@ tests:
     set:
       server:
         frontend:
-          readinessProbe:
-            grpc:
-              port: 9999
-              service: WorkflowService
+          service:
+            port: 9999
     asserts:
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.grpc.port
           value: 9999
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.grpc.service
-          value: WorkflowService
+          value: temporal.api.workflowservice.v1.WorkflowService
   - it: readinessProbe is set for history service
     template: templates/server-deployment.yaml
     documentSelector:
