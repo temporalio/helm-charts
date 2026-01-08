@@ -236,8 +236,8 @@ tests:
     set:
       server:
         readinessProbeDelaySeconds: 15
-      frontend:
-        readinessProbeDelaySeconds: 10
+        frontend:
+          readinessProbeDelaySeconds: 10
     asserts:
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
