@@ -94,3 +94,43 @@ tests:
       - matchRegex:
           path: data['config_template.yaml']
           pattern: "connectAddr: postgres.example.com:5432"
+
+  - it: injects password from existingSecret without explicit password field
+    set:
+      server:
+        enabled: true
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            numHistoryShards: 512
+            datastores:
+              default:
+                sql:
+                  pluginName: postgres12_pgx
+                  driverName: postgres12_pgx
+                  databaseName: temporal
+                  connectAddr: "postgres.example.com:5432"
+                  user: temporal_user
+                  existingSecret: my-postgres-secret
+                  secretKey: postgresPassword
+              visibility:
+                sql:
+                  pluginName: postgres12_pgx
+                  driverName: postgres12_pgx
+                  databaseName: temporal_visibility
+                  connectAddr: "postgres.example.com:5432"
+                  user: temporal_user
+                  existingSecret: my-postgres-secret
+                  secretKey: postgresPassword
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'password: \{\{ env "TEMPORAL_DEFAULT_STORE_PASSWORD" \| quote \}\}'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'password: \{\{ env "TEMPORAL_VISIBILITY_STORE_PASSWORD" \| quote \}\}'
