@@ -24,6 +24,7 @@ server:
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
+  readinessProbe: {}
   metrics:
     # Annotate pods and services directly with the following Prometheus annotations.
     # prometheus.io/job
@@ -229,6 +230,10 @@ server:
       membershipAppProtocol: tcp
       httpPort: 7243
       httpAppProtocol: http
+    readinessProbe:
+      grpc:
+        port: 7233
+        service: temporal.api.workflowservice.v1.WorkflowService
     ingress:
       enabled: false
       # className:
@@ -277,6 +282,10 @@ server:
       membershipAppProtocol: tcp
       httpPort: 7246
       httpAppProtocol: http
+    readinessProbe:
+      grpc:
+        port: 7236
+        service: temporal.api.workflowservice.v1.WorkflowService
     metrics:
       annotations:
         enabled: true
@@ -304,6 +313,7 @@ server:
       appProtocol: tcp
       membershipPort: 6934
       membershipAppProtocol: tcp
+    readinessProbe: {}
     metrics:
       annotations:
         enabled: true
@@ -332,6 +342,7 @@ server:
       appProtocol: tcp
       membershipPort: 6935
       membershipAppProtocol: tcp
+    readinessProbe: {}
     metrics:
       annotations:
         enabled: false
@@ -359,6 +370,7 @@ server:
       appProtocol: tcp
       membershipPort: 6939
       membershipAppProtocol: tcp
+    readinessProbe: {}
     metrics:
       annotations:
         enabled: true
@@ -427,6 +439,11 @@ web:
     appProtocol: http
     annotations: {}
     # loadBalancerIP:
+  readinessProbe:
+    initialDelaySeconds: 10
+    httpGet:
+      path: /healthz
+      port: http
   ingress:
     enabled: false
     # className:

@@ -105,6 +105,10 @@ spec:
             tcpSocket:
               port: rpc
           {{- end }}
+          {{- with default $.Values.server.readinessProbe $serviceValues.readinessProbe }}
+          readinessProbe:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: config
               mountPath: /etc/temporal/config/config_template.yaml
