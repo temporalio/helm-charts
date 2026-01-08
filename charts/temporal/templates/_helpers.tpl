@@ -146,7 +146,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
   {{- range $storeType := list "sql" "cassandra" "elasticsearch" -}}
     {{- if hasKey $dsCopy $storeType -}}
       {{- $storeConfig := get $dsCopy $storeType -}}
-      {{- if hasKey $storeConfig "password" -}}
+      {{- if or (hasKey $storeConfig "password") (hasKey $storeConfig "existingSecret") -}}
         {{- if eq $name $defaultStore -}}
           {{- $_ := set $storeConfig "password" "__ENV_TEMPORAL_DEFAULT_STORE_PASSWORD__" -}}
         {{- else if eq $name $visibilityStore -}}
