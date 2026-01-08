@@ -3,7 +3,7 @@
 {{- $service := include "serviceName" (list $rawService) }}
 {{- $serviceValues := index $.Values.server $rawService }}
 {{- if or (not (hasKey $serviceValues "enabled")) $serviceValues.enabled }}
-{{- if and (gt ($serviceValues.replicaCount | int) 1) ($serviceValues.podDisruptionBudget) }}
+{{- if and (gt ($serviceValues.replicaCount | int) 0) ($serviceValues.podDisruptionBudget) }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
