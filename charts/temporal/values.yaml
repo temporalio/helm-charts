@@ -24,6 +24,7 @@ server:
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
+  readinessProbeDelaySeconds: 0
   metrics:
     # Annotate pods and services directly with the following Prometheus annotations.
     # prometheus.io/job
@@ -264,6 +265,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+    readinessProbeDelaySeconds: 0
   internalFrontend:
     # Enable this to create internal-frontend
     enabled: false
@@ -297,6 +299,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+    readinessProbeDelaySeconds: 0
   history:
     service:
       # type: ClusterIP
@@ -325,6 +328,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+    readinessProbeDelaySeconds: 0
   matching:
     service:
       # type: ClusterIP
@@ -352,6 +356,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+    readinessProbeDelaySeconds: 0
   worker:
     service:
       # type: ClusterIP
@@ -379,6 +384,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+    readinessProbeDelaySeconds: 0
 admintools:
   enabled: true
   image:

@@ -104,6 +104,10 @@ spec:
             initialDelaySeconds: 150
             tcpSocket:
               port: rpc
+          readinessProbe:
+             initialDelaySeconds: {{ default $.Values.server.readinessProbeDelaySeconds $serviceValues.readinessProbeDelaySeconds }}
+             tcpSocket:
+               port: rpc
           {{- end }}
           volumeMounts:
             - name: config
