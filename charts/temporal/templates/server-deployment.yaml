@@ -105,15 +105,9 @@ spec:
             tcpSocket:
               port: rpc
           {{- end }}
-          {{- if or (eq $service "frontend") (eq $service "internal-frontend") }}
-          readinessProbe:
-            grpc:
-              port: {{ $serviceValues.service.port }}
-              service: temporal.api.workflowservice.v1.WorkflowService
-          {{- else }}
           {{- with default $.Values.server.readinessProbe $serviceValues.readinessProbe }}
+          readinessProbe:
           {{- toYaml . | nindent 12 }}
-          {{- end }}
           {{- end }}
           volumeMounts:
             - name: config

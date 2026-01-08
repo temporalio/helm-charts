@@ -229,8 +229,10 @@ tests:
     set:
       server:
         frontend:
-          service:
-            port: 9999
+          readinessProbe:
+            grpc:
+              port: 9999
+              service: temporal.api.workflowservice.v1.WorkflowService
     asserts:
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.grpc.port
