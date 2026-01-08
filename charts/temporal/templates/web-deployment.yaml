@@ -49,6 +49,10 @@ spec:
             initialDelaySeconds: 10
             tcpSocket:
               port: http
+          {{- with .Values.web.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: 8080
