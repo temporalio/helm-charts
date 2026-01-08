@@ -313,6 +313,7 @@ server:
       appProtocol: tcp
       membershipPort: 6934
       membershipAppProtocol: tcp
+    readinessProbe: {}
     metrics:
       annotations:
         enabled: true
@@ -334,7 +335,6 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
-    readinessProbe: {}
   matching:
     service:
       # type: ClusterIP
@@ -342,6 +342,7 @@ server:
       appProtocol: tcp
       membershipPort: 6935
       membershipAppProtocol: tcp
+    readinessProbe: {}
     metrics:
       annotations:
         enabled: false
@@ -362,7 +363,6 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
-    readinessProbe: {}
   worker:
     service:
       # type: ClusterIP
@@ -370,6 +370,7 @@ server:
       appProtocol: tcp
       membershipPort: 6939
       membershipAppProtocol: tcp
+    readinessProbe: {}
     metrics:
       annotations:
         enabled: true
@@ -390,7 +391,6 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
-    readinessProbe: {}
 admintools:
   enabled: true
   image:
