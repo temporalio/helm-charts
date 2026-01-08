@@ -284,7 +284,7 @@ server:
       httpAppProtocol: http
     readinessProbe:
       grpc:
-        port: 7233
+        port: 7236
         service: temporal.api.workflowservice.v1.WorkflowService
     metrics:
       annotations:
