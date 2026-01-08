@@ -439,6 +439,11 @@ web:
     appProtocol: http
     annotations: {}
     # loadBalancerIP:
+  readinessProbe:
+    initialDelaySeconds: 10
+    httpGet:
+      path: /healthz
+      port: http
   ingress:
     enabled: false
     # className:
