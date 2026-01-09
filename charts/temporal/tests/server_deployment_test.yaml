@@ -125,6 +125,30 @@ tests:
       - equal:
           path: spec.template.spec.minReadySeconds
           value: 30
+  - it: terminationGracePeriodSeconds is not set by default
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.terminationGracePeriodSeconds
+  - it: terminationGracePeriodSeconds favors service specific resources
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        terminationGracePeriodSeconds: 30
+        frontend:
+          terminationGracePeriodSeconds: 60
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 60
   - it: renders log config with defaults
     template: templates/server-configmap.yaml
     asserts:
