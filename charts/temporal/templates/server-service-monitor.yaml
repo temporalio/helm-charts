@@ -9,7 +9,7 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ $rawService "") | nindent 4 }}
     {{- with (default $.Values.server.metrics.serviceMonitor.additionalLabels $serviceValues.metrics.serviceMonitor.additionalLabels) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -21,7 +21,7 @@ spec:
     metricRelabelings:
       {{- toYaml . | nindent 4 }}
     {{- end }}
-  jobLabel: {{ include "temporal.componentname" (list $ $service) }}
+  jobLabel: {{ include "temporal.componentname" (list $ $rawService) }}
   namespaceSelector:
     matchNames:
       - "{{ $.Release.Namespace }}"

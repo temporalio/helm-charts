@@ -10,9 +10,9 @@ kind: Deployment
 metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
   annotations:
-    {{- include "temporal.resourceAnnotations" (list $ $service "deployment") | nindent 4 }}
+    {{- include "temporal.resourceAnnotations" (list $ $rawService "deployment") | nindent 4 }}
   labels:
-    {{- include "temporal.resourceLabels" (list $ $service "deployment") | nindent 4 }}
+    {{- include "temporal.resourceLabels" (list $ $rawService "deployment") | nindent 4 }}
 spec:
   replicas: {{ default $.Values.server.replicaCount $serviceValues.replicaCount }}
   {{- with (default $.Values.server.deploymentStrategy $serviceValues.deploymentStrategy) }}
@@ -34,9 +34,9 @@ spec:
         prometheus.io/scheme: http
         prometheus.io/port: '9090'
         {{- end }}
-        {{- include "temporal.resourceAnnotations" (list $ $service "pod") | nindent 8 }}
+        {{- include "temporal.resourceAnnotations" (list $ $rawService "pod") | nindent 8 }}
       labels:
-        {{- include "temporal.resourceLabels" (list $ $service "pod") | nindent 8 }}
+        {{- include "temporal.resourceLabels" (list $ $rawService "pod") | nindent 8 }}
     spec:
       {{ include "temporal.serviceAccount" $ }}
       {{- with $.Values.server.securityContext }}
