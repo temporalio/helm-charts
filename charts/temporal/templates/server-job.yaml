@@ -116,6 +116,11 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
               {{- with $.Values.admintools.additionalEnv }}
                 {{- toYaml . | nindent 12 }}
               {{- end }}
+              {{- with $.Values.admintools.additionalEnvSecretName }}
+          envFrom:
+            - secretRef:
+                name: {{ . }}
+              {{- end }}
               {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
                 {{- toYaml . | nindent 12 }}
