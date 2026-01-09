@@ -46,6 +46,36 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].name
           value: my-init-container
+  - it: includes additional environment variables
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+          namespaces:
+            create: true
+      admintools:
+        additionalEnv:
+          - name: MY_ENV_VAR
+            value: my-value
+        additionalEnvSecretName: env-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="MY_ENV_VAR")].value
+          value: my-value
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].envFrom[0].secretRef.name
+          value: env-secret
   - it: includes additional volumes
     set:
       server:
