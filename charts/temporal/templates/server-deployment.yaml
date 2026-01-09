@@ -167,6 +167,9 @@ spec:
     {{- with (default $.Values.server.minReadySeconds $serviceValues.minReadySeconds) }}
       minReadySeconds: {{ . }}
     {{- end }}
+    {{- with (default $.Values.server.terminationGracePeriodSeconds $serviceValues.terminationGracePeriodSeconds) }}
+      terminationGracePeriodSeconds: {{ . }}
+    {{- end }}
 ---
 {{- end }}
 {{- end }}
