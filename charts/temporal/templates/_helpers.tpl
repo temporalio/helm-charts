@@ -269,3 +269,38 @@ To modify camelCase to hyphenated internal-frontend service name
         {{- print $service }}
     {{- end }}
 {{- end -}}
+
+{{/*
+Get default SQL port based on plugin name
+*/}}
+{{- define "temporal.sql.defaultPort" -}}
+    {{- $pluginName := . -}}
+    {{- if hasPrefix "postgres" $pluginName }}
+        {{- print "5432" }}
+    {{- else if hasPrefix "mysql" $pluginName }}
+        {{- print "3306" }}
+    {{- else }}
+        {{- print "" }}
+    {{- end }}
+{{- end -}}
+
+{{/*
+Extract port from connectAddr or use default based on database type
+Usage: include "temporal.sql.portFromConnectAddr" (dict "connectAddr" .connectAddr "pluginName" .pluginName "storeName" .storeName)
+*/}}
+{{- define "temporal.sql.portFromConnectAddr" -}}
+    {{- $connectAddr := required (printf "Please specify connectAddr for %s store" .storeName) .connectAddr -}}
+    {{- $parts := splitList ":" $connectAddr -}}
+    {{- $port := last $parts -}}
+    {{- if eq $port (first $parts) -}}
+        {{- $defaultPort := include "temporal.sql.defaultPort" .pluginName -}}
+        {{- if $defaultPort -}}
+            {{- print $defaultPort -}}
+        {{- else -}}
+            {{- required (printf "Please specify port in connectAddr for %s store" .storeName) "" -}}
+        {{- end -}}
+    {{- else -}}
+        {{- print $port -}}
+    {{- end -}}
+{{- end -}}
+
