@@ -30,7 +30,7 @@
 - name: SQL_HOST
   value: {{ required (printf "Please specify connectAddr for %s store" $store.name) $store.config.connectAddr | splitList ":" | first }}
 - name: SQL_PORT
-  value: {{ required (printf "Please specify connectAddr for %s store" $store.name) $store.config.connectAddr | splitList ":" | last | quote }}
+  value: {{ include "temporal.sql.portFromConnectAddr" (dict "connectAddr" $store.config.connectAddr "pluginName" $store.config.pluginName "storeName" $store.name) | quote }}
 - name: SQL_DATABASE
   value: {{ required (printf "Please specify databaseName for %s store" $store.name) $store.config.databaseName }}
 - name: SQL_USER
