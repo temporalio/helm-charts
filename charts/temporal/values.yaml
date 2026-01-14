@@ -20,7 +20,7 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.29.1
+    tag: 1.29.2
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -497,6 +497,5 @@ schema:
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
-
 test:
   podAnnotations: {}
