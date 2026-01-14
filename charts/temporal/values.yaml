@@ -93,6 +93,8 @@ server:
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
+  additionalEnvSecretName: ""
+  additionalEnvConfigMapName: ""
   # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
   securityContext:
@@ -337,7 +339,6 @@ server:
     tolerations: []
     affinity: {}
     additionalEnv: []
-    additionalEnvSecretName: ""
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
@@ -419,6 +420,7 @@ admintools:
   additionalVolumeMounts: []
   additionalEnv: []
   additionalEnvSecretName: ""
+  additionalEnvConfigMapName: ""
   # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
   resources: {}
@@ -490,6 +492,7 @@ web:
   # https://docs.temporal.io/references/web-ui-environment-variables
   additionalEnv: []
   additionalEnvSecretName: ""
+  additionalEnvConfigMapName: ""
   containerSecurityContext: {}
   securityContext: {}
   topologySpreadConstraints: []
