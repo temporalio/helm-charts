@@ -345,7 +345,7 @@ server:
     readinessProbe: {}
     metrics:
       annotations:
-        enabled: false
+        enabled: true
       serviceMonitor: {}
       # enabled: false
       prometheus: {}
