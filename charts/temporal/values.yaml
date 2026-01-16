@@ -150,6 +150,8 @@ server:
         default:
         # Example SQL configuration:
         # sql:
+        #   createDatabase: false
+        #   manageSchema: false
         #   pluginName: mysql8  # or postgres12, postgres12_pgx
         #   driverName: mysql8
         #   databaseName: temporal
@@ -172,6 +174,8 @@ server:
         #     caFile: /path/to/ca.pem
         # Example Cassandra configuration:
         # cassandra:
+        #   createDatabase: false
+        #   manageSchema: false
         #   hosts: "host1,host2"  # or ["host1", "host2"]
         #   port: 9042
         #   keyspace: temporal
@@ -187,6 +191,8 @@ server:
         visibility:
         # Example SQL configuration (same structure as default.sql):
         # sql:
+        #   createDatabase: false
+        #   manageSchema: false
         #   pluginName: mysql8
         #   driverName: mysql8
         #   databaseName: temporal_visibility
