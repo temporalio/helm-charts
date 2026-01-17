@@ -41,12 +41,8 @@ data:
           {{- with $server.metrics.tags }}
             {{- toYaml . | nindent 10 }}
           {{- end }}
-        {{- with $server.metrics.excludeTags }}
-        excludeTags:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- with $server.metrics.prefix }}
-        prefix: "{{- . }}"
+        {{- with (omit $server.metrics "tags" "annotations" "serviceMonitor" "prometheus") }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
         {{- with $server.config.prometheus }}
         prometheus:
