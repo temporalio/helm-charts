@@ -14,6 +14,9 @@ spec:
       app.kubernetes.io/name: {{ include "temporal.name" $ }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/component: web
+  {{- with .Values.web.minReadySeconds }}
+  minReadySeconds: {{ . }}
+  {{- end }}
   template:
     metadata:
       annotations:
@@ -90,8 +93,5 @@ spec:
     {{- with .Values.web.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- with .Values.web.minReadySeconds }}
-      minReadySeconds: {{ . }}
     {{- end }}
   {{- end }}

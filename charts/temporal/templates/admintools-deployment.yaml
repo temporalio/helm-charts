@@ -14,6 +14,9 @@ spec:
       app.kubernetes.io/name: {{ include "temporal.name" $ }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/component: admintools
+  {{- with .Values.admintools.minReadySeconds }}
+  minReadySeconds: {{ . }}
+  {{- end }}
   template:
     metadata:
       annotations:
@@ -94,8 +97,5 @@ spec:
     {{- with .Values.admintools.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- with .Values.admintools.minReadySeconds }}
-      minReadySeconds: {{ . }}
     {{- end }}
 {{- end }}
