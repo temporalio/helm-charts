@@ -108,7 +108,7 @@ tests:
         minReadySeconds: 10
     asserts:
       - equal:
-          path: spec.template.spec.minReadySeconds
+          path: spec.minReadySeconds
           value: 10
   - it: minReadySeconds favours service specific resources
     template: templates/server-deployment.yaml
@@ -123,7 +123,7 @@ tests:
           minReadySeconds: 30
     asserts:
       - equal:
-          path: spec.template.spec.minReadySeconds
+          path: spec.minReadySeconds
           value: 30
   - it: renders log config with defaults
     template: templates/server-configmap.yaml

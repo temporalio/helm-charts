@@ -29,3 +29,11 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].volumeMounts[0].name
           value: my-volume
+  - it: minReadySeconds usage
+    set:
+      admintools:
+        minReadySeconds: 10
+    asserts:
+      - equal:
+          path: spec.minReadySeconds
+          value: 10

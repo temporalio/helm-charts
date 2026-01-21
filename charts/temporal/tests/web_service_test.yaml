@@ -1,6 +1,7 @@
 suite: test web service
 templates:
   - web-service.yaml
+  - web-deployment.yaml
 tests:
   - it: includes the provided clusterIP to make the service headless
     template: templates/web-service.yaml
@@ -29,7 +30,6 @@ tests:
           value: ClusterIP
       - notExists:
           path: spec.clusterIP
-
   - it: app protocol default
     template: templates/web-service.yaml
     asserts:
@@ -62,3 +62,12 @@ tests:
             port: 8080
             protocol: TCP
             targetPort: http
+  - it: minReadySeconds usage
+    template: templates/web-deployment.yaml
+    set:
+      web:
+        minReadySeconds: 10
+    asserts:
+      - equal:
+          path: spec.minReadySeconds
+          value: 10
