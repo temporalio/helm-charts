@@ -135,7 +135,7 @@ tests:
           path: data['config_template.yaml']
           pattern: 'password: \{\{ env "TEMPORAL_VISIBILITY_STORE_PASSWORD" \| quote \}\}'
 
-  - it: handles metrics correctly
+  - it: handles metrics correctly with backwards compatibility
     set:
       server:
         config:
@@ -149,12 +149,16 @@ tests:
               visibility:
                 sql:
                   password: "secret"
+          metrics:
+            prefix: "temporal_"
+            tags:
+              env: production
+            withoutUnitSuffix: false
         metrics:
           tags:
-            env: production
+            region: us-west-2
           excludeTags:
             ignored: ["tag1", "tag2"]
-          prefix: temporal_
     template: templates/server-configmap.yaml
     documentSelector:
       path: metadata.name
@@ -163,3 +167,15 @@ tests:
       - matchRegex:
           path: data['config_template.yaml']
           pattern: 'prefix: temporal_'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "excludeTags:\\s+ignored:"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "env: production"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "region: us-west-2"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "withoutUnitSuffix: false"

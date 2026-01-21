@@ -33,10 +33,11 @@ server:
     # prometheus.io/scrape
     annotations:
       enabled: true
-    # Additional tags to be added to Prometheus metrics
+    # Additional tags to be added to Prometheus metrics. Deprecated, set server.config.metrics.tags.
     tags: {}
-    # Tags to be excluded in Prometheus metrics
+    # Tags to be excluded in Prometheus metrics. Deprecated, set server.config.metrics.excludeTags.
     excludeTags: {}
+    # Deprecated, set server.config.metrics.prefix.
     prefix:
     # Enable Prometheus ServiceMonitor
     # Use this if you installed the Prometheus Operator (https://github.com/coreos/prometheus-operator).
@@ -221,6 +222,13 @@ server:
         #   sql:
         #     pluginName: postgres12
         #     ...
+    metrics:
+      # Additional tags to be added to Prometheus metrics
+      tags: {}
+      # ... All other fields from https://github.com/temporalio/temporal/blob/main/common/metrics/config.go
+      prometheus:
+          timerType: histogram
+          listenAddress: "0.0.0.0:9090"
     namespaces:
       # Enable this to create namespaces
       create: false
