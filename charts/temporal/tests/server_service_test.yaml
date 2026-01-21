@@ -3,17 +3,24 @@ templates:
   - server-service.yaml
 set:
   server:
-    internalFrontend:
+    internal-frontend:
       enabled: true
     replicaCount: 2
     resources:
       requests:
         cpu: 100m
     frontend:
+      enabled: true
       replicaCount: 3
       resources:
         requests:
           cpu: 200m
+    history:
+      enabled: true
+    matching:
+      enabled: true
+    worker:
+      enabled: true
 tests:
   - it: omits prometheus annotations when disabled
     template: templates/server-service.yaml
@@ -306,7 +313,7 @@ tests:
       matchMany: true
     set:
       server:
-        internalFrontend:
+        internal-frontend:
           service:
             appProtocol: grpc
             httpAppProtocol: http2
@@ -378,7 +385,7 @@ tests:
       matchMany: true
     set:
       server:
-        internalFrontend:
+        internal-frontend:
           service:
             appProtocol: grpc
             membershipAppProtocol: tls
