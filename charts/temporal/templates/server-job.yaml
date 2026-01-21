@@ -84,9 +84,11 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
             {{- with $.Values.admintools.additionalVolumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
+            {{- if $.Values.shims.elasticsearchTool }}
             - name: shims
               mountPath: /usr/local/sbin/temporal-elasticsearch-tool
               subPath: temporal-elasticsearch-tool
+            {{- end }}
             {{- with $.Values.schema.resources }}
           resources:
               {{- toYaml . | nindent 12 }}
@@ -164,13 +166,15 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or $.Values.admintools.additionalVolumes true }}
+      {{- if or $.Values.admintools.additionalVolumes $.Values.shims.elasticsearchTool }}
       volumes:
         {{- with $.Values.admintools.additionalVolumes }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
+        {{- if $.Values.shims.elasticsearchTool }}
         - name: shims
           configMap:
             name: "{{ include "temporal.fullname" $ }}-shims"
             defaultMode: 0555
+        {{- end }}
       {{- end }}

@@ -1,3 +1,4 @@
+{{- if or $.Values.shims.dockerize $.Values.shims.elasticsearchTool }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -5,6 +6,7 @@ metadata:
   labels:
     {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
 data:
+{{- if $.Values.shims.dockerize }}
   dockerize: |-
     #!/bin/sh
     set -e
@@ -38,6 +40,8 @@ data:
 
         echo "Skipped dockerize, copied $SRC to $DST"
     fi
+{{- end }}
+{{- if $.Values.shims.elasticsearchTool }}
   temporal-elasticsearch-tool: |-
     #!/bin/sh
     set -e
@@ -312,3 +316,5 @@ data:
             exit 1
             ;;
     esac
+{{- end }}
+{{- end }}

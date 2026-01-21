@@ -118,9 +118,11 @@ spec:
               subPath: config_template.yaml
             - name: dynamic-config
               mountPath: /etc/temporal/dynamic_config
+            {{- if $.Values.shims.dockerize }}
             - name: shims
               mountPath: /usr/local/bin/dockerize
               subPath: dockerize
+            {{- end }}
             {{- if $.Values.server.additionalVolumeMounts }}
             {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12}}
             {{- end }}
@@ -135,10 +137,12 @@ spec:
       {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+        {{- if $.Values.shims.dockerize }}
         - name: shims
           configMap:
             name: "{{ include "temporal.fullname" $ }}-shims"
             defaultMode: 0555
+        {{- end }}
         - name: config
           configMap:
             name: "{{ include "temporal.fullname" $ }}-config"

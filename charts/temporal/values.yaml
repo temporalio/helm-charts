@@ -503,5 +503,8 @@ schema:
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
+shims:
+  dockerize: true
+  elasticsearchTool: true
 test:
   podAnnotations: {}
