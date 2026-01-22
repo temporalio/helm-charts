@@ -269,6 +269,7 @@ server:
     deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -306,6 +307,7 @@ server:
     deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -334,6 +336,7 @@ server:
     deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -362,6 +365,7 @@ server:
     deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -390,6 +394,7 @@ server:
     deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []

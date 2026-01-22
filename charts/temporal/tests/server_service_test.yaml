@@ -530,3 +530,22 @@ tests:
             port: 9090
             protocol: TCP
             targetPort: metrics
+  - it: add custom label for frontend service
+    template: templates/server-service.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Service
+      matchMany: true
+    set:
+      server:
+        frontend:
+          serviceLabels:
+            label1: value1
+            label2: value2
+    asserts:
+      - equal:
+          path: metadata.labels["label1"]
+          value: value1
+      - equal:
+          path: metadata.labels["label2"]
+          value: value2
