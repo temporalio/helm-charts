@@ -237,14 +237,14 @@ admintools:
 ```
 
 #### Disable Shims
-- `shims.dockerize` - Option to disable dockerize shim creation (default: `true`)
-- `shims.elasticsearchTool` - Option to disable elasticsearch tool shim creation (default: `true`)
+- `shims.dockerize` - Enable compatibility with Temporal 1.29 images (default: `true`). Set to `false` if using Temporal 1.30 or higher.
+- `shims.elasticsearchTool` - Enable compatibility with Temporal 1.29 images (default: `true`). Set to `false` if using Temporal 1.30 or higher.
 
 **Example:**
 ```yaml
 shims:
-  dockerize: false
-  elasticsearchTool: false
+  dockerize: false  # Disable if using Temporal 1.30+
+  elasticsearchTool: false  # Disable if using Temporal 1.30+
 ```
 
 #### Schema Job Annotations
