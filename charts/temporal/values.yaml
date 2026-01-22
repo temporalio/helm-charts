@@ -178,7 +178,7 @@ server:
         # cassandra:
         #   createDatabase: false
         #   manageSchema: false
-        #   hosts: "host1,host2"  # or ["host1", "host2"]
+        #   hosts: "host1,host2"
         #   port: 9042
         #   keyspace: temporal
         #   user: cassandra_user
