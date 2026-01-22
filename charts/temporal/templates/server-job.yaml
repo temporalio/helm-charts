@@ -108,8 +108,8 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
           args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
           env:
             - name: TEMPORAL_ADDRESS
-              {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
-              value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.internalFrontend.service.port }}
+              {{- if (index $.Values.server "internal-frontend").enabled }}
+              value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ (index $.Values.server "internal-frontend").service.port }}
               {{- else if $.Values.server.frontend.ingress.enabled }}
               value: "{{ index $.Values.server.frontend.ingress.hosts 0 }}"
               {{- else }}

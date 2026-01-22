@@ -3,7 +3,9 @@ templates:
   - server-pdb.yaml
 set:
   server:
+    enabled: true
     frontend:
+      enabled: true
       replicaCount: 1
 tests:
   - it: creates pdb when specified

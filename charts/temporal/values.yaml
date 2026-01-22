@@ -278,7 +278,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
-  internalFrontend:
+  internal-frontend:
     # Enable this to create internal-frontend
     enabled: false
     service:
