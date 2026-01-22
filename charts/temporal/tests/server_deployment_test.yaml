@@ -295,3 +295,26 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
           value: rpc
+  - it: additional environment variables are set on all services
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$.kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        additionalEnv:
+          - name: HELLO
+            value: world
+        additionalEnvSecretName: secret-env
+        additionalEnvConfigMapName: configmap-env
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name=="HELLO")].value
+          value: world
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].secretRef.name
+          value: secret-env
+      - equal: 
+          path: spec.template.spec.containers[0].envFrom[1].configMapRef.name
+          value: configmap-env

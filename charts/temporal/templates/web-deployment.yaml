@@ -43,10 +43,16 @@ spec:
           {{- if .Values.web.additionalEnv }}
           {{- toYaml .Values.web.additionalEnv | nindent 12 }}
           {{- end }}
-          {{- if .Values.web.additionalEnvSecretName }}
+          {{- if or .Values.web.additionalEnvSecretName .Values.web.additionalEnvConfigMapName }}
           envFrom:
+          {{- if .Values.web.additionalEnvSecretName }}
             - secretRef:
                 name: {{ .Values.web.additionalEnvSecretName }}
+          {{- end }}
+          {{- if .Values.web.additionalEnvConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.web.additionalEnvConfigMapName }}
+          {{- end }}
           {{- end }}
           livenessProbe:
             initialDelaySeconds: 10

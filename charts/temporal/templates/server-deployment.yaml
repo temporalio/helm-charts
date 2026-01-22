@@ -78,10 +78,16 @@ spec:
           {{- if or $.Values.server.additionalEnv $serviceValues.additionalEnv }}
           {{- toYaml (default $.Values.server.additionalEnv $serviceValues.additionalEnv) | nindent 12 }}
           {{- end }}
-          {{- if $.Values.server.additionalEnvSecretName }}
+          {{- if or $.Values.server.additionalEnvSecretName $.Values.server.additionalEnvConfigMapName }}
           envFrom:
+          {{- if $.Values.server.additionalEnvSecretName }}
             - secretRef:
                 name: {{ $.Values.server.additionalEnvSecretName }}
+          {{- end }}
+          {{- if $.Values.server.additionalEnvConfigMapName }}
+            - configMapRef:
+                name: {{ $.Values.server.additionalEnvConfigMapName }}
+          {{- end }}
           {{- end }}
           # For Istio service mesh - make sure ports are defined here and in the headless service, see:
           # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services

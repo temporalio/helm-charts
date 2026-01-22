@@ -50,10 +50,16 @@ spec:
           {{- with .Values.admintools.additionalEnv }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.admintools.additionalEnvSecretName }}
+          {{- if or .Values.admintools.additionalEnvSecretName .Values.admintools.additionalEnvConfigMapName }}
           envFrom:
+          {{- with .Values.admintools.additionalEnvSecretName }}
             - secretRef:
                 name: {{ . }}
+          {{- end }}
+          {{- with .Values.admintools.additionalEnvConfigMapName }}
+            - configMapRef:
+                name: {{ . }}
+          {{- end }}
           {{- end }}
           livenessProbe:
               exec:
