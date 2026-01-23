@@ -171,9 +171,9 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- $stores := dict -}}
 {{- $_ := set $stores "default" (include "temporal.persistence.getStoreByType" (list $ "default") | fromYaml) -}}
 {{- $_ := set $stores "visibility" (include "temporal.persistence.getStoreByType" (list $ "visibility") | fromYaml) -}}
-{{- if .Values.server.config.persistence.secondaryVisibilityStore -}}
-{{- $secondaryVisibilityStoreName := .Values.server.config.persistence.secondaryVisibilityStore -}}
-{{- $_ := set $stores "secondaryVisibility" (include "temporal.persistence.getStore" (list $ $secondaryVisibilityStoreName) | fromYaml) -}}
+{{- $secondaryVisibility := include "temporal.persistence.getStoreByType" (list $ "secondaryVisibility") | fromYaml -}}
+{{- if $secondaryVisibility -}}
+{{- $_ := set $stores "secondaryVisibility" $secondaryVisibility -}}
 {{- end -}}
 {{- $stores | toYaml -}}
 {{- end -}}
@@ -221,7 +221,11 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- $root := index . 0 -}}
 {{- $type := index . 1 -}}
 {{- $storeName := get $root.Values.server.config.persistence (printf "%sStore" $type) -}}
+{{- if $storeName -}}
 {{- include "temporal.persistence.getStore" (list $root $storeName) -}}
+{{- else -}}
+{{- dict | toYaml -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.persistence.schema" -}}
