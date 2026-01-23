@@ -104,18 +104,17 @@ data:
           bindOnIP: "0.0.0.0"
 
     clusterMetadata:
-    {{- with $server.config.clusterMetadata }}
+    {{- with (omit $server.config.clusterMetadata "clusterName") }}
       {{- toYaml . | nindent 8 }}
     {{- else }}
       enableGlobalNamespace: false
       failoverVersionIncrement: 10
-      masterClusterName: "active"
-      currentClusterName: "active"
+      masterClusterName: {{ $server.config.clusterMetadata.clusterName | quote }}
+      currentClusterName: {{ $server.config.clusterMetadata.clusterName | quote }}
       clusterInformation:
-        active:
+        {{ $server.config.clusterMetadata.clusterName }}:
           enabled: true
           initialFailoverVersion: 1
-          rpcName: "temporal-frontend"
           rpcAddress: "127.0.0.1:{{ $server.frontend.service.port }}"
           httpAddress: "127.0.0.1:{{ $server.frontend.service.httpPort }}"
     {{- end }}

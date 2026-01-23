@@ -43,6 +43,53 @@ tests:
           path: data['config_template.yaml']
           pattern: 'password: \{\{ env "TEMPORAL_VISIBILITY_STORE_PASSWORD" \| quote \}\}'
 
+  - it: handles clusterMetadata clusterName
+    set:
+      server:
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            datastores:
+              default:
+              visibility:
+          clusterMetadata:
+            clusterName: my-cluster
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'masterClusterName: "my-cluster"\s+currentClusterName: "my-cluster"'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'clusterInformation:\s+my-cluster:'
+
+  - it: handles custom clusterMetadata
+    set:
+      server:
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            datastores:
+              default:
+              visibility:
+          clusterMetadata:
+            clusterName: my-cluster # this is ignored
+            enableGlobalNamespace: true
+            failoverVersionIncrement: 20
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'clusterMetadata:\s+enableGlobalNamespace: true\s+failoverVersionIncrement: 20'
+
   - it: handles additional stores
     set:
       server:

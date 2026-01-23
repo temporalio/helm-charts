@@ -221,6 +221,10 @@ server:
         #   sql:
         #     pluginName: postgres12
         #     ...
+    clusterMetadata:
+      # Sets the cluster name.
+      # If any other clusterMetadata fields are set, clusterName will be ignored, and those will be set as clusterMetadata instead.
+      clusterName: active
     namespaces:
       # Enable this to create namespaces
       create: false
