@@ -70,15 +70,11 @@ spec:
               {{- include "temporal.password-env" (list $ $defaultStore) | nindent 14 }}
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
               {{- include "temporal.password-env" (list $ $visibilityStore) | nindent 14 }}
-<<<<<<< HEAD
-          {{- if (index $.Values.server "internal-frontend").enabled }}
-=======
           {{- if $.Values.server.config.persistence.secondaryVisibilityStore }}
             - name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
               {{- include "temporal.password-env" (list $ $secondaryVisibilityStore) | nindent 14 }}
           {{- end }}
-          {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
->>>>>>> d02b74b (feat: add support for secondary visibility store (dual visibility))
+          {{- if (index $.Values.server "internal-frontend").enabled }}
             - name: USE_INTERNAL_FRONTEND
               value: "1"
           {{- end }}
