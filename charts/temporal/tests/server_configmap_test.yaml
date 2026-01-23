@@ -135,7 +135,7 @@ tests:
           path: data['config_template.yaml']
           pattern: 'password: \{\{ env "TEMPORAL_VISIBILITY_STORE_PASSWORD" \| quote \}\}'
 
-  - it: handles metrics correctly with backwards compatibility
+  - it: handles metrics config
     set:
       server:
         config:
@@ -153,12 +153,9 @@ tests:
             prefix: "temporal_"
             tags:
               env: production
+            excludeTags:
+              ignored: ["tag1", "tag2"]
             withoutUnitSuffix: false
-        metrics:
-          tags:
-            region: us-west-2
-          excludeTags:
-            ignored: ["tag1", "tag2"]
     template: templates/server-configmap.yaml
     documentSelector:
       path: metadata.name
@@ -175,7 +172,7 @@ tests:
           pattern: "env: production"
       - matchRegex:
           path: data['config_template.yaml']
-          pattern: "region: us-west-2"
+          pattern: "withoutUnitSuffix: false"
       - matchRegex:
           path: data['config_template.yaml']
-          pattern: "withoutUnitSuffix: false"
+          pattern: "prometheus:\\s+listenAddress: 0.0.0.0:9090"
