@@ -152,7 +152,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
           {{- $_ := set $storeConfig "password" "__ENV_TEMPORAL_DEFAULT_STORE_PASSWORD__" -}}
         {{- else if eq $name $visibilityStore -}}
           {{- $_ := set $storeConfig "password" "__ENV_TEMPORAL_VISIBILITY_STORE_PASSWORD__" -}}
-        {{- else if and $secondaryVisibilityStore (eq $name $secondaryVisibilityStore) -}}
+        {{- else if eq $name $secondaryVisibilityStore -}}
           {{- $_ := set $storeConfig "password" "__ENV_TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD__" -}}
         {{- else -}}
           {{- $_ := unset $storeConfig "password" -}}
