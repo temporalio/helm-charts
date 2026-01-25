@@ -270,18 +270,4 @@ To modify camelCase to hyphenated internal-frontend service name
     {{- end }}
 {{- end -}}
 
-{{/*
-Extract port from connectAddr and fail if not provided
-Usage: include "temporal.sql.portFromConnectAddr" (dict "connectAddr" .connectAddr "storeName" .storeName)
-*/}}
-{{- define "temporal.sql.portFromConnectAddr" -}}
-    {{- $connectAddr := required (printf "Please specify connectAddr for %s store" .storeName) .connectAddr -}}
-    {{- $parts := splitList ":" $connectAddr -}}
-    {{- $port := last $parts -}}
-    {{- if eq $port (first $parts) -}}
-        {{- required (printf "Port must be specified in connectAddr for %s store. Expected format: 'host:port' (e.g., 'localhost:5432')" .storeName) "" -}}
-    {{- else -}}
-        {{- print $port -}}
-    {{- end -}}
-{{- end -}}
 
