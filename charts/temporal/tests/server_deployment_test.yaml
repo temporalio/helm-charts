@@ -78,6 +78,41 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].name
           value: my-init-container
+  - it: includes volume mounts with shim by default
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    asserts:
+      - exists:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name=='config')]
+      - exists:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name=='dynamic-config')]
+      - exists:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name=='shims')]
+      - exists:
+          path: spec.template.spec.volumes[?(@.name=='config')]
+      - exists:
+          path: spec.template.spec.volumes[?(@.name=='dynamic-config')]
+      - exists:
+          path: spec.template.spec.volumes[?(@.name=='shims')]
+  - it: includes additional volumes without shim when disabled
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    set:
+      shims:
+        dockerize: false
+    asserts:
+      - exists:
+          path: spec.template.spec.volumes[?(@.name=='config')]
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name=='shims')]
+      - notExists:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name=='shims')]
   - it: omits prometheus annotations when disabled
     template: templates/server-deployment.yaml
     documentSelector:
@@ -108,7 +143,7 @@ tests:
         minReadySeconds: 10
     asserts:
       - equal:
-          path: spec.template.spec.minReadySeconds
+          path: spec.minReadySeconds
           value: 10
   - it: minReadySeconds favours service specific resources
     template: templates/server-deployment.yaml
@@ -123,7 +158,7 @@ tests:
           minReadySeconds: 30
     asserts:
       - equal:
-          path: spec.template.spec.minReadySeconds
+          path: spec.minReadySeconds
           value: 30
   - it: renders log config with defaults
     template: templates/server-configmap.yaml
@@ -260,3 +295,26 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
           value: rpc
+  - it: additional environment variables are set on all services
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$.kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        additionalEnv:
+          - name: HELLO
+            value: world
+        additionalEnvSecretName: secret-env
+        additionalEnvConfigMapName: configmap-env
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name=="HELLO")].value
+          value: world
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].secretRef.name
+          value: secret-env
+      - equal: 
+          path: spec.template.spec.containers[0].envFrom[1].configMapRef.name
+          value: configmap-env

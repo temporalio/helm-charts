@@ -61,6 +61,8 @@ server:
       datastores:
         default:
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: mysql8  # or postgres12, postgres12_pgx
             driverName: mysql8
             databaseName: temporal
@@ -75,6 +77,8 @@ server:
             maxConnLifetime: "1h"
         visibility:
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: mysql8
             driverName: mysql8
             databaseName: temporal_visibility
@@ -114,6 +118,8 @@ server:
       datastores:
         default:
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: mysql8
             driverName: mysql8
             databaseName: temporal
@@ -125,6 +131,8 @@ server:
             # secretKey: password
         visibility:
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: mysql8
             driverName: mysql8
             databaseName: temporal_visibility
@@ -151,6 +159,8 @@ server:
       datastores:
         default:
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: postgres12
             driverName: postgres12
             databaseName: temporal
@@ -160,6 +170,8 @@ server:
             secretKey: password
         visibility:
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: postgres12
             driverName: postgres12
             databaseName: temporal_visibility
@@ -188,6 +200,8 @@ server:
       datastores:
         default:
           cassandra:
+            createDatabase: true
+            manageSchema: true
             hosts: "cassandra1.example.com,cassandra2.example.com"
             port: 9042
             keyspace: temporal
@@ -197,6 +211,8 @@ server:
         visibility:
           # Use SQL or Elasticsearch for visibility
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: mysql8
             driverName: mysql8
             databaseName: temporal_visibility
@@ -224,6 +240,8 @@ server:
         default:
           # Configure your default store (SQL or Cassandra)
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: mysql8
             driverName: mysql8
             databaseName: temporal

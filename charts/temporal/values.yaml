@@ -20,7 +20,7 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.29.1
+    tag: 1.29.2
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -93,6 +93,8 @@ server:
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
+  additionalEnvSecretName: ""
+  additionalEnvConfigMapName: ""
   # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
   securityContext:
@@ -150,6 +152,8 @@ server:
         default:
         # Example SQL configuration:
         # sql:
+        #   createDatabase: false
+        #   manageSchema: false
         #   pluginName: mysql8  # or postgres12, postgres12_pgx
         #   driverName: mysql8
         #   databaseName: temporal
@@ -172,7 +176,9 @@ server:
         #     caFile: /path/to/ca.pem
         # Example Cassandra configuration:
         # cassandra:
-        #   hosts: "host1,host2"  # or ["host1", "host2"]
+        #   createDatabase: false
+        #   manageSchema: false
+        #   hosts: "host1,host2"
         #   port: 9042
         #   keyspace: temporal
         #   user: cassandra_user
@@ -187,6 +193,8 @@ server:
         visibility:
         # Example SQL configuration (same structure as default.sql):
         # sql:
+        #   createDatabase: false
+        #   manageSchema: false
         #   pluginName: mysql8
         #   driverName: mysql8
         #   databaseName: temporal_visibility
@@ -261,6 +269,7 @@ server:
     deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -269,7 +278,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
-  internalFrontend:
+  internal-frontend:
     # Enable this to create internal-frontend
     enabled: false
     service:
@@ -298,6 +307,7 @@ server:
     deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -326,12 +336,12 @@ server:
     deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
     affinity: {}
     additionalEnv: []
-    additionalEnvSecretName: ""
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
@@ -345,7 +355,7 @@ server:
     readinessProbe: {}
     metrics:
       annotations:
-        enabled: false
+        enabled: true
       serviceMonitor: {}
       # enabled: false
       prometheus: {}
@@ -355,6 +365,7 @@ server:
     deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -383,6 +394,7 @@ server:
     deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -413,6 +425,7 @@ admintools:
   additionalVolumeMounts: []
   additionalEnv: []
   additionalEnvSecretName: ""
+  additionalEnvConfigMapName: ""
   # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
   resources: {}
@@ -484,6 +497,7 @@ web:
   # https://docs.temporal.io/references/web-ui-environment-variables
   additionalEnv: []
   additionalEnvSecretName: ""
+  additionalEnvConfigMapName: ""
   containerSecurityContext: {}
   securityContext: {}
   topologySpreadConstraints: []
@@ -497,6 +511,8 @@ schema:
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
-
+shims:
+  dockerize: true
+  elasticsearchTool: true
 test:
   podAnnotations: {}
