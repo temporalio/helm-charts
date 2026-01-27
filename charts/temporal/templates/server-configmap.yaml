@@ -38,23 +38,11 @@ data:
       metrics:
         tags:
           type: {{ `{{ env "TEMPORAL_SERVICES" | quote }}` }}
-          {{- with $server.metrics.tags }}
+          {{- with $server.config.metrics.tags }}
             {{- toYaml . | nindent 10 }}
           {{- end }}
-        {{- with $server.metrics.excludeTags }}
-        excludeTags:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- with $server.metrics.prefix }}
-        prefix: "{{- . }}"
-        {{- end }}
-        {{- with $server.config.prometheus }}
-        prometheus:
-          {{- toYaml . | nindent 10 }}
-        {{- else }}
-        prometheus:
-          timerType: histogram
-          listenAddress: "0.0.0.0:9090"
+        {{- with (omit $server.config.metrics "tags") }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
 
       {{- with $server.config.tls }}

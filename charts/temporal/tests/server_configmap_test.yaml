@@ -134,3 +134,45 @@ tests:
       - matchRegex:
           path: data['config_template.yaml']
           pattern: 'password: \{\{ env "TEMPORAL_VISIBILITY_STORE_PASSWORD" \| quote \}\}'
+
+  - it: handles metrics config
+    set:
+      server:
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            datastores:
+              default:
+                sql:
+                  password: "secret"
+              visibility:
+                sql:
+                  password: "secret"
+          metrics:
+            prefix: "temporal_"
+            tags:
+              env: production
+            excludeTags:
+              ignored: ["tag1", "tag2"]
+            withoutUnitSuffix: false
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'prefix: temporal_'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "excludeTags:\\s+ignored:"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "env: production"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "withoutUnitSuffix: false"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "prometheus:\\s+listenAddress: 0.0.0.0:9090"
