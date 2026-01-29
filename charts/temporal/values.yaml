@@ -158,10 +158,10 @@ server:
         #   driverName: mysql8
         #   databaseName: temporal
         #   connectAddr: "mysql.example.com:3306"  # preferred format
+        #   connectProtocol: "tcp"
         #   # OR use separate host/port:
         #   # host: mysql.example.com
         #   # port: 3306
-        #   # connectProtocol defaults to "tcp" if not specified
         #   user: temporal_user
         #   password: ""  # optional, use existingSecret instead
         #   existingSecret: temporal-db-secret  # Helm-specific, stripped before rendering
@@ -199,7 +199,7 @@ server:
         #   driverName: mysql8
         #   databaseName: temporal_visibility
         #   connectAddr: "mysql.example.com:3306"
-        #   # connectProtocol defaults to "tcp" if not specified
+        #   connectProtocol: "tcp"
         #   user: temporal_user
         #   existingSecret: temporal-db-secret
         #   secretKey: password

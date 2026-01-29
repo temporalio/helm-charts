@@ -48,7 +48,7 @@ server:
             driverName: mysql8
             databaseName: temporal_visibility
             connectAddr: "mysql.example.com:3306"
-            # connectProtocol defaults to "tcp" if not specified
+            connectProtocol: "tcp"
             user: temporal
             password: password
 
