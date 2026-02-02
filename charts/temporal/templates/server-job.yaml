@@ -1,7 +1,8 @@
+{{- $jobName := include "temporal.componentname" (list $ (printf "schema-%d-%d" $.Chart.Version $.Release.Revision | replace "." "-")) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
+  name: {{ $jobName }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
   {{- with $.Values.schema.jobAnnotations }}
@@ -10,10 +11,10 @@ metadata:
   {{- end }}
 spec:
   backoffLimit: {{ $.Values.schema.backoffLimit }}
-  ttlSecondsAfterFinished: 86400
+  ttlSecondsAfterFinished: {{ $.Values.schema.ttlSecondsAfterFinished }}
   template:
     metadata:
-      name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
+      name: {{ $jobName }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 8 }}
         {{- with $.Values.schema.podLabels }}

@@ -508,6 +508,7 @@ web:
   podDisruptionBudget: {}
 schema:
   backoffLimit: 100
+  ttlSecondsAfterFinished: 86400
   jobAnnotations: {}
   podAnnotations: {}
   podLabels: {}
