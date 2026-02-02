@@ -137,6 +137,14 @@ spec:
                   --index "$ES_VISIBILITY_INDEX" \
                   --fail
 
+                echo "Updating index mappings: $ES_VISIBILITY_INDEX"
+                temporal-elasticsearch-tool \
+                  --endpoint "$ES_SCHEME://$ES_HOST:$ES_PORT" \
+                  --user "$ES_USER" \
+                  --password "$ES_PWD" \
+                  update-schema \
+                  --index "$ES_VISIBILITY_INDEX"
+
               elif command -v curl >/dev/null 2>&1; then
                 echo "Using curl for Elasticsearch setup"
 
@@ -146,14 +154,12 @@ spec:
                   -H "Content-Type: application/json" \
                   --data-binary "@schema/elasticsearch/visibility/index_template_$ES_VERSION.json"
 
-                echo "Checking if index exists: $ES_VISIBILITY_INDEX"
-                if ! curl --head --fail --user "$ES_USER:$ES_PWD" \
-                  "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX" 2>&1 > /dev/null; then
-                  echo "Creating index: $ES_VISIBILITY_INDEX"
-                  curl -X PUT --fail --user "$ES_USER:$ES_PWD" \
-                    "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX"
-                else
-                  echo "Index already exists"
+                echo "Creating index: $ES_VISIBILITY_INDEX"
+                HTTP_CODE=$(curl -X PUT -s -o /dev/null -w "%{http_code}" --user "$ES_USER:$ES_PWD" \
+                  "$ES_SCHEME://$ES_HOST:$ES_PORT/$ES_VISIBILITY_INDEX")
+                if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "400" ]; then
+                  echo "ERROR: Failed to create index, HTTP code: $HTTP_CODE" >&2
+                  exit 1
                 fi
 
               else
