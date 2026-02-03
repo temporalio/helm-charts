@@ -30,7 +30,7 @@
 - name: SQL_HOST
   value: {{ required (printf "Please specify connectAddr for %s store" $store.name) $store.config.connectAddr | splitList ":" | first }}
 - name: SQL_PORT
-  value: {{ required (printf "Please specify connectAddr for %s store" $store.name) $store.config.connectAddr | splitList ":" | last | quote }}
+  value: {{ required (printf "Port must be specified in connectAddr for %s store. Expected format: 'host:port' (e.g., 'localhost:5432')" $store.name) ($store.config.connectAddr | splitList ":" | rest | first) | quote }}
 - name: SQL_DATABASE
   value: {{ required (printf "Please specify databaseName for %s store" $store.name) $store.config.databaseName }}
 - name: SQL_USER
