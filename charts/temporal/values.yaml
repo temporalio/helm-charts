@@ -83,6 +83,7 @@ server:
   tolerations: []
   affinity: {}
   minReadySeconds: 0
+  terminationGracePeriodSeconds: null
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []

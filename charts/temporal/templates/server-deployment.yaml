@@ -181,6 +181,7 @@ spec:
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      terminationGracePeriodSeconds: {{ default $.Values.server.terminationGracePeriodSeconds $serviceValues.terminationGracePeriodSeconds }}
 ---
 {{- end }}
 {{- end }}
