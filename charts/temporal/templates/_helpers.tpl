@@ -140,6 +140,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- $config := deepCopy . -}}
 {{- $defaultStore := $config.defaultStore -}}
 {{- $visibilityStore := $config.visibilityStore -}}
+{{- $secondaryVisibilityStore := $config.secondaryVisibilityStore | default "" -}}
 {{- $patchedDatastores := dict -}}
 {{- range $name, $ds := $config.datastores -}}
   {{- $dsCopy := deepCopy $ds -}}
@@ -151,6 +152,8 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
           {{- $_ := set $storeConfig "password" "__ENV_TEMPORAL_DEFAULT_STORE_PASSWORD__" -}}
         {{- else if eq $name $visibilityStore -}}
           {{- $_ := set $storeConfig "password" "__ENV_TEMPORAL_VISIBILITY_STORE_PASSWORD__" -}}
+        {{- else if eq $name $secondaryVisibilityStore -}}
+          {{- $_ := set $storeConfig "password" "__ENV_TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD__" -}}
         {{- else -}}
           {{- $_ := unset $storeConfig "password" -}}
         {{- end -}}
@@ -168,6 +171,10 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- $stores := dict -}}
 {{- $_ := set $stores "default" (include "temporal.persistence.getStoreByType" (list $ "default") | fromYaml) -}}
 {{- $_ := set $stores "visibility" (include "temporal.persistence.getStoreByType" (list $ "visibility") | fromYaml) -}}
+{{- $secondaryVisibility := include "temporal.persistence.getStoreByType" (list $ "secondaryVisibility") | fromYaml -}}
+{{- if $secondaryVisibility -}}
+{{- $_ := set $stores "secondaryVisibility" $secondaryVisibility -}}
+{{- end -}}
 {{- $stores | toYaml -}}
 {{- end -}}
 
@@ -214,7 +221,11 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
 {{- $root := index . 0 -}}
 {{- $type := index . 1 -}}
 {{- $storeName := get $root.Values.server.config.persistence (printf "%sStore" $type) -}}
+{{- if $storeName -}}
 {{- include "temporal.persistence.getStore" (list $root $storeName) -}}
+{{- else -}}
+{{- dict | toYaml -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "temporal.persistence.schema" -}}

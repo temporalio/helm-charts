@@ -1,6 +1,7 @@
 {{- if $.Values.server.enabled }}
 {{- $defaultStore := include "temporal.persistence.getStoreByType" (list $ "default") | fromYaml -}}
 {{- $visibilityStore := include "temporal.persistence.getStoreByType" (list $ "visibility") | fromYaml -}}
+{{- $secondaryVisibilityStore := include "temporal.persistence.getStoreByType" (list $ "secondaryVisibility") | fromYaml -}}
 {{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
 {{- $serviceValues := index $.Values.server $service }}
 {{- if or (not (hasKey $serviceValues "enabled")) $serviceValues.enabled }}
@@ -66,6 +67,10 @@ spec:
               {{- include "temporal.password-env" (list $ $defaultStore) | nindent 14 }}
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
               {{- include "temporal.password-env" (list $ $visibilityStore) | nindent 14 }}
+          {{- if $secondaryVisibilityStore }}
+            - name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
+              {{- include "temporal.password-env" (list $ $secondaryVisibilityStore) | nindent 14 }}
+          {{- end }}
           {{- if (index $.Values.server "internal-frontend").enabled }}
             - name: USE_INTERNAL_FRONTEND
               value: "1"
