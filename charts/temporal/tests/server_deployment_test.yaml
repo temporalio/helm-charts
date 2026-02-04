@@ -349,7 +349,7 @@ tests:
             name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: RELEASE-NAME-secondary-visibility-store
+                name: RELEASE-NAME-temporal-secondary-visibility-store
                 key: password
 
   - it: does not inject secondary visibility env var when not configured
