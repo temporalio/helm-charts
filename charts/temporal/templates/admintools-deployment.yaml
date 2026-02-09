@@ -14,6 +14,9 @@ spec:
       app.kubernetes.io/name: {{ include "temporal.name" $ }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/component: admintools
+  {{- with .Values.admintools.minReadySeconds }}
+  minReadySeconds: {{ . }}
+  {{- end }}
   template:
     metadata:
       annotations:
@@ -33,24 +36,30 @@ spec:
           env:
             # TEMPORAL_CLI_ADDRESS is deprecated, use TEMPORAL_ADDRESS instead
             - name: TEMPORAL_CLI_ADDRESS
-              {{- if and (hasKey .Values.server "internalFrontend") .Values.server.internalFrontend.enabled }}
-              value: {{ include "temporal.fullname" $ }}-internal-frontend:{{ .Values.server.internalFrontend.service.port }}
+              {{- if and (index $.Values.server "internal-frontend").enabled }}
+              value: {{ include "temporal.fullname" $ }}-internal-frontend:{{ (index $.Values.server "internal-frontend").service.port }}
               {{- else }}
-              value: {{ include "temporal.fullname" $ }}-frontend:{{ .Values.server.frontend.service.port }}
+              value: {{ include "temporal.fullname" $ }}-frontend:{{ $.Values.server.frontend.service.port }}
               {{- end }}
             - name: TEMPORAL_ADDRESS
-              {{- if and (hasKey .Values.server "internalFrontend") .Values.server.internalFrontend.enabled }}
-              value: {{ include "temporal.fullname" $ }}-internal-frontend:{{ .Values.server.internalFrontend.service.port }}
+              {{- if (index $.Values.server "internal-frontend").enabled }}
+              value: {{ include "temporal.fullname" $ }}-internal-frontend:{{ (index $.Values.server "internal-frontend").service.port }}
               {{- else }}
-              value: {{ include "temporal.fullname" $ }}-frontend:{{ .Values.server.frontend.service.port }}
+              value: {{ include "temporal.fullname" $ }}-frontend:{{ $.Values.server.frontend.service.port }}
               {{- end }}
           {{- with .Values.admintools.additionalEnv }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.admintools.additionalEnvSecretName }}
+          {{- if or .Values.admintools.additionalEnvSecretName .Values.admintools.additionalEnvConfigMapName }}
           envFrom:
+          {{- with .Values.admintools.additionalEnvSecretName }}
             - secretRef:
                 name: {{ . }}
+          {{- end }}
+          {{- with .Values.admintools.additionalEnvConfigMapName }}
+            - configMapRef:
+                name: {{ . }}
+          {{- end }}
           {{- end }}
           livenessProbe:
               exec:
