@@ -440,6 +440,7 @@ admintools:
 web:
   # additionalInitContainers: []
   enabled: true
+  # replicaCount: 1
   image:
     repository: temporalio/ui
     tag: 2.42.1
