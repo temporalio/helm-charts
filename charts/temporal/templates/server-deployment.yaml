@@ -59,6 +59,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            - name: SERVICES
+              value: {{ $service }}
             - name: TEMPORAL_SERVICES
               value: {{ $service }}
             - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
