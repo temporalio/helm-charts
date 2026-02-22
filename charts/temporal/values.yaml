@@ -145,6 +145,7 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
+          existingSecretKeys: {}
           replicationFactor: 1
           # datacenter: "us-east-1a"
           # maxQPS: 1000
@@ -161,6 +162,7 @@ server:
           user: "temporal"
           password: "temporal"
           existingSecret: ""
+          existingSecretKeys: {}
           secretName: ""
           maxConns: 20
           maxIdleConns: 20
@@ -176,6 +178,7 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
+          existingSecretKeys: {}
           # datacenter: "us-east-1a"
           # maxQPS: 1000
           # maxConns: 2
@@ -192,6 +195,7 @@ server:
           user: "temporal"
           password: "temporal"
           existingSecret: ""
+          existingSecretKeys: {}
           secretName: ""
           maxConns: 20
           maxIdleConns: 20

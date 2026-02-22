@@ -91,6 +91,7 @@ spec:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "default") }}
                   key: {{ include "temporal.persistence.secretKey" (list $ "default") }}
+            {{- include "temporal.persistence.storeEnvVars" (list $ "default") | nindent 12 }}
             {{- end }}
             {{- if ne (include "temporal.persistence.driver" (list $ "visibility")) "custom" }}
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
@@ -98,6 +99,7 @@ spec:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
                   key: {{ include "temporal.persistence.secretKey" (list $ "visibility") }}
+            {{- include "temporal.persistence.storeEnvVars" (list $ "visibility") | nindent 12 }}
             {{- end }}
           {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
             - name: USE_INTERNAL_FRONTEND

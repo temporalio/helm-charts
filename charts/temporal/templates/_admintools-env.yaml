@@ -8,14 +8,43 @@
 {{- $driverConfig = $global.Values.elasticsearch -}}
 {{- end -}}
 {{- if eq $driver "cassandra" -}}
+{{- $eskKeys := $driverConfig.existingSecretKeys | default dict -}}
 - name: CASSANDRA_HOST
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "hosts") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "hosts" }}
+{{- else }}
   value: {{ first (splitList "," (include "temporal.persistence.cassandra.hosts" (list $global $store))) }}
+{{- end }}
 - name: CASSANDRA_PORT
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "port") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "port" }}
+{{- else }}
   value: {{ include "temporal.persistence.cassandra.port" (list $global $store) | quote }}
+{{- end }}
 - name: CASSANDRA_KEYSPACE
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "keyspace") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "keyspace" }}
+{{- else }}
   value: {{ $driverConfig.keyspace }}
+{{- end }}
 - name: CASSANDRA_USER
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "user") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "user" }}
+{{- else }}
   value: {{ $driverConfig.user }}
+{{- end }}
 - name: CASSANDRA_PASSWORD
   valueFrom:
     secretKeyRef:
@@ -34,16 +63,45 @@
     {{- end }}
   {{- end }}
 {{- else if eq $driver "sql" -}}
+{{- $eskKeys := $driverConfig.existingSecretKeys | default dict -}}
 - name: SQL_PLUGIN
   value: {{ include "temporal.persistence.sql.driver" (list $global $store) }}
 - name: SQL_HOST
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "host") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "host" }}
+{{- else }}
   value: {{ include "temporal.persistence.sql.host" (list $global $store) }}
+{{- end }}
 - name: SQL_PORT
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "port") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "port" }}
+{{- else }}
   value: {{ include "temporal.persistence.sql.port" (list $global $store) | quote }}
+{{- end }}
 - name: SQL_DATABASE
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "database") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "database" }}
+{{- else }}
   value: {{ include "temporal.persistence.sql.database" (list $global $store) }}
+{{- end }}
 - name: SQL_USER
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "user") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "user" }}
+{{- else }}
   value: {{ $driverConfig.user }}
+{{- end }}
 - name: SQL_PASSWORD
   valueFrom:
     secretKeyRef:

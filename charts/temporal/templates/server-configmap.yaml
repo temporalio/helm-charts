@@ -22,22 +22,24 @@ data:
         default:
           {{- if eq (include "temporal.persistence.driver" (list $ "default")) "cassandra" }}
           cassandra:
-            hosts: "{{ include "temporal.persistence.cassandra.hosts" (list $ "default") }}"
-            port: {{ include "temporal.persistence.cassandra.port" (list $ "default") }}
+            hosts: "{{ `{{ .Env.TEMPORAL_STORE_HOSTS }}` }}"
+            port: {{ `{{ .Env.TEMPORAL_STORE_PORT }}` }}
+            user: {{ `{{ .Env.TEMPORAL_STORE_USER }}` }}
+            keyspace: {{ `{{ .Env.TEMPORAL_STORE_KEYSPACE }}` }}
             password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
-            {{- with (omit $server.config.persistence.default.cassandra "hosts" "port" "password" "existingSecret") }}
+            {{- with (omit $server.config.persistence.default.cassandra "hosts" "port" "user" "keyspace" "password" "existingSecret" "existingSecretKeys") }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- else if eq (include "temporal.persistence.driver" (list $ "default")) "sql" }}
           sql:
             pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "default") }}"
             driverName: "{{ include "temporal.persistence.sql.driver" (list $ "default") }}"
-            databaseName: "{{ $server.config.persistence.default.sql.database }}"
-            connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "default") }}:{{ include "temporal.persistence.sql.port" (list $ "default") }}"
+            databaseName: {{ `{{ .Env.TEMPORAL_STORE_DATABASE | quote }}` }}
+            connectAddr: "{{ `{{ .Env.TEMPORAL_STORE_HOST }}` }}:{{ `{{ .Env.TEMPORAL_STORE_PORT }}` }}"
             connectProtocol: "tcp"
-            user: {{ include "temporal.persistence.sql.user" (list $ "default") }}
+            user: {{ `{{ .Env.TEMPORAL_STORE_USER }}` }}
             password: {{ `{{ .Env.TEMPORAL_STORE_PASSWORD | quote }}` }}
-            {{- with (omit $server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
+            {{- with (omit $server.config.persistence.default.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret" "existingSecretKeys") }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- end }}
@@ -69,12 +71,12 @@ data:
           sql:
             pluginName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"
             driverName: "{{ include "temporal.persistence.sql.driver" (list $ "visibility") }}"
-            databaseName: "{{ $server.config.persistence.visibility.sql.database }}"
-            connectAddr: "{{ include "temporal.persistence.sql.host" (list $ "visibility") }}:{{ include "temporal.persistence.sql.port" (list $ "visibility") }}"
+            databaseName: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_DATABASE | quote }}` }}
+            connectAddr: "{{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_HOST }}` }}:{{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PORT }}` }}"
             connectProtocol: "tcp"
-            user: "{{ include "temporal.persistence.sql.user" (list $ "visibility") }}"
+            user: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_USER }}` }}
             password: {{ `{{ .Env.TEMPORAL_VISIBILITY_STORE_PASSWORD  | quote }}` }}
-            {{- with (omit $server.config.persistence.visibility.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret") }}
+            {{- with (omit $server.config.persistence.visibility.sql "driver" "driverName" "host" "port" "connectAddr" "connectProtocol" "database" "databaseName" "user" "password" "existingSecret" "existingSecretKeys") }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
         {{- end }}

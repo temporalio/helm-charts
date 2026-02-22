@@ -220,8 +220,11 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
 {{- $driverConfig := $storeConfig.cassandra -}}
-{{- with $driverConfig.secretKey -}}
-{{- print . -}}
+{{- $eskKeys := $driverConfig.existingSecretKeys | default dict -}}
+{{- if hasKey $eskKeys "password" -}}
+{{- index $eskKeys "password" -}}
+{{- else if $driverConfig.secretKey -}}
+{{- print $driverConfig.secretKey -}}
 {{- else -}}
 {{/* Cassandra password is optional, but we will create an empty secret for it */}}
 {{- print "password" -}}
@@ -347,7 +350,10 @@ Source: https://stackoverflow.com/a/52024583/3027614
 {{- $store := index . 1 -}}
 {{- $storeConfig := index $global.Values.server.config.persistence $store -}}
 {{- $driverConfig := $storeConfig.sql -}}
-{{- if $driverConfig.secretKey -}}
+{{- $eskKeys := $driverConfig.existingSecretKeys | default dict -}}
+{{- if hasKey $eskKeys "password" -}}
+{{- index $eskKeys "password" -}}
+{{- else if $driverConfig.secretKey -}}
 {{- print $driverConfig.secretKey -}}
 {{- else if or $driverConfig.existingSecret $driverConfig.password -}}
 {{- print "password" -}}
@@ -438,6 +444,101 @@ Usage:
     {{- else }}
         {{- tpl (.value | toYaml) .context }}
     {{- end }}
+{{- end -}}
+
+{{/*
+Generate env vars for a persistence store's connection params.
+For each field, emit secretKeyRef if existingSecretKeys has the key, else plain value.
+Args: list of ($global, $store)
+*/}}
+{{- define "temporal.persistence.storeEnvVars" -}}
+{{- $global := index . 0 -}}
+{{- $store := index . 1 -}}
+{{- $storeConfig := index $global.Values.server.config.persistence $store -}}
+{{- $driver := include "temporal.persistence.driver" (list $global $store) -}}
+{{- $prefix := "TEMPORAL_STORE" -}}
+{{- if eq $store "visibility" -}}
+{{- $prefix = "TEMPORAL_VISIBILITY_STORE" -}}
+{{- end -}}
+{{- if eq $driver "sql" -}}
+{{- $driverConfig := $storeConfig.sql -}}
+{{- $eskKeys := $driverConfig.existingSecretKeys | default dict -}}
+- name: {{ $prefix }}_HOST
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "host") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "host" }}
+{{- else }}
+  value: {{ include "temporal.persistence.sql.host" (list $global $store) | quote }}
+{{- end }}
+- name: {{ $prefix }}_PORT
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "port") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "port" }}
+{{- else }}
+  value: {{ include "temporal.persistence.sql.port" (list $global $store) | quote }}
+{{- end }}
+- name: {{ $prefix }}_USER
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "user") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "user" }}
+{{- else }}
+  value: {{ include "temporal.persistence.sql.user" (list $global $store) | quote }}
+{{- end }}
+- name: {{ $prefix }}_DATABASE
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "database") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "database" }}
+{{- else }}
+  value: {{ include "temporal.persistence.sql.database" (list $global $store) | quote }}
+{{- end }}
+{{- else if eq $driver "cassandra" -}}
+{{- $driverConfig := $storeConfig.cassandra -}}
+{{- $eskKeys := $driverConfig.existingSecretKeys | default dict -}}
+- name: {{ $prefix }}_HOSTS
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "hosts") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "hosts" }}
+{{- else }}
+  value: {{ include "temporal.persistence.cassandra.hosts" (list $global $store) | quote }}
+{{- end }}
+- name: {{ $prefix }}_PORT
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "port") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "port" }}
+{{- else }}
+  value: {{ include "temporal.persistence.cassandra.port" (list $global $store) | quote }}
+{{- end }}
+- name: {{ $prefix }}_USER
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "user") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "user" }}
+{{- else }}
+  value: {{ $driverConfig.user | quote }}
+{{- end }}
+- name: {{ $prefix }}_KEYSPACE
+{{- if and $driverConfig.existingSecret (hasKey $eskKeys "keyspace") }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $driverConfig.existingSecret }}
+      key: {{ index $eskKeys "keyspace" }}
+{{- else }}
+  value: {{ $driverConfig.keyspace | quote }}
+{{- end }}
+{{- end -}}
 {{- end -}}
 
 {{/*
