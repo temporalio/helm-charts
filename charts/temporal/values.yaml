@@ -145,6 +145,7 @@ server:
           user: "user"
           password: "password"
           existingSecret: ""
+          # Override connection param keys from existingSecret (supported: password, hosts, port, user, keyspace)
           existingSecretKeys: {}
           replicationFactor: 1
           # datacenter: "us-east-1a"
@@ -162,6 +163,7 @@ server:
           user: "temporal"
           password: "temporal"
           existingSecret: ""
+          # Override connection param keys from existingSecret (supported: password, host, port, user, database)
           existingSecretKeys: {}
           secretName: ""
           maxConns: 20
