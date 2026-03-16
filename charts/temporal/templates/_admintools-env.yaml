@@ -84,6 +84,28 @@
   value: {{ $store.config.version }}
 - name: ES_VISIBILITY_INDEX
   value: {{ $store.config.indices.visibility }}
+  {{- with $store.config.tls }}
+- name: ES_TLS
+  value: {{ .enabled | quote }}
+    {{- with .caFile }}
+- name: ES_TLS_CA_FILE
+  value: {{ . }}
+    {{- end }}
+    {{- if and .certFile .keyFile }}
+- name: ES_TLS_CERT_FILE
+  value: {{ .certFile }}
+- name: ES_TLS_KEY_FILE
+  value: {{ .keyFile }}
+    {{- end }}
+    {{- with .serverName }}
+- name: ES_TLS_SERVER_NAME
+  value: {{ . }}
+    {{- end }}
+    {{- if hasKey . "enableHostVerification" }}
+- name: ES_TLS_DISABLE_HOST_VERIFICATION
+  value: {{ not .enableHostVerification | quote }}
+    {{- end }}
+  {{- end }}
 {{- else -}}
     {{- fail (printf "No valid persistence driver configuration found for %s store" $store.name) -}}
 {{- end -}}
