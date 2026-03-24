@@ -196,3 +196,115 @@ tests:
       - equal:
           path: spec.template.metadata.labels.custom-pod-label
           value: ghi
+  - it: sets Elasticsearch TLS environment variables with all options
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                elasticsearch:
+                  version: v7
+                  url:
+                    scheme: https
+                    host: "elasticsearch:9200"
+                  username: ""
+                  password: ""
+                  indices:
+                    visibility: temporal_visibility_v1
+                  tls:
+                    enabled: true
+                    caFile: /etc/tls/ca.crt
+                    certFile: /etc/tls/client.crt
+                    keyFile: /etc/tls/client.key
+                    serverName: elasticsearch.internal
+                    enableHostVerification: false
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS")].value
+          value: "true"
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS_CA_FILE")].value
+          value: /etc/tls/ca.crt
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS_CERT_FILE")].value
+          value: /etc/tls/client.crt
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS_KEY_FILE")].value
+          value: /etc/tls/client.key
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS_SERVER_NAME")].value
+          value: elasticsearch.internal
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS_DISABLE_HOST_VERIFICATION")].value
+          value: "true"
+  - it: sets Elasticsearch TLS enabled without optional fields
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                elasticsearch:
+                  version: v7
+                  url:
+                    scheme: https
+                    host: "elasticsearch:9200"
+                  username: ""
+                  password: ""
+                  indices:
+                    visibility: temporal_visibility_v1
+                  tls:
+                    enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS")].value
+          value: "true"
+      - isNull:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS_CA_FILE")]
+      - isNull:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS_CERT_FILE")]
+      - isNull:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS_KEY_FILE")]
+      - isNull:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS_SERVER_NAME")]
+      - isNull:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS_DISABLE_HOST_VERIFICATION")]
+  - it: inverts enableHostVerification for Elasticsearch TLS
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                elasticsearch:
+                  version: v7
+                  url:
+                    scheme: https
+                    host: "elasticsearch:9200"
+                  username: ""
+                  password: ""
+                  indices:
+                    visibility: temporal_visibility_v1
+                  tls:
+                    enabled: true
+                    enableHostVerification: true
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS_DISABLE_HOST_VERIFICATION")].value
+          value: "false"
