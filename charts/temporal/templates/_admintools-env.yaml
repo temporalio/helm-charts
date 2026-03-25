@@ -106,6 +106,24 @@
   value: {{ not .enableHostVerification | quote }}
     {{- end }}
   {{- end }}
+  {{- with index $store.config "aws-request-signing" }}
+    {{- with .credentialProvider }}
+- name: AWS_CREDENTIALS
+  value: {{ . | quote }}
+    {{- end }}
+    {{- with .region }}
+- name: AWS_REGION
+  value: {{ . | quote }}
+    {{- end }}
+    {{- if eq .credentialProvider "static" }}
+      {{- with .static }}
+        {{- with .token }}
+- name: AWS_SESSION_TOKEN
+  value: {{ . | quote }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
 {{- else -}}
     {{- fail (printf "No valid persistence driver configuration found for %s store" $store.name) -}}
 {{- end -}}

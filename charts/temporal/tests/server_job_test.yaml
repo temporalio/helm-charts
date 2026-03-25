@@ -308,3 +308,102 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="ES_TLS_DISABLE_HOST_VERIFICATION")].value
           value: "false"
+  - it: sets Elasticsearch AWS request signing environment variables
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                elasticsearch:
+                  version: v7
+                  url:
+                    scheme: https
+                    host: "elasticsearch:9200"
+                  username: ""
+                  password: ""
+                  indices:
+                    visibility: temporal_visibility_v1
+                  aws-request-signing:
+                    credentialProvider: environment
+                    region: us-east-1
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="AWS_CREDENTIALS")].value
+          value: environment
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="AWS_REGION")].value
+          value: us-east-1
+      - isNull:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="AWS_SESSION_TOKEN")]
+  - it: sets AWS_SESSION_TOKEN for static Elasticsearch AWS credentials
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                elasticsearch:
+                  version: v7
+                  url:
+                    scheme: https
+                    host: "elasticsearch:9200"
+                  username: myAccessKeyID
+                  password: mySecretAccessKey
+                  indices:
+                    visibility: temporal_visibility_v1
+                  aws-request-signing:
+                    credentialProvider: static
+                    region: us-east-1
+                    static:
+                      token: mySessionToken
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="AWS_CREDENTIALS")].value
+          value: static
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="AWS_REGION")].value
+          value: us-east-1
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="AWS_SESSION_TOKEN")].value
+          value: mySessionToken
+  - it: omits AWS_SESSION_TOKEN when not using static Elasticsearch AWS credentials
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                elasticsearch:
+                  version: v7
+                  url:
+                    scheme: https
+                    host: "elasticsearch:9200"
+                  username: ""
+                  password: ""
+                  indices:
+                    visibility: temporal_visibility_v1
+                  aws-request-signing:
+                    credentialProvider: aws-sdk-default
+                    region: eu-west-1
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="AWS_CREDENTIALS")].value
+          value: aws-sdk-default
+      - isNull:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="AWS_SESSION_TOKEN")]

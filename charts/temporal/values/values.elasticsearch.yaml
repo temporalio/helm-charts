@@ -39,3 +39,10 @@ server:
             #   keyFile: /path/to/client.key
             #   serverName: elasticsearch.internal
             #   enableHostVerification: true
+            # aws-request-signing:
+            #   credentialProvider: environment  # static, environment, or aws-sdk-default
+            #   region: us-east-1
+            #   static:
+            #     accessKeyID: ""
+            #     secretAccessKey: ""
+            #     token: ""
