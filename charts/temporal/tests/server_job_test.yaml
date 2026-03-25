@@ -196,6 +196,32 @@ tests:
       - equal:
           path: spec.template.metadata.labels.custom-pod-label
           value: ghi
+  - it: sets backoffLimit and ttlSecondsAfterFinished on the job
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+      schema:
+        backoffLimit: 5
+        ttlSecondsAfterFinished: 3600
+    asserts:
+      - equal:
+          path: spec.backoffLimit
+          value: 5
+      - equal:
+          path: spec.ttlSecondsAfterFinished
+          value: 3600
   - it: sets Elasticsearch TLS environment variables with all options
     set:
       server:
