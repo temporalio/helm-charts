@@ -11,6 +11,27 @@ tests:
     asserts:
       - notExists:
           path: metadata.annotations["sidecar.istio.io/inject"]
+  - it: does not set resources by default
+    asserts:
+      - notExists:
+          path: spec.containers[0].resources
+  - it: sets resources when specified
+    set:
+      test:
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+    asserts:
+      - equal:
+          path: spec.containers[0].resources.limits.cpu
+          value: 100m
+      - equal:
+          path: spec.containers[0].resources.requests.memory
+          value: 128Mi
   - it: includes custom pod annotations when specified
     set:
       test:
