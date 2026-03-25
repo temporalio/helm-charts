@@ -19,4 +19,8 @@ spec:
     env:
       - name: TEMPORAL_ADDRESS
         value: {{ include "temporal.fullname" . }}-frontend:{{ .Values.server.frontend.service.port }}
+    {{- with .Values.test.resources }}
+    resources:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
   restartPolicy: Never
