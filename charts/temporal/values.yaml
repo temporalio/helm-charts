@@ -516,6 +516,7 @@ web:
   podDisruptionBudget: {}
 schema:
   backoffLimit: 100
+  activeDeadlineSeconds: 500
   jobAnnotations: {}
   podAnnotations: {}
   podLabels: {}
