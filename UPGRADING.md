@@ -1,6 +1,6 @@
 # Upgrading from Previous Helm Chart Versions
 
-This document outlines the key differences between the previous Helm chart versions and v1.0.0-rc.1, and provides guidance on how to migrate your existing deployments.
+This document outlines the key differences between the previous Helm chart versions and v1.0.0-rc.2, and provides guidance on how to migrate your existing deployments.
 
 ## Major Changes
 
@@ -11,7 +11,7 @@ This document outlines the key differences between the previous Helm chart versi
 - These were installed automatically when you installed the Temporal chart
 - You could configure them via top-level keys in your values file (e.g., `cassandra:`, `elasticsearch:`, `prometheus:`, `grafana:`)
 
-**v1.0.0-rc.1:**
+**v1.0.0-rc.2:**
 - The chart **does not install any database sub-charts**
 - You must provide your own persistence (databases) for Temporal to use
 - The chart only installs Temporal server components (frontend, history, matching, worker, web UI, admin tools)
@@ -28,10 +28,11 @@ This document outlines the key differences between the previous Helm chart versi
 - Persistence configuration was likely spread across multiple top-level keys
 - Configuration was abstracted from the raw Temporal server config format
 
-**v1.0.0-rc.1:**
+**v1.0.0-rc.2:**
 - Persistence configuration follows the **raw Temporal server config format**
 - All persistence configuration is under `server.config.persistence.datastores`
 - The driver type is determined by which key is present: `sql:`, `cassandra:`, or `elasticsearch:`
+- `createDatabase` and `manageSchema` options control whether the chart should create databases and manage schemas automatically
 
 **Example new configuration structure:**
 
@@ -45,6 +46,8 @@ server:
       datastores:
         default:
           sql:
+            createDatabase: false
+            manageSchema: false
             pluginName: mysql8
             driverName: mysql8
             databaseName: temporal
@@ -54,6 +57,8 @@ server:
             secretKey: password
         visibility:
           sql:
+            createDatabase: false
+            manageSchema: false
             pluginName: mysql8
             driverName: mysql8
             databaseName: temporal_visibility
@@ -65,7 +70,7 @@ server:
 
 ### 3. Helm-Specific Fields
 
-**v1.0.0-rc.1 introduces Helm-specific fields:**
+**v1.0.0-rc.2 introduces Helm-specific fields:**
 - `existingSecret`: Reference to a Kubernetes secret containing credentials
 - `secretKey`: Key name within the secret (defaults to `password`)
 
@@ -80,7 +85,7 @@ These fields are **stripped before rendering** to the Temporal server config. Th
 **Previous versions:**
 - All dependencies were included and configured automatically
 
-**v1.0.0-rc.1:**
+**v1.0.0-rc.2:**
 - You **must** provide persistence configuration before installation
 - Databases must be set up and accessible before installing Temporal
 
@@ -118,9 +123,10 @@ helm install --repo https://go.temporal.io/helm-charts \
 - Prometheus and Grafana were included as sub-charts
 - Pre-configured dashboards were available
 
-**v1.0.0-rc.1:**
+**v1.0.0-rc.2:**
 - Prometheus and Grafana are **not included**
 - You must provide your own monitoring stack
+- Metrics annotations are enabled by default for all server services (frontend, history, matching, worker, internalFrontend)
 - Pre-configured Grafana dashboards are available for import:
   - [Server-General](https://raw.githubusercontent.com/temporalio/dashboards/helm/server/server-general.json)
   - [SDK-General](https://raw.githubusercontent.com/temporalio/dashboards/helm/sdk/sdk-general.json)
@@ -137,9 +143,133 @@ helm install --repo https://go.temporal.io/helm-charts \
 - Import the dashboards listed above
 - Configure Prometheus ServiceMonitor if using Prometheus Operator (enabled via `server.metrics.serviceMonitor.enabled`)
 
+### 7. imagePullSecrets Format Change
+
+**Previous versions:**
+- `imagePullSecrets` was a map: `imagePullSecrets: {}`
+
+**v1.0.0-rc.2:**
+- `imagePullSecrets` is now an array: `imagePullSecrets: []`
+
+**Migration:**
+- If you had `imagePullSecrets: {}` in your values file, change it to `imagePullSecrets: []`
+- If you were using image pull secrets, update to array format:
+  ```yaml
+  imagePullSecrets:
+    - name: my-registry-secret
+  ```
+
+### 8. New Configuration Options
+
+**v1.0.0-rc.2 adds the following new configuration options:**
+
+#### Readiness Probes
+- `server.readinessProbe` - Configure readiness probes for server pods
+- `web.readinessProbe` - Configure readiness probes for web UI pods
+
+**Example:**
+```yaml
+server:
+  readinessProbe: {}
+  frontend:
+    readinessProbe:
+      grpc:
+        port: 7233
+        service: temporal.api.workflowservice.v1.WorkflowService
+```
+
+#### Deployment Strategy
+- `server.deploymentStrategy` - Configure custom deployment strategies for server services
+- Per-service `deploymentStrategy` options (frontend, history, matching, worker, internalFrontend)
+
+**Example:**
+```yaml
+server:
+  deploymentStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+```
+
+#### Min Ready Seconds
+- `server.minReadySeconds` - Minimum seconds a pod must be ready before considered available
+- `admintools.minReadySeconds` - Same for admin tools deployment
+- `web.minReadySeconds` - Same for web UI deployment
+
+**Example:**
+```yaml
+server:
+  minReadySeconds: 30
+```
+
+#### Log Level Configuration
+- `server.config.logLevel` - Configure log levels for Temporal server
+
+**Example:**
+```yaml
+server:
+  config:
+    logLevel: "info,warn"
+```
+
+#### Service Labels
+- `serviceLabels` option for all server services (frontend, history, matching, worker, internalFrontend)
+
+**Example:**
+```yaml
+server:
+  frontend:
+    serviceLabels:
+      app.kubernetes.io/part-of: my-app
+```
+
+#### Environment Variables from ConfigMap
+- `additionalEnvConfigMapName` option for server, admintools, web, and server-job
+- Allows setting environment variables from ConfigMap in addition to Secrets
+
+**Example:**
+```yaml
+server:
+  additionalEnvConfigMapName: my-configmap
+admintools:
+  additionalEnvConfigMapName: my-configmap
+```
+
+#### Disable Shims
+- `shims.dockerize` - Enable compatibility with Temporal 1.29 images (default: `true`). Set to `false` if using Temporal 1.30 or higher.
+- `shims.elasticsearchTool` - Enable compatibility with Temporal 1.29 images (default: `true`). Set to `false` if using Temporal 1.30 or higher.
+
+**Example:**
+```yaml
+shims:
+  dockerize: false  # Disable if using Temporal 1.30+
+  elasticsearchTool: false  # Disable if using Temporal 1.30+
+```
+
+#### Schema Job Annotations
+- `schema.jobAnnotations` - Add custom annotations to the schema job
+
+**Example:**
+```yaml
+schema:
+  jobAnnotations:
+    my-annotation: value
+```
+
+#### Test Pod Annotations
+- `test.podAnnotations` - Add custom annotations to test pods
+
+**Example:**
+```yaml
+test:
+  podAnnotations:
+    my-annotation: value
+```
+
 ## Migration Checklist
 
-Before upgrading to v1.0.0-rc.1:
+Before upgrading to v1.0.0-rc.2:
 
 - [ ] Review your current values file and identify all persistence configurations
 - [ ] Set up external databases (MySQL, PostgreSQL, Cassandra, or Elasticsearch)
@@ -152,6 +282,7 @@ Before upgrading to v1.0.0-rc.1:
 - [ ] Test the migration in a non-production environment
 - [ ] Backup your data before upgrading
 - [ ] Plan for downtime during migration if needed
+- [ ] Update `imagePullSecrets` from map `{}` to array `[]` format if used
 
 ## Example Migration
 
@@ -230,6 +361,7 @@ If you encounter issues during migration:
 | Monitoring | Prometheus/Grafana included | Must provide externally |
 | Installation | Simple install | Requires version flag and persistence config |
 | Secrets | May have used different format | Use `existingSecret` and `secretKey` |
+| imagePullSecrets | Map format `{}` | Array format `[]` |
 
 ## Notes
 

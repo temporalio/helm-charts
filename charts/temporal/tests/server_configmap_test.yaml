@@ -134,6 +134,62 @@ tests:
       - matchRegex:
           path: data['config_template.yaml']
           pattern: 'password: \{\{ env "TEMPORAL_VISIBILITY_STORE_PASSWORD" \| quote \}\}'
+  - it: handles secondary visibility store for dual visibility
+    set:
+      server:
+        enabled: true
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            secondaryVisibilityStore: secondary-visibility
+            numHistoryShards: 512
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  driverName: mysql8
+                  databaseName: temporal
+                  connectAddr: "mysql.example.com:3306"
+                  user: temporal_user
+                  password: "secret"
+              visibility:
+                elasticsearch:
+                  version: v8
+                  url:
+                    scheme: https
+                    host: "elasticsearch.example.com:9200"
+                  username: elastic
+                  password: "secret"
+                  indices:
+                    visibility: temporal_visibility_v1
+              secondary-visibility:
+                elasticsearch:
+                  version: v8
+                  url:
+                    scheme: https
+                    host: "elasticsearch.example.com:9200"
+                  username: elastic
+                  password: "secret2"
+                  indices:
+                    visibility: temporal_visibility_v1_secondary
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'secondaryVisibilityStore: secondary-visibility'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'secondary-visibility:'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'password: \{\{ env "TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD" \| quote \}\}'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'visibility: temporal_visibility_v1_secondary'
 
   - it: handles metrics config
     set:

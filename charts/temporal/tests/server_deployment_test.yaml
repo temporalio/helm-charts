@@ -160,6 +160,31 @@ tests:
       - equal:
           path: spec.minReadySeconds
           value: 30
+  - it: terminationGracePeriodSeconds is null by default
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: null
+  - it: terminationGracePeriodSeconds favors service specific resources
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        terminationGracePeriodSeconds: 30
+        frontend:
+          terminationGracePeriodSeconds: 60
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 60
   - it: renders log config with defaults
     template: templates/server-configmap.yaml
     asserts:
@@ -295,6 +320,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
           value: rpc
+
   - it: additional environment variables are set on all services
     template: templates/server-deployment.yaml
     documentSelector:
@@ -315,6 +341,62 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].envFrom[0].secretRef.name
           value: secret-env
-      - equal: 
+      - equal:
           path: spec.template.spec.containers[0].envFrom[1].configMapRef.name
           value: configmap-env
+
+  - it: injects secondary visibility store password env var when configured
+    template: templates/server-deployment.yaml
+    set:
+      server:
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            secondaryVisibilityStore: secondary-visibility
+            datastores:
+              default:
+                sql:
+                  password: "secret"
+              visibility:
+                elasticsearch:
+                  password: "secret"
+              secondary-visibility:
+                elasticsearch:
+                  password: "secret2"
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-temporal-secondary-visibility-store
+                key: password
+
+  - it: does not inject secondary visibility env var when not configured
+    template: templates/server-deployment.yaml
+    set:
+      server:
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            datastores:
+              default:
+                sql:
+                  password: "secret"
+              visibility:
+                elasticsearch:
+                  password: "secret"
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
