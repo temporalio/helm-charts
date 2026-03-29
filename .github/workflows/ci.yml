@@ -1,4 +1,4 @@
-name: Lint Charts
+name: Lint and Unit Test Charts
 
 on: pull_request
 
@@ -8,6 +8,65 @@ permissions:
 jobs:
   lint-test:
     runs-on: ubuntu-latest
+
+    services:
+      cassandra:
+        image: cassandra:4.1
+        env:
+          CASSANDRA_CLUSTER_NAME: test-cluster
+          CASSANDRA_DC: dc1
+          CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+        ports:
+          - 9042:9042
+        options: >-
+          --health-cmd "cqlsh -e 'describe cluster'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 30
+
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: temporal
+          POSTGRES_PASSWORD: temporal
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: temporal
+          MYSQL_DATABASE: temporal
+          MYSQL_USER: temporal
+          MYSQL_PASSWORD: temporal
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost -u root -ppassword"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      elasticsearch:
+        image: elasticsearch:8.11.0
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: false
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd "curl -f http://localhost:9200/_cluster/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -15,48 +74,80 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Helm
-        uses: azure/setup-helm@v4.2.0
+        uses: azure/setup-helm@v4
         with:
-          version: v3.14.4
+          version: v3.19.2
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
           check-latest: true
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: 'charts/temporal/tests/go.mod'
-
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.6.1
 
-      - name: Add dependency repos
-        run: |
-          helm repo add incubator https://charts.helm.sh/incubator
-          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-          helm repo add elastic https://helm.elastic.co
-          helm repo add grafana https://grafana.github.io/helm-charts
-
-      - name: Run chart-testing (list-changed)
-        id: list-changed
-        run: |
-          changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
-          if [[ -n "$changed" ]]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Run chart-testing (lint)
-        if: steps.list-changed.outputs.changed == 'true'
         run: ct lint --check-version-increment=false --target-branch ${{ github.event.repository.default_branch }}
 
-      - name: Run template tests
-        working-directory: charts/temporal/tests
-        run: go test
-
       - name: Install helm-unittest
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version v1.0.3
 
       - name: Run helm-unittest
         working-directory: charts/temporal
         run: helm unittest .
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1.13.0
+
+      - name: Get Docker host gateway IP
+        id: docker
+        run: |
+          HOST_IP=$(docker network inspect bridge -f '{{range .IPAM.Config}}{{.Gateway}}{{end}}')
+          echo "host_ip=$HOST_IP" >> $GITHUB_OUTPUT
+          echo "Docker host IP: $HOST_IP"
+
+      - name: Expose persistence backend services to Kubernetes
+        run: |
+          HOST_IP="${{ steps.docker.outputs.host_ip }}"
+          echo "Using HOST_IP: $HOST_IP"
+
+          create_service() {
+            local name=$1
+            local port=$2
+            cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: ${name}
+            namespace: default
+          spec:
+            ports:
+              - port: ${port}
+                protocol: TCP
+                targetPort: ${port}
+            clusterIP: None
+          ---
+          apiVersion: discovery.k8s.io/v1
+          kind: EndpointSlice
+          metadata:
+            name: ${name}-1
+            namespace: default
+            labels:
+              kubernetes.io/service-name: ${name}
+          addressType: IPv4
+          ports:
+            - port: ${port}
+              protocol: TCP
+          endpoints:
+            - addresses:
+                - ${HOST_IP}
+          EOF
+          }
+
+          create_service cassandra 9042
+          create_service postgres 5432
+          create_service mysql 3306
+          create_service elasticsearch 9200
+
+      - name: Run chart-testing (install)
+        run: ct install --target-branch ${{ github.event.repository.default_branch }}
