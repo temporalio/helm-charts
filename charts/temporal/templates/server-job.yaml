@@ -1,7 +1,8 @@
+{{- $jobName := include "temporal.componentname" (list $ (printf "schema-%s-%d" $.Chart.Version $.Release.Revision | replace "." "-")) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
+  name: {{ $jobName }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
   {{- with $.Values.schema.jobAnnotations }}
@@ -10,10 +11,10 @@ metadata:
   {{- end }}
 spec:
   backoffLimit: {{ $.Values.schema.backoffLimit }}
-  ttlSecondsAfterFinished: 86400
+  ttlSecondsAfterFinished: {{ $.Values.schema.ttlSecondsAfterFinished }}
   template:
     metadata:
-      name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
+      name: {{ $jobName }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 8 }}
         {{- with $.Values.schema.podLabels }}
@@ -84,9 +85,11 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
             {{- with $.Values.admintools.additionalVolumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
+            {{- if $.Values.shims.elasticsearchTool }}
             - name: shims
               mountPath: /usr/local/sbin/temporal-elasticsearch-tool
               subPath: temporal-elasticsearch-tool
+            {{- end }}
             {{- with $.Values.schema.resources }}
           resources:
               {{- toYaml . | nindent 12 }}
@@ -106,8 +109,8 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
           args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
           env:
             - name: TEMPORAL_ADDRESS
-              {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
-              value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.internalFrontend.service.port }}
+              {{- if (index $.Values.server "internal-frontend").enabled }}
+              value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ (index $.Values.server "internal-frontend").service.port }}
               {{- else if $.Values.server.frontend.ingress.enabled }}
               value: "{{ index $.Values.server.frontend.ingress.hosts 0 }}"
               {{- else }}
@@ -115,6 +118,17 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
               {{- end }}
               {{- with $.Values.admintools.additionalEnv }}
                 {{- toYaml . | nindent 12 }}
+              {{- end }}
+              {{- if or $.Values.admintools.additionalEnvSecretName $.Values.admintools.additionalEnvConfigMapName }}
+          envFrom:
+              {{- with $.Values.admintools.additionalEnvSecretName }}
+            - secretRef:
+                name: {{ . }}
+              {{- end }}
+              {{- with $.Values.admintools.additionalEnvConfigMapName }}
+            - configMapRef:
+                name: {{ . }}
+              {{- end }}
               {{- end }}
               {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
@@ -159,13 +173,15 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or $.Values.admintools.additionalVolumes true }}
+      {{- if or $.Values.admintools.additionalVolumes $.Values.shims.elasticsearchTool }}
       volumes:
         {{- with $.Values.admintools.additionalVolumes }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
+        {{- if $.Values.shims.elasticsearchTool }}
         - name: shims
           configMap:
             name: "{{ include "temporal.fullname" $ }}-shims"
             defaultMode: 0555
+        {{- end }}
       {{- end }}

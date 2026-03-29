@@ -94,3 +94,141 @@ tests:
       - matchRegex:
           path: data['config_template.yaml']
           pattern: "connectAddr: postgres.example.com:5432"
+
+  - it: injects password from existingSecret without explicit password field
+    set:
+      server:
+        enabled: true
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            numHistoryShards: 512
+            datastores:
+              default:
+                sql:
+                  pluginName: postgres12_pgx
+                  driverName: postgres12_pgx
+                  databaseName: temporal
+                  connectAddr: "postgres.example.com:5432"
+                  user: temporal_user
+                  existingSecret: my-postgres-secret
+                  secretKey: postgresPassword
+              visibility:
+                sql:
+                  pluginName: postgres12_pgx
+                  driverName: postgres12_pgx
+                  databaseName: temporal_visibility
+                  connectAddr: "postgres.example.com:5432"
+                  user: temporal_user
+                  existingSecret: my-postgres-secret
+                  secretKey: postgresPassword
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'password: \{\{ env "TEMPORAL_DEFAULT_STORE_PASSWORD" \| quote \}\}'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'password: \{\{ env "TEMPORAL_VISIBILITY_STORE_PASSWORD" \| quote \}\}'
+  - it: handles secondary visibility store for dual visibility
+    set:
+      server:
+        enabled: true
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            secondaryVisibilityStore: secondary-visibility
+            numHistoryShards: 512
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  driverName: mysql8
+                  databaseName: temporal
+                  connectAddr: "mysql.example.com:3306"
+                  user: temporal_user
+                  password: "secret"
+              visibility:
+                elasticsearch:
+                  version: v8
+                  url:
+                    scheme: https
+                    host: "elasticsearch.example.com:9200"
+                  username: elastic
+                  password: "secret"
+                  indices:
+                    visibility: temporal_visibility_v1
+              secondary-visibility:
+                elasticsearch:
+                  version: v8
+                  url:
+                    scheme: https
+                    host: "elasticsearch.example.com:9200"
+                  username: elastic
+                  password: "secret2"
+                  indices:
+                    visibility: temporal_visibility_v1_secondary
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'secondaryVisibilityStore: secondary-visibility'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'secondary-visibility:'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'password: \{\{ env "TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD" \| quote \}\}'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'visibility: temporal_visibility_v1_secondary'
+
+  - it: handles metrics config
+    set:
+      server:
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            datastores:
+              default:
+                sql:
+                  password: "secret"
+              visibility:
+                sql:
+                  password: "secret"
+          metrics:
+            prefix: "temporal_"
+            tags:
+              env: production
+            excludeTags:
+              ignored: ["tag1", "tag2"]
+            withoutUnitSuffix: false
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'prefix: temporal_'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "excludeTags:\\s+ignored:"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "env: production"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "withoutUnitSuffix: false"
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: "prometheus:\\s+listenAddress: 0.0.0.0:9090"

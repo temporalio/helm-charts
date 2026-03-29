@@ -20,10 +20,11 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.29.1
+    tag: 1.30.2
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
+  readinessProbe: {}
   metrics:
     # Annotate pods and services directly with the following Prometheus annotations.
     # prometheus.io/job
@@ -32,11 +33,6 @@ server:
     # prometheus.io/scrape
     annotations:
       enabled: true
-    # Additional tags to be added to Prometheus metrics
-    tags: {}
-    # Tags to be excluded in Prometheus metrics
-    excludeTags: {}
-    prefix:
     # Enable Prometheus ServiceMonitor
     # Use this if you installed the Prometheus Operator (https://github.com/coreos/prometheus-operator).
     serviceMonitor:
@@ -65,10 +61,9 @@ server:
       #   sourceLabels:
       #   - __name__
       #   targetLabel: __name__
-    prometheus:
-      timerType: histogram
   deploymentLabels: {}
   deploymentAnnotations: {}
+  deploymentStrategy: {}
   podAnnotations: {}
   podLabels: {}
   secretLabels: {}
@@ -88,9 +83,12 @@ server:
   tolerations: []
   affinity: {}
   minReadySeconds: 0
+  terminationGracePeriodSeconds: null
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
+  additionalEnvSecretName: ""
+  additionalEnvConfigMapName: ""
   # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
   securityContext:
@@ -148,14 +146,16 @@ server:
         default:
         # Example SQL configuration:
         # sql:
+        #   createDatabase: false
+        #   manageSchema: false
         #   pluginName: mysql8  # or postgres12, postgres12_pgx
         #   driverName: mysql8
         #   databaseName: temporal
         #   connectAddr: "mysql.example.com:3306"  # preferred format
+        #   connectProtocol: "tcp"
         #   # OR use separate host/port:
         #   # host: mysql.example.com
         #   # port: 3306
-        #   # connectProtocol defaults to "tcp" if not specified
         #   user: temporal_user
         #   password: ""  # optional, use existingSecret instead
         #   existingSecret: temporal-db-secret  # Helm-specific, stripped before rendering
@@ -170,7 +170,9 @@ server:
         #     caFile: /path/to/ca.pem
         # Example Cassandra configuration:
         # cassandra:
-        #   hosts: "host1,host2"  # or ["host1", "host2"]
+        #   createDatabase: false
+        #   manageSchema: false
+        #   hosts: "host1,host2"
         #   port: 9042
         #   keyspace: temporal
         #   user: cassandra_user
@@ -185,11 +187,13 @@ server:
         visibility:
         # Example SQL configuration (same structure as default.sql):
         # sql:
+        #   createDatabase: false
+        #   manageSchema: false
         #   pluginName: mysql8
         #   driverName: mysql8
         #   databaseName: temporal_visibility
         #   connectAddr: "mysql.example.com:3306"
-        #   # connectProtocol defaults to "tcp" if not specified
+        #   connectProtocol: "tcp"
         #   user: temporal_user
         #   existingSecret: temporal-db-secret
         #   secretKey: password
@@ -206,11 +210,35 @@ server:
         #   logLevel: error
         #   indices:
         #     visibility: temporal_visibility_v1
+        #   tls:
+        #     enabled: true
+        #     caFile: /path/to/ca.crt
+        #     certFile: /path/to/client.crt
+        #     keyFile: /path/to/client.key
+        #     serverName: elasticsearch.internal
+        #     enableHostVerification: true
+        #   aws-request-signing:
+        #     credentialProvider: environment  # static, environment, or aws-sdk-default
+        #     region: us-east-1
+        #     static:
+        #       accessKeyID: ""
+        #       secretAccessKey: ""
+        #       token: ""
         # Additional stores can be added here and will pass through directly
         # archive:
         #   sql:
         #     pluginName: postgres12
         #     ...
+    metrics:
+      # Additional tags to be added to Prometheus metrics
+      tags: {}
+      # ... All other fields from https://github.com/temporalio/temporal/blob/main/common/metrics/config.go
+      # excludeTags: {}
+      # prefix: ""
+      # etc.
+      prometheus:
+        timerType: histogram
+        listenAddress: "0.0.0.0:9090"
     namespaces:
       # Enable this to create namespaces
       create: false
@@ -228,6 +256,10 @@ server:
       membershipAppProtocol: tcp
       httpPort: 7243
       httpAppProtocol: http
+    readinessProbe:
+      grpc:
+        port: 7233
+        service: temporal.api.workflowservice.v1.WorkflowService
     ingress:
       enabled: false
       # className:
@@ -252,8 +284,10 @@ server:
       # timerType: histogram
     deploymentLabels: {}
     deploymentAnnotations: {}
+    deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -262,7 +296,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
-  internalFrontend:
+  internal-frontend:
     # Enable this to create internal-frontend
     enabled: false
     service:
@@ -275,6 +309,10 @@ server:
       membershipAppProtocol: tcp
       httpPort: 7246
       httpAppProtocol: http
+    readinessProbe:
+      grpc:
+        port: 7236
+        service: temporal.api.workflowservice.v1.WorkflowService
     metrics:
       annotations:
         enabled: true
@@ -284,8 +322,10 @@ server:
       # timerType: histogram
     deploymentLabels: {}
     deploymentAnnotations: {}
+    deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -301,6 +341,7 @@ server:
       appProtocol: tcp
       membershipPort: 6934
       membershipAppProtocol: tcp
+    readinessProbe: {}
     metrics:
       annotations:
         enabled: true
@@ -310,14 +351,15 @@ server:
       # timerType: histogram
     deploymentLabels: {}
     deploymentAnnotations: {}
+    deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
     affinity: {}
     additionalEnv: []
-    additionalEnvSecretName: ""
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
@@ -328,17 +370,20 @@ server:
       appProtocol: tcp
       membershipPort: 6935
       membershipAppProtocol: tcp
+    readinessProbe: {}
     metrics:
       annotations:
-        enabled: false
+        enabled: true
       serviceMonitor: {}
       # enabled: false
       prometheus: {}
       # timerType: histogram
     deploymentLabels: {}
     deploymentAnnotations: {}
+    deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -354,6 +399,7 @@ server:
       appProtocol: tcp
       membershipPort: 6939
       membershipAppProtocol: tcp
+    readinessProbe: {}
     metrics:
       annotations:
         enabled: true
@@ -363,8 +409,10 @@ server:
       # timerType: histogram
     deploymentLabels: {}
     deploymentAnnotations: {}
+    deploymentStrategy: {}
     podAnnotations: {}
     podLabels: {}
+    serviceLabels: {}
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -377,7 +425,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: "1.29.1-tctl-1.18.4-cli-1.5.0"
+    tag: "1.30.2"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -385,6 +433,7 @@ admintools:
     annotations: {}
   deploymentLabels: {}
   deploymentAnnotations: {}
+  deploymentStrategy: {}
   podLabels: {}
   podAnnotations: {}
   nodeSelector: {}
@@ -394,6 +443,7 @@ admintools:
   additionalVolumeMounts: []
   additionalEnv: []
   additionalEnvSecretName: ""
+  additionalEnvConfigMapName: ""
   # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
   resources: {}
@@ -407,7 +457,7 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.42.1
+    tag: 2.48.1
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
@@ -420,6 +470,11 @@ web:
     appProtocol: http
     annotations: {}
     # loadBalancerIP:
+  readinessProbe:
+    initialDelaySeconds: 10
+    httpGet:
+      path: /healthz
+      port: http
   ingress:
     enabled: false
     # className:
@@ -437,6 +492,7 @@ web:
     #      - chart-example.local
   deploymentLabels: {}
   deploymentAnnotations: {}
+  deploymentStrategy: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}
@@ -459,6 +515,7 @@ web:
   # https://docs.temporal.io/references/web-ui-environment-variables
   additionalEnv: []
   additionalEnvSecretName: ""
+  additionalEnvConfigMapName: ""
   containerSecurityContext: {}
   securityContext: {}
   topologySpreadConstraints: []
@@ -466,13 +523,18 @@ web:
   podDisruptionBudget: {}
 schema:
   backoffLimit: 100
+  ttlSecondsAfterFinished: 86400
   jobAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
-
+shims:
+  # Enable compatibility with Temporal 1.29 images. Set to false if using Temporal 1.30 or higher.
+  dockerize: true
+  # Enable compatibility with Temporal 1.29 images. Set to false if using Temporal 1.30 or higher.
+  elasticsearchTool: true
 test:
   podAnnotations: {}
 
@@ -500,3 +562,4 @@ additionalSecrets: []
   #     tls.key: |
   #       -----BEGIN EC PRIVATE KEY-----
   #       -----END EC PRIVATE KEY-----
+  resources: {}

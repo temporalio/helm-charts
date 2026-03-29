@@ -61,34 +61,48 @@ server:
       datastores:
         default:
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: mysql8  # or postgres12, postgres12_pgx
             driverName: mysql8
             databaseName: temporal
             connectAddr: "mysql.example.com:3306"
             connectProtocol: tcp
             user: temporal_user
-            password: ""  # Use existingSecret in production
-            existingSecret: temporal-db-secret
-            secretKey: password
+            # Option 1: Provide password in values (chart will create a secret)
+            password: your_password
+            # Option 2: Use an existing secret (recommended for production)
+            # existingSecret: temporal-db-secret
+            # secretKey: password
             maxConns: 20
             maxIdleConns: 20
             maxConnLifetime: "1h"
         visibility:
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: mysql8
             driverName: mysql8
             databaseName: temporal_visibility
             connectAddr: "mysql.example.com:3306"
             connectProtocol: tcp
             user: temporal_user
+            # Use existing secret (recommended for production)
             existingSecret: temporal-db-secret
             secretKey: password
 ```
 
 **Key points:**
 - Driver is determined by which key is present (`sql:`, `cassandra:`, or `elasticsearch:`)
-- Helm-specific fields (`existingSecret`, `secretKey`) are stripped before rendering to server config
-- Password fields are stored in Kubernetes secrets and the server configuration reads them from the environment
+- **Helm-specific fields** (stripped before rendering to server config):
+  - `createDatabase`: If `true`, the chart will create the database/keyspace if it doesn't exist (default: `true`)
+  - `manageSchema`: If `true`, the chart will run schema setup/upgrade jobs (default: `true`)
+  - `existingSecret`: Reference to an existing Kubernetes secret containing credentials (e.g., `temporal-db-secret`). If not set, the chart will create a new secret.
+  - `secretKey`: Key name within the secret to read the password from (default: `password`)
+- **Password handling**: Passwords are always stored in Kubernetes secrets and read from environment variables - they are never written to ConfigMaps or other manifests, even if provided as plaintext in your values file.
+  - If `existingSecret` is not set, the chart creates a new secret using the `password` value from your values file
+  - If `existingSecret` is set, the chart uses that existing secret (the `password` field in values is ignored)
+  - The server configuration always reads passwords from environment variables that reference these secrets
 - All other fields pass through directly to the Temporal server config
 
 See the example values files in the `values/` directory for complete examples.
@@ -114,17 +128,22 @@ server:
       datastores:
         default:
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: mysql8
             driverName: mysql8
             databaseName: temporal
             connectAddr: "mysql.example.com:3306"
             user: temporal_user
+            # Option 1: Provide password in values (chart will create a secret)
             password: your_password
-            # Or use existingSecret for production
+            # Option 2: Use an existing secret (recommended for production)
             # existingSecret: temporal-db-secret
             # secretKey: password
         visibility:
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: mysql8
             driverName: mysql8
             databaseName: temporal_visibility
@@ -151,6 +170,8 @@ server:
       datastores:
         default:
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: postgres12
             driverName: postgres12
             databaseName: temporal
@@ -160,6 +181,8 @@ server:
             secretKey: password
         visibility:
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: postgres12
             driverName: postgres12
             databaseName: temporal_visibility
@@ -188,15 +211,23 @@ server:
       datastores:
         default:
           cassandra:
+            createDatabase: true
+            manageSchema: true
             hosts: "cassandra1.example.com,cassandra2.example.com"
             port: 9042
             keyspace: temporal
             user: cassandra_user
+            # Option 1: Provide password in values (chart will create a secret)
             password: your_password
+            # Option 2: Use an existing secret (recommended for production)
+            # existingSecret: temporal-cassandra-secret
+            # secretKey: password
             replicationFactor: 3
         visibility:
           # Use SQL or Elasticsearch for visibility
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: mysql8
             driverName: mysql8
             databaseName: temporal_visibility
@@ -224,6 +255,8 @@ server:
         default:
           # Configure your default store (SQL or Cassandra)
           sql:
+            createDatabase: true
+            manageSchema: true
             pluginName: mysql8
             driverName: mysql8
             databaseName: temporal
@@ -238,8 +271,9 @@ server:
               scheme: http
               host: "elasticsearch.example.com:9200"
             username: ""
+            # Option 1: Provide password in values (chart will create a secret)
             password: ""
-            # Or use existingSecret
+            # Option 2: Use an existing secret (recommended for production)
             # existingSecret: temporal-es-secret
             # secretKey: password
             logLevel: error

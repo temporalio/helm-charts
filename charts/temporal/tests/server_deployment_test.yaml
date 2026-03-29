@@ -78,6 +78,41 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].name
           value: my-init-container
+  - it: includes volume mounts with shim by default
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    asserts:
+      - exists:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name=='config')]
+      - exists:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name=='dynamic-config')]
+      - exists:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name=='shims')]
+      - exists:
+          path: spec.template.spec.volumes[?(@.name=='config')]
+      - exists:
+          path: spec.template.spec.volumes[?(@.name=='dynamic-config')]
+      - exists:
+          path: spec.template.spec.volumes[?(@.name=='shims')]
+  - it: includes additional volumes without shim when disabled
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    set:
+      shims:
+        dockerize: false
+    asserts:
+      - exists:
+          path: spec.template.spec.volumes[?(@.name=='config')]
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name=='shims')]
+      - notExists:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name=='shims')]
   - it: omits prometheus annotations when disabled
     template: templates/server-deployment.yaml
     documentSelector:
@@ -108,7 +143,7 @@ tests:
         minReadySeconds: 10
     asserts:
       - equal:
-          path: spec.template.spec.minReadySeconds
+          path: spec.minReadySeconds
           value: 10
   - it: minReadySeconds favours service specific resources
     template: templates/server-deployment.yaml
@@ -123,8 +158,33 @@ tests:
           minReadySeconds: 30
     asserts:
       - equal:
-          path: spec.template.spec.minReadySeconds
+          path: spec.minReadySeconds
           value: 30
+  - it: terminationGracePeriodSeconds is null by default
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: null
+  - it: terminationGracePeriodSeconds favors service specific resources
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        terminationGracePeriodSeconds: 30
+        frontend:
+          terminationGracePeriodSeconds: 60
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 60
   - it: renders log config with defaults
     template: templates/server-configmap.yaml
     asserts:
@@ -162,3 +222,181 @@ tests:
       - matchRegex:
           path: data["config_template.yaml"]
           pattern: 'format: "json"'
+  - it: deploymentStrategy defaults to service wide resources
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        deploymentStrategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 25%
+            maxUnavailable: 25%
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: RollingUpdate
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 25%
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 25%
+  - it: deploymentStrategy favours service specific resources
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        deploymentStrategy:
+          type: Recreate
+        frontend:
+          deploymentStrategy:
+            type: RollingUpdate
+            rollingUpdate:
+              maxSurge: 1
+              maxUnavailable: 0
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: RollingUpdate
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 1
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 0
+  - it: readinessProbe defaults to empty
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-worker")].kind'
+      value: Deployment
+      matchMany: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].readinessProbe
+  - it: readinessProbe is set for frontend service
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        frontend:
+          readinessProbe:
+            grpc:
+              port: 9999
+              service: temporal.api.workflowservice.v1.WorkflowService
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.grpc.port
+          value: 9999
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.grpc.service
+          value: temporal.api.workflowservice.v1.WorkflowService
+  - it: readinessProbe is set for history service
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-history")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        history:
+          readinessProbe:
+             initialDelaySeconds: 300
+             tcpSocket:
+               port: rpc
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
+          value: 300
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
+          value: rpc
+
+  - it: additional environment variables are set on all services
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$.kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        additionalEnv:
+          - name: HELLO
+            value: world
+        additionalEnvSecretName: secret-env
+        additionalEnvConfigMapName: configmap-env
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name=="HELLO")].value
+          value: world
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[0].secretRef.name
+          value: secret-env
+      - equal:
+          path: spec.template.spec.containers[0].envFrom[1].configMapRef.name
+          value: configmap-env
+
+  - it: injects secondary visibility store password env var when configured
+    template: templates/server-deployment.yaml
+    set:
+      server:
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            secondaryVisibilityStore: secondary-visibility
+            datastores:
+              default:
+                sql:
+                  password: "secret"
+              visibility:
+                elasticsearch:
+                  password: "secret"
+              secondary-visibility:
+                elasticsearch:
+                  password: "secret2"
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-temporal-secondary-visibility-store
+                key: password
+
+  - it: does not inject secondary visibility env var when not configured
+    template: templates/server-deployment.yaml
+    set:
+      server:
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            datastores:
+              default:
+                sql:
+                  password: "secret"
+              visibility:
+                elasticsearch:
+                  password: "secret"
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
