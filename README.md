@@ -117,6 +117,53 @@ For an example, review the values for Google's `cloud sql proxy` in the `values/
 helm install --repo https://go.temporal.io/helm-charts -f values/values.cloudsqlproxy.yaml temporal temporal --timeout 900s
 ```
 
+### Install with extraObjects for external secret management
+
+You can inject additional Kubernetes manifests using the `extraObjects` configuration. This is particularly useful for GitOps scenarios where you want to manage secrets externally using tools like ExternalSecretOperator or SealedSecrets.
+
+The `extraObjects` field accepts an array of raw YAML strings rendered alongside the Temporal chart. Each entry supports Go templating (e.g. `{{ .Release.Name }}`).
+
+#### Example with ExternalSecretOperator
+
+```yaml
+extraObjects:
+  - |
+    apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: {{ .Release.Name }}-db-secret
+    spec:
+      secretStoreRef:
+        name: aws-secretsmanager
+        kind: SecretStore
+      target:
+        name: {{ .Release.Name }}-db-secret
+        creationPolicy: Owner
+      data:
+      - secretKey: password
+        remoteRef:
+          key: prod/temporal/db
+          property: password
+```
+
+
+#### Example with SealedSecrets
+
+```yaml
+extraObjects:
+  - |
+    apiVersion: bitnami.com/v1alpha1
+    kind: SealedSecret
+    metadata:
+      name: {{ .Release.Name }}-db-secret
+    spec:
+      encryptedData:
+        password: <encrypted-password>
+      template:
+        metadata:
+          name: {{ .Release.Name }}-db-secret
+```
+
 ### Install with MySQL
 
 To use a MySQL database, copy the [MySQL values file](values/values.mysql.yaml) locally and edit it with your database connection details:
