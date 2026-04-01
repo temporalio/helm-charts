@@ -45,6 +45,20 @@ spec:
             {{- end }}
           env:
             {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
+            {{- with $.Values.admintools.additionalEnv }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if or $.Values.admintools.additionalEnvSecretName $.Values.admintools.additionalEnvConfigMapName }}
+          envFrom:
+              {{- with $.Values.admintools.additionalEnvSecretName }}
+            - secretRef:
+                name: {{ . }}
+              {{- end }}
+              {{- with $.Values.admintools.additionalEnvConfigMapName }}
+            - configMapRef:
+                name: {{ . }}
+              {{- end }}
+            {{- end }}
             {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
               {{- toYaml . | nindent 12 }}
@@ -80,6 +94,20 @@ spec:
             {{- end }}
           env:
             {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
+            {{- with $.Values.admintools.additionalEnv }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if or $.Values.admintools.additionalEnvSecretName $.Values.admintools.additionalEnvConfigMapName }}
+          envFrom:
+              {{- with $.Values.admintools.additionalEnvSecretName }}
+            - secretRef:
+                name: {{ . }}
+              {{- end }}
+              {{- with $.Values.admintools.additionalEnvConfigMapName }}
+            - configMapRef:
+                name: {{ . }}
+              {{- end }}
+            {{- end }}
           volumeMounts:
             {{- with $.Values.admintools.additionalVolumeMounts }}
               {{- toYaml . | nindent 12 }}
