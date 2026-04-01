@@ -248,6 +248,7 @@ server:
         - name: default
           retention: 3d
   frontend:
+    enabled: true
     service:
       # Evaluated as template
       annotations: {}
@@ -337,6 +338,7 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   history:
+    enabled: true
     service:
       # type: ClusterIP
       port: 7234
@@ -366,6 +368,7 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   matching:
+    enabled: true
     service:
       # type: ClusterIP
       port: 7235
@@ -395,6 +398,7 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   worker:
+    enabled: true
     service:
       # type: ClusterIP
       port: 7239

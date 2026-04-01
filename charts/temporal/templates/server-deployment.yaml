@@ -4,7 +4,7 @@
 {{- $secondaryVisibilityStore := include "temporal.persistence.getStoreByType" (list $ "secondaryVisibility") | fromYaml -}}
 {{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
 {{- $serviceValues := index $.Values.server $service }}
-{{- if or (not (hasKey $serviceValues "enabled")) $serviceValues.enabled }}
+{{- if $serviceValues.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
