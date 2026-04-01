@@ -83,7 +83,7 @@ data:
       membership:
         name: temporal
         maxJoinDuration: 30s
-        broadcastAddress: {{ `{{ .Env.POD_IP }}` }}
+        broadcastAddress: {{ `{{ env "POD_IP" | quote }}` }}
 
       pprof:
         port: 7936
