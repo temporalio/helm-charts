@@ -54,11 +54,15 @@ tests:
             datastores:
               default:
                 sql:
+                  createDatabase: true
+                  manageSchema: true
                   pluginName: mysql8
                   connectAddr: "temporal-persistence:3306"
                   databaseName: temporal
               visibility:
                 sql:
+                  createDatabase: true
+                  manageSchema: true
                   pluginName: mysql8
                   connectAddr: "temporal-visibility:3306"
                   databaseName: temporal_visibility
@@ -71,6 +75,45 @@ tests:
         additionalEnvSecretName: env-secret
         additionalEnvConfigMapName: env-configmap
     asserts:
+      # create-*-store containers
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-store")].env[?(@.name=="MY_ENV_VAR")].value
+          value: my-value
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-store")].envFrom[0].secretRef.name
+          value: env-secret
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-store")].envFrom[1].configMapRef.name
+          value: env-configmap
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-visibility-store")].env[?(@.name=="MY_ENV_VAR")].value
+          value: my-value
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-visibility-store")].envFrom[0].secretRef.name
+          value: env-secret
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-visibility-store")].envFrom[1].configMapRef.name
+          value: env-configmap
+      # manage-schema-*-store containers
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="MY_ENV_VAR")].value
+          value: my-value
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].envFrom[0].secretRef.name
+          value: env-secret
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].envFrom[1].configMapRef.name
+          value: env-configmap
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="MY_ENV_VAR")].value
+          value: my-value
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].envFrom[0].secretRef.name
+          value: env-secret
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].envFrom[1].configMapRef.name
+          value: env-configmap
+      # create-*-namespace containers
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="MY_ENV_VAR")].value
           value: my-value
