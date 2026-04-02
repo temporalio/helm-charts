@@ -20,7 +20,7 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.29.1
+    tag: 1.30.3
     pullPolicy: IfNotPresent
   # Use entrypoint script that detects dockerize and processes config if available
   # Set to false to use the image's default entrypoint
@@ -377,7 +377,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: "1.29.1-tctl-1.18.4-cli-1.5.0"
+    tag: "1.30.3"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -406,7 +406,7 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.44.0
+    tag: 2.48.1
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
