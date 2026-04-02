@@ -181,6 +181,7 @@ server:
             driverName: mysql8
             databaseName: temporal
             connectAddr: "mysql.example.com:3306"
+            connectProtocol: tcp
             user: temporal_user
             # Option 1: Provide password in values (chart will create a secret)
             password: your_password
@@ -195,6 +196,7 @@ server:
             driverName: mysql8
             databaseName: temporal_visibility
             connectAddr: "mysql.example.com:3306"
+            connectProtocol: tcp
             user: temporal_user
             existingSecret: temporal-db-secret
             secretKey: password
@@ -223,6 +225,7 @@ server:
             driverName: postgres12
             databaseName: temporal
             connectAddr: "postgres.example.com:5432"
+            connectProtocol: tcp
             user: temporal_user
             existingSecret: temporal-db-secret
             secretKey: password
@@ -234,6 +237,7 @@ server:
             driverName: postgres12
             databaseName: temporal_visibility
             connectAddr: "postgres.example.com:5432"
+            connectProtocol: tcp
             user: temporal_user
             existingSecret: temporal-db-secret
             secretKey: password
@@ -279,6 +283,7 @@ server:
             driverName: mysql8
             databaseName: temporal_visibility
             connectAddr: "mysql.example.com:3306"
+            connectProtocol: tcp
             user: temporal_user
             existingSecret: temporal-db-secret
             secretKey: password
@@ -308,6 +313,7 @@ server:
             driverName: mysql8
             databaseName: temporal
             connectAddr: "mysql.example.com:3306"
+            connectProtocol: tcp
             user: temporal_user
             existingSecret: temporal-db-secret
             secretKey: password
