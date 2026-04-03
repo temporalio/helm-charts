@@ -517,6 +517,12 @@ web:
   affinity: {}
   additionalVolumes: []
   additionalVolumeMounts: []
+  # When enabled, the Web UI connects to internal-frontend instead of frontend.
+  # This allows the Web UI to bypass server-side authorization, since internal-frontend
+  # is not subject to the authorizer. Requires server.internal-frontend.enabled to be true.
+  # If you need authenticated Web UI access (e.g., via SSO/OIDC), leave this as false
+  # and configure TEMPORAL_AUTH_* environment variables in additionalEnv instead.
+  useInternalFrontend: false
   # Adjust Web UI config with environment variables:
   # https://docs.temporal.io/references/web-ui-environment-variables
   additionalEnv: []
