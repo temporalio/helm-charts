@@ -527,6 +527,7 @@ web:
   topologySpreadConstraints: []
   minReadySeconds: 0
   podDisruptionBudget: {}
+  useInternalFrontend: false
 schema:
   backoffLimit: 100
   ttlSecondsAfterFinished: 86400
