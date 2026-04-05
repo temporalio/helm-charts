@@ -1,7 +1,11 @@
 {{- if $.Values.server.enabled }}
-{{- range $service := (list "frontend" "internal-frontend") }}
-{{- $serviceValues := index $.Values.server $service }}
-{{- if $serviceValues.enabled }}
+{{- $services := list "frontend" }}
+{{- if $.Values.server.internalFrontend.enabled }}
+{{-   $services = concat $services (list "internalFrontend") }}
+{{- end }}
+{{- range $rawService := $services }}
+{{- $service := include "serviceName" (list $rawService) }}
+{{- $serviceValues := index $.Values.server $rawService }}
 apiVersion: v1
 kind: Service
 metadata:
