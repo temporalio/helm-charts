@@ -22,7 +22,7 @@ server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.30.2
+    tag: 1.30.3
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -431,7 +431,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: "1.30.2"
+    tag: "1.30.3"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
