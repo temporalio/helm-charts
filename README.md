@@ -105,6 +105,57 @@ server:
 
 See the example values files in the `values/` directory for complete examples.
 
+#### Using an existing Kubernetes secret
+
+If you have already created a Kubernetes secret containing your database password, reference it with `existingSecret` and `secretKey`:
+
+```bash
+# Create the secret before installing the chart
+kubectl create secret generic temporal-db-secret \
+  --from-literal=password=your_db_password
+```
+
+The secret should have the following structure:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: temporal-db-secret
+type: Opaque
+data:
+  password: <base64-encoded-password>
+```
+
+Then reference it in your values:
+
+```yaml
+server:
+  config:
+    persistence:
+      datastores:
+        default:
+          sql:
+            pluginName: postgres12_pgx
+            driverName: postgres12_pgx
+            databaseName: temporal
+            connectAddr: "postgres.example.com:5432"
+            connectProtocol: tcp
+            user: temporal_user
+            existingSecret: temporal-db-secret
+            secretKey: password
+        visibility:
+          sql:
+            pluginName: postgres12_pgx
+            driverName: postgres12_pgx
+            databaseName: temporal_visibility
+            connectAddr: "postgres.example.com:5432"
+            connectProtocol: tcp
+            user: temporal_user
+            existingSecret: temporal-db-secret
+            secretKey: password
+```
+
 ### Install with sidecar containers
 
 You may need to provide your own sidecar containers (e.g., for database proxies).
