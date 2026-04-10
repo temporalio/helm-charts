@@ -48,3 +48,15 @@ tests:
       - equal:
           path: metadata.annotations["helm.sh/hook"]
           value: test
+  - it: does not set imagePullSecrets by default
+    asserts:
+      - notExists:
+          path: spec.imagePullSecrets
+  - it: sets imagePullSecrets when specified
+    set:
+      imagePullSecrets:
+        - name: my-registry-secret
+    asserts:
+      - equal:
+          path: spec.imagePullSecrets[0].name
+          value: my-registry-secret
