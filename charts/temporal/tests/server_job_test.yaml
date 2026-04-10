@@ -476,3 +476,49 @@ tests:
           value: aws-sdk-default
       - isNull:
           path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="AWS_SESSION_TOKEN")]
+  - it: extracts SQL_HOST and SQL_PORT from a single-host connectAddr
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: postgres12
+                  connectAddr: "postgres-host:5432"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: postgres12
+                  connectAddr: "postgres-host:5432"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="SQL_HOST")].value
+          value: postgres-host
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="SQL_PORT")].value
+          value: "5432"
+  - it: extracts SQL_HOST and SQL_PORT from the first host in a multi-host connectAddr
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: postgres12
+                  connectAddr: "host1:5432,host2:5432,host3:5432"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: postgres12
+                  connectAddr: "host1:5432,host2:5432,host3:5432"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="SQL_HOST")].value
+          value: host1
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="SQL_PORT")].value
+          value: "5432"
