@@ -97,13 +97,60 @@ server:
   - `manageSchema`: If `true`, the chart will run schema setup/upgrade jobs (default: `true`)
   - `existingSecret`: Reference to an existing Kubernetes secret containing credentials (e.g., `temporal-db-secret`). If not set, the chart will create a new secret.
   - `secretKey`: Key name within the secret to read the password from (default: `password`)
-- **Password handling**: Passwords are always stored in Kubernetes secrets and read from environment variables - they are never written to ConfigMaps or other manifests, even if provided as plaintext in your values file.
-  - If `existingSecret` is not set, the chart creates a new secret using the `password` value from your values file
-  - If `existingSecret` is set, the chart uses that existing secret (the `password` field in values is ignored)
+- **Password handling**: Passwords are always stored in Kubernetes secrets and read from environment variables—they are never written to ConfigMaps or other manifests, even if you supply a plaintext `password` in values for bootstrap only.
+  - If `existingSecret` is set, the chart uses that secret and ignores any `password` field in values for that datastore
+  - If `existingSecret` is not set, the chart creates a secret from the `password` value in values
   - The server configuration always reads passwords from environment variables that reference these secrets
 - All other fields pass through directly to the Temporal server config
 
 See the example values files in the `values/` directory for complete examples.
+
+#### Using an existing Kubernetes secret
+
+For production and GitOps, manage database credentials in a Kubernetes `Secret` that you (or a controller such as External Secrets) create and own outside this chart. Point each datastore at that object with `existingSecret` (the secret name) and `secretKey` (the key inside the secret that holds the password; default `password`).
+
+The secret must exist in the same namespace as the release before the chart’s jobs or pods need it. A typical manifest looks like this (`stringData` is fine if you prefer not to base64-encode by hand):
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: temporal-db-secret
+type: Opaque
+data:
+  password: <base64-encoded-password>
+```
+
+Reference it from your values (here both stores share one secret; use separate secrets if you split credentials):
+
+```yaml
+server:
+  config:
+    persistence:
+      datastores:
+        default:
+          sql:
+            pluginName: postgres12_pgx
+            driverName: postgres12_pgx
+            databaseName: temporal
+            connectAddr: "postgres.example.com:5432"
+            connectProtocol: tcp
+            user: temporal_user
+            existingSecret: temporal-db-secret
+            secretKey: password
+        visibility:
+          sql:
+            pluginName: postgres12_pgx
+            driverName: postgres12_pgx
+            databaseName: temporal_visibility
+            connectAddr: "postgres.example.com:5432"
+            connectProtocol: tcp
+            user: temporal_user
+            existingSecret: temporal-db-secret
+            secretKey: password
+```
+
+For a disposable local cluster only, you can seed a minimal secret before `helm install` with `kubectl create secret generic temporal-db-secret --from-literal=password=your_db_password`. Prefer your standard secret workflow everywhere else.
 
 ### Install with sidecar containers
 
