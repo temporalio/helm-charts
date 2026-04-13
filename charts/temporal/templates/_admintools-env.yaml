@@ -28,9 +28,9 @@
 - name: SQL_PLUGIN
   value: {{ required (printf "Please specify pluginName for %s store (e.g., mysql8, postgres12, postgres12_pgx)" $store.name) $store.config.pluginName }}
 - name: SQL_HOST
-  value: {{ required (printf "Please specify connectAddr for %s store" $store.name) $store.config.connectAddr | splitList ":" | first }}
+  value: {{ required (printf "Please specify connectAddr for %s store" $store.name) $store.config.connectAddr | splitList "," | first | splitList ":" | first }}
 - name: SQL_PORT
-  value: {{ required (printf "Port must be specified in connectAddr for %s store. Expected format: 'host:port' (e.g., 'localhost:5432')" $store.name) ($store.config.connectAddr | splitList ":" | rest | first) | quote }}
+  value: {{ required (printf "Port must be specified in connectAddr for %s store. Expected format: 'host:port' (e.g., 'localhost:5432')" $store.name) ($store.config.connectAddr | splitList "," | first | splitList ":" | rest | first) | quote }}
 - name: SQL_DATABASE
   value: {{ required (printf "Please specify databaseName for %s store" $store.name) $store.config.databaseName }}
 - name: SQL_USER
