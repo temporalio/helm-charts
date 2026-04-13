@@ -143,7 +143,23 @@ helm install --repo https://go.temporal.io/helm-charts \
 - Import the dashboards listed above
 - Configure Prometheus ServiceMonitor if using Prometheus Operator (enabled via `server.metrics.serviceMonitor.enabled`)
 
-### 7. imagePullSecrets Format Change
+### 7. `internalFrontend` Key Renamed to `internal-frontend`
+
+**Previous versions:**
+- The internal frontend service was configured under `server.internalFrontend`
+
+**v1.0.0-rc.2:**
+- The key is now `server.internal-frontend` (hyphenated, matching the Temporal service name)
+
+**Migration:**
+- Rename `server.internalFrontend` to `server.internal-frontend` in your values file:
+  ```yaml
+  server:
+    internal-frontend:
+      enabled: true
+  ```
+
+### 8. imagePullSecrets Format Change
 
 **Previous versions:**
 - `imagePullSecrets` was a map: `imagePullSecrets: {}`
@@ -159,7 +175,7 @@ helm install --repo https://go.temporal.io/helm-charts \
     - name: my-registry-secret
   ```
 
-### 8. New Configuration Options
+### 9. New Configuration Options
 
 **v1.0.0-rc.2 adds the following new configuration options:**
 
@@ -180,7 +196,7 @@ server:
 
 #### Deployment Strategy
 - `server.deploymentStrategy` - Configure custom deployment strategies for server services
-- Per-service `deploymentStrategy` options (frontend, history, matching, worker, internalFrontend)
+- Per-service `deploymentStrategy` options (frontend, history, matching, worker, internal-frontend)
 
 **Example:**
 ```yaml
@@ -362,6 +378,7 @@ If you encounter issues during migration:
 | Installation | Simple install | Requires version flag and persistence config |
 | Secrets | May have used different format | Use `existingSecret` and `secretKey` |
 | imagePullSecrets | Map format `{}` | Array format `[]` |
+| internalFrontend key | `server.internalFrontend` | `server.internal-frontend` |
 
 ## Notes
 

@@ -78,6 +78,13 @@ Call this from a top-level template so it is always evaluated during rendering.
 {{- end -}}
 
 {{/* ------------------------------------------------------------------ */}}
+{{/* internalFrontend renamed to internal-frontend                       */}}
+{{/* ------------------------------------------------------------------ */}}
+{{- if .Values.server.internalFrontend -}}
+  {{- fail "'server.internalFrontend' is no longer supported. Rename to 'server.internal-frontend'. See UPGRADING.md." -}}
+{{- end -}}
+
+{{/* ------------------------------------------------------------------ */}}
 {{/* imagePullSecrets format changed from map to array in v1.0.0-rc.2   */}}
 {{/* ------------------------------------------------------------------ */}}
 {{- if kindIs "map" .Values.imagePullSecrets -}}
