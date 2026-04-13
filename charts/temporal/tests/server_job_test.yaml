@@ -206,6 +206,80 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[*].resources.limits.memory
           value: 16Gi
+  - it: includes Helm hook annotations by default
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: "pre-install,pre-upgrade"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "0"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-delete-policy"]
+          value: "before-hook-creation"
+  - it: excludes Helm hook annotations when useHelmHooks is false
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+      schema:
+        useHelmHooks: false
+    asserts:
+      - isNull:
+          path: metadata.annotations
+  - it: merges Helm hook annotations with custom jobAnnotations
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+      schema:
+        useHelmHooks: true
+        jobAnnotations:
+          custom-job-annotation: abc
+    asserts:
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: "pre-install,pre-upgrade"
+      - equal:
+          path: metadata.annotations.custom-job-annotation
+          value: abc
   - it: includes custom annotations and labels for pod and job
     set:
       server:
@@ -223,6 +297,7 @@ tests:
                   connectAddr: "temporal-visibility:3306"
                   databaseName: temporal_visibility
       schema:
+        useHelmHooks: false
         jobAnnotations:
           custom-job-annotation: abc
         podAnnotations:

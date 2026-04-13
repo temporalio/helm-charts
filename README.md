@@ -595,6 +595,14 @@ web:
       value: /custom-path
 ```
 
+### Schema Setup and Deployment Ordering
+
+By default, the schema Job uses [Helm hooks](https://helm.sh/docs/topics/charts_hooks/) (`pre-install`, `pre-upgrade`) to ensure database and Elasticsearch schemas are set up before server pods start.
+
+ArgoCD [maps Helm hooks to ArgoCD hooks](https://argo-cd.readthedocs.io/en/stable/user-guide/helm/) (`pre-install`/`pre-upgrade` → PreSync, `post-install`/`post-upgrade` → PostSync, `hook-weight` → sync-wave), so the default should work with ArgoCD. Caveats: ArgoCD cannot distinguish install from upgrade (every operation is a sync), and delete-policy follows [ArgoCD sync semantics](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-waves/) rather than Helm's per-hook lifecycle. If any ArgoCD-native hooks are defined, all Helm hooks are ignored.
+
+For explicit control, or when using Flux or Terraform, set `useHelmHooks: false`.
+
 ## Uninstalling
 
 Note: Depending on how the persistence is configured, this may remove all of the Temporal data.
