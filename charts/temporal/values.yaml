@@ -529,7 +529,7 @@ web:
   podDisruptionBudget: {}
 schema:
   # Use Helm hooks to ensure schema setup completes before server pods start.
-  # Set to false if using ArgoCD, Flux, Rancher or Terraform.
+  # Set to false if using Flux, Rancher or Terraform.
   useHelmHooks: true
   backoffLimit: 100
   ttlSecondsAfterFinished: 86400
