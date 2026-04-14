@@ -1,0 +1,25 @@
+suite: test shim configmap
+templates:
+  - shim-configmap.yaml
+tests:
+  - it: includes Helm hook annotations when useHelmHooks is true
+    set:
+      schema:
+        useHelmHooks: true
+    asserts:
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: "pre-install,pre-upgrade"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "-1"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-delete-policy"]
+          value: "before-hook-creation"
+  - it: excludes Helm hook annotations when useHelmHooks is false
+    set:
+      schema:
+        useHelmHooks: false
+    asserts:
+      - isNull:
+          path: metadata.annotations
