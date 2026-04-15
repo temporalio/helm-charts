@@ -1,0 +1,176 @@
+suite: test server namespace job
+templates:
+  - server-namespace-job.yaml
+tests:
+  - it: does not create the namespace job when namespaces.create is false
+    set:
+      server:
+        config:
+          namespaces:
+            create: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: creates the namespace job when namespaces.create is true
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+                retention: 3d
+    asserts:
+      - containsDocument:
+          kind: Job
+          apiVersion: batch/v1
+  - it: creates an init container per namespace
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+                retention: 3d
+              - name: my-namespace
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: create-default-namespace
+      - equal:
+          path: spec.template.spec.initContainers[1].name
+          value: create-my-namespace-namespace
+  - it: sets TEMPORAL_ADDRESS to the frontend service by default
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
+  - it: sets TEMPORAL_ADDRESS to the internal-frontend service when enabled
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          value: RELEASE-NAME-temporal-internal-frontend.NAMESPACE.svc:7236
+  - it: includes additional environment variables
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+      admintools:
+        additionalEnv:
+          - name: MY_ENV_VAR
+            value: my-value
+        additionalEnvSecretName: env-secret
+        additionalEnvConfigMapName: env-configmap
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="MY_ENV_VAR")].value
+          value: my-value
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].envFrom[0].secretRef.name
+          value: env-secret
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].envFrom[1].configMapRef.name
+          value: env-configmap
+  - it: does not include Helm hook annotations
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - isNull:
+          path: metadata.annotations["helm.sh/hook"]
+  - it: sets backoffLimit and ttlSecondsAfterFinished from schema values
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+      schema:
+        backoffLimit: 5
+        ttlSecondsAfterFinished: 3600
+    asserts:
+      - equal:
+          path: spec.backoffLimit
+          value: 5
+      - equal:
+          path: spec.ttlSecondsAfterFinished
+          value: 3600
+  - it: includes custom annotations and labels for pod and job
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+      schema:
+        jobAnnotations:
+          custom-job-annotation: abc
+        podAnnotations:
+          custom-pod-annotation: def
+        podLabels:
+          custom-pod-label: ghi
+    asserts:
+      - equal:
+          path: metadata.annotations.custom-job-annotation
+          value: abc
+      - equal:
+          path: spec.template.metadata.annotations.custom-pod-annotation
+          value: def
+      - equal:
+          path: spec.template.metadata.labels.custom-pod-label
+          value: ghi
+  - it: includes resource limits and requests on init containers
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+      schema:
+        resources:
+          requests:
+            cpu: 12
+            memory: 12Gi
+          limits:
+            cpu: 16
+            memory: 16Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[*].resources.requests.cpu
+          value: 12
+      - equal:
+          path: spec.template.spec.initContainers[*].resources.requests.memory
+          value: 12Gi
+      - equal:
+          path: spec.template.spec.initContainers[*].resources.limits.cpu
+          value: 16
+      - equal:
+          path: spec.template.spec.initContainers[*].resources.limits.memory
+          value: 16Gi
