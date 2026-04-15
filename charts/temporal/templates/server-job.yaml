@@ -134,50 +134,7 @@ spec:
             {{- end }}
           {{- end }}
         {{- end }}
-        {{- if $.Values.server.config.namespaces.create }}
-          {{- range $namespace := $.Values.server.config.namespaces.namespace }}
-        - name: create-{{ $namespace.name }}-namespace
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
-          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['/bin/sh','-c']
-          args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
-          env:
-            - name: TEMPORAL_ADDRESS
-              {{- if (index $.Values.server "internal-frontend").enabled }}
-              value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ (index $.Values.server "internal-frontend").service.port }}
-              {{- else if $.Values.server.frontend.ingress.enabled }}
-              value: "{{ index $.Values.server.frontend.ingress.hosts 0 }}"
-              {{- else }}
-              value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
-              {{- end }}
-              {{- with $.Values.admintools.additionalEnv }}
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- if or $.Values.admintools.additionalEnvSecretName $.Values.admintools.additionalEnvConfigMapName }}
-          envFrom:
-              {{- with $.Values.admintools.additionalEnvSecretName }}
-            - secretRef:
-                name: {{ . }}
-              {{- end }}
-              {{- with $.Values.admintools.additionalEnvConfigMapName }}
-            - configMapRef:
-                name: {{ . }}
-              {{- end }}
-              {{- end }}
-              {{- with $.Values.admintools.additionalVolumeMounts }}
-          volumeMounts:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.resources }}
-          resources:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.containerSecurityContext }}
-          securityContext:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-          {{- end }}
-        {{- end }}
+
       containers:
         - name: done
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"

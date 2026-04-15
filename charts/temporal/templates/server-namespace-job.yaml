@@ -1,0 +1,107 @@
+{{- if $.Values.server.config.namespaces.create }}
+{{- $jobName := include "temporal.componentname" (list $ (printf "namespace-%s-%d" $.Chart.Version $.Release.Revision | replace "." "-")) }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $jobName }}
+  labels:
+    {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
+  {{- with $.Values.schema.jobAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  backoffLimit: {{ $.Values.schema.backoffLimit }}
+  ttlSecondsAfterFinished: {{ $.Values.schema.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      name: {{ $jobName }}
+      labels:
+        {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 8 }}
+        {{- with $.Values.schema.podLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with $.Values.schema.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{ include "temporal.serviceAccount" $ }}
+      restartPolicy: OnFailure
+      initContainers:
+        {{- range $namespace := $.Values.server.config.namespaces.namespace }}
+        - name: create-{{ $namespace.name }}-namespace
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['/bin/sh', '-c']
+          args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
+          env:
+            - name: TEMPORAL_ADDRESS
+              {{- if (index $.Values.server "internal-frontend").enabled }}
+              value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ (index $.Values.server "internal-frontend").service.port }}
+              {{- else if $.Values.server.frontend.ingress.enabled }}
+              value: "{{ index $.Values.server.frontend.ingress.hosts 0 }}"
+              {{- else }}
+              value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
+              {{- end }}
+            {{- with $.Values.admintools.additionalEnv }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if or $.Values.admintools.additionalEnvSecretName $.Values.admintools.additionalEnvConfigMapName }}
+          envFrom:
+            {{- with $.Values.admintools.additionalEnvSecretName }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+            {{- with $.Values.admintools.additionalEnvConfigMapName }}
+            - configMapRef:
+                name: {{ . }}
+            {{- end }}
+          {{- end }}
+          {{- with $.Values.admintools.additionalVolumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $.Values.schema.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $.Values.schema.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- end }}
+      containers:
+        - name: done
+          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
+          command: ['sh', '-c', 'echo "Namespace setup completed"']
+          {{- with $.Values.schema.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $.Values.schema.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with $.Values.schema.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.admintools.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.admintools.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.admintools.additionalVolumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

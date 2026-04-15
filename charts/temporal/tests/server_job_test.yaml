@@ -66,8 +66,6 @@ tests:
                   pluginName: mysql8
                   connectAddr: "temporal-visibility:3306"
                   databaseName: temporal_visibility
-          namespaces:
-            create: true
       admintools:
         additionalEnv:
           - name: MY_ENV_VAR
@@ -112,16 +110,6 @@ tests:
           value: env-secret
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].envFrom[1].configMapRef.name
-          value: env-configmap
-      # create-*-namespace containers
-      - equal:
-          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="MY_ENV_VAR")].value
-          value: my-value
-      - equal:
-          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].envFrom[0].secretRef.name
-          value: env-secret
-      - equal:
-          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].envFrom[1].configMapRef.name
           value: env-configmap
   - it: includes additional volumes
     set:
