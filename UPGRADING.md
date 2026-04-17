@@ -382,8 +382,6 @@ If you encounter issues during migration:
 
 ## Notes
 
-- This is a **release candidate** version. Test thoroughly before using in production.
-- The chart version must be specified while the chart is still an rc: `--version '>=1.0.0-0'`
 - Data migration is your responsibility when moving from bundled databases to external ones
 - Some configuration options may have changed - review all settings carefully
 
