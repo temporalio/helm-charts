@@ -527,6 +527,7 @@ web:
   topologySpreadConstraints: []
   minReadySeconds: 0
   podDisruptionBudget: {}
+  useInternalFrontend: false
 schema:
   # Use Helm hooks to ensure schema setup completes before server pods start.
   # Set to false if using Flux, Rancher or Terraform.
