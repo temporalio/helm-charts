@@ -45,6 +45,19 @@ tests:
       - equal:
           path: spec.replicas
           value: 3
+  - it: omits replica count when neither service specific nor service wide is set
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        replicaCount: null
+        frontend:
+          replicaCount: null
+    asserts:
+      - notExists:
+          path: spec.replicas
   - it: defaults to service wide resources
     template: templates/server-deployment.yaml
     documentSelector:
@@ -310,9 +323,9 @@ tests:
       server:
         history:
           readinessProbe:
-             initialDelaySeconds: 300
-             tcpSocket:
-               port: rpc
+            initialDelaySeconds: 300
+            tcpSocket:
+              port: rpc
     asserts:
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
