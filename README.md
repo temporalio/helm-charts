@@ -384,6 +384,7 @@ Then install:
 ```bash
 helm install --repo https://go.temporal.io/helm-charts -f elasticsearch.values.yaml temporal temporal --timeout 900s
 ```
+**Note:** In shared Elasticsearch clusters `elasticsearch.skipClusterSettings` may be useful. If `true`, skip applying cluster-wide settings (`action.auto_create_index`) during schema setup. (default: `false`)
 
 ### Enable Archival
 

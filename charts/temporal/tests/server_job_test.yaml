@@ -585,3 +585,57 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="SQL_PORT")].value
           value: "5432"
+  - it: skips setup-schema when skipClusterSettings is true for elasticsearch
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                elasticsearch:
+                  version: v7
+                  skipClusterSettings: true
+                  url:
+                    scheme: http
+                    host: "elasticsearch:9200"
+                  username: ""
+                  password: ""
+                  indices:
+                    visibility: temporal_visibility_v1
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].args[0]
+          pattern: "^temporal-elasticsearch-tool create-index"
+      - notMatchRegex:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].args[0]
+          pattern: "setup-schema"
+  - it: includes setup-schema by default for elasticsearch
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                elasticsearch:
+                  version: v7
+                  url:
+                    scheme: http
+                    host: "elasticsearch:9200"
+                  username: ""
+                  password: ""
+                  indices:
+                    visibility: temporal_visibility_v1
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].args[0]
+          pattern: "setup-schema"
