@@ -158,7 +158,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
           {{- $_ := unset $storeConfig "password" -}}
         {{- end -}}
       {{- end -}}
-      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey" "createDatabase" "manageSchema" "skipClusterSettings") -}}
+      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey" "createDatabase" "manageSchema") -}}
     {{- end -}}
   {{- end -}}
   {{- $_ := set $patchedDatastores $name $dsCopy -}}
@@ -209,9 +209,6 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
     {{- $storeConfig := get $config "elasticsearch" -}}
     {{- if not (hasKey $storeConfig "manageSchema") -}}
         {{- $_ := set $storeConfig "manageSchema" true -}}
-    {{- end -}}
-    {{- if not (hasKey $storeConfig "skipClusterSettings") -}}
-        {{- $_ := set $storeConfig "skipClusterSettings" false -}}
     {{- end -}}
     {{- $_ := set $store "config" $storeConfig -}}
 {{- else -}}

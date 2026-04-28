@@ -32,9 +32,6 @@ server:
             logLevel: error
             indices:
               visibility: temporal_visibility_v1
-            # Skip applying cluster-wide settings (action.auto_create_index) during schema setup.
-            # Useful when sharing an ES cluster with other services that need auto-index creation.
-            # skipClusterSettings: false
             # tls:
             #   enabled: true
             #   caFile: /path/to/ca.crt
