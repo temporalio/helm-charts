@@ -97,7 +97,7 @@ spec:
                 {{- fail (printf "manageSchema is not supported for %s SQL database plugin" $store.config.pluginName) -}}
               {{- end }}
             {{- else if eq $store.driver "elasticsearch" }}
-            - temporal-elasticsearch-tool setup-schema && temporal-elasticsearch-tool create-index && temporal-elasticsearch-tool update-schema --index "$ES_VISIBILITY_INDEX"
+            - temporal-elasticsearch-tool update-schema --index "" && temporal-elasticsearch-tool create-index && temporal-elasticsearch-tool update-schema --index "$ES_VISIBILITY_INDEX"
             {{- end }}
           env:
             {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
