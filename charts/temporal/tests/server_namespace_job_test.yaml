@@ -24,6 +24,25 @@ tests:
       - containsDocument:
           kind: Job
           apiVersion: batch/v1
+  - it: replaces build metadata separators in the namespace job name
+    release:
+      name: test
+    chart:
+      version: 1.1.1+build
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: metadata.name
+          value: test-temporal-namespace-1-1-1-build-0
+      - equal:
+          path: spec.template.metadata.name
+          value: test-temporal-namespace-1-1-1-build-0
   - it: creates an init container per namespace
     set:
       server:
