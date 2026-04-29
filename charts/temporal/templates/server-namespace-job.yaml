@@ -1,5 +1,5 @@
 {{- if $.Values.server.config.namespaces.create }}
-{{- $jobName := include "temporal.componentname" (list $ (printf "namespace-%s-%d" $.Chart.Version $.Release.Revision | replace "." "-")) }}
+{{- $jobName := include "temporal.componentname" (list $ (printf "namespace-%s-%d" $.Chart.Version $.Release.Revision | replace "." "-" | replace "+" "-")) }}
 apiVersion: batch/v1
 kind: Job
 metadata:

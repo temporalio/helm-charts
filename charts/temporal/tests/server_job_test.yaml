@@ -23,6 +23,33 @@ tests:
       - containsDocument:
           kind: Job
           apiVersion: batch/v1
+  - it: replaces build metadata separators in the server job name
+    release:
+      name: test
+    chart:
+      version: 1.1.1+build
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: metadata.name
+          value: test-temporal-schema-1-1-1-build-0
+      - equal:
+          path: spec.template.metadata.name
+          value: test-temporal-schema-1-1-1-build-0
   - it: includes additional init containers
     set:
       server:
