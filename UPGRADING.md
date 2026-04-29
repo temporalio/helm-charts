@@ -52,6 +52,7 @@ server:
             driverName: mysql8
             databaseName: temporal
             connectAddr: "mysql.example.com:3306"
+            connectProtocol: tcp
             user: temporal_user
             existingSecret: temporal-db-secret
             secretKey: password
@@ -63,6 +64,7 @@ server:
             driverName: mysql8
             databaseName: temporal_visibility
             connectAddr: "mysql.example.com:3306"
+            connectProtocol: tcp
             user: temporal_user
             existingSecret: temporal-db-secret
             secretKey: password
