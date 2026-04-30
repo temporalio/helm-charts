@@ -18,6 +18,7 @@ metadata:
   {{- end }}
 spec:
   backoffLimit: {{ $.Values.schema.backoffLimit }}
+  activeDeadlineSeconds: {{ $.Values.schema.activeDeadlineSeconds }}
   ttlSecondsAfterFinished: {{ $.Values.schema.ttlSecondsAfterFinished }}
   template:
     metadata:
