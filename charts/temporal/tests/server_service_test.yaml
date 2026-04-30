@@ -3,17 +3,24 @@ templates:
   - server-service.yaml
 set:
   server:
-    internalFrontend:
+    internal-frontend:
       enabled: true
     replicaCount: 2
     resources:
       requests:
         cpu: 100m
     frontend:
+      enabled: true
       replicaCount: 3
       resources:
         requests:
           cpu: 200m
+    history:
+      enabled: true
+    matching:
+      enabled: true
+    worker:
+      enabled: true
 tests:
   - it: omits prometheus annotations when disabled
     template: templates/server-service.yaml
@@ -44,6 +51,40 @@ tests:
         containsDocument:
           kind: Service
           apiVersion: v1
+  - it: doesn't create frontend services when frontend is disabled
+    template: templates/server-service.yaml
+    set:
+      server:
+        frontend:
+          enabled: false
+    asserts:
+      - not: true
+        containsDocument:
+          kind: Service
+          apiVersion: v1
+          name: RELEASE-NAME-temporal-frontend
+      - not: true
+        containsDocument:
+          kind: Service
+          apiVersion: v1
+          name: RELEASE-NAME-temporal-frontend-headless
+  - it: doesn't create internal-frontend services when internal-frontend is disabled
+    template: templates/server-service.yaml
+    set:
+      server:
+        internal-frontend:
+          enabled: false
+    asserts:
+      - not: true
+        containsDocument:
+          kind: Service
+          apiVersion: v1
+          name: RELEASE-NAME-temporal-internal-frontend
+      - not: true
+        containsDocument:
+          kind: Service
+          apiVersion: v1
+          name: RELEASE-NAME-temporal-internal-frontend-headless
   - it: app protocol default in frontend service
     template: templates/server-service.yaml
     documentSelector:
@@ -306,7 +347,7 @@ tests:
       matchMany: true
     set:
       server:
-        internalFrontend:
+        internal-frontend:
           service:
             appProtocol: grpc
             httpAppProtocol: http2
@@ -378,7 +419,7 @@ tests:
       matchMany: true
     set:
       server:
-        internalFrontend:
+        internal-frontend:
           service:
             appProtocol: grpc
             membershipAppProtocol: tls
@@ -530,3 +571,22 @@ tests:
             port: 9090
             protocol: TCP
             targetPort: metrics
+  - it: add custom label for frontend service
+    template: templates/server-service.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Service
+      matchMany: true
+    set:
+      server:
+        frontend:
+          serviceLabels:
+            label1: value1
+            label2: value2
+    asserts:
+      - equal:
+          path: metadata.labels["label1"]
+          value: value1
+      - equal:
+          path: metadata.labels["label2"]
+          value: value2

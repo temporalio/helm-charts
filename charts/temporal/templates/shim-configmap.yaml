@@ -1,10 +1,18 @@
+{{- if or $.Values.shims.dockerize $.Values.shims.elasticsearchTool }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: "{{ include "temporal.fullname" $ }}-shims"
   labels:
     {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
+  {{- if $.Values.schema.useHelmHooks }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation
+  {{- end }}
 data:
+{{- if $.Values.shims.dockerize }}
   dockerize: |-
     #!/bin/sh
     set -e
@@ -38,6 +46,8 @@ data:
 
         echo "Skipped dockerize, copied $SRC to $DST"
     fi
+{{- end }}
+{{- if $.Values.shims.elasticsearchTool }}
   temporal-elasticsearch-tool: |-
     #!/bin/sh
     set -e
@@ -312,3 +322,5 @@ data:
             exit 1
             ;;
     esac
+{{- end }}
+{{- end }}

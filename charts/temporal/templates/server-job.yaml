@@ -1,20 +1,28 @@
+{{- $jobName := include "temporal.componentname" (list $ (printf "schema-%s-%d" $.Chart.Version $.Release.Revision | replace "." "-" | replace "+" "-")) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
+  name: {{ $jobName }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
-  {{- with $.Values.schema.jobAnnotations }}
+  {{- if or $.Values.schema.useHelmHooks $.Values.schema.jobAnnotations }}
   annotations:
+    {{- if $.Values.schema.useHelmHooks }}
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation
+    {{- end }}
+    {{- with $.Values.schema.jobAnnotations }}
     {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- end }}
 spec:
   backoffLimit: {{ $.Values.schema.backoffLimit }}
   activeDeadlineSeconds: {{ $.Values.schema.activeDeadlineSeconds }}
-  ttlSecondsAfterFinished: 86400
+  ttlSecondsAfterFinished: {{ $.Values.schema.ttlSecondsAfterFinished }}
   template:
     metadata:
-      name: {{ include "temporal.componentname" (list $ (printf "schema-%d" .Release.Revision | replace "." "-")) }}
+      name: {{ $jobName }}
       labels:
         {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 8 }}
         {{- with $.Values.schema.podLabels }}
@@ -37,8 +45,7 @@ spec:
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
             {{- if eq $store.driver "cassandra" }}
-          command: ['temporal-cassandra-tool', 'create', '-k', '{{ $store.config.keyspace }}', '--replication-factor', '{{ $store.config.replicationFactor | default 1 }}'{{- if $store.config.datacenter }}, '--
-datacenter', '{{ $store.config.datacenter }}'{{- end }}]
+          command: ['temporal-cassandra-tool', 'create', '-k', '{{ $store.config.keyspace }}', '--replication-factor', '{{ $store.config.replicationFactor | default 1 }}'{{- if $store.config.datacenter }}, '--datacenter', '{{ $store.config.datacenter }}'{{- end }}]
             {{- else if eq $store.driver "sql" }}
           command: ['temporal-sql-tool', 'create-database']
             {{- else -}}
@@ -46,6 +53,20 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
             {{- end }}
           env:
             {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
+            {{- with $.Values.admintools.additionalEnv }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if or $.Values.admintools.additionalEnvSecretName $.Values.admintools.additionalEnvConfigMapName }}
+          envFrom:
+              {{- with $.Values.admintools.additionalEnvSecretName }}
+            - secretRef:
+                name: {{ . }}
+              {{- end }}
+              {{- with $.Values.admintools.additionalEnvConfigMapName }}
+            - configMapRef:
+                name: {{ . }}
+              {{- end }}
+            {{- end }}
             {{- with $.Values.admintools.additionalVolumeMounts }}
           volumeMounts:
               {{- toYaml . | nindent 12 }}
@@ -77,17 +98,33 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
                 {{- fail (printf "manageSchema is not supported for %s SQL database plugin" $store.config.pluginName) -}}
               {{- end }}
             {{- else if eq $store.driver "elasticsearch" }}
-            - temporal-elasticsearch-tool setup-schema && temporal-elasticsearch-tool create-index && temporal-elasticsearch-tool update-schema --index "$ES_VISIBILITY_INDEX"
+            - temporal-elasticsearch-tool update-schema --index "" && temporal-elasticsearch-tool create-index && temporal-elasticsearch-tool update-schema --index "$ES_VISIBILITY_INDEX"
             {{- end }}
           env:
             {{- include "temporal.admintools-env" (list $ $store) | nindent 12 }}
+            {{- with $.Values.admintools.additionalEnv }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if or $.Values.admintools.additionalEnvSecretName $.Values.admintools.additionalEnvConfigMapName }}
+          envFrom:
+              {{- with $.Values.admintools.additionalEnvSecretName }}
+            - secretRef:
+                name: {{ . }}
+              {{- end }}
+              {{- with $.Values.admintools.additionalEnvConfigMapName }}
+            - configMapRef:
+                name: {{ . }}
+              {{- end }}
+            {{- end }}
           volumeMounts:
             {{- with $.Values.admintools.additionalVolumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
+            {{- if $.Values.shims.elasticsearchTool }}
             - name: shims
               mountPath: /usr/local/sbin/temporal-elasticsearch-tool
               subPath: temporal-elasticsearch-tool
+            {{- end }}
             {{- with $.Values.schema.resources }}
           resources:
               {{- toYaml . | nindent 12 }}
@@ -98,39 +135,7 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
             {{- end }}
           {{- end }}
         {{- end }}
-        {{- if $.Values.server.config.namespaces.create }}
-          {{- range $namespace := $.Values.server.config.namespaces.namespace }}
-        - name: create-{{ $namespace.name }}-namespace
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
-          imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
-          command: ['/bin/sh','-c']
-          args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
-          env:
-            - name: TEMPORAL_ADDRESS
-              {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
-              value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.internalFrontend.service.port }}
-              {{- else if $.Values.server.frontend.ingress.enabled }}
-              value: "{{ index $.Values.server.frontend.ingress.hosts 0 }}"
-              {{- else }}
-              value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
-              {{- end }}
-              {{- with $.Values.admintools.additionalEnv }}
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.admintools.additionalVolumeMounts }}
-          volumeMounts:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.resources }}
-          resources:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-              {{- with $.Values.schema.containerSecurityContext }}
-          securityContext:
-                {{- toYaml . | nindent 12 }}
-              {{- end }}
-          {{- end }}
-        {{- end }}
+
       containers:
         - name: done
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
@@ -160,13 +165,15 @@ datacenter', '{{ $store.config.datacenter }}'{{- end }}]
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or $.Values.admintools.additionalVolumes true }}
+      {{- if or $.Values.admintools.additionalVolumes $.Values.shims.elasticsearchTool }}
       volumes:
         {{- with $.Values.admintools.additionalVolumes }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
+        {{- if $.Values.shims.elasticsearchTool }}
         - name: shims
           configMap:
             name: "{{ include "temporal.fullname" $ }}-shims"
             defaultMode: 0555
+        {{- end }}
       {{- end }}
