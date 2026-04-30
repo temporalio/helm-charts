@@ -532,6 +532,7 @@ schema:
   # Set to false if using Flux, Rancher or Terraform.
   useHelmHooks: true
   backoffLimit: 100
+  activeDeadlineSeconds: null
   ttlSecondsAfterFinished: 86400
   jobAnnotations: {}
   podAnnotations: {}
