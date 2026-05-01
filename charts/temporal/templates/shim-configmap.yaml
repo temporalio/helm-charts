@@ -99,7 +99,7 @@ data:
                 exit 1
             fi
 
-            CLUSTER_SETTINGS_FILE="schema/elasticsearch/visibility/cluster_settings_v7.json"
+            CLUSTER_SETTINGS_FILE="schema/elasticsearch/visibility/cluster_settings_${ES_VERSION}.json"
             TEMPLATE_FILE="schema/elasticsearch/visibility/index_template_${ES_VERSION}.json"
 
             if [ ! -f "$TEMPLATE_FILE" ]; then
@@ -108,10 +108,15 @@ data:
             fi
 
             FAIL_SILENTLY="false"
+            SKIP_CLUSTER_SETTINGS="false"
             while [ $# -gt 0 ]; do
                 case "$1" in
                     --fail)
                         FAIL_SILENTLY="true"
+                        shift
+                        ;;
+                    --skip-cluster-settings)
+                        SKIP_CLUSTER_SETTINGS="true"
                         shift
                         ;;
                     *)
@@ -120,13 +125,15 @@ data:
                 esac
             done
 
-            # Setup cluster settings if file exists
-            if [ -f "$CLUSTER_SETTINGS_FILE" ]; then
-                echo "Setting up cluster settings..."
-                curl_request "PUT" "/_cluster/settings" "$CLUSTER_SETTINGS_FILE" "$FAIL_SILENTLY" >/dev/null
-                echo "Cluster settings setup complete"
-            else
-                echo "Warning: Cluster settings file not found: $CLUSTER_SETTINGS_FILE, skipping cluster settings"
+            if [ "$SKIP_CLUSTER_SETTINGS" = "false" ]; then
+              # Setup cluster settings if file exists
+              if [ -f "$CLUSTER_SETTINGS_FILE" ]; then
+                  echo "Setting up cluster settings..."
+                  curl_request "PUT" "/_cluster/settings" "$CLUSTER_SETTINGS_FILE" "$FAIL_SILENTLY" >/dev/null
+                  echo "Cluster settings setup complete"
+              else
+                  echo "Warning: Cluster settings file not found: $CLUSTER_SETTINGS_FILE, skipping cluster settings"
+              fi
             fi
 
             echo "Setting up index template..."
