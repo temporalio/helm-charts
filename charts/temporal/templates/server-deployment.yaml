@@ -65,11 +65,15 @@ spec:
               value: {{ $service }}
             - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
               value: /etc/temporal/config/config_template.yaml
+          {{- if not $defaultStore.config.passwordCommand }}
             - name: TEMPORAL_DEFAULT_STORE_PASSWORD
               {{- include "temporal.password-env" (list $ $defaultStore) | nindent 14 }}
+          {{- end }}
+          {{- if not $visibilityStore.config.passwordCommand }}
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
               {{- include "temporal.password-env" (list $ $visibilityStore) | nindent 14 }}
-          {{- if $secondaryVisibilityStore }}
+          {{- end }}
+          {{- if and $secondaryVisibilityStore (not $secondaryVisibilityStore.config.passwordCommand) }}
             - name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
               {{- include "temporal.password-env" (list $ $secondaryVisibilityStore) | nindent 14 }}
           {{- end }}

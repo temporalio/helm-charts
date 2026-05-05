@@ -162,6 +162,12 @@ server:
         #   password: ""  # optional, use existingSecret instead
         #   existingSecret: temporal-db-secret  # Helm-specific, stripped before rendering
         #   secretKey: password  # Helm-specific, default: password
+        #   # Server v1.31+ alternative to password/existingSecret. When set, no
+        #   # password Secret is created and no SQL_PASSWORD env is wired.
+        #   passwordCommand:
+        #     command: my-token-helper
+        #     args: []
+        #     timeout: 30s
         #   maxConns: 20
         #   maxIdleConns: 20
         #   maxConnLifetime: "1h"
