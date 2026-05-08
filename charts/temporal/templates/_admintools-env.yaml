@@ -35,8 +35,10 @@
   value: {{ required (printf "Please specify databaseName for %s store" $store.name) $store.config.databaseName }}
 - name: SQL_USER
   value: {{ $store.config.user | quote }}
+{{- if not $store.config.passwordCommand }}
 - name: SQL_PASSWORD
   {{- include "temporal.password-env" (list $root $store) | nindent 2 }}
+{{- end }}
   {{- with $store.config.connectAttributes }}
 - name: SQL_CONNECT_ATTRIBUTES
   value: {{ include "temporal.persistence.sql.connectAttributes" . | quote }}
