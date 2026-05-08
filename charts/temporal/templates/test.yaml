@@ -4,6 +4,9 @@ metadata:
   name: "{{ include "temporal.fullname" . }}-test-cluster-health"
   labels:
     {{- include "temporal.resourceLabels" (list $ "test" "") | nindent 4 }}
+    {{- with .Values.test.podLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   annotations:
     "helm.sh/hook": test
     {{- with .Values.test.podAnnotations }}
@@ -25,6 +28,18 @@ spec:
     {{- end }}
   {{- with $.Values.imagePullSecrets }}
   imagePullSecrets:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.test.nodeSelector }}
+  nodeSelector:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.test.affinity }}
+  affinity:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.test.tolerations }}
+  tolerations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   restartPolicy: Never
