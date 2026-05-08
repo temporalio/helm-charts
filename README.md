@@ -97,10 +97,11 @@ server:
   - `manageSchema`: If `true`, the chart will run schema setup/upgrade jobs (default: `true`)
   - `existingSecret`: Reference to an existing Kubernetes secret containing credentials (e.g., `temporal-db-secret`). If not set, the chart will create a new secret.
   - `secretKey`: Key name within the secret to read the password from (default: `password`)
-- **Password handling**: Passwords are always stored in Kubernetes secrets and read from environment variables—they are never written to ConfigMaps or other manifests, even if you supply a plaintext `password` in values for bootstrap only.
+- **Password handling**: With `password` or `existingSecret`, passwords are stored in Kubernetes secrets and read from environment variables—they are never written to ConfigMaps or other manifests, even if you supply a plaintext `password` in values for bootstrap only.
   - If `existingSecret` is set, the chart uses that secret and ignores any `password` field in values for that datastore
   - If `existingSecret` is not set, the chart creates a secret from the `password` value in values
-  - The server configuration always reads passwords from environment variables that reference these secrets
+  - The server configuration reads passwords from environment variables that reference these secrets
+  - As a third option, `passwordCommand` (Temporal server v1.31+, **SQL datastores only**) lets the server invoke a shell command per new connection to fetch the password — handy for short-lived credentials such as AWS RDS IAM auth tokens or GCP Cloud SQL IAM tokens. When set on a datastore, the chart skips creating a password Secret and skips wiring the `*_PASSWORD` env var for that store; the `passwordCommand` block passes through to the server config as-is.
 - All other fields pass through directly to the Temporal server config
 
 See the example values files in the `values/` directory for complete examples.
