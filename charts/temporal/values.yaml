@@ -547,4 +547,8 @@ shims:
   elasticsearchTool: true
 test:
   podAnnotations: {}
+  podLabels: {}
   resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
