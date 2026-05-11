@@ -120,9 +120,27 @@ spec:
             tcpSocket:
               port: rpc
           {{- end }}
+          {{- /* gRPC probes don't support TLS; they are switched to tcpSocket when TLS is configured. */ -}}
+          {{- $tlsKey := "" }}
+          {{- if eq $service "frontend" }}
+          {{- $tlsKey = "frontend" }}
+          {{- end }}
+          {{- if eq $service "internal-frontend" }}
+          {{- $tlsKey = "internode" }}
+          {{- end }}
+          {{- $tlsCertFile := "" }}
+          {{- if $tlsKey }}
+          {{- $tlsCertFile = dig "tls" $tlsKey "server" "certFile" "" $.Values.server.config }}
+          {{- end }}
+          {{- if $tlsCertFile }}
+          readinessProbe:
+            tcpSocket:
+              port: rpc
+          {{- else }}
           {{- with default $.Values.server.readinessProbe $serviceValues.readinessProbe }}
           readinessProbe:
           {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- end }}
           volumeMounts:
             - name: config

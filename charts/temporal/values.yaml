@@ -259,6 +259,7 @@ server:
       membershipAppProtocol: tcp
       httpPort: 7243
       httpAppProtocol: http
+    # Auto-replaced with a tcpSocket probe when server.config.tls.frontend is set (kubernetes/enhancements#4939).
     readinessProbe:
       grpc:
         port: 7233
@@ -312,6 +313,7 @@ server:
       membershipAppProtocol: tcp
       httpPort: 7246
       httpAppProtocol: http
+    # Auto-replaced with a tcpSocket probe when server.config.tls.internode is set (kubernetes/enhancements#4939).
     readinessProbe:
       grpc:
         port: 7236

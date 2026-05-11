@@ -320,6 +320,48 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
           value: rpc
+  - it: frontend with TLS configured switches readinessProbe to tcpSocket
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        config:
+          tls:
+            frontend:
+              server:
+                certFile: /etc/certs/frontend.crt
+                keyFile: /etc/certs/frontend.key
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].readinessProbe.grpc
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
+          value: rpc
+  - it: internal-frontend with internode TLS switches readinessProbe to tcpSocket
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-internal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+        config:
+          tls:
+            internode:
+              server:
+                certFile: /etc/certs/internode.crt
+                keyFile: /etc/certs/internode.key
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].readinessProbe.grpc
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
+          value: rpc
 
   - it: additional environment variables are set on all services
     template: templates/server-deployment.yaml
