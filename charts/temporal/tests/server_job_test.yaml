@@ -566,6 +566,97 @@ tests:
           value: aws-sdk-default
       - isNull:
           path: spec.template.spec.initContainers[?(@.name=="manage-schema-visibility-store")].env[?(@.name=="AWS_SESSION_TOKEN")]
+  - it: sets Cassandra TLS environment variables with all options
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                cassandra:
+                  hosts: "cassandra.default.svc.cluster.local"
+                  port: 9042
+                  keyspace: temporal
+                  user: "user"
+                  password: "password"
+                  tls:
+                    enabled: true
+                    caFile: /etc/tls/ca.crt
+                    enableHostVerification: false
+              visibility:
+                cassandra:
+                  hosts: "cassandra.default.svc.cluster.local"
+                  port: 9042
+                  keyspace: temporal_visibility
+                  user: "user"
+                  password: "password"
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="CASSANDRA_ENABLE_TLS")].value
+          value: "true"
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="CASSANDRA_TLS_CA")].value
+          value: /etc/tls/ca.crt
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="CASSANDRA_TLS_DISABLE_HOST_VERIFICATION")].value
+          value: "true"
+  - it: sets Cassandra TLS enabled without optional fields
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                cassandra:
+                  hosts: "cassandra.default.svc.cluster.local"
+                  port: 9042
+                  keyspace: temporal
+                  user: "user"
+                  password: "password"
+                  tls:
+                    enabled: true
+              visibility:
+                cassandra:
+                  hosts: "cassandra.default.svc.cluster.local"
+                  port: 9042
+                  keyspace: temporal_visibility
+                  user: "user"
+                  password: "password"
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="CASSANDRA_ENABLE_TLS")].value
+          value: "true"
+      - isNull:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="CASSANDRA_TLS_CA")]
+      - isNull:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="CASSANDRA_TLS_DISABLE_HOST_VERIFICATION")]
+  - it: inverts enableHostVerification for Cassandra TLS
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                cassandra:
+                  hosts: "cassandra.default.svc.cluster.local"
+                  port: 9042
+                  keyspace: temporal
+                  user: "user"
+                  password: "password"
+                  tls:
+                    enabled: true
+                    enableHostVerification: true
+              visibility:
+                cassandra:
+                  hosts: "cassandra.default.svc.cluster.local"
+                  port: 9042
+                  keyspace: temporal_visibility
+                  user: "user"
+                  password: "password"
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="CASSANDRA_TLS_DISABLE_HOST_VERIFICATION")].value
+          value: "false"
   - it: extracts SQL_HOST and SQL_PORT from a single-host connectAddr
     set:
       server:
