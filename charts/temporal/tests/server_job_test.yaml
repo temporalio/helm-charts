@@ -582,6 +582,8 @@ tests:
                   tls:
                     enabled: true
                     caFile: /etc/tls/ca.crt
+                    certFile: /etc/tls/client.crt
+                    keyFile: /etc/tls/client.key
                     enableHostVerification: false
               visibility:
                 cassandra:
@@ -597,6 +599,12 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="CASSANDRA_TLS_CA")].value
           value: /etc/tls/ca.crt
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="CASSANDRA_TLS_CERT")].value
+          value: /etc/tls/client.crt
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="CASSANDRA_TLS_KEY")].value
+          value: /etc/tls/client.key
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="CASSANDRA_TLS_DISABLE_HOST_VERIFICATION")].value
           value: "true"
