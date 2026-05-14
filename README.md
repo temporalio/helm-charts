@@ -1,4 +1,5 @@
 # Temporal Helm Chart
+
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts?ref=badge_shield)
 
 > **For users upgrading from 0.x releases:** Please see [UPGRADING.md](UPGRADING.md) for important migration information and breaking changes.
@@ -16,8 +17,9 @@ This Helm Chart code is tested by a dedicated test pipeline. It is also used ext
 ## Prerequisites
 
 This sequence assumes
-* that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), [kind](https://kind.sigs.k8s.io/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/))
-* that your machine has the following installed and able to access your cluster:
+
+- that your system is configured to access a kubernetes cluster (e. g. [AWS EKS](https://aws.amazon.com/eks/), [kind](https://kind.sigs.k8s.io/), or [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/))
+- that your machine has the following installed and able to access your cluster:
   - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
   - [Helm v3](https://helm.sh)
 
@@ -42,6 +44,7 @@ The sections that follow describe various deployment configurations using persis
 ### Persistence Configuration
 
 Temporal requires persistence stores for:
+
 - **Default store**: Stores workflow execution data (history, tasks, etc.)
 - **Visibility store**: Stores workflow visibility/search data
 
@@ -61,7 +64,7 @@ server:
           sql:
             createDatabase: true
             manageSchema: true
-            pluginName: mysql8  # or postgres12, postgres12_pgx
+            pluginName: mysql8 # or postgres12, postgres12_pgx
             driverName: mysql8
             databaseName: temporal
             connectAddr: "mysql.example.com:3306"
@@ -91,6 +94,7 @@ server:
 ```
 
 **Key points:**
+
 - Driver is determined by which key is present (`sql:`, `cassandra:`, or `elasticsearch:`)
 - **Helm-specific fields** (stripped before rendering to server config):
   - `createDatabase`: If `true`, the chart will create the database/keyspace if it doesn't exist (default: `true`)
@@ -191,7 +195,6 @@ extraObjects:
           key: prod/temporal/db
           property: password
 ```
-
 
 #### Example with SealedSecrets
 
@@ -390,11 +393,12 @@ helm install --repo https://go.temporal.io/helm-charts -f elasticsearch.values.y
 
 By default archival is disabled. You can enable it with one of the three provider options:
 
-* File Store, values file `values/values.archival.filestore.yaml`
-* S3, values file `values/values.archival.s3.yaml`
-* GCloud, values file `values/values.archival.gcloud.yaml`
+- File Store, values file `values/values.archival.filestore.yaml`
+- S3, values file `values/values.archival.s3.yaml`
+- GCloud, values file `values/values.archival.gcloud.yaml`
 
 So to use the minimal command again and to enable archival with file store provider:
+
 ```bash
 helm install --repo https://go.temporal.io/helm-charts -f values/values.archival.filestore.yaml temporal temporal --timeout 900s
 ```
@@ -424,6 +428,53 @@ TEMPORAL_AUTH_CLIENT_SECRET: xxxxxxxxxxxxxxx
 ```
 
 Reference: <https://docs.temporal.io/references/web-ui-server-env-vars>
+
+### Enable Autoscaling (HPA)
+
+By default all server services run with a static replica count. You can enable a `HorizontalPodAutoscaler` (autoscaling/v2) per service to let Kubernetes scale replicas automatically based on CPU or memory utilisation.
+
+Autoscaling is supported for `frontend`, `internal-frontend`, `history`, `matching`, and `worker`. When enabled, `spec.replicas` is omitted from the Deployment so the HPA is the sole replica controller.
+
+```yaml
+server:
+  frontend:
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 70 # optional, omit to disable memory scaling
+      behavior: # optional, tune scale-up/down behaviour
+        scaleUp:
+          stabilizationWindowSeconds: 60
+          policies:
+            - type: Pods
+              value: 2
+              periodSeconds: 60
+        scaleDown:
+          stabilizationWindowSeconds: 300
+      customMetrics: [] # optional, any extra autoscaling/v2 metric objects
+  history:
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+  matching:
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+  worker:
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80
+```
+
+> **Note:** To use memory-based autoscaling, ensure your pods have `resources.requests.memory` set, otherwise the HPA cannot calculate utilisation.
 
 ## Play With It
 
@@ -549,25 +600,29 @@ and navigate to http://127.0.0.1:8080 in your browser.
 
 There are a number of preconfigured dashboards that you may import into your Grafana installation.
 
-* [Server-General](https://raw.githubusercontent.com/temporalio/dashboards/helm/server/server-general.json)
-* [SDK-General](https://raw.githubusercontent.com/temporalio/dashboards/helm/sdk/sdk-general.json)
-* [Misc - Advanced Visibility Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/advanced-visibility-specific.json)
-* [Misc - Cluster Monitoring Kubernetes](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/clustermonitoring-kubernetes.json)
-* [Misc - Frontend Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/frontend-service-specific.json)
-* [Misc - History Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/history-service-specific.json)
-* [Misc - Matching Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/matching-service-specific.json)
-* [Misc - Worker Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json)
+- [Server-General](https://raw.githubusercontent.com/temporalio/dashboards/helm/server/server-general.json)
+- [SDK-General](https://raw.githubusercontent.com/temporalio/dashboards/helm/sdk/sdk-general.json)
+- [Misc - Advanced Visibility Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/advanced-visibility-specific.json)
+- [Misc - Cluster Monitoring Kubernetes](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/clustermonitoring-kubernetes.json)
+- [Misc - Frontend Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/frontend-service-specific.json)
+- [Misc - History Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/history-service-specific.json)
+- [Misc - Matching Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/matching-service-specific.json)
+- [Misc - Worker Service Specific](https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json)
 
 ### Updating Dynamic Configs
 
 By default dynamic config is empty, if you want to override some properties for your cluster, you should:
+
 1. Create a yaml file with your config (for example dc.yaml).
 2. Populate it with some values under server.dynamicConfig prefix (use the sample provided at `values/values.dynamic_config.yaml` as a starting point)
 3. Install your helm configuration:
+
 ```bash
 helm install --repo https://go.temporal.io/helm-charts -f values/values.dynamic_config.yaml temporal temporal --timeout 900s
 ```
+
 Note that if you already have a running cluster you can use the "helm upgrade" command to change dynamic config values:
+
 ```bash
 helm upgrade --repo https://go.temporal.io/helm-charts -f values/values.dynamic_config.yaml temporal temporal --timeout 900s
 ```
@@ -579,6 +634,7 @@ If a rolling upgrade is not desirable, you can also generate the ConfigMap file 
 ```bash
 kubectl apply -f dynamicconfigmap.yaml
 ```
+
 You can use helm upgrade with the "--dry-run" option to generate the content for the dynamicconfigmap.yaml.
 
 The dynamic-config ConfigMap is referenced as a mounted volume within the Temporal Containers, so any applied change will be automatically picked up by all pods within a few minutes without the need for pod recycling. See k8S documentation (https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically) for more details on how this works.
@@ -617,8 +673,9 @@ helm uninstall temporal
 To upgrade your cluster, upgrade your database schema (if the release includes schema changes), and then use `helm upgrade` command to perform a rolling upgrade of your installation.
 
 Note:
-* Not supported: running newer binaries with an older schema.
-* Supported: downgrading binaries – running older binaries with a newer schema.
+
+- Not supported: running newer binaries with an older schema.
+- Supported: downgrading binaries – running older binaries with a newer schema.
 
 # Contributing
 
@@ -628,6 +685,6 @@ Please see our [CONTRIBUTING guide](CONTRIBUTING.md).
 
 Many thanks to [Banzai Cloud](https://github.com/banzaicloud) whose [Cadence Helm Charts](https://github.com/banzaicloud/banzai-charts/tree/master/cadence) heavily inspired this work.
 
-
 ## License
+
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts?ref=badge_large)

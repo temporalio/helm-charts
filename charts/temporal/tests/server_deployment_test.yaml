@@ -310,9 +310,9 @@ tests:
       server:
         history:
           readinessProbe:
-             initialDelaySeconds: 300
-             tcpSocket:
-               port: rpc
+            initialDelaySeconds: 300
+            tcpSocket:
+              port: rpc
     asserts:
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
@@ -324,7 +324,7 @@ tests:
   - it: additional environment variables are set on all services
     template: templates/server-deployment.yaml
     documentSelector:
-      path: '$.kind'
+      path: "$.kind"
       value: Deployment
       matchMany: true
     set:
@@ -400,3 +400,116 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
+
+  - it: omits replicas when autoscaling is enabled
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        frontend:
+          autoscaling:
+            enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: sets replicas when autoscaling is disabled
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        frontend:
+          replicaCount: 3
+          autoscaling:
+            enabled: false
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: applies per-service replicaCount overrides alongside global replicaCount
+    template: templates/server-deployment.yaml
+    set:
+      server:
+        replicaCount: 4
+        frontend:
+          replicaCount: 8
+        history:
+          replicaCount: 8
+        matching:
+          replicaCount: 4
+        worker:
+          replicaCount: 8
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 8
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-frontend
+      - equal:
+          path: spec.replicas
+          value: 8
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-history
+      - equal:
+          path: spec.replicas
+          value: 4
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-matching
+      - equal:
+          path: spec.replicas
+          value: 8
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-worker
+
+  - it: global replicaCount applies to services without a per-service override
+    template: templates/server-deployment.yaml
+    set:
+      server:
+        replicaCount: 4
+        frontend:
+          replicaCount: 8
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 4
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-history
+      - equal:
+          path: spec.replicas
+          value: 4
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-matching
+      - equal:
+          path: spec.replicas
+          value: 4
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-worker
+
+  - it: HPA takes precedence over replicaCount when both are set
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        frontend:
+          replicaCount: 8
+          autoscaling:
+            enabled: true
+            minReplicas: 2
+            maxReplicas: 10
+    asserts:
+      - notExists:
+          path: spec.replicas
