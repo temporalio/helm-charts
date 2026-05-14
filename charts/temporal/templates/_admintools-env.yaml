@@ -23,6 +23,12 @@
 - name: CASSANDRA_TLS_DISABLE_HOST_VERIFICATION
   value: {{ not .enableHostVerification | quote }}
     {{- end }}
+    {{- if and .certFile .keyFile }}
+- name: CASSANDRA_TLS_CERT
+  value: {{ .certFile }}
+- name: CASSANDRA_TLS_KEY
+  value: {{ .keyFile }}
+    {{- end }}
   {{- end }}
 {{- else if eq $store.driver "sql" -}}
 - name: SQL_PLUGIN
