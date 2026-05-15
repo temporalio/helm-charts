@@ -259,11 +259,13 @@ server:
       membershipAppProtocol: tcp
       httpPort: 7243
       httpAppProtocol: http
-    # Auto-replaced with a tcpSocket probe when server.config.tls.frontend is set (kubernetes/enhancements#4939).
-    readinessProbe:
-      grpc:
-        port: 7233
-        service: temporal.api.workflowservice.v1.WorkflowService
+    # Defaults to a tcpSocket probe; uncomment below for a gRPC probe.
+    # gRPC probes don't yet support TLS (kubernetes/enhancements#4939), so opt in only when TLS is off.
+    readinessProbe: {}
+    # readinessProbe:
+    #   grpc:
+    #     port: 7233
+    #     service: temporal.api.workflowservice.v1.WorkflowService
     ingress:
       enabled: false
       # className:
@@ -313,11 +315,13 @@ server:
       membershipAppProtocol: tcp
       httpPort: 7246
       httpAppProtocol: http
-    # Auto-replaced with a tcpSocket probe when server.config.tls.internode is set (kubernetes/enhancements#4939).
-    readinessProbe:
-      grpc:
-        port: 7236
-        service: temporal.api.workflowservice.v1.WorkflowService
+    # Defaults to a tcpSocket probe; uncomment below for a gRPC probe.
+    # gRPC probes don't yet support TLS (kubernetes/enhancements#4939), so opt in only when TLS is off.
+    readinessProbe: {}
+    # readinessProbe:
+    #   grpc:
+    #     port: 7236
+    #     service: temporal.api.workflowservice.v1.WorkflowService
     metrics:
       annotations:
         enabled: true

@@ -424,6 +424,10 @@ TEMPORAL_AUTH_CLIENT_SECRET: xxxxxxxxxxxxxxx
 
 Reference: <https://docs.temporal.io/references/web-ui-server-env-vars>
 
+### Readiness probes
+
+The frontend and internal-frontend Deployments default to a `tcpSocket` readinessProbe, which works regardless of whether TLS is configured. If you are not using TLS and want a richer health check, you can opt into a gRPC probe by uncommenting the example block at `server.frontend.readinessProbe` (or `server.internal-frontend.readinessProbe`) in `values.yaml`. gRPC probes are not compatible with TLS — see [kubernetes/enhancements#4939](https://github.com/kubernetes/enhancements/issues/4939).
+
 ## Play With It
 
 ### Exploring Your Cluster
