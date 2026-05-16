@@ -51,6 +51,40 @@ tests:
         containsDocument:
           kind: Service
           apiVersion: v1
+  - it: doesn't create frontend services when frontend is disabled
+    template: templates/server-service.yaml
+    set:
+      server:
+        frontend:
+          enabled: false
+    asserts:
+      - not: true
+        containsDocument:
+          kind: Service
+          apiVersion: v1
+          name: RELEASE-NAME-temporal-frontend
+      - not: true
+        containsDocument:
+          kind: Service
+          apiVersion: v1
+          name: RELEASE-NAME-temporal-frontend-headless
+  - it: doesn't create internal-frontend services when internal-frontend is disabled
+    template: templates/server-service.yaml
+    set:
+      server:
+        internal-frontend:
+          enabled: false
+    asserts:
+      - not: true
+        containsDocument:
+          kind: Service
+          apiVersion: v1
+          name: RELEASE-NAME-temporal-internal-frontend
+      - not: true
+        containsDocument:
+          kind: Service
+          apiVersion: v1
+          name: RELEASE-NAME-temporal-internal-frontend-headless
   - it: app protocol default in frontend service
     template: templates/server-service.yaml
     documentSelector:

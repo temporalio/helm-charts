@@ -1,0 +1,67 @@
+suite: test extra objects
+templates:
+  - extra-objects.yaml
+tests:
+  - it: does not render anything when extraObjects is empty
+    asserts:
+      - not: true
+        containsDocument:
+          kind: "*"
+  - it: renders a ConfigMap from a string entry
+    set:
+      extraObjects:
+        - |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: test-config
+          data:
+            key: value
+    asserts:
+      - containsDocument:
+          kind: ConfigMap
+          apiVersion: v1
+      - equal:
+          path: metadata.name
+          value: test-config
+  - it: renders an ExternalSecret from a string entry
+    set:
+      extraObjects:
+        - |
+          apiVersion: external-secrets.io/v1beta1
+          kind: ExternalSecret
+          metadata:
+            name: test-secret
+          spec:
+            secretStoreRef:
+              name: test-store
+              kind: SecretStore
+            target:
+              name: test-target
+            data:
+            - secretKey: password
+              remoteRef:
+                key: test/key
+                property: password
+    asserts:
+      - containsDocument:
+          kind: ExternalSecret
+          apiVersion: external-secrets.io/v1beta1
+      - equal:
+          path: metadata.name
+          value: test-secret
+  - it: supports Go templating within entries
+    set:
+      extraObjects:
+        - |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: {{ .Release.Name }}-config
+    asserts:
+      - containsDocument:
+          kind: ConfigMap
+          apiVersion: v1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-config
