@@ -16,11 +16,13 @@ serviceAccount:
   extraAnnotations:
 additionalAnnotations: {}
 additionalLabels: {}
+# Array of extra K8s manifests to deploy
+extraObjects: []
 server:
   enabled: true
   image:
     repository: temporalio/server
-    tag: 1.30.2
+    tag: 1.31.0
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   replicaCount: 1
@@ -160,6 +162,13 @@ server:
         #   password: ""  # optional, use existingSecret instead
         #   existingSecret: temporal-db-secret  # Helm-specific, stripped before rendering
         #   secretKey: password  # Helm-specific, default: password
+        #   # Server v1.31+ alternative to password/existingSecret (SQL datastores
+        #   # only). When set, no password Secret is created and no SQL_PASSWORD
+        #   # env is wired; the server invokes the command per new connection.
+        #   passwordCommand:
+        #     command: my-token-helper
+        #     args: []
+        #     timeout: 30s
         #   maxConns: 20
         #   maxIdleConns: 20
         #   maxConnLifetime: "1h"
@@ -246,6 +255,7 @@ server:
         - name: default
           retention: 3d
   frontend:
+    enabled: true
     service:
       # Evaluated as template
       annotations: {}
@@ -335,6 +345,7 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   history:
+    enabled: true
     service:
       # type: ClusterIP
       port: 7234
@@ -364,6 +375,7 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   matching:
+    enabled: true
     service:
       # type: ClusterIP
       port: 7235
@@ -393,6 +405,7 @@ server:
     topologySpreadConstraints: []
     podDisruptionBudget: {}
   worker:
+    enabled: true
     service:
       # type: ClusterIP
       port: 7239
@@ -425,7 +438,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: "1.30.2"
+    tag: "1.31.0"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -457,7 +470,7 @@ web:
   replicaCount: 1
   image:
     repository: temporalio/ui
-    tag: 2.48.1
+    tag: 2.49.1
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster
@@ -522,7 +535,11 @@ web:
   minReadySeconds: 0
   podDisruptionBudget: {}
 schema:
+  # Use Helm hooks to ensure schema setup completes before server pods start.
+  # Set to false if using Flux, Rancher or Terraform.
+  useHelmHooks: true
   backoffLimit: 100
+  activeDeadlineSeconds: null
   ttlSecondsAfterFinished: 86400
   jobAnnotations: {}
   podAnnotations: {}
@@ -537,29 +554,15 @@ shims:
   elasticsearchTool: true
 test:
   podAnnotations: {}
-
-certificates:
-  enabled: false
-  issuer:
-    name: temporal-issuer
-    secretName: tls-certs
-  certificate:
-    name: temporal-cert
-    isCA: false
-    secret:
-      name: temporal-tls-certs
-    privateKey:
-      algorithm: RSA
-      size: 2048
-      rotationPolicy: Always
-
-additionalSecrets: []
-  # - name: tls-certs
-  #   value:
-  #     tls.crt: |
-  #       -----BEGIN CERTIFICATE-----
-  #       -----END CERTIFICATE-----
-  #     tls.key: |
-  #       -----BEGIN EC PRIVATE KEY-----
-  #       -----END EC PRIVATE KEY-----
+  podLabels: {}
   resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+tls:
+  enabled: false
+  cert: |
+  key: |
+  # Optional CA certificate
+  ca: |
