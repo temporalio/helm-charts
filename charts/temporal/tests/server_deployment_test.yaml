@@ -271,7 +271,7 @@ tests:
       - equal:
           path: spec.strategy.rollingUpdate.maxUnavailable
           value: 0
-  - it: readinessProbe defaults to empty
+  - it: worker readinessProbe defaults to empty
     template: templates/server-deployment.yaml
     documentSelector:
       path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-worker")].kind'
@@ -280,6 +280,22 @@ tests:
     asserts:
       - notExists:
           path: spec.template.spec.containers[0].readinessProbe
+  - it: non-worker readinessProbe defaults to tcpSocket
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name != "RELEASE-NAME-temporal-worker")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].readinessProbe.grpc
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
+          value: rpc
   - it: readinessProbe is set for frontend service
     template: templates/server-deployment.yaml
     documentSelector:
