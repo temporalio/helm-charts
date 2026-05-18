@@ -1,4 +1,4 @@
-{{- $jobName := include "temporal.componentname" (list $ (printf "schema-%s-%d" $.Chart.Version $.Release.Revision | replace "." "-" | replace "+" "-")) }}
+{{- $jobName := printf "%s-schema" (include "temporal.fullname" $) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
