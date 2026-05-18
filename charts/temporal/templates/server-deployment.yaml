@@ -125,7 +125,7 @@ spec:
           {{- if $resolvedProbe }}
           readinessProbe:
           {{- toYaml $resolvedProbe | nindent 12 }}
-          {{- else if or (eq $service "frontend") (eq $service "internal-frontend") }}
+          {{- else if ne $service "worker" }}
           readinessProbe:
             tcpSocket:
               port: rpc
