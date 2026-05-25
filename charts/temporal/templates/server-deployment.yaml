@@ -124,9 +124,15 @@ spec:
             tcpSocket:
               port: rpc
           {{- end }}
-          {{- with default $.Values.server.readinessProbe $serviceValues.readinessProbe }}
+          {{- /* Default to tcpSocket (works with TLS); users may override per-service via server.<svc>.readinessProbe. */ -}}
+          {{- $resolvedProbe := default $.Values.server.readinessProbe $serviceValues.readinessProbe }}
+          {{- if $resolvedProbe }}
           readinessProbe:
-          {{- toYaml . | nindent 12 }}
+          {{- toYaml $resolvedProbe | nindent 12 }}
+          {{- else if ne $service "worker" }}
+          readinessProbe:
+            tcpSocket:
+              port: rpc
           {{- end }}
           volumeMounts:
             - name: config
