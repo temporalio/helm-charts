@@ -290,9 +290,10 @@ server:
       #      - chart-example.local
     httpRoute:
       enabled: false
+      labels: {}
       annotations: {}
       hostnames: []
-      parentRefs: {}
+      parentRefs: []
       matches: []
     metrics:
       annotations:
@@ -517,9 +518,10 @@ web:
     #      - chart-example.local
   httpRoute:
     enabled: false
+    labels: {}
     annotations: {}
     hostnames: []
-    parentRefs: {}
+    parentRefs: []
     matches: []
   deploymentLabels: {}
   deploymentAnnotations: {}
