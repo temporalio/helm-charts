@@ -1,0 +1,32 @@
+{{- if .Values.server.frontend.httpRoute.enabled -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "temporal.componentname" (list $ "frontend") }}
+  labels:
+    {{- include "temporal.resourceLabels" (list $ "frontend" "") | nindent 4 }}
+  {{- with .Values.server.frontend.httpRoute.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    {{- toYaml .Values.server.frontend.httpRoute.parentRefs | nindent 4 }}
+  hostnames:
+    {{- toYaml .Values.server.frontend.httpRoute.hostnames | nindent 4 }}
+  rules:
+    - matches:
+      {{- if .Values.server.frontend.httpRoute.matches }}
+        {{- toYaml .Values.server.frontend.httpRoute.matches | nindent 8 }}
+      {{- else }}
+        - path:
+            type: PathPrefix
+            value: /
+      {{- end }}
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: {{ include "temporal.fullname" $ }}-frontend
+          port: {{ $.Values.server.frontend.service.port }}
+          weight: 1
+{{- end }}
