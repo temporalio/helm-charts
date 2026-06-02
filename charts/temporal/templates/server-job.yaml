@@ -1,4 +1,4 @@
-{{- $jobName := printf "%s-schema" (include "temporal.fullname" $) }}
+{{- $jobName := ternary (printf "%s-schema" (include "temporal.fullname" $)) (include "temporal.componentname" (list $ (printf "schema-%s-%d" $.Chart.Version $.Release.Revision | replace "." "-" | replace "+" "-"))) $.Values.schema.useHelmHooks }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -10,7 +10,7 @@ metadata:
     {{- if $.Values.schema.useHelmHooks }}
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "0"
-    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
     {{- end }}
     {{- with $.Values.schema.jobAnnotations }}
     {{- toYaml . | nindent 4 }}
