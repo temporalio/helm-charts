@@ -288,6 +288,13 @@ server:
       #  - secretName: chart-example-tls
       #    hosts:
       #      - chart-example.local
+    httpRoute:
+      enabled: false
+      labels: {}
+      annotations: {}
+      hostnames: []
+      parentRefs: []
+      matches: []
     metrics:
       annotations:
         enabled: true
@@ -509,6 +516,13 @@ web:
     #  - secretName: chart-example-tls
     #    hosts:
     #      - chart-example.local
+  httpRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    hostnames: []
+    parentRefs: []
+    matches: []
   deploymentLabels: {}
   deploymentAnnotations: {}
   deploymentStrategy: {}
