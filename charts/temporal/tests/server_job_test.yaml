@@ -23,12 +23,42 @@ tests:
       - containsDocument:
           kind: Job
           apiVersion: batch/v1
-  - it: replaces build metadata separators in the server job name
+  - it: uses a constant name for the schema job
     release:
       name: test
+    set:
+      schema:
+        useHelmHooks: true
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: metadata.name
+          value: test-temporal-schema
+      - equal:
+          path: spec.template.metadata.name
+          value: test-temporal-schema
+  - it: uses a dynamic name for the schema job when useHelmHooks is false
+    release:
+      name: test
+      revision: 0
     chart:
       version: 1.1.1+build
     set:
+      schema:
+        useHelmHooks: false
       server:
         config:
           persistence:
@@ -246,7 +276,7 @@ tests:
           value: "0"
       - equal:
           path: metadata.annotations["helm.sh/hook-delete-policy"]
-          value: "before-hook-creation"
+          value: "before-hook-creation,hook-succeeded"
   - it: excludes Helm hook annotations when useHelmHooks is false
     set:
       server:
