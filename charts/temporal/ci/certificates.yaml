@@ -1,0 +1,90 @@
+server:
+  additionalVolumeMounts:
+    - name: tls-certs
+      mountPath: /etc/tls
+    - name: temporal-tls-certs
+      mountPath: /etc/temporal/tls
+  additionalVolumes:
+    - name: tls-certs
+      secret:
+        secretName: tls-certs
+    - name: temporal-tls-certs
+      secret:
+        secretName: temporal-tls-certs
+  config:
+    tls:
+      internode:
+        server:
+          certFile: "/etc/temporal/tls/tls.crt"
+          keyFile: "/etc/temporal/tls/tls.key"
+          requireClientAuth: true
+          clientCaFiles:
+            - "/etc/temporal/tls/ca.crt"
+        client:
+          serverName: ""
+          rootCaFiles:
+            - "/etc/temporal/tls/ca.crt"
+      frontend:
+        server:
+          certFile: "/etc/temporal/tls/tls.crt"
+          keyFile: "/etc/temporal/tls/tls.key"
+          requireClientAuth: false
+        client:
+          serverName: ""
+          rootCaFiles:
+            - "/etc/temporal/tls/ca.crt"
+web:
+  additionalVolumeMounts:
+    - name: tls-certs
+      mountPath: /etc/tls
+    - name: temporal-tls-certs
+      mountPath: /etc/temporal/tls
+  additionalVolumes:
+    - name: tls-certs
+      secret:
+        secretName: tls-certs
+    - name: temporal-tls-certs
+      secret:
+        secretName: temporal-tls-certs
+  additionalEnv:
+    - name: TEMPORAL_TLS_SERVER_NAME
+      value: ""
+    - name: TEMPORAL_TLS_CA
+      value: /etc/temporal/tls/ca.crt
+    - name: TEMPORAL_TLS_CERT
+      value: /etc/temporal/tls/tls.crt
+    - name: TEMPORAL_TLS_KEY
+      value: /etc/temporal/tls/tls.key
+frontend:
+  service:
+    enabled: true
+  ingress:
+    enabled: true
+    className: ""
+    hosts:
+      - ""
+additionalSecrets:
+  - name: tls-certs
+    value:
+      tls.crt: |
+        -----BEGIN CERTIFICATE-----
+        -----END CERTIFICATE-----
+      tls.key: |
+        -----BEGIN EC PRIVATE KEY-----
+        -----END EC PRIVATE KEY-----
+certificates:
+  enabled: false
+  issuer:
+    name: temporal-issuer
+    secretName: tls-certs
+  certificate:
+    name: temporal-cert
+    isCA: false
+    secret:
+      name: temporal-tls-certs
+    privateKey:
+      algorithm: RSA
+      size: 2048
+      rotationPolicy: Always
+    annotations:
+      argocd.argoproj.io/hook: PreSync
