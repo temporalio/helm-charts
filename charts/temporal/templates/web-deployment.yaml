@@ -8,7 +8,9 @@ metadata:
   labels:
     {{- include "temporal.resourceLabels" (list $ "web" "deployment") | nindent 4 }}
 spec:
+  {{- if .Values.web.replicaCount }}
   replicas: {{ .Values.web.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "temporal.name" $ }}
