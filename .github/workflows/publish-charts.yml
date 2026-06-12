@@ -35,13 +35,13 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1.12.0
         with:
           app-id: ${{ secrets.TEMPORAL_CICD_APP_ID }}
           private-key: ${{ secrets.TEMPORAL_CICD_PRIVATE_KEY }}
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           persist-credentials: true
           token: ${{ steps.generate_token.outputs.token }}
@@ -80,7 +80,7 @@ jobs:
           echo "chart_version=$CHART_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Update image tags
-        uses: mikefarah/yq@v4
+        uses: mikefarah/yq@1b9b4ac5187171d2e5e3129be0cfa827c7f9d53d # v4.53.3
         with:
           cmd: |
             yq -i '.server.image.tag = "${{ github.event.inputs.server_version }}"' charts/temporal/values.yaml
@@ -88,7 +88,7 @@ jobs:
             yq -i '.web.image.tag = "${{ github.event.inputs.ui_version }}"' charts/temporal/values.yaml
 
       - name: Update chart
-        uses: mikefarah/yq@v4
+        uses: mikefarah/yq@1b9b4ac5187171d2e5e3129be0cfa827c7f9d53d # v4.53.3
         with:
           cmd: |
             yq -i '.appVersion = "${{ github.event.inputs.server_version }}"' charts/temporal/Chart.yaml
@@ -103,10 +103,10 @@ jobs:
           git push --tags origin ${{ github.ref_name }}
 
       - name: Install Helm
-        uses: azure/setup-helm@v3
+        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3.5
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
+        uses: helm/chart-releaser-action@a917fd15b20e8b64b94d9158ad54cd6345335584 # v1.6.0
         with:
           mark_as_latest: "${{ github.event.inputs.mark_latest }}"
         env:
