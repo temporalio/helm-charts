@@ -444,7 +444,7 @@ admintools:
   enabled: true
   image:
     repository: temporalio/admin-tools
-    tag: "1.31.0"
+    tag: "1.31.1"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
