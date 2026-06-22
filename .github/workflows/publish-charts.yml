@@ -32,19 +32,23 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    env:
+      TEMPORAL_CICD_APP_ID: ${{ secrets.TEMPORAL_CICD_APP_ID }}
+      TEMPORAL_CICD_PRIVATE_KEY: ${{ secrets.TEMPORAL_CICD_PRIVATE_KEY }}
     steps:
       - name: Generate token
         id: generate_token
+        if: ${{ env.TEMPORAL_CICD_APP_ID != '' && env.TEMPORAL_CICD_PRIVATE_KEY != '' }}
         uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1.12.0
         with:
-          app-id: ${{ secrets.TEMPORAL_CICD_APP_ID }}
-          private-key: ${{ secrets.TEMPORAL_CICD_PRIVATE_KEY }}
+          app-id: ${{ env.TEMPORAL_CICD_APP_ID }}
+          private-key: ${{ env.TEMPORAL_CICD_PRIVATE_KEY }}
 
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: true
-          token: ${{ steps.generate_token.outputs.token }}
+          token: ${{ steps.generate_token.outputs.token || github.token }}
           fetch-depth: 0
           fetch-tags: true
 
