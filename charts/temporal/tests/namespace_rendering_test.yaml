@@ -1,0 +1,198 @@
+suite: test kubernetes namespace rendering
+templates:
+  - server-deployment.yaml
+  - server-service.yaml
+  - server-service-monitor.yaml
+  - server-secret.yaml
+  - server-configmap.yaml
+  - server-dynamicconfigmap.yaml
+  - shim-configmap.yaml
+  - server-job.yaml
+  - server-namespace-job.yaml
+  - server-pdb.yaml
+  - frontend-ingress.yaml
+  - web-deployment.yaml
+  - web-service.yaml
+  - web-pdb.yaml
+  - web-ingress.yaml
+  - admintools-deployment.yaml
+  - serviceaccount.yaml
+  - test.yaml
+release:
+  namespace: target-namespace
+set:
+  serviceAccount:
+    create: true
+  server:
+    metrics:
+      serviceMonitor:
+        enabled: true
+    config:
+      namespaces:
+        create: true
+        namespace:
+          - name: default
+      persistence:
+        defaultStore: default
+        visibilityStore: visibility
+        datastores:
+          default:
+            sql:
+              pluginName: postgres12
+              databaseName: temporal
+              connectAddr: postgres.default.svc.cluster.local:5432
+              user: temporal
+              password: secret
+          visibility:
+            sql:
+              pluginName: postgres12
+              databaseName: temporal_visibility
+              connectAddr: postgres.default.svc.cluster.local:5432
+              user: temporal
+              password: secret
+    frontend:
+      ingress:
+        enabled: true
+      podDisruptionBudget:
+        maxUnavailable: 1
+    history:
+      podDisruptionBudget:
+        maxUnavailable: 1
+  web:
+    ingress:
+      enabled: true
+    podDisruptionBudget:
+      maxUnavailable: 1
+tests:
+  - it: renders namespace on server deployment
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on server service
+    template: templates/server-service.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on headless server service
+    template: templates/server-service.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-history-headless
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on service monitor
+    template: templates/server-service-monitor.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on server secret
+    template: templates/server-secret.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-default-store
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on server configmap
+    template: templates/server-configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on dynamic configmap
+    template: templates/server-dynamicconfigmap.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on shim configmap
+    template: templates/shim-configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on schema job
+    template: templates/server-job.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on temporal namespace job
+    template: templates/server-namespace-job.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on server pdb
+    template: templates/server-pdb.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend-pdb
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on frontend ingress
+    template: templates/frontend-ingress.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on web deployment
+    template: templates/web-deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on web service
+    template: templates/web-service.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on web pdb
+    template: templates/web-pdb.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on web ingress
+    template: templates/web-ingress.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on admintools deployment
+    template: templates/admintools-deployment.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on service account
+    template: templates/serviceaccount.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
+  - it: renders namespace on test pod
+    template: templates/test.yaml
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: target-namespace

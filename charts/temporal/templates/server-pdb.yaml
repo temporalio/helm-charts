@@ -6,6 +6,7 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
+  namespace: {{ include "temporal.kubernetesNamespace" $ }}
   name: {{ include "temporal.componentname" (list $ $service) }}-pdb
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}

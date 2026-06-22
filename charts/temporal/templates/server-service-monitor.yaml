@@ -6,6 +6,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
+  namespace: {{ include "temporal.kubernetesNamespace" $ }}
   name: {{ include "temporal.componentname" (list $ $service) }}
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
@@ -21,9 +22,6 @@ spec:
       {{- toYaml . | nindent 4 }}
     {{- end }}
   jobLabel: {{ include "temporal.componentname" (list $ $service) }}
-  namespaceSelector:
-    matchNames:
-      - "{{ $.Release.Namespace }}"
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "temporal.name" $ }}

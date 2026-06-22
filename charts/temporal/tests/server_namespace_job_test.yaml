@@ -71,7 +71,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
-          value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
+          value: RELEASE-NAME-temporal-frontend:7233
   - it: sets TEMPORAL_ADDRESS to the internal-frontend service when enabled
     set:
       server:
@@ -85,7 +85,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
-          value: RELEASE-NAME-temporal-internal-frontend.NAMESPACE.svc:7236
+          value: RELEASE-NAME-temporal-internal-frontend:7236
   - it: includes additional environment variables
     set:
       server:

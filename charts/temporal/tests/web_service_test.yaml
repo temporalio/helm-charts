@@ -71,3 +71,9 @@ tests:
       - equal:
           path: spec.minReadySeconds
           value: 10
+  - it: uses same-namespace frontend service address
+    template: templates/web-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          value: RELEASE-NAME-temporal-frontend:7233
