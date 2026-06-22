@@ -486,7 +486,7 @@ web:
   # Override the address the UI uses to connect to the Temporal frontend.
   # Defaults to <fullname>-frontend.<namespace>.svc:<server.frontend.service.port>.
   # Useful when running a proxy sidecar that intercepts gRPC traffic.
-  # temporalAddress: ""
+  # temporalAddress: "localhost:7233"
   readinessProbe:
     initialDelaySeconds: 10
     httpGet:

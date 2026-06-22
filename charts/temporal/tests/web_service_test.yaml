@@ -90,3 +90,14 @@ tests:
           content:
             name: TEMPORAL_ADDRESS
             value: "localhost:7233"
+  - it: TEMPORAL_ADDRESS falls back to default when web.temporalAddress is empty string
+    template: templates/web-deployment.yaml
+    set:
+      web:
+        temporalAddress: ""
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
