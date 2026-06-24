@@ -39,7 +39,11 @@ spec:
           imagePullPolicy: {{ .Values.web.image.pullPolicy }}
           env:
             - name: TEMPORAL_ADDRESS
-              value: "{{ .Values.web.temporalAddress | default (printf "%s-frontend.%s.svc:%d" (include "temporal.fullname" $) .Release.Namespace (.Values.server.frontend.service.port | int)) }}"
+              {{- if .Values.web.temporalAddress }}
+              value: {{ .Values.web.temporalAddress }}
+              {{- else }}
+              value: {{ include "temporal.frontendAddress.fqdn" $ }}
+              {{- end }}
           {{- if .Values.web.additionalEnv }}
           {{- toYaml .Values.web.additionalEnv | nindent 12 }}
           {{- end }}

@@ -36,16 +36,18 @@ spec:
           env:
             # TEMPORAL_CLI_ADDRESS is deprecated, use TEMPORAL_ADDRESS instead
             - name: TEMPORAL_CLI_ADDRESS
-              {{- if and (index $.Values.server "internal-frontend").enabled }}
-              value: {{ include "temporal.fullname" $ }}-internal-frontend:{{ (index $.Values.server "internal-frontend").service.port }}
+              {{- if (index $.Values.server "internal-frontend").enabled }}
+              value: {{ include "temporal.internalFrontendAddress" $ }}
               {{- else }}
-              value: {{ include "temporal.fullname" $ }}-frontend:{{ $.Values.server.frontend.service.port }}
+              value: {{ include "temporal.frontendAddress" $ }}
               {{- end }}
             - name: TEMPORAL_ADDRESS
-              {{- if (index $.Values.server "internal-frontend").enabled }}
-              value: {{ include "temporal.fullname" $ }}-internal-frontend:{{ (index $.Values.server "internal-frontend").service.port }}
+              {{- if .Values.admintools.temporalAddress }}
+              value: {{ .Values.admintools.temporalAddress }}
+              {{- else if (index $.Values.server "internal-frontend").enabled }}
+              value: {{ include "temporal.internalFrontendAddress" $ }}
               {{- else }}
-              value: {{ include "temporal.fullname" $ }}-frontend:{{ $.Values.server.frontend.service.port }}
+              value: {{ include "temporal.frontendAddress" $ }}
               {{- end }}
           {{- with .Values.admintools.additionalEnv }}
             {{- toYaml . | nindent 12 }}

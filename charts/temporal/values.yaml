@@ -457,6 +457,7 @@ admintools:
   additionalEnv: []
   additionalEnvSecretName: ""
   additionalEnvConfigMapName: ""
+  # temporalAddress: "localhost:7233"
   # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
   resources: {}
