@@ -37,3 +37,30 @@ tests:
       - equal:
           path: spec.minReadySeconds
           value: 10
+  - it: TEMPORAL_ADDRESS uses admintools.temporalAddress when set
+    set:
+      admintools:
+        temporalAddress: "my-temporal:7233"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: "my-temporal:7233"
+  - it: TEMPORAL_ADDRESS falls back to default when admintools.temporalAddress is not set
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: RELEASE-NAME-temporal-frontend:7233
+  - it: TEMPORAL_ADDRESS falls back to default when admintools.temporalAddress is empty string
+    set:
+      admintools:
+        temporalAddress: ""
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: RELEASE-NAME-temporal-frontend:7233

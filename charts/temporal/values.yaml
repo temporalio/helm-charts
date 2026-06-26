@@ -463,6 +463,7 @@ admintools:
   additionalEnv: []
   additionalEnvSecretName: ""
   additionalEnvConfigMapName: ""
+  # temporalAddress: "localhost:7233"
   # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
   resources: {}
@@ -489,6 +490,10 @@ web:
     appProtocol: http
     annotations: {}
     # loadBalancerIP:
+  # Override the address the UI uses to connect to the Temporal frontend.
+  # Defaults to <fullname>-frontend.<namespace>.svc:<server.frontend.service.port>.
+  # Useful when running a proxy sidecar that intercepts gRPC traffic.
+  # temporalAddress: "localhost:7233"
   readinessProbe:
     initialDelaySeconds: 10
     httpGet:
