@@ -191,6 +191,79 @@ tests:
           path: data['config_template.yaml']
           pattern: 'visibility: temporal_visibility_v1_secondary'
 
+  - it: uses server.publicClientHostPort when set
+    set:
+      server:
+        publicClientHostPort: "temporal-frontend.mesh.svc:7233"
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            datastores:
+              default:
+                sql:
+                  password: "secret"
+              visibility:
+                sql:
+                  password: "secret"
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'hostPort: "temporal-frontend.mesh.svc:7233"'
+
+  - it: falls back to default publicClient when server.publicClientHostPort is not set
+    set:
+      server:
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            datastores:
+              default:
+                sql:
+                  password: "secret"
+              visibility:
+                sql:
+                  password: "secret"
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'hostPort: "RELEASE-NAME-temporal-frontend:7233"'
+
+  - it: server.publicClientHostPort overrides even when internal-frontend is enabled
+    set:
+      server:
+        publicClientHostPort: "temporal-frontend.mesh.svc:7233"
+        internal-frontend:
+          enabled: true
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            datastores:
+              default:
+                sql:
+                  password: "secret"
+              visibility:
+                sql:
+                  password: "secret"
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'hostPort: "temporal-frontend.mesh.svc:7233"'
+
   - it: handles metrics config
     set:
       server:
