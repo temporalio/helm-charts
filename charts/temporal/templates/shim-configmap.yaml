@@ -2,10 +2,15 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-{{- printf "namespace: %s\nname: \"%s-shims\"\nlabels:" (include "temporal.kubernetesNamespace" $) (include "temporal.fullname" $) | nindent 2 }}
-{{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
+  namespace: {{ include "temporal.kubernetesNamespace" $ }}
+  name: "{{ include "temporal.fullname" $ }}-shims"
+  labels:
+    {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
 {{- if $.Values.schema.useHelmHooks }}
-{{- printf "annotations:\n  \"helm.sh/hook\": pre-install,pre-upgrade\n  \"helm.sh/hook-weight\": \"-1\"\n  \"helm.sh/hook-delete-policy\": before-hook-creation" | nindent 2 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation
 {{- end }}
 data:
 {{- if $.Values.shims.dockerize }}

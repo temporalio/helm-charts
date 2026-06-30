@@ -39,11 +39,11 @@ spec:
           env:
             - name: TEMPORAL_ADDRESS
               {{- if (index $.Values.server "internal-frontend").enabled }}
-              value: {{ include "temporal.fullname" $ }}-internal-frontend:{{ (index $.Values.server "internal-frontend").service.port }}
+              value: {{ include "temporal.internalFrontendAddress" $ }}
               {{- else if $.Values.server.frontend.ingress.enabled }}
               value: "{{ index $.Values.server.frontend.ingress.hosts 0 }}"
               {{- else }}
-              value: "{{ include "temporal.fullname" $ }}-frontend:{{ $.Values.server.frontend.service.port }}"
+              value: {{ include "temporal.frontendAddress" $ }}
               {{- end }}
             {{- with $.Values.admintools.additionalEnv }}
               {{- toYaml . | nindent 12 }}
