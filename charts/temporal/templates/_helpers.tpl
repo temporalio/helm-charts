@@ -68,6 +68,36 @@ and we want to make sure that the component is included in the name.
 {{- end -}}
 
 {{/*
+Frontend service address as a short in-cluster name (host:port).
+*/}}
+{{- define "temporal.frontendAddress" -}}
+{{- printf "%s-frontend:%d" (include "temporal.fullname" .) (.Values.server.frontend.service.port | int) -}}
+{{- end -}}
+
+{{/*
+Frontend service address as a fully-qualified cluster DNS name (host.namespace.svc:port).
+*/}}
+{{- define "temporal.frontendAddress.fqdn" -}}
+{{- printf "%s-frontend.%s.svc:%d" (include "temporal.fullname" .) .Release.Namespace (.Values.server.frontend.service.port | int) -}}
+{{- end -}}
+
+{{/*
+Internal-frontend service address as a short in-cluster name (host:port).
+*/}}
+{{- define "temporal.internalFrontendAddress" -}}
+{{- $internalFrontend := index .Values.server "internal-frontend" -}}
+{{- printf "%s-internal-frontend:%d" (include "temporal.fullname" .) ($internalFrontend.service.port | int) -}}
+{{- end -}}
+
+{{/*
+Internal-frontend service address as a fully-qualified cluster DNS name (host.namespace.svc:port).
+*/}}
+{{- define "temporal.internalFrontendAddress.fqdn" -}}
+{{- $internalFrontend := index .Values.server "internal-frontend" -}}
+{{- printf "%s-internal-frontend.%s.svc:%d" (include "temporal.fullname" .) .Release.Namespace ($internalFrontend.service.port | int) -}}
+{{- end -}}
+
+{{/*
 Define the AppVersion
 */}}
 {{- define "temporal.appVersion" -}}

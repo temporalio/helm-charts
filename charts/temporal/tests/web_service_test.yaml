@@ -71,9 +71,33 @@ tests:
       - equal:
           path: spec.minReadySeconds
           value: 10
-  - it: uses same-namespace frontend service address
+  - it: TEMPORAL_ADDRESS defaults to frontend service address
     template: templates/web-deployment.yaml
     asserts:
-      - equal:
-          path: spec.template.spec.containers[0].env[?(@.name=="TEMPORAL_ADDRESS")].value
-          value: RELEASE-NAME-temporal-frontend:7233
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
+  - it: TEMPORAL_ADDRESS can be overridden via web.temporalAddress
+    template: templates/web-deployment.yaml
+    set:
+      web:
+        temporalAddress: "localhost:7233"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: "localhost:7233"
+  - it: TEMPORAL_ADDRESS falls back to default when web.temporalAddress is empty string
+    template: templates/web-deployment.yaml
+    set:
+      web:
+        temporalAddress: ""
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
