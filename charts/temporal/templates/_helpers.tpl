@@ -43,10 +43,50 @@ Create the name of the service account
 {{- end -}}
 
 {{/*
-Define the service account as needed
+Return the service account name for a specific component.
+Usage: {{ include "temporal.componentServiceAccountName" (list $ "frontend") }}
+Looks up the component-specific serviceAccount first; falls back to the global one.
+For server sub-services the path is server.<svc>.serviceAccount;
+for top-level components (admintools, web, schema, test) the path is <component>.serviceAccount.
+*/}}
+{{- define "temporal.componentServiceAccountName" -}}
+{{- $global := index . 0 -}}
+{{- $component := index . 1 -}}
+{{- $componentSA := dict -}}
+{{- if or (eq $component "admintools") (eq $component "web") (eq $component "schema") (eq $component "test") -}}
+  {{- if hasKey (index $global.Values $component) "serviceAccount" -}}
+    {{- $componentSA = index $global.Values $component "serviceAccount" -}}
+  {{- end -}}
+{{- else -}}
+  {{- if and (hasKey $global.Values.server $component) (hasKey (index $global.Values.server $component) "serviceAccount") -}}
+    {{- $componentSA = index $global.Values.server $component "serviceAccount" -}}
+  {{- end -}}
+{{- end -}}
+{{- if and $componentSA (kindIs "map" $componentSA) (hasKey $componentSA "create") -}}
+  {{- if $componentSA.create -}}
+    {{ default (include "temporal.componentname" (list $global $component)) $componentSA.name }}
+  {{- else -}}
+    {{ default (include "temporal.serviceAccountName" $global) $componentSA.name }}
+  {{- end -}}
+{{- else -}}
+  {{ include "temporal.serviceAccountName" $global }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Define the service account as needed.
+When called with just $, uses the global SA (backward compat).
 */}}
 {{- define "temporal.serviceAccount" -}}
 serviceAccountName: {{ include "temporal.serviceAccountName" . }}
+{{- end -}}
+
+{{/*
+Define the service account for a specific component.
+Usage: {{ include "temporal.componentServiceAccount" (list $ "frontend") }}
+*/}}
+{{- define "temporal.componentServiceAccount" -}}
+serviceAccountName: {{ include "temporal.componentServiceAccountName" . }}
 {{- end -}}
 
 {{/*

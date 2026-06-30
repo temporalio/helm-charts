@@ -193,3 +193,83 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[*].resources.limits.memory
           value: 16Gi
+
+  - it: uses global service account by default
+    set:
+      serviceAccount:
+        create: true
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal
+
+  - it: uses default service account when serviceAccount.create is false
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: default
+
+  - it: uses per-service SA for schema when configured
+    set:
+      serviceAccount:
+        create: true
+      schema:
+        serviceAccount:
+          create: true
+          name: my-schema-sa
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: my-schema-sa
+
+  - it: uses auto-generated name for schema per-service SA
+    set:
+      schema:
+        serviceAccount:
+          create: true
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal-schema
+
+  - it: falls back to global SA when schema serviceAccount is empty
+    set:
+      serviceAccount:
+        create: true
+      schema:
+        serviceAccount: {}
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal

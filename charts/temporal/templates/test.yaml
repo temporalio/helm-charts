@@ -13,7 +13,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-  {{ include "temporal.serviceAccount" . }}
+  {{ include "temporal.componentServiceAccount" (list $ "test") }}
   containers:
   - name: cluster-health
     image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"

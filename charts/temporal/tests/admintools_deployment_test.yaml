@@ -64,3 +64,57 @@ tests:
           content:
             name: TEMPORAL_ADDRESS
             value: RELEASE-NAME-temporal-frontend:7233
+  - it: uses global service account by default
+    set:
+      serviceAccount:
+        create: true
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal
+  - it: uses default service account when serviceAccount.create is false
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: default
+  - it: uses per-service SA for admintools when configured
+    set:
+      serviceAccount:
+        create: true
+      admintools:
+        serviceAccount:
+          create: true
+          name: my-admin-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: my-admin-sa
+  - it: uses auto-generated name for admintools per-service SA
+    set:
+      admintools:
+        serviceAccount:
+          create: true
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal-admintools
+  - it: falls back to global SA when admintools serviceAccount is empty
+    set:
+      serviceAccount:
+        create: true
+      admintools:
+        serviceAccount: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal
+  - it: uses externally managed SA for admintools
+    set:
+      admintools:
+        serviceAccount:
+          create: false
+          name: external-admin-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: external-admin-sa
