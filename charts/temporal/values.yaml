@@ -93,6 +93,7 @@ server:
   additionalEnvConfigMapName: ""
   # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
+  # publicClientHostPort: "temporal-frontend.example.svc:7233"
   securityContext:
     fsGroup: 1000
     runAsUser: 1000

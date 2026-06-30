@@ -128,7 +128,10 @@ data:
       {{- toYaml . | nindent 6 }}
     {{- end }}
 
-    {{- if not (index $.Values.server "internal-frontend").enabled }}
+    {{- if $.Values.server.publicClientHostPort }}
+    publicClient:
+      hostPort: "{{ $.Values.server.publicClientHostPort }}"
+    {{- else if not (index $.Values.server "internal-frontend").enabled }}
     publicClient:
       hostPort: "{{ include "temporal.componentname" (list $ "frontend") }}:{{ $server.frontend.service.port }}"
     {{- end }}
