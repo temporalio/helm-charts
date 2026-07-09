@@ -416,3 +416,64 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
+
+  - it: schedulerName, runtimeClassName and priorityClassName are unset by default
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.schedulerName
+      - notExists:
+          path: spec.template.spec.runtimeClassName
+      - notExists:
+          path: spec.template.spec.priorityClassName
+
+  - it: schedulerName, runtimeClassName and priorityClassName default to service wide values
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        schedulerName: my-scheduler
+        runtimeClassName: my-runtime-class
+        priorityClassName: my-priority-class
+    asserts:
+      - equal:
+          path: spec.template.spec.schedulerName
+          value: my-scheduler
+      - equal:
+          path: spec.template.spec.runtimeClassName
+          value: my-runtime-class
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: my-priority-class
+
+  - it: schedulerName, runtimeClassName and priorityClassName favour service specific values
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        schedulerName: my-scheduler
+        runtimeClassName: my-runtime-class
+        priorityClassName: my-priority-class
+        frontend:
+          schedulerName: frontend-scheduler
+          runtimeClassName: frontend-runtime-class
+          priorityClassName: frontend-priority-class
+    asserts:
+      - equal:
+          path: spec.template.spec.schedulerName
+          value: frontend-scheduler
+      - equal:
+          path: spec.template.spec.runtimeClassName
+          value: frontend-runtime-class
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: frontend-priority-class
