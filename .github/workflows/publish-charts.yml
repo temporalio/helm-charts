@@ -96,11 +96,39 @@ jobs:
     
       - name: Commit changes
         working-directory: charts/temporal
+        env:
+          VERSION: ${{ steps.chart-version.outputs.chart_version }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: |
-          git commit -m "Update Chart to ${{ steps.chart-version.outputs.chart_version }}." Chart.yaml values.yaml
-          git tag -a "temporal-${{ steps.chart-version.outputs.chart_version }}" -m "Release Chart: ${{ steps.chart-version.outputs.chart_version }}"
+          TAG="temporal-${VERSION}"
 
-          git push --tags origin ${{ github.ref_name }}
+          # Fail fast with a clear message if this version is already fully released,
+          # rather than dying later with a confusing "tag already exists" error.
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1 \
+             && gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "::error::${TAG} is already released — bump to a new version instead of retrying."
+            exit 1
+          fi
+
+          # Each step below is idempotent so a re-run after a transient failure
+          # skips the work already done and proceeds to chart-releaser.
+
+          # Commit the bump only if there is something to commit.
+          if git diff --quiet Chart.yaml values.yaml; then
+            echo "Chart already bumped; nothing to commit."
+          else
+            git commit -m "Update Chart to ${VERSION}." Chart.yaml values.yaml
+          fi
+
+          # Create the tag only if it does not already exist.
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "Tag ${TAG} already exists; reusing it."
+          else
+            git tag -a "${TAG}" -m "Release Chart: ${VERSION}"
+          fi
+
+          # Push the branch and this single tag atomically; "already up to date" is success.
+          git push --atomic origin "${{ github.ref_name }}" "refs/tags/${TAG}"
 
       - name: Install Helm
         uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3.5
