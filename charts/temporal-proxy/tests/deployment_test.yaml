@@ -1,0 +1,155 @@
+suite: Deployment test
+templates:
+  - deployment.yaml
+chart:
+  version: 1.0.0
+  appVersion: 1.0.0
+release:
+  name: temporal-proxy
+  namespace: temporal-proxy
+tests:
+  - it: renders defaults
+    asserts:
+      - matchSnapshot: {}
+
+  - it: sets replicas when autoscaling is disabled
+    set:
+      replicaCount: 3
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: omits replicas when autoscaling is enabled
+    set:
+      autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: defaults the image tag to the chart appVersion
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: temporalio/temporal-proxy:1.0.0
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent
+
+  - it: honors image overrides
+    set:
+      image:
+        repository: example.com/temporal-proxy
+        tag: v1.2.3
+        pullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/temporal-proxy:v1.2.3
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: wires the container port to the service port
+    set:
+      service.port: 8080
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+
+  - it: uses the service account name
+    set:
+      serviceAccount:
+        create: true
+        name: custom-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: custom-sa
+
+  - it: falls back to the default service account when create is disabled
+    set:
+      serviceAccount:
+        create: false
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: default
+
+  - it: keeps version out of the immutable selector
+    asserts:
+      - notExists:
+          path: spec.selector.matchLabels["app.kubernetes.io/version"]
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/name"]
+          value: temporal-proxy
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/instance"]
+          value: temporal-proxy
+
+  - it: renders probes by default
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /
+
+  - it: omits probes when unset
+    set:
+      livenessProbe: null
+      readinessProbe: null
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe
+      - notExists:
+          path: spec.template.spec.containers[0].readinessProbe
+
+  - it: omits optional blocks by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].resources
+      - notExists:
+          path: spec.template.spec.nodeSelector
+      - notExists:
+          path: spec.template.spec.affinity
+      - notExists:
+          path: spec.template.spec.tolerations
+      - notExists:
+          path: spec.template.spec.imagePullSecrets
+      - notExists:
+          path: spec.template.metadata.annotations
+
+  - it: renders optional blocks when set
+    set:
+      imagePullSecrets:
+        - name: regcred
+      podAnnotations:
+        prometheus.io/scrape: "true"
+      podLabels:
+        team: platform
+      resources:
+        limits:
+          cpu: 100m
+      nodeSelector:
+        disktype: ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: regcred
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.labels.team
+          value: platform
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 100m
+      - equal:
+          path: spec.template.spec.nodeSelector.disktype
+          value: ssd

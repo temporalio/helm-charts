@@ -1,0 +1,54 @@
+suite: Naming and labels test
+templates:
+  - service.yaml
+chart:
+  version: 1.0.0
+  appVersion: 1.0.0
+tests:
+  - it: prefixes the release name when it does not contain the chart name
+    release:
+      name: prod
+    asserts:
+      - equal:
+          path: metadata.name
+          value: prod-temporal-proxy
+
+  - it: uses the release name as-is when it contains the chart name
+    release:
+      name: my-temporal-proxy
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-temporal-proxy
+
+  - it: honors fullnameOverride
+    release:
+      name: prod
+    set:
+      fullnameOverride: custom-name
+    asserts:
+      - equal:
+          path: metadata.name
+          value: custom-name
+
+  - it: applies nameOverride to the name and name label
+    release:
+      name: prod
+    set:
+      nameOverride: proxy
+    asserts:
+      - equal:
+          path: metadata.name
+          value: prod-proxy
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: proxy
+
+  - it: falls back to the release namespace when namespace is unset
+    release:
+      name: prod
+      namespace: kube-system
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: kube-system

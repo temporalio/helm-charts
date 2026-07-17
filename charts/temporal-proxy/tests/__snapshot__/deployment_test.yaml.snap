@@ -1,0 +1,57 @@
+renders defaults:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app.kubernetes.io/instance: temporal-proxy
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: temporal-proxy
+        app.kubernetes.io/version: 1.0.0
+        helm.sh/chart: temporal-proxy-1.0.0
+      name: temporal-proxy
+      namespace: temporal-proxy
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: temporal-proxy
+          app.kubernetes.io/name: temporal-proxy
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/instance: temporal-proxy
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/name: temporal-proxy
+            app.kubernetes.io/version: 1.0.0
+            helm.sh/chart: temporal-proxy-1.0.0
+        spec:
+          containers:
+            - args:
+                - serve
+              env:
+                - name: PROXY_CONFIG
+                  value: /etc/temporal-proxy/config.yaml
+              image: temporalio/temporal-proxy:1.0.0
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                httpGet:
+                  path: /
+                  port: http
+              name: temporal-proxy
+              ports:
+                - containerPort: 8443
+                  name: http
+                  protocol: TCP
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: http
+              volumeMounts:
+                - mountPath: /etc/temporal-proxy
+                  name: config
+          serviceAccountName: temporal-proxy
+          volumes:
+            - configMap:
+                name: temporal-proxy
+              name: config
