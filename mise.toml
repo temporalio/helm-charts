@@ -1,0 +1,46 @@
+[settings]
+lockfile = true
+
+[tools]
+helm = "4.2.0"
+
+[tasks.render]
+description = "Render the specified chart to stdout"
+raw = true
+quiet = true
+usage = '''
+arg "<chart>" help="The chart to render" default="temporal"
+flag "--release <release>" help="The name of the release"
+'''
+run = '''
+if [[ -z "${usage_release}" ]]; then usage_release="${usage_chart?}"; fi
+helm template ${usage_release?} charts/${usage_chart?}
+'''
+
+[tasks.test]
+description = "Run unit tests for the specified chart"
+depends = ["helm:unittest"]
+usage = '''
+arg "<chart>" help="The chart to run tests for"
+'''
+raw = true
+run = "helm unittest charts/${usage_chart?}"
+
+[tasks."helm:unittest"]
+description = "Install helm-unittest plugin"
+hide = true
+silent = true
+vars = { version = "1.0.3" }
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Skip if already installed
+if helm plugin list | awk '$1 == "unittest" && $2 == "{{vars.version}}" { found = 1 } END { exit !found }'; then
+  exit 0
+fi
+
+helm plugin uninstall unittest 2>/dev/null || true
+helm plugin install \
+  https://github.com/helm-unittest/helm-unittest.git --version=v{{vars.version}} --verify=false
+'''
