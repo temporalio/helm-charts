@@ -298,3 +298,97 @@ Usage:
         {{- tpl (.value | toYaml) .context }}
     {{- end }}
 {{- end -}}
+
+{{/*
+TLS wiring helpers.
+
+These turn the concise `server.tls`/`web.tls` stanzas into the volumes,
+volume mounts, server `config.tls` and Web UI environment variables that
+Temporal expects. The cert/key/ca paths, volume names and config shape are all
+determined by Temporal, so users only supply an existing kubernetes.io/tls
+secret (tls.crt, tls.key and ca.crt) and a handful of real choices.
+
+The volume names are fixed constants so that each volume and its mount always
+agree; only the mount path is user-configurable.
+*/}}
+
+{{/* Server: volumes for the internode/frontend TLS secrets. Renders "[]" when
+disabled, so callers should gate on the enabled flags. */}}
+{{- define "temporal.server.tls.volumes" -}}
+{{- $tls := .Values.server.tls -}}
+{{- $volumes := list -}}
+{{- if $tls.internode.enabled -}}
+{{- $volumes = append $volumes (dict "name" "internode-tls" "secret" (dict "secretName" (required "server.tls.internode.secretName is required when server.tls.internode.enabled is true" $tls.internode.secretName))) -}}
+{{- end -}}
+{{- if $tls.frontend.enabled -}}
+{{- $volumes = append $volumes (dict "name" "frontend-tls" "secret" (dict "secretName" (required "server.tls.frontend.secretName is required when server.tls.frontend.enabled is true" $tls.frontend.secretName))) -}}
+{{- end -}}
+{{- toYaml $volumes -}}
+{{- end -}}
+
+{{/* Server: volume mounts matching temporal.server.tls.volumes. */}}
+{{- define "temporal.server.tls.volumeMounts" -}}
+{{- $tls := .Values.server.tls -}}
+{{- $mounts := list -}}
+{{- if $tls.internode.enabled -}}
+{{- $mounts = append $mounts (dict "name" "internode-tls" "mountPath" $tls.internode.mountPath "readOnly" true) -}}
+{{- end -}}
+{{- if $tls.frontend.enabled -}}
+{{- $mounts = append $mounts (dict "name" "frontend-tls" "mountPath" $tls.frontend.mountPath "readOnly" true) -}}
+{{- end -}}
+{{- toYaml $mounts -}}
+{{- end -}}
+
+{{/* Server: the config.tls block derived from server.tls. Renders "{}" when
+disabled. server.config.tls is deep-merged on top of this by the configmap. */}}
+{{- define "temporal.server.tls.config" -}}
+{{- $tls := .Values.server.tls -}}
+{{- $config := dict -}}
+{{- range $section := list "internode" "frontend" -}}
+{{- $s := index $tls $section -}}
+{{- if $s.enabled -}}
+{{- $server := dict "certFile" (printf "%s/tls.crt" $s.mountPath) "keyFile" (printf "%s/tls.key" $s.mountPath) "requireClientAuth" $s.requireClientAuth -}}
+{{- if $s.requireClientAuth -}}
+{{- $_ := set $server "clientCaFiles" (list (printf "%s/ca.crt" $s.mountPath)) -}}
+{{- end -}}
+{{- $client := dict "serverName" $s.serverName "rootCaFiles" (list (printf "%s/ca.crt" $s.mountPath)) -}}
+{{- $_ := set $config $section (dict "server" $server "client" $client) -}}
+{{- end -}}
+{{- end -}}
+{{- toYaml $config -}}
+{{- end -}}
+
+{{/* Web: volume for the TLS secret. Renders "[]" when disabled. */}}
+{{- define "temporal.web.tls.volumes" -}}
+{{- $tls := .Values.web.tls -}}
+{{- $volumes := list -}}
+{{- if $tls.enabled -}}
+{{- $volumes = append $volumes (dict "name" "web-tls" "secret" (dict "secretName" (required "web.tls.secretName is required when web.tls.enabled is true" $tls.secretName))) -}}
+{{- end -}}
+{{- toYaml $volumes -}}
+{{- end -}}
+
+{{/* Web: volume mount matching temporal.web.tls.volumes. */}}
+{{- define "temporal.web.tls.volumeMounts" -}}
+{{- $tls := .Values.web.tls -}}
+{{- $mounts := list -}}
+{{- if $tls.enabled -}}
+{{- $mounts = append $mounts (dict "name" "web-tls" "mountPath" $tls.mountPath "readOnly" true) -}}
+{{- end -}}
+{{- toYaml $mounts -}}
+{{- end -}}
+
+{{/* Web: TEMPORAL_TLS_* env for the Web UI -> frontend connection. Renders "[]"
+when disabled. See https://docs.temporal.io/references/web-ui-environment-variables */}}
+{{- define "temporal.web.tls.env" -}}
+{{- $tls := .Values.web.tls -}}
+{{- $env := list -}}
+{{- if $tls.enabled -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_CA" "value" (printf "%s/ca.crt" $tls.mountPath)) -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_CERT" "value" (printf "%s/tls.crt" $tls.mountPath)) -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_KEY" "value" (printf "%s/tls.key" $tls.mountPath)) -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_NAME" "value" $tls.serverName) -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_ENABLE_HOST_VERIFICATION" "value" (printf "%t" $tls.enableHostVerification)) -}}
+{{- end -}}
+{{- toYaml $env -}}
+{{- end -}}

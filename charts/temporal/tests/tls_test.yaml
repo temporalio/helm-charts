@@ -1,0 +1,190 @@
+suite: test tls wiring
+templates:
+  - server-deployment.yaml
+  - server-configmap.yaml
+  - web-deployment.yaml
+set:
+  server:
+    enabled: true
+    config:
+      persistence:
+        defaultStore: default
+        visibilityStore: visibility
+        datastores:
+          default:
+            sql:
+              password: "secret"
+          visibility:
+            sql:
+              password: "secret"
+tests:
+  - it: does not add tls config, volumes or mounts by default
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - notMatchRegex:
+          path: data['config_template.yaml']
+          pattern: 'tls:'
+
+  - it: does not add server tls volumes or mounts by default
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name=='internode-tls')]
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name=='frontend-tls')]
+      - notExists:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name=='internode-tls')]
+
+  - it: mounts the internode secret and generates internode config.tls
+    set:
+      server:
+        tls:
+          internode:
+            enabled: true
+            secretName: my-internode-secret
+            serverName: temporal.internal
+    asserts:
+      - template: templates/server-deployment.yaml
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-frontend
+        equal:
+          path: spec.template.spec.volumes[?(@.name=='internode-tls')].secret.secretName
+          value: my-internode-secret
+      - template: templates/server-deployment.yaml
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-frontend
+        equal:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name=='internode-tls')].mountPath
+          value: /etc/temporal/tls/internode
+      - template: templates/server-configmap.yaml
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-config
+        matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'certFile: /etc/temporal/tls/internode/tls.crt'
+      - template: templates/server-configmap.yaml
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-config
+        matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'serverName: temporal.internal'
+      # requireClientAuth defaults to true for internode, so clientCaFiles is emitted
+      - template: templates/server-configmap.yaml
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-config
+        matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'clientCaFiles:'
+
+  - it: omits clientCaFiles for frontend when requireClientAuth is false
+    set:
+      server:
+        tls:
+          frontend:
+            enabled: true
+            secretName: my-frontend-secret
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'certFile: /etc/temporal/tls/frontend/tls.crt'
+      # requireClientAuth: false -> server has no clientCaFiles, but client still verifies via rootCaFiles
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'rootCaFiles:'
+
+  - it: deep-merges explicit server.config.tls over generated config
+    set:
+      server:
+        tls:
+          frontend:
+            enabled: true
+            secretName: my-frontend-secret
+        config:
+          tls:
+            frontend:
+              server:
+                requireClientAuth: true
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'requireClientAuth: true'
+
+  - it: fails when a tls section is enabled without a secretName
+    set:
+      server:
+        tls:
+          internode:
+            enabled: true
+    template: templates/server-deployment.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: server.tls.internode.secretName is required when server.tls.internode.enabled is true
+
+  - it: wires web tls env, volume and mount
+    set:
+      web:
+        tls:
+          enabled: true
+          secretName: my-web-secret
+          serverName: temporal.example.com
+          enableHostVerification: true
+    template: templates/web-deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_CA
+            value: /etc/temporal/tls/ca.crt
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_SERVER_NAME
+            value: temporal.example.com
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_ENABLE_HOST_VERIFICATION
+            value: "true"
+      - equal:
+          path: spec.template.spec.volumes[?(@.name=='web-tls')].secret.secretName
+          value: my-web-secret
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[?(@.name=='web-tls')].mountPath
+          value: /etc/temporal/tls
+
+  - it: does not add web tls env or volumes by default
+    template: templates/web-deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name=='web-tls')]
+      - notExists:
+          path: spec.template.spec.containers[0].env[?(@.name=='TEMPORAL_TLS_CA')]
+
+  - it: fails when web tls is enabled without a secretName
+    set:
+      web:
+        tls:
+          enabled: true
+    template: templates/web-deployment.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: web.tls.secretName is required when web.tls.enabled is true
