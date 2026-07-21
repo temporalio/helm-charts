@@ -127,3 +127,8 @@ volumeMounts: []
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# This is for setting up a PodDisruptionBudget more information can be found here:
+# https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
+podDisruptionBudget: {}
+  # minAvailable: 1
