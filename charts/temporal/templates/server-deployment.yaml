@@ -148,6 +148,9 @@ spec:
             {{- if $.Values.server.additionalVolumeMounts }}
             {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12}}
             {{- end }}
+            {{- if or $.Values.server.tls.internode.enabled $.Values.server.tls.frontend.enabled }}
+            {{- include "temporal.server.tls.volumeMounts" $ | nindent 12 }}
+            {{- end }}
           resources:
             {{- toYaml (default $.Values.server.resources $serviceValues.resources) | nindent 12 }}
           {{- with $serviceValues.containerSecurityContext }}
@@ -176,6 +179,9 @@ spec:
               path: dynamic_config.yaml
         {{- if $.Values.server.additionalVolumes }}
         {{- toYaml $.Values.server.additionalVolumes | nindent 8}}
+        {{- end }}
+        {{- if or $.Values.server.tls.internode.enabled $.Values.server.tls.frontend.enabled }}
+        {{- include "temporal.server.tls.volumes" $ | nindent 8 }}
         {{- end }}
       {{- with (default $.Values.server.nodeSelector $serviceValues.nodeSelector) }}
       nodeSelector:

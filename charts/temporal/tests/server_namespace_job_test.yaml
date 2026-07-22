@@ -73,6 +73,8 @@ tests:
           path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
           value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
   - it: sets TEMPORAL_ADDRESS to the internal-frontend service when enabled
+    # The namespace job is a one-off admin tools invocation, so by default it
+    # targets the internal-frontend when that is enabled.
     set:
       server:
         internal-frontend:
@@ -86,6 +88,22 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
           value: RELEASE-NAME-temporal-internal-frontend.NAMESPACE.svc:7236
+
+  - it: routes the namespace job to the external frontend when useExternalFrontend is set
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+        config:
+          namespaces:
+            create: true
+            useExternalFrontend: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
   - it: includes additional environment variables
     set:
       server:

@@ -91,6 +91,34 @@ server:
   additionalEnv: []
   additionalEnvSecretName: ""
   additionalEnvConfigMapName: ""
+  # Wire TLS for the Temporal server without hand-writing volumes, mounts and
+  # config.tls. Point each section at an existing kubernetes.io/tls secret
+  # (tls.crt + tls.key, plus ca.crt for verification). The secret can come from
+  # cert-manager, external-secrets, or be created by hand; the chart does not
+  # create it. Enabling a section mounts the secret and generates the matching
+  # `server.config.tls` block. Anything you set under `server.config.tls` is
+  # deep-merged on top, so individual fields remain overridable.
+  tls:
+    internode:
+      enabled: false
+      # Existing secret with tls.crt, tls.key and ca.crt for internode traffic.
+      secretName: ""
+      # Where the secret is mounted in the server containers.
+      mountPath: /etc/temporal/tls/internode
+      # Require and verify client certificates on internode connections.
+      requireClientAuth: true
+      # DNS name clients expect in the server certificate (a SAN on the cert).
+      # Host verification is always on for internode, so this is required when
+      # internode.enabled is true.
+      serverName: ""
+    frontend:
+      enabled: false
+      secretName: ""
+      mountPath: /etc/temporal/tls/frontend
+      requireClientAuth: false
+      # DNS name clients expect in the frontend certificate (a SAN on the cert).
+      # Required when frontend.enabled is true.
+      serverName: ""
   # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
   # publicClientHostPort: "temporal-frontend.example.svc:7233"
@@ -100,8 +128,12 @@ server:
   config:
     logLevel: "debug,info"
     # Define your TLS configuration here. See https://docs.temporal.io/references/configuration#tls
-    # for configuration options. You must also use `server.additionalVolumeMounts` and `server.additionalVolumes`
-    # to mount certificates (from Secret or ConfigMap etc) to the path you use below.
+    # for configuration options. For most setups prefer the `server.tls` stanza
+    # above, which mounts the certificates and generates this block for you; use
+    # this only for advanced fields or to override what `server.tls` generates.
+    # If you configure TLS here directly you must also use
+    # `server.additionalVolumeMounts` and `server.additionalVolumes` to mount the
+    # certificates to the paths you reference below.
     # tls:
     #   internode:
     #     server:
@@ -252,6 +284,13 @@ server:
     namespaces:
       # Enable this to create namespaces
       create: false
+      # The namespace-setup job is a one-off admin tools invocation. Like the
+      # admin tools (see admintools.useExternalFrontend) it connects to the
+      # internal-frontend when that is enabled, which grants admin without an
+      # external Authorizer. Set this to true to route it through the external
+      # frontend instead (e.g. when the frontend has an Authorizer and you can
+      # authenticate the job rather than relying on the internal-frontend bypass).
+      useExternalFrontend: false
       namespace:
         - name: default
           retention: 3d
@@ -443,6 +482,14 @@ server:
     podDisruptionBudget: {}
 admintools:
   enabled: true
+  # By default the admin tools connect to the internal-frontend when it is
+  # enabled, which grants admin access without an external Authorizer. Set this
+  # to true to connect through the external frontend instead (e.g. when the
+  # frontend has an Authorizer and you supply credentials via additionalEnv). If
+  # server TLS is enabled the chart mounts the matching certificate (internode
+  # for the internal-frontend, frontend for the external frontend) and sets the
+  # TEMPORAL_TLS_* env; this is skipped when a custom temporalAddress is set.
+  useExternalFrontend: false
   image:
     repository: temporalio/admin-tools
     tag: "1.31.2"
@@ -536,6 +583,20 @@ web:
   affinity: {}
   additionalVolumes: []
   additionalVolumeMounts: []
+  # Wire TLS for the connection from the Web UI to the frontend. Point at an
+  # existing kubernetes.io/tls secret; the chart mounts it and sets the
+  # TEMPORAL_TLS_* environment variables. The secret needs ca.crt to verify the
+  # frontend, plus tls.crt + tls.key when the frontend requires client
+  # certificates (server.tls.frontend.requireClientAuth: true).
+  tls:
+    enabled: false
+    secretName: ""
+    mountPath: /etc/temporal/tls
+    # DNS name expected in the frontend server certificate. Required when
+    # enableHostVerification is true.
+    serverName: ""
+    # Verify the frontend certificate against serverName.
+    enableHostVerification: false
   # Adjust Web UI config with environment variables:
   # https://docs.temporal.io/references/web-ui-environment-variables
   additionalEnv: []

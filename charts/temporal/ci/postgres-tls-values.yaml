@@ -1,0 +1,117 @@
+# CI case: full TLS (internode + frontend + web) with certificates issued by
+# cert-manager. cert-manager is installed by the CI workflow before this runs.
+#
+# The cert-manager Issuer/Certificate resources are created via extraObjects;
+# each Certificate writes a kubernetes.io/tls secret that server.tls/web.tls
+# then mount and wire up. serverName values are self-consistent SANs (matched by
+# the certificates below), so they do not depend on the generated release name.
+server:
+  replicaCount: 1
+  config:
+    persistence:
+      defaultStore: default
+      visibilityStore: visibility
+      numHistoryShards: 512
+      datastores:
+        default:
+          sql:
+            pluginName: postgres12
+            databaseName: temporal
+            connectAddr: "postgres.default.svc.cluster.local:5432"
+            connectProtocol: "tcp"
+            user: temporal
+            password: temporal
+        visibility:
+          sql:
+            pluginName: postgres12
+            databaseName: temporal_visibility
+            connectAddr: "postgres.default.svc.cluster.local:5432"
+            connectProtocol: "tcp"
+            user: temporal
+            password: temporal
+    namespaces:
+      create: true
+      namespace:
+        - name: test
+          retention: 1d
+  tls:
+    internode:
+      enabled: true
+      secretName: temporal-internode-tls
+      serverName: temporal-internode
+    frontend:
+      enabled: true
+      secretName: temporal-frontend-tls
+      serverName: temporal-frontend
+
+web:
+  tls:
+    enabled: true
+    secretName: temporal-frontend-tls
+    serverName: temporal-frontend
+    enableHostVerification: true
+
+extraObjects:
+  # Self-signed root, used to mint a CA that signs the leaf certificates.
+  - |
+    apiVersion: cert-manager.io/v1
+    kind: Issuer
+    metadata:
+      name: temporal-selfsigned
+    spec:
+      selfSigned: {}
+  - |
+    apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: temporal-ca
+    spec:
+      isCA: true
+      commonName: temporal-ca
+      secretName: temporal-ca-tls
+      issuerRef:
+        name: temporal-selfsigned
+        kind: Issuer
+  - |
+    apiVersion: cert-manager.io/v1
+    kind: Issuer
+    metadata:
+      name: temporal-ca
+    spec:
+      ca:
+        secretName: temporal-ca-tls
+  - |
+    apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: temporal-internode-tls
+    spec:
+      secretName: temporal-internode-tls
+      dnsNames:
+        - temporal-internode
+      # internode uses mutual TLS, so the cert must serve as both server and client.
+      usages:
+        - server auth
+        - client auth
+        - digital signature
+        - key encipherment
+      issuerRef:
+        name: temporal-ca
+        kind: Issuer
+  - |
+    apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: temporal-frontend-tls
+    spec:
+      secretName: temporal-frontend-tls
+      dnsNames:
+        - temporal-frontend
+      usages:
+        - server auth
+        - client auth
+        - digital signature
+        - key encipherment
+      issuerRef:
+        name: temporal-ca
+        kind: Issuer

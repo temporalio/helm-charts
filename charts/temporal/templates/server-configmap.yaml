@@ -45,7 +45,9 @@ data:
         {{- toYaml . | nindent 8 }}
         {{- end }}
 
-      {{- with $server.config.tls }}
+      {{- $autoTls := fromYaml (include "temporal.server.tls.config" $) }}
+      {{- $tls := mergeOverwrite $autoTls (deepCopy ($server.config.tls | default dict)) }}
+      {{- with $tls }}
       tls:
         {{- toYaml . | nindent 10 }}
       {{- end }}
