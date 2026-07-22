@@ -148,5 +148,19 @@ jobs:
           create_service mysql 3306
           create_service elasticsearch 9200
 
+      - name: Install cert-manager
+        # Required by the ci/postgres-tls-values.yaml case, which issues the
+        # server/web TLS certificates via cert-manager Issuer/Certificate
+        # resources. --wait blocks until the webhook is ready to admit them.
+        run: |
+          helm repo add jetstack https://charts.jetstack.io
+          helm repo update
+          helm install cert-manager jetstack/cert-manager \
+            --namespace cert-manager \
+            --create-namespace \
+            --version v1.16.2 \
+            --set crds.enabled=true \
+            --wait
+
       - name: Run chart-testing (install)
         run: ct install --excluded-charts temporal-proxy --target-branch ${{ github.event.repository.default_branch }}

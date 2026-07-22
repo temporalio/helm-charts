@@ -60,6 +60,12 @@ extraObjects:
       secretName: temporal-internode-tls
       dnsNames:
         - temporal-internode
+      # internode uses mutual TLS, so the cert must serve as both server and client.
+      usages:
+        - server auth
+        - client auth
+        - digital signature
+        - key encipherment
       issuerRef:
         name: temporal-ca
         kind: Issuer
@@ -73,6 +79,11 @@ extraObjects:
       secretName: temporal-frontend-tls
       dnsNames:
         - temporal-frontend
+      usages:
+        - server auth
+        - client auth
+        - digital signature
+        - key encipherment
       issuerRef:
         name: temporal-ca
         kind: Issuer

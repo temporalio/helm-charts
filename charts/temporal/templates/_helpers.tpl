@@ -392,3 +392,48 @@ when disabled. See https://docs.temporal.io/references/web-ui-environment-variab
 {{- end -}}
 {{- toYaml $env -}}
 {{- end -}}
+
+{{/*
+Frontend-client TLS: shared wiring for the chart's own `temporal` CLI pods that
+connect to the frontend (the namespace-setup job and the cluster-health test).
+When server.tls.frontend is enabled these mount the frontend secret and set the
+CLI's TEMPORAL_TLS_* env (note the CLI env var names differ from the Web UI's).
+All render empty when frontend TLS is off, so callers gate on frontend.enabled.
+The secret is mounted at a fixed path, /etc/temporal/tls/frontend.
+*/}}
+{{- define "temporal.frontendClient.tls.env" -}}
+{{- $tls := .Values.server.tls.frontend -}}
+{{- $env := list -}}
+{{- if $tls.enabled -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS" "value" "true") -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_CA_CERT_PATH" "value" "/etc/temporal/tls/frontend/ca.crt") -}}
+{{- if $tls.serverName -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_NAME" "value" $tls.serverName) -}}
+{{- else -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_DISABLE_HOST_VERIFICATION" "value" "true") -}}
+{{- end -}}
+{{- if $tls.requireClientAuth -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_CLIENT_CERT_PATH" "value" "/etc/temporal/tls/frontend/tls.crt") -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_CLIENT_KEY_PATH" "value" "/etc/temporal/tls/frontend/tls.key") -}}
+{{- end -}}
+{{- end -}}
+{{- toYaml $env -}}
+{{- end -}}
+
+{{- define "temporal.frontendClient.tls.volumes" -}}
+{{- $tls := .Values.server.tls.frontend -}}
+{{- $volumes := list -}}
+{{- if $tls.enabled -}}
+{{- $volumes = append $volumes (dict "name" "frontend-tls" "secret" (dict "secretName" (required "server.tls.frontend.secretName is required when server.tls.frontend.enabled is true" $tls.secretName))) -}}
+{{- end -}}
+{{- toYaml $volumes -}}
+{{- end -}}
+
+{{- define "temporal.frontendClient.tls.volumeMounts" -}}
+{{- $tls := .Values.server.tls.frontend -}}
+{{- $mounts := list -}}
+{{- if $tls.enabled -}}
+{{- $mounts = append $mounts (dict "name" "frontend-tls" "mountPath" "/etc/temporal/tls/frontend" "readOnly" true) -}}
+{{- end -}}
+{{- toYaml $mounts -}}
+{{- end -}}

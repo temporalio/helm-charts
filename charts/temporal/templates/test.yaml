@@ -22,6 +22,13 @@ spec:
     env:
       - name: TEMPORAL_ADDRESS
         value: {{ include "temporal.fullname" . }}-frontend:{{ .Values.server.frontend.service.port }}
+      {{- if .Values.server.tls.frontend.enabled }}
+      {{- include "temporal.frontendClient.tls.env" . | nindent 6 }}
+      {{- end }}
+    {{- if .Values.server.tls.frontend.enabled }}
+    volumeMounts:
+      {{- include "temporal.frontendClient.tls.volumeMounts" . | nindent 6 }}
+    {{- end }}
     {{- with .Values.test.resources }}
     resources:
       {{- toYaml . | nindent 6 }}
@@ -41,5 +48,9 @@ spec:
   {{- with .Values.test.tolerations }}
   tolerations:
     {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if .Values.server.tls.frontend.enabled }}
+  volumes:
+    {{- include "temporal.frontendClient.tls.volumes" . | nindent 4 }}
   {{- end }}
   restartPolicy: Never

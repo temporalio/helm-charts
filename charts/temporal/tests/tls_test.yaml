@@ -3,6 +3,8 @@ templates:
   - server-deployment.yaml
   - server-configmap.yaml
   - web-deployment.yaml
+  - test.yaml
+  - server-namespace-job.yaml
 set:
   server:
     enabled: true
@@ -188,3 +190,138 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: web.tls.secretName is required when web.tls.enabled is true
+
+  - it: does not add tls to the health check test pod by default
+    template: templates/test.yaml
+    asserts:
+      - notExists:
+          path: spec.containers[0].env[?(@.name=='TEMPORAL_TLS')]
+      - notExists:
+          path: spec.volumes[?(@.name=='frontend-tls')]
+
+  - it: wires the health check test pod for tls when the frontend has tls
+    set:
+      server:
+        tls:
+          frontend:
+            enabled: true
+            secretName: my-frontend-secret
+            serverName: temporal-frontend
+    template: templates/test.yaml
+    asserts:
+      - contains:
+          path: spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS
+            value: "true"
+      - contains:
+          path: spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_SERVER_CA_CERT_PATH
+            value: /etc/temporal/tls/frontend/ca.crt
+      - contains:
+          path: spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_SERVER_NAME
+            value: temporal-frontend
+      # requireClientAuth defaults to false, so no client cert is presented
+      - notExists:
+          path: spec.containers[0].env[?(@.name=='TEMPORAL_TLS_CLIENT_CERT_PATH')]
+      - equal:
+          path: spec.volumes[?(@.name=='frontend-tls')].secret.secretName
+          value: my-frontend-secret
+
+  - it: presents a client certificate when the frontend requires client auth
+    set:
+      server:
+        tls:
+          frontend:
+            enabled: true
+            secretName: my-frontend-secret
+            serverName: temporal-frontend
+            requireClientAuth: true
+    template: templates/test.yaml
+    asserts:
+      - contains:
+          path: spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_CLIENT_CERT_PATH
+            value: /etc/temporal/tls/frontend/tls.crt
+      - contains:
+          path: spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_CLIENT_KEY_PATH
+            value: /etc/temporal/tls/frontend/tls.key
+
+  - it: disables host verification for the test pod when no serverName is set
+    set:
+      server:
+        tls:
+          frontend:
+            enabled: true
+            secretName: my-frontend-secret
+    template: templates/test.yaml
+    asserts:
+      - contains:
+          path: spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_DISABLE_HOST_VERIFICATION
+            value: "true"
+      - notExists:
+          path: spec.containers[0].env[?(@.name=='TEMPORAL_TLS_SERVER_NAME')]
+
+  - it: wires the namespace setup job for tls when the frontend has tls
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: test
+                retention: 1d
+        tls:
+          frontend:
+            enabled: true
+            secretName: my-frontend-secret
+            serverName: temporal-frontend
+    template: templates/server-namespace-job.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: TEMPORAL_TLS
+            value: "true"
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: TEMPORAL_TLS_SERVER_NAME
+            value: temporal-frontend
+      - equal:
+          path: spec.template.spec.volumes[?(@.name=='frontend-tls')].secret.secretName
+          value: my-frontend-secret
+      - equal:
+          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name=='frontend-tls')].mountPath
+          value: /etc/temporal/tls/frontend
+
+  - it: does not wire namespace job tls when it targets the internal frontend
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: test
+                retention: 1d
+        tls:
+          frontend:
+            enabled: true
+            secretName: my-frontend-secret
+            serverName: temporal-frontend
+    template: templates/server-namespace-job.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers[0].env[?(@.name=='TEMPORAL_TLS')]
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name=='frontend-tls')]
