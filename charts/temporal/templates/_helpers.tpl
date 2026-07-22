@@ -399,42 +399,65 @@ when disabled. See https://docs.temporal.io/references/web-ui-environment-variab
 {{- end -}}
 
 {{/*
-Frontend-client TLS: shared wiring for the chart's own `temporal` CLI pods that
-connect to the frontend (the namespace-setup job and the cluster-health test).
-When server.tls.frontend is enabled these mount the frontend secret and set the
-CLI's TEMPORAL_TLS_* env (note the CLI env var names differ from the Web UI's).
-All render empty when frontend TLS is off, so callers gate on frontend.enabled.
-The secret is mounted at a fixed path, /etc/temporal/tls/frontend.
+Admin-client TLS: shared wiring for the chart's own `temporal` CLI pods (the
+admintools Deployment, the namespace-setup Job and the cluster-health test).
+Each connects either to the external frontend or, when enabled, to the
+internal-frontend, and those two paths terminate TLS with different certificates:
+the frontend uses server.tls.frontend, while the internal-frontend uses the
+internode config (server.tls.internode). The helpers take the resolved section
+name ("frontend" or "internode") so the matching secret, serverName and
+client-auth setting are wired. The secret is mounted at a fixed path,
+/etc/temporal/tls/client. Note the CLI env var names differ from the Web UI's.
+
+temporal.adminClient.tls.section resolves which section applies from whether the
+pod targets the internal-frontend; it returns "" when that path has no
+chart-managed TLS, and callers gate on the empty string.
 */}}
-{{- define "temporal.frontendClient.tls.env" -}}
-{{- $tls := .Values.server.tls.frontend -}}
+{{- define "temporal.adminClient.tls.section" -}}
+{{- $root := index . 0 -}}
+{{- $useInternal := index . 1 -}}
+{{- $tls := $root.Values.server.tls -}}
+{{- if $useInternal -}}
+{{- if $tls.internode.enabled }}internode{{ end -}}
+{{- else -}}
+{{- if $tls.frontend.enabled }}frontend{{ end -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "temporal.adminClient.tls.env" -}}
+{{- $root := index . 0 -}}
+{{- $section := index . 1 -}}
 {{- $env := list -}}
-{{- if $tls.enabled -}}
+{{- if $section -}}
+{{- $tls := index $root.Values.server.tls $section -}}
 {{- $env = append $env (dict "name" "TEMPORAL_TLS" "value" "true") -}}
-{{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_CA_CERT_PATH" "value" "/etc/temporal/tls/frontend/ca.crt") -}}
-{{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_NAME" "value" (required "server.tls.frontend.serverName is required when server.tls.frontend.enabled is true" $tls.serverName)) -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_CA_CERT_PATH" "value" "/etc/temporal/tls/client/ca.crt") -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_NAME" "value" (required (printf "server.tls.%s.serverName is required when server.tls.%s.enabled is true" $section $section) $tls.serverName)) -}}
 {{- if $tls.requireClientAuth -}}
-{{- $env = append $env (dict "name" "TEMPORAL_TLS_CLIENT_CERT_PATH" "value" "/etc/temporal/tls/frontend/tls.crt") -}}
-{{- $env = append $env (dict "name" "TEMPORAL_TLS_CLIENT_KEY_PATH" "value" "/etc/temporal/tls/frontend/tls.key") -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_CLIENT_CERT_PATH" "value" "/etc/temporal/tls/client/tls.crt") -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_CLIENT_KEY_PATH" "value" "/etc/temporal/tls/client/tls.key") -}}
 {{- end -}}
 {{- end -}}
 {{- toYaml $env -}}
 {{- end -}}
 
-{{- define "temporal.frontendClient.tls.volumes" -}}
-{{- $tls := .Values.server.tls.frontend -}}
+{{- define "temporal.adminClient.tls.volumes" -}}
+{{- $root := index . 0 -}}
+{{- $section := index . 1 -}}
 {{- $volumes := list -}}
-{{- if $tls.enabled -}}
-{{- $volumes = append $volumes (dict "name" "frontend-tls" "secret" (dict "secretName" (required "server.tls.frontend.secretName is required when server.tls.frontend.enabled is true" $tls.secretName))) -}}
+{{- if $section -}}
+{{- $tls := index $root.Values.server.tls $section -}}
+{{- $volumes = append $volumes (dict "name" "client-tls" "secret" (dict "secretName" (required (printf "server.tls.%s.secretName is required when server.tls.%s.enabled is true" $section $section) $tls.secretName))) -}}
 {{- end -}}
 {{- toYaml $volumes -}}
 {{- end -}}
 
-{{- define "temporal.frontendClient.tls.volumeMounts" -}}
-{{- $tls := .Values.server.tls.frontend -}}
+{{- define "temporal.adminClient.tls.volumeMounts" -}}
+{{- $root := index . 0 -}}
+{{- $section := index . 1 -}}
 {{- $mounts := list -}}
-{{- if $tls.enabled -}}
-{{- $mounts = append $mounts (dict "name" "frontend-tls" "mountPath" "/etc/temporal/tls/frontend" "readOnly" true) -}}
+{{- if $section -}}
+{{- $mounts = append $mounts (dict "name" "client-tls" "mountPath" "/etc/temporal/tls/client" "readOnly" true) -}}
 {{- end -}}
 {{- toYaml $mounts -}}
 {{- end -}}

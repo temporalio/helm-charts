@@ -284,6 +284,13 @@ server:
     namespaces:
       # Enable this to create namespaces
       create: false
+      # The namespace-setup job is a one-off admin tools invocation. Like the
+      # admin tools (see admintools.useExternalFrontend) it connects to the
+      # internal-frontend when that is enabled, which grants admin without an
+      # external Authorizer. Set this to true to route it through the external
+      # frontend instead (e.g. when the frontend has an Authorizer and you can
+      # authenticate the job rather than relying on the internal-frontend bypass).
+      useExternalFrontend: false
       namespace:
         - name: default
           retention: 3d
@@ -475,6 +482,14 @@ server:
     podDisruptionBudget: {}
 admintools:
   enabled: true
+  # By default the admin tools connect to the internal-frontend when it is
+  # enabled, which grants admin access without an external Authorizer. Set this
+  # to true to connect through the external frontend instead (e.g. when the
+  # frontend has an Authorizer and you supply credentials via additionalEnv). If
+  # server TLS is enabled the chart mounts the matching certificate (internode
+  # for the internal-frontend, frontend for the external frontend) and sets the
+  # TEMPORAL_TLS_* env; this is skipped when a custom temporalAddress is set.
+  useExternalFrontend: false
   image:
     repository: temporalio/admin-tools
     tag: "1.31.2"

@@ -1,3 +1,6 @@
+{{- /* The health check always connects to the external frontend, so it uses the
+frontend TLS section (empty unless frontend TLS is enabled). */}}
+{{- $tlsSection := include "temporal.adminClient.tls.section" (list . false) }}
 apiVersion: v1
 kind: Pod
 metadata:
@@ -22,12 +25,12 @@ spec:
     env:
       - name: TEMPORAL_ADDRESS
         value: {{ include "temporal.fullname" . }}-frontend:{{ .Values.server.frontend.service.port }}
-      {{- if .Values.server.tls.frontend.enabled }}
-      {{- include "temporal.frontendClient.tls.env" . | nindent 6 }}
+      {{- if $tlsSection }}
+      {{- include "temporal.adminClient.tls.env" (list . $tlsSection) | nindent 6 }}
       {{- end }}
-    {{- if .Values.server.tls.frontend.enabled }}
+    {{- if $tlsSection }}
     volumeMounts:
-      {{- include "temporal.frontendClient.tls.volumeMounts" . | nindent 6 }}
+      {{- include "temporal.adminClient.tls.volumeMounts" (list . $tlsSection) | nindent 6 }}
     {{- end }}
     {{- with .Values.test.resources }}
     resources:
@@ -49,8 +52,8 @@ spec:
   tolerations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- if .Values.server.tls.frontend.enabled }}
+  {{- if $tlsSection }}
   volumes:
-    {{- include "temporal.frontendClient.tls.volumes" . | nindent 4 }}
+    {{- include "temporal.adminClient.tls.volumes" (list . $tlsSection) | nindent 4 }}
   {{- end }}
   restartPolicy: Never

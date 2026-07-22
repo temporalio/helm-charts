@@ -64,3 +64,93 @@ tests:
           content:
             name: TEMPORAL_ADDRESS
             value: RELEASE-NAME-temporal-frontend:7233
+  - it: targets the internal-frontend by default when it is enabled
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: RELEASE-NAME-temporal-internal-frontend:7236
+  - it: targets the external frontend when useExternalFrontend is set
+    set:
+      admintools:
+        useExternalFrontend: true
+      server:
+        internal-frontend:
+          enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: RELEASE-NAME-temporal-frontend:7233
+  - it: does not wire tls by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name=='client-tls')]
+      - notExists:
+          path: spec.template.spec.containers[0].env[?(@.name=='TEMPORAL_TLS')]
+  - it: wires frontend tls when the external frontend has tls
+    set:
+      server:
+        tls:
+          frontend:
+            enabled: true
+            secretName: my-frontend-secret
+            serverName: temporal-frontend
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_SERVER_NAME
+            value: temporal-frontend
+      - equal:
+          path: spec.template.spec.volumes[?(@.name=='client-tls')].secret.secretName
+          value: my-frontend-secret
+      # frontend requireClientAuth defaults to false, so no client cert is presented
+      - notExists:
+          path: spec.template.spec.containers[0].env[?(@.name=='TEMPORAL_TLS_CLIENT_CERT_PATH')]
+  - it: wires internode tls when it targets the internal-frontend
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+        tls:
+          internode:
+            enabled: true
+            secretName: my-internode-secret
+            serverName: temporal-internode
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_SERVER_NAME
+            value: temporal-internode
+      # internode requireClientAuth defaults to true, so a client cert is presented
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_CLIENT_CERT_PATH
+            value: /etc/temporal/tls/client/tls.crt
+      - equal:
+          path: spec.template.spec.volumes[?(@.name=='client-tls')].secret.secretName
+          value: my-internode-secret
+  - it: does not wire chart tls when a custom temporalAddress is set
+    set:
+      admintools:
+        temporalAddress: "external-lb:7233"
+      server:
+        tls:
+          frontend:
+            enabled: true
+            secretName: my-frontend-secret
+            serverName: temporal-frontend
+    asserts:
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name=='client-tls')]
+      - notExists:
+          path: spec.template.spec.containers[0].env[?(@.name=='TEMPORAL_TLS')]

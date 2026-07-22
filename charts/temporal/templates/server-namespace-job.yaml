@@ -1,8 +1,18 @@
 {{- if $.Values.server.config.namespaces.create }}
 {{- $jobName := include "temporal.componentname" (list $ (printf "namespace-%s-%d" $.Chart.Version $.Release.Revision | replace "." "-" | replace "+" "-")) }}
-{{- /* The job talks to the in-cluster frontend service; wire client TLS when that
-frontend has TLS enabled (not for internal-frontend or an external ingress host). */}}
-{{- $frontendTls := and $.Values.server.tls.frontend.enabled (not (index $.Values.server "internal-frontend").enabled) (not $.Values.server.frontend.ingress.enabled) }}
+{{- /* The namespace-setup job is a one-off admin CLI invocation. By default it
+targets the internal-frontend when that is enabled (which grants admin without
+an external Authorizer); set server.config.namespaces.useExternalFrontend to true
+to route it through the external frontend instead (e.g. when you can authenticate
+it and do not want to rely on the internal-frontend bypass). The two paths
+terminate TLS with different certificates, so resolve the section accordingly;
+an external ingress host has no chart-managed certificate, so skip TLS there. */}}
+{{- $useInternalFrontend := and (index $.Values.server "internal-frontend").enabled (not $.Values.server.config.namespaces.useExternalFrontend) }}
+{{- $viaIngress := and (not $useInternalFrontend) $.Values.server.frontend.ingress.enabled }}
+{{- $tlsSection := "" }}
+{{- if not $viaIngress }}
+{{- $tlsSection = include "temporal.adminClient.tls.section" (list $ $useInternalFrontend) }}
+{{- end }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -40,15 +50,15 @@ spec:
           args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
           env:
             - name: TEMPORAL_ADDRESS
-              {{- if (index $.Values.server "internal-frontend").enabled }}
-              value: {{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ (index $.Values.server "internal-frontend").service.port }}
+              {{- if $useInternalFrontend }}
+              value: "{{ include "temporal.fullname" $ }}-internal-frontend.{{ $.Release.Namespace }}.svc:{{ (index $.Values.server "internal-frontend").service.port }}"
               {{- else if $.Values.server.frontend.ingress.enabled }}
               value: "{{ index $.Values.server.frontend.ingress.hosts 0 }}"
               {{- else }}
               value: "{{ include "temporal.fullname" $ }}-frontend.{{ $.Release.Namespace }}.svc:{{ $.Values.server.frontend.service.port }}"
               {{- end }}
-            {{- if $frontendTls }}
-            {{- include "temporal.frontendClient.tls.env" $ | nindent 12 }}
+            {{- if $tlsSection }}
+            {{- include "temporal.adminClient.tls.env" (list $ $tlsSection) | nindent 12 }}
             {{- end }}
             {{- with $.Values.admintools.additionalEnv }}
               {{- toYaml . | nindent 12 }}
@@ -64,13 +74,13 @@ spec:
                 name: {{ . }}
             {{- end }}
           {{- end }}
-          {{- if or $.Values.admintools.additionalVolumeMounts $frontendTls }}
+          {{- if or $.Values.admintools.additionalVolumeMounts $tlsSection }}
           volumeMounts:
           {{- with $.Values.admintools.additionalVolumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if $frontendTls }}
-          {{- include "temporal.frontendClient.tls.volumeMounts" $ | nindent 12 }}
+          {{- if $tlsSection }}
+          {{- include "temporal.adminClient.tls.volumeMounts" (list $ $tlsSection) | nindent 12 }}
           {{- end }}
           {{- end }}
           {{- with $.Values.schema.resources }}
@@ -111,13 +121,13 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or $.Values.admintools.additionalVolumes $frontendTls }}
+      {{- if or $.Values.admintools.additionalVolumes $tlsSection }}
       volumes:
       {{- with $.Values.admintools.additionalVolumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if $frontendTls }}
-        {{- include "temporal.frontendClient.tls.volumes" $ | nindent 8 }}
+      {{- if $tlsSection }}
+        {{- include "temporal.adminClient.tls.volumes" (list $ $tlsSection) | nindent 8 }}
       {{- end }}
       {{- end }}
 {{- end }}

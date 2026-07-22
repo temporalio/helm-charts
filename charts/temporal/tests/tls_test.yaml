@@ -264,7 +264,7 @@ tests:
           path: spec.containers[0].env
           content:
             name: TEMPORAL_TLS_SERVER_CA_CERT_PATH
-            value: /etc/temporal/tls/frontend/ca.crt
+            value: /etc/temporal/tls/client/ca.crt
       - contains:
           path: spec.containers[0].env
           content:
@@ -274,7 +274,7 @@ tests:
       - notExists:
           path: spec.containers[0].env[?(@.name=='TEMPORAL_TLS_CLIENT_CERT_PATH')]
       - equal:
-          path: spec.volumes[?(@.name=='frontend-tls')].secret.secretName
+          path: spec.volumes[?(@.name=='client-tls')].secret.secretName
           value: my-frontend-secret
 
   - it: presents a client certificate when the frontend requires client auth
@@ -292,12 +292,12 @@ tests:
           path: spec.containers[0].env
           content:
             name: TEMPORAL_TLS_CLIENT_CERT_PATH
-            value: /etc/temporal/tls/frontend/tls.crt
+            value: /etc/temporal/tls/client/tls.crt
       - contains:
           path: spec.containers[0].env
           content:
             name: TEMPORAL_TLS_CLIENT_KEY_PATH
-            value: /etc/temporal/tls/frontend/tls.key
+            value: /etc/temporal/tls/client/tls.key
 
   - it: fails when the frontend has tls but no serverName is set
     set:
@@ -311,7 +311,7 @@ tests:
       - failedTemplate:
           errorMessage: server.tls.frontend.serverName is required when server.tls.frontend.enabled is true
 
-  - it: wires the namespace setup job for tls when the frontend has tls
+  - it: wires the namespace job with frontend tls when there is no internal-frontend
     set:
       server:
         config:
@@ -327,24 +327,25 @@ tests:
             serverName: temporal-frontend
     template: templates/server-namespace-job.yaml
     asserts:
-      - contains:
-          path: spec.template.spec.initContainers[0].env
-          content:
-            name: TEMPORAL_TLS
-            value: "true"
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-test-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
       - contains:
           path: spec.template.spec.initContainers[0].env
           content:
             name: TEMPORAL_TLS_SERVER_NAME
             value: temporal-frontend
       - equal:
-          path: spec.template.spec.volumes[?(@.name=='frontend-tls')].secret.secretName
+          path: spec.template.spec.volumes[?(@.name=='client-tls')].secret.secretName
           value: my-frontend-secret
       - equal:
-          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name=='frontend-tls')].mountPath
-          value: /etc/temporal/tls/frontend
+          path: spec.template.spec.initContainers[0].volumeMounts[?(@.name=='client-tls')].mountPath
+          value: /etc/temporal/tls/client
 
-  - it: does not wire namespace job tls when it targets the internal frontend
+  - it: wires the namespace job with internode tls when it targets the internal-frontend
+    # internal-frontend is the default target, and it terminates TLS with the
+    # internode config, so the job uses the internode secret and (because
+    # internode requireClientAuth defaults to true) presents a client cert.
     set:
       server:
         internal-frontend:
@@ -356,13 +357,58 @@ tests:
               - name: test
                 retention: 1d
         tls:
+          internode:
+            enabled: true
+            secretName: my-internode-secret
+            serverName: temporal-internode
+    template: templates/server-namespace-job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-test-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          value: RELEASE-NAME-temporal-internal-frontend.NAMESPACE.svc:7236
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: TEMPORAL_TLS_SERVER_NAME
+            value: temporal-internode
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: TEMPORAL_TLS_CLIENT_CERT_PATH
+            value: /etc/temporal/tls/client/tls.crt
+      - equal:
+          path: spec.template.spec.volumes[?(@.name=='client-tls')].secret.secretName
+          value: my-internode-secret
+
+  - it: routes the namespace job to the external frontend when useExternalFrontend is set
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+        config:
+          namespaces:
+            create: true
+            useExternalFrontend: true
+            namespace:
+              - name: test
+                retention: 1d
+        tls:
+          internode:
+            enabled: true
+            secretName: my-internode-secret
+            serverName: temporal-internode
           frontend:
             enabled: true
             secretName: my-frontend-secret
             serverName: temporal-frontend
     template: templates/server-namespace-job.yaml
     asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-test-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
+      - equal:
+          path: spec.template.spec.volumes[?(@.name=='client-tls')].secret.secretName
+          value: my-frontend-secret
+      # frontend requireClientAuth defaults to false, so no client cert is presented
       - notExists:
-          path: spec.template.spec.initContainers[0].env[?(@.name=='TEMPORAL_TLS')]
-      - notExists:
-          path: spec.template.spec.volumes[?(@.name=='frontend-tls')]
+          path: spec.template.spec.initContainers[0].env[?(@.name=='TEMPORAL_TLS_CLIENT_CERT_PATH')]
