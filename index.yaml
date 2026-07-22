@@ -2273,6 +2273,29 @@ entries:
     version: 0.33.0
   temporal-proxy:
   - apiVersion: v2
+    appVersion: v0.1.0
+    created: "2026-07-22T17:18:32.108623123Z"
+    description: The Temporal proxy handles routing between clusters, namespace translation,
+      encryption, and more.
+    digest: ce1a63ee030d184f555d5bffa62eb00a949bff0ad4525a5e0d274603b7e765cb
+    home: https://github.com/temporalio/temporal-proxy
+    icon: https://raw.githubusercontent.com/temporalio/temporal-proxy/refs/heads/main/temporal-proxy-small.png
+    keywords:
+    - temporal
+    - workflow
+    - orchestration
+    - proxy
+    maintainers:
+    - name: temporalio
+      url: https://temporal.io/
+    name: temporal-proxy
+    sources:
+    - https://github.com/temporalio/temporal-proxy
+    type: application
+    urls:
+    - https://github.com/temporalio/helm-charts/releases/download/temporal-proxy-0.1.0/temporal-proxy-0.1.0.tgz
+    version: 0.1.0
+  - apiVersion: v2
     appVersion: v0.1.0-alpha.20260716
     created: "2026-07-20T14:20:32.280890678Z"
     description: The Temporal proxy handles routing between clusters, namespace translation,
@@ -2295,4 +2318,4 @@ entries:
     urls:
     - https://github.com/temporalio/helm-charts/releases/download/temporal-proxy-0.1.0-alpha1/temporal-proxy-0.1.0-alpha1.tgz
     version: 0.1.0-alpha1
-generated: "2026-07-20T14:20:32.281047431Z"
+generated: "2026-07-22T17:18:32.108750534Z"
