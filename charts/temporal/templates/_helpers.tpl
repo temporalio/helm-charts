@@ -351,7 +351,8 @@ disabled. server.config.tls is deep-merged on top of this by the configmap. */}}
 {{- if $s.requireClientAuth -}}
 {{- $_ := set $server "clientCaFiles" (list (printf "%s/ca.crt" $s.mountPath)) -}}
 {{- end -}}
-{{- $client := dict "serverName" $s.serverName "rootCaFiles" (list (printf "%s/ca.crt" $s.mountPath)) -}}
+{{- $serverName := required (printf "server.tls.%s.serverName is required when server.tls.%s.enabled is true" $section $section) $s.serverName -}}
+{{- $client := dict "serverName" $serverName "rootCaFiles" (list (printf "%s/ca.crt" $s.mountPath)) -}}
 {{- $_ := set $config $section (dict "server" $server "client" $client) -}}
 {{- end -}}
 {{- end -}}
@@ -387,7 +388,11 @@ when disabled. See https://docs.temporal.io/references/web-ui-environment-variab
 {{- $env = append $env (dict "name" "TEMPORAL_TLS_CA" "value" (printf "%s/ca.crt" $tls.mountPath)) -}}
 {{- $env = append $env (dict "name" "TEMPORAL_TLS_CERT" "value" (printf "%s/tls.crt" $tls.mountPath)) -}}
 {{- $env = append $env (dict "name" "TEMPORAL_TLS_KEY" "value" (printf "%s/tls.key" $tls.mountPath)) -}}
-{{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_NAME" "value" $tls.serverName) -}}
+{{- $serverName := $tls.serverName -}}
+{{- if $tls.enableHostVerification -}}
+{{- $serverName = required "web.tls.serverName is required when web.tls.enableHostVerification is true" $tls.serverName -}}
+{{- end -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_NAME" "value" $serverName) -}}
 {{- $env = append $env (dict "name" "TEMPORAL_TLS_ENABLE_HOST_VERIFICATION" "value" (printf "%t" $tls.enableHostVerification)) -}}
 {{- end -}}
 {{- toYaml $env -}}
@@ -407,11 +412,7 @@ The secret is mounted at a fixed path, /etc/temporal/tls/frontend.
 {{- if $tls.enabled -}}
 {{- $env = append $env (dict "name" "TEMPORAL_TLS" "value" "true") -}}
 {{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_CA_CERT_PATH" "value" "/etc/temporal/tls/frontend/ca.crt") -}}
-{{- if $tls.serverName -}}
-{{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_NAME" "value" $tls.serverName) -}}
-{{- else -}}
-{{- $env = append $env (dict "name" "TEMPORAL_TLS_DISABLE_HOST_VERIFICATION" "value" "true") -}}
-{{- end -}}
+{{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_NAME" "value" (required "server.tls.frontend.serverName is required when server.tls.frontend.enabled is true" $tls.serverName)) -}}
 {{- if $tls.requireClientAuth -}}
 {{- $env = append $env (dict "name" "TEMPORAL_TLS_CLIENT_CERT_PATH" "value" "/etc/temporal/tls/frontend/tls.crt") -}}
 {{- $env = append $env (dict "name" "TEMPORAL_TLS_CLIENT_KEY_PATH" "value" "/etc/temporal/tls/frontend/tls.key") -}}

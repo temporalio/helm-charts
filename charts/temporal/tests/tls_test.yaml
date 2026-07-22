@@ -96,6 +96,7 @@ tests:
           frontend:
             enabled: true
             secretName: my-frontend-secret
+            serverName: temporal-frontend
     template: templates/server-configmap.yaml
     documentSelector:
       path: metadata.name
@@ -116,6 +117,7 @@ tests:
           frontend:
             enabled: true
             secretName: my-frontend-secret
+            serverName: temporal-frontend
         config:
           tls:
             frontend:
@@ -136,10 +138,23 @@ tests:
         tls:
           internode:
             enabled: true
+            serverName: temporal-internode
     template: templates/server-deployment.yaml
     asserts:
       - failedTemplate:
           errorMessage: server.tls.internode.secretName is required when server.tls.internode.enabled is true
+
+  - it: fails when internode tls is enabled without a serverName
+    set:
+      server:
+        tls:
+          internode:
+            enabled: true
+            secretName: my-internode-secret
+    template: templates/server-deployment.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: server.tls.internode.serverName is required when server.tls.internode.enabled is true
 
   - it: wires web tls env, volume and mount
     set:
@@ -190,6 +205,37 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: web.tls.secretName is required when web.tls.enabled is true
+
+  - it: allows web tls without a serverName when host verification is off
+    set:
+      web:
+        tls:
+          enabled: true
+          secretName: my-web-secret
+    template: templates/web-deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_ENABLE_HOST_VERIFICATION
+            value: "false"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_SERVER_NAME
+            value: ""
+
+  - it: fails when web host verification is enabled without a serverName
+    set:
+      web:
+        tls:
+          enabled: true
+          secretName: my-web-secret
+          enableHostVerification: true
+    template: templates/web-deployment.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: web.tls.serverName is required when web.tls.enableHostVerification is true
 
   - it: does not add tls to the health check test pod by default
     template: templates/test.yaml
@@ -253,7 +299,7 @@ tests:
             name: TEMPORAL_TLS_CLIENT_KEY_PATH
             value: /etc/temporal/tls/frontend/tls.key
 
-  - it: disables host verification for the test pod when no serverName is set
+  - it: fails when the frontend has tls but no serverName is set
     set:
       server:
         tls:
@@ -262,13 +308,8 @@ tests:
             secretName: my-frontend-secret
     template: templates/test.yaml
     asserts:
-      - contains:
-          path: spec.containers[0].env
-          content:
-            name: TEMPORAL_TLS_DISABLE_HOST_VERIFICATION
-            value: "true"
-      - notExists:
-          path: spec.containers[0].env[?(@.name=='TEMPORAL_TLS_SERVER_NAME')]
+      - failedTemplate:
+          errorMessage: server.tls.frontend.serverName is required when server.tls.frontend.enabled is true
 
   - it: wires the namespace setup job for tls when the frontend has tls
     set:

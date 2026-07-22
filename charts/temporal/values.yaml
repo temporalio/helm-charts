@@ -108,12 +108,16 @@ server:
       # Require and verify client certificates on internode connections.
       requireClientAuth: true
       # DNS name clients expect in the server certificate (a SAN on the cert).
+      # Host verification is always on for internode, so this is required when
+      # internode.enabled is true.
       serverName: ""
     frontend:
       enabled: false
       secretName: ""
       mountPath: /etc/temporal/tls/frontend
       requireClientAuth: false
+      # DNS name clients expect in the frontend certificate (a SAN on the cert).
+      # Required when frontend.enabled is true.
       serverName: ""
   # for sidecar containers, add containers here with restartPolicy: Always
   additionalInitContainers: []
@@ -573,7 +577,8 @@ web:
     enabled: false
     secretName: ""
     mountPath: /etc/temporal/tls
-    # DNS name expected in the frontend server certificate.
+    # DNS name expected in the frontend server certificate. Required when
+    # enableHostVerification is true.
     serverName: ""
     # Verify the frontend certificate against serverName.
     enableHostVerification: false
