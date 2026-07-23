@@ -1,0 +1,224 @@
+suite: test server hpa
+templates:
+  - server-hpa.yaml
+set:
+  server:
+    enabled: true
+    config:
+      persistence:
+        defaultStore: default
+        visibilityStore: visibility
+        datastores:
+          default:
+            sql:
+              password: "secret"
+          visibility:
+            sql:
+              password: "secret"
+    frontend:
+      enabled: true
+    history:
+      enabled: true
+    matching:
+      enabled: true
+    worker:
+      enabled: true
+
+tests:
+  - it: does not create HPA by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: creates HPA for frontend when enabled
+    set:
+      server.frontend.autoscaling.enabled: true
+    asserts:
+      - containsDocument:
+          kind: HorizontalPodAutoscaler
+          apiVersion: autoscaling/v2
+          name: RELEASE-NAME-temporal-frontend
+
+  - it: creates HPA for history when enabled
+    set:
+      server.history.autoscaling.enabled: true
+    asserts:
+      - containsDocument:
+          kind: HorizontalPodAutoscaler
+          apiVersion: autoscaling/v2
+          name: RELEASE-NAME-temporal-history
+
+  - it: creates HPA for matching when enabled
+    set:
+      server.matching.autoscaling.enabled: true
+    asserts:
+      - containsDocument:
+          kind: HorizontalPodAutoscaler
+          apiVersion: autoscaling/v2
+          name: RELEASE-NAME-temporal-matching
+
+  - it: creates HPA for worker when enabled
+    set:
+      server.worker.autoscaling.enabled: true
+    asserts:
+      - containsDocument:
+          kind: HorizontalPodAutoscaler
+          apiVersion: autoscaling/v2
+          name: RELEASE-NAME-temporal-worker
+
+  - it: creates HPAs for all services when all enabled
+    set:
+      server.frontend.autoscaling.enabled: true
+      server.history.autoscaling.enabled: true
+      server.matching.autoscaling.enabled: true
+      server.worker.autoscaling.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 4
+
+  - it: sets default minReplicas and maxReplicas
+    set:
+      server.frontend.autoscaling.enabled: true
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: spec.minReplicas
+          value: 1
+      - equal:
+          path: spec.maxReplicas
+          value: 5
+
+  - it: respects custom minReplicas and maxReplicas
+    set:
+      server.frontend.autoscaling.enabled: true
+      server.frontend.autoscaling.minReplicas: 2
+      server.frontend.autoscaling.maxReplicas: 10
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: spec.minReplicas
+          value: 2
+      - equal:
+          path: spec.maxReplicas
+          value: 10
+
+  - it: sets CPU metric by default
+    set:
+      server.frontend.autoscaling.enabled: true
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 80
+
+  - it: sets memory metric when configured
+    set:
+      server.frontend.autoscaling.enabled: true
+      server.frontend.autoscaling.targetMemoryUtilizationPercentage: 75
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: memory
+              target:
+                type: Utilization
+                averageUtilization: 75
+
+  - it: sets scaleTargetRef to the correct deployment
+    set:
+      server.worker.autoscaling.enabled: true
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-worker
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef.apiVersion
+          value: apps/v1
+      - equal:
+          path: spec.scaleTargetRef.kind
+          value: Deployment
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: RELEASE-NAME-temporal-worker
+
+  - it: sets scale behavior when configured
+    set:
+      server.frontend.autoscaling.enabled: true
+      server.frontend.autoscaling.behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: spec.behavior.scaleDown.stabilizationWindowSeconds
+          value: 300
+
+  - it: sets scaleUp behavior when configured
+    set:
+      server.frontend.autoscaling.enabled: true
+      server.frontend.autoscaling.behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 60
+          policies:
+            - type: Pods
+              value: 2
+              periodSeconds: 60
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: spec.behavior.scaleUp.stabilizationWindowSeconds
+          value: 60
+      - equal:
+          path: spec.behavior.scaleUp.policies[0].type
+          value: Pods
+      - equal:
+          path: spec.behavior.scaleUp.policies[0].value
+          value: 2
+
+  - it: sets both scaleUp and scaleDown behavior when configured
+    set:
+      server.frontend.autoscaling.enabled: true
+      server.frontend.autoscaling.behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 60
+        scaleDown:
+          stabilizationWindowSeconds: 300
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - equal:
+          path: spec.behavior.scaleUp.stabilizationWindowSeconds
+          value: 60
+      - equal:
+          path: spec.behavior.scaleDown.stabilizationWindowSeconds
+          value: 300
+
+  - it: does not create HPA when service is disabled
+    set:
+      server.frontend.enabled: false
+      server.frontend.autoscaling.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0

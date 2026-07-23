@@ -1,0 +1,47 @@
+{{- if $.Values.server.enabled }}
+{{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
+{{- $serviceValues := index $.Values.server $service }}
+{{- if and $serviceValues.enabled (dig "autoscaling" "enabled" false $serviceValues) }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "temporal.componentname" (list $ $service) }}
+  annotations:
+    {{- include "temporal.resourceAnnotations" (list $ $service "hpa") | nindent 4 }}
+  labels:
+    {{- include "temporal.resourceLabels" (list $ $service "hpa") | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "temporal.componentname" (list $ $service) }}
+  minReplicas: {{ $serviceValues.autoscaling.minReplicas }}
+  maxReplicas: {{ $serviceValues.autoscaling.maxReplicas }}
+  metrics:
+    {{- if $serviceValues.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $serviceValues.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if $serviceValues.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $serviceValues.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+    {{- with $serviceValues.autoscaling.customMetrics }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $serviceValues.autoscaling.behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+---
+{{- end }}
+{{- end }}
+{{- end }}
