@@ -33,7 +33,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
-      {{ include "temporal.serviceAccount" $ }}
+      {{ include "temporal.componentServiceAccount" (list $ "schema") }}
       restartPolicy: OnFailure
       initContainers:
         {{- with $.Values.admintools.additionalInitContainers }}

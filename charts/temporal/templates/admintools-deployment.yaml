@@ -24,7 +24,7 @@ spec:
       labels:
         {{- include "temporal.resourceLabels" (list $ "admintools" "pod") | nindent 8 }}
     spec:
-      {{ include "temporal.serviceAccount" $ }}
+      {{ include "temporal.componentServiceAccount" (list $ "admintools") }}
       {{- with $.Values.admintools.additionalInitContainers }}
       initContainers:
         {{- toYaml .| nindent 8 }}

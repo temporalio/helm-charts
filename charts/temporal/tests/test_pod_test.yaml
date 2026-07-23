@@ -131,3 +131,48 @@ tests:
       - equal:
           path: spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key
           value: kubernetes.io/arch
+
+  - it: uses global service account by default
+    set:
+      serviceAccount:
+        create: true
+    asserts:
+      - equal:
+          path: spec.serviceAccountName
+          value: RELEASE-NAME-temporal
+  - it: uses default service account when serviceAccount.create is false
+    asserts:
+      - equal:
+          path: spec.serviceAccountName
+          value: default
+  - it: uses per-service SA for test when configured
+    set:
+      serviceAccount:
+        create: true
+      test:
+        serviceAccount:
+          create: true
+          name: my-test-sa
+    asserts:
+      - equal:
+          path: spec.serviceAccountName
+          value: my-test-sa
+  - it: uses auto-generated name for test per-service SA
+    set:
+      test:
+        serviceAccount:
+          create: true
+    asserts:
+      - equal:
+          path: spec.serviceAccountName
+          value: RELEASE-NAME-temporal-test
+  - it: falls back to global SA when test serviceAccount is empty
+    set:
+      serviceAccount:
+        create: true
+      test:
+        serviceAccount: {}
+    asserts:
+      - equal:
+          path: spec.serviceAccountName
+          value: RELEASE-NAME-temporal

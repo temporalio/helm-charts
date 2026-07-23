@@ -310,6 +310,11 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+    serviceAccount: {}
+    # serviceAccount:
+    #   create: false
+    #   name: "frontend-service-account"
+    #   extraAnnotations: {}
   internal-frontend:
     # Enable this to create internal-frontend
     enabled: false
@@ -351,6 +356,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+    serviceAccount: {}
   history:
     enabled: true
     service:
@@ -381,6 +387,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+    serviceAccount: {}
   matching:
     enabled: true
     service:
@@ -411,6 +418,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+    serviceAccount: {}
   worker:
     enabled: true
     service:
@@ -441,6 +449,7 @@ server:
     containerSecurityContext: {}
     topologySpreadConstraints: []
     podDisruptionBudget: {}
+    serviceAccount: {}
 admintools:
   enabled: true
   image:
@@ -472,6 +481,7 @@ admintools:
   securityContext: {}
   minReadySeconds: 0
   podDisruptionBudget: {}
+  serviceAccount: {}
 web:
   # additionalInitContainers: []
   enabled: true
@@ -546,6 +556,7 @@ web:
   topologySpreadConstraints: []
   minReadySeconds: 0
   podDisruptionBudget: {}
+  serviceAccount: {}
 schema:
   # Use Helm hooks to ensure schema setup completes before server pods start.
   # Set to false if using Flux, Rancher or Terraform.
@@ -559,6 +570,7 @@ schema:
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
+  serviceAccount: {}
 shims:
   # Enable compatibility with Temporal 1.29 images. Set to false if using Temporal 1.30 or higher.
   dockerize: true
@@ -571,3 +583,4 @@ test:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  serviceAccount: {}

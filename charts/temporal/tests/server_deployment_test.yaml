@@ -416,3 +416,111 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
+
+  - it: uses global service account by default
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    set:
+      serviceAccount:
+        create: true
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal
+
+  - it: uses default service account when serviceAccount.create is false
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: default
+
+  - it: uses per-service SA for frontend when configured
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      serviceAccount:
+        create: true
+      server:
+        frontend:
+          serviceAccount:
+            create: true
+            name: my-frontend-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: my-frontend-sa
+
+  - it: other services still use global SA when only frontend has per-service SA
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-history
+    set:
+      serviceAccount:
+        create: true
+      server:
+        frontend:
+          serviceAccount:
+            create: true
+            name: my-frontend-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal
+
+  - it: uses auto-generated name for per-service SA when name is not set
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        frontend:
+          serviceAccount:
+            create: true
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal-frontend
+
+  - it: falls back to global SA when per-service serviceAccount is empty
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      serviceAccount:
+        create: true
+      server:
+        frontend:
+          serviceAccount: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal
+
+  - it: uses custom name from per-service SA without create
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        frontend:
+          serviceAccount:
+            create: false
+            name: externally-managed-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: externally-managed-sa
