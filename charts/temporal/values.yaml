@@ -252,6 +252,10 @@ server:
     namespaces:
       # Enable this to create namespaces
       create: false
+      # Use Helm hooks to ensure namespace creation runs as a post-install/post-upgrade step,
+      # after the frontend is created, and is cleaned up automatically on the next release.
+      # Set to false if using Flux, Rancher or Terraform.
+      useHelmHooks: true
       namespace:
         - name: default
           retention: 3d
