@@ -84,6 +84,10 @@ server:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  # Default scheduling values for all server services. Each service can override these below.
+  schedulerName: ""
+  runtimeClassName: ""
+  priorityClassName: ""
   minReadySeconds: 0
   terminationGracePeriodSeconds: null
   additionalVolumes: []
@@ -309,6 +313,9 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
+    schedulerName: ""
+    runtimeClassName: ""
+    priorityClassName: ""
     podDisruptionBudget: {}
   internal-frontend:
     # Enable this to create internal-frontend
@@ -350,6 +357,9 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
+    schedulerName: ""
+    runtimeClassName: ""
+    priorityClassName: ""
     podDisruptionBudget: {}
   history:
     enabled: true
@@ -380,6 +390,9 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
+    schedulerName: ""
+    runtimeClassName: ""
+    priorityClassName: ""
     podDisruptionBudget: {}
   matching:
     enabled: true
@@ -410,6 +423,9 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
+    schedulerName: ""
+    runtimeClassName: ""
+    priorityClassName: ""
     podDisruptionBudget: {}
   worker:
     enabled: true
@@ -440,6 +456,9 @@ server:
     additionalEnv: []
     containerSecurityContext: {}
     topologySpreadConstraints: []
+    schedulerName: ""
+    runtimeClassName: ""
+    priorityClassName: ""
     podDisruptionBudget: {}
 admintools:
   enabled: true
@@ -459,6 +478,9 @@ admintools:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  schedulerName: ""
+  runtimeClassName: ""
+  priorityClassName: ""
   additionalVolumes: []
   additionalVolumeMounts: []
   additionalEnv: []
@@ -544,6 +566,9 @@ web:
   containerSecurityContext: {}
   securityContext: {}
   topologySpreadConstraints: []
+  schedulerName: ""
+  runtimeClassName: ""
+  priorityClassName: ""
   minReadySeconds: 0
   podDisruptionBudget: {}
 schema:

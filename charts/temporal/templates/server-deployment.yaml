@@ -193,6 +193,15 @@ spec:
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+    {{- with (default $.Values.server.schedulerName $serviceValues.schedulerName) }}
+      schedulerName: {{ . }}
+    {{- end }}
+    {{- with (default $.Values.server.runtimeClassName $serviceValues.runtimeClassName) }}
+      runtimeClassName: {{ . }}
+    {{- end }}
+    {{- with (default $.Values.server.priorityClassName $serviceValues.priorityClassName) }}
+      priorityClassName: {{ . }}
+    {{- end }}
       terminationGracePeriodSeconds: {{ default $.Values.server.terminationGracePeriodSeconds $serviceValues.terminationGracePeriodSeconds }}
 ---
 {{- end }}

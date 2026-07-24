@@ -106,4 +106,13 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+    {{- with .Values.admintools.schedulerName }}
+      schedulerName: {{ . }}
+    {{- end }}
+    {{- with .Values.admintools.runtimeClassName }}
+      runtimeClassName: {{ . }}
+    {{- end }}
+    {{- with .Values.admintools.priorityClassName }}
+      priorityClassName: {{ . }}
+    {{- end }}
 {{- end }}
