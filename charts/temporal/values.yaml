@@ -571,3 +571,10 @@ test:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+
+tls:
+  enabled: false
+  cert: |
+  key: |
+  # Optional CA certificate
+  ca: |
