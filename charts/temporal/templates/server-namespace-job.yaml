@@ -1,14 +1,21 @@
 {{- if $.Values.server.config.namespaces.create }}
-{{- $jobName := include "temporal.componentname" (list $ (printf "namespace-%s-%d" $.Chart.Version $.Release.Revision | replace "." "-" | replace "+" "-")) }}
+{{- $jobName := ternary (printf "%s-namespace" (include "temporal.fullname" $)) (include "temporal.componentname" (list $ (printf "namespace-%s-%d" $.Chart.Version $.Release.Revision | replace "." "-" | replace "+" "-"))) $.Values.server.config.namespaces.useHelmHooks }}
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ $jobName }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
-  {{- with $.Values.schema.jobAnnotations }}
+  {{- if or $.Values.server.config.namespaces.useHelmHooks $.Values.schema.jobAnnotations }}
   annotations:
+    {{- if $.Values.server.config.namespaces.useHelmHooks }}
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    {{- end }}
+    {{- with $.Values.schema.jobAnnotations }}
     {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- end }}
 spec:
   backoffLimit: {{ $.Values.schema.backoffLimit }}

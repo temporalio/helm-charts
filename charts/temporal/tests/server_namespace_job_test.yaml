@@ -24,7 +24,25 @@ tests:
       - containsDocument:
           kind: Job
           apiVersion: batch/v1
-  - it: replaces build metadata separators in the namespace job name
+  - it: uses a fixed job name when useHelmHooks is true
+    release:
+      name: test
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            useHelmHooks: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: metadata.name
+          value: test-temporal-namespace
+      - equal:
+          path: spec.template.metadata.name
+          value: test-temporal-namespace
+  - it: replaces build metadata separators in the namespace job name when useHelmHooks is false
     release:
       name: test
     chart:
@@ -34,6 +52,7 @@ tests:
         config:
           namespaces:
             create: true
+            useHelmHooks: false
             namespace:
               - name: default
     asserts:
@@ -110,12 +129,31 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].envFrom[1].configMapRef.name
           value: env-configmap
-  - it: does not include Helm hook annotations
+  - it: includes Helm hook annotations by default
     set:
       server:
         config:
           namespaces:
             create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: post-install,post-upgrade
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "0"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-delete-policy"]
+          value: before-hook-creation,hook-succeeded
+  - it: does not include Helm hook annotations when useHelmHooks is false
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            useHelmHooks: false
             namespace:
               - name: default
     asserts:
