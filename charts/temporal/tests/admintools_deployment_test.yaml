@@ -64,3 +64,27 @@ tests:
           content:
             name: TEMPORAL_ADDRESS
             value: RELEASE-NAME-temporal-frontend:7233
+  - it: schedulerName, runtimeClassName and priorityClassName are unset by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.schedulerName
+      - notExists:
+          path: spec.template.spec.runtimeClassName
+      - notExists:
+          path: spec.template.spec.priorityClassName
+  - it: sets schedulerName, runtimeClassName and priorityClassName when configured
+    set:
+      admintools:
+        schedulerName: my-scheduler
+        runtimeClassName: my-runtime-class
+        priorityClassName: my-priority-class
+    asserts:
+      - equal:
+          path: spec.template.spec.schedulerName
+          value: my-scheduler
+      - equal:
+          path: spec.template.spec.runtimeClassName
+          value: my-runtime-class
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: my-priority-class

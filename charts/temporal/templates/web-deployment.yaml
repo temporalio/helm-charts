@@ -104,4 +104,13 @@ spec:
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+    {{- with .Values.web.schedulerName }}
+      schedulerName: {{ . }}
+    {{- end }}
+    {{- with .Values.web.runtimeClassName }}
+      runtimeClassName: {{ . }}
+    {{- end }}
+    {{- with .Values.web.priorityClassName }}
+      priorityClassName: {{ . }}
+    {{- end }}
   {{- end }}
