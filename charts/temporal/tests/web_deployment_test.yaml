@@ -1,0 +1,28 @@
+suite: test web deployment
+templates:
+  - web-deployment.yaml
+tests:
+  - it: schedulerName, runtimeClassName and priorityClassName are unset by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.schedulerName
+      - notExists:
+          path: spec.template.spec.runtimeClassName
+      - notExists:
+          path: spec.template.spec.priorityClassName
+  - it: sets schedulerName, runtimeClassName and priorityClassName when configured
+    set:
+      web:
+        schedulerName: my-scheduler
+        runtimeClassName: my-runtime-class
+        priorityClassName: my-priority-class
+    asserts:
+      - equal:
+          path: spec.template.spec.schedulerName
+          value: my-scheduler
+      - equal:
+          path: spec.template.spec.runtimeClassName
+          value: my-runtime-class
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: my-priority-class

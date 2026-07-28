@@ -6,25 +6,19 @@ clusters, namespace translation, encryption, and more.
 The chart deploys the proxy as a single Deployment fronted by a ClusterIP Service, with its runtime configuration
 supplied through a ConfigMap.
 
-> This chart is in alpha. The configuration surface and defaults may change between releases.
-
 ## Installation
 
 The chart is published to the Temporal Helm repo at `https://go.temporal.io/helm-charts`.
 
-Because releases are currently pre-release (alpha) versions, Helm will not select them unless you opt in with `--devel`
-or pin an explicit `--version`:
-
 ```bash
-# Install the latest pre-release
+# Install the latest release
 helm install temporal-proxy temporal-proxy \
-  --repo https://go.temporal.io/helm-charts \
-  --devel
+  --repo https://go.temporal.io/helm-charts
 
 # Or pin a specific version
 helm install temporal-proxy temporal-proxy \
   --repo https://go.temporal.io/helm-charts \
-  --version 0.1.0-alpha1
+  --version 0.1.0
 ```
 
 To install from a local checkout of this repo instead (useful when testing chart changes), run the following from the
