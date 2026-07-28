@@ -1,3 +1,4 @@
+{{- $rendered := include "temporal-proxy.rendered" . | fromYaml }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,4 +8,4 @@ metadata:
     {{- include "temporal-proxy.labels" . | nindent 4 }}
 data:
   config.yaml: |
-{{ tpl (toYaml .Values.config) . | indent 4 }}
+{{ $rendered.config | toYaml | indent 4 }}

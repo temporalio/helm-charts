@@ -1,16 +1,33 @@
 # Default values for temporal-proxy.
 
-# Raw configuration for the proxy.
-# Values are templates so you can reference other values as needed.
+# Proxy configuration, matching the temporal-proxy config schema.
+# See charts/temporal-proxy/README.md for the config supply model.
 config:
-  hostPort: :{{ .Values.service.port }}
-
   upstreams:
     - name: default
       hostPort: localhost:7233
 
   routing:
     default: default
+
+# Extra environment variables for the proxy container. Use these to supply
+# values referenced with ${VAR} in the config (e.g. Temporal Cloud account id,
+# KMS credentials). Chart-generated secret env vars are merged in automatically.
+env: []
+  # - name: TEMPORAL_ACCOUNT
+  #   value: a1b2c
+  # - name: TEMPORAL_API_KEY
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: temporal-cloud
+  #       key: api-key
+
+# Populate environment variables from Secrets or ConfigMaps.
+envFrom: []
+  # - configMapRef:
+  #     name: my-configmap
+  # - secretRef:
+  #     name: proxy-env
 
 # This will set the replicaset count more information can be found here:
 # https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/

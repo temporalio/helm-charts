@@ -1,3 +1,4 @@
+{{- $rendered := include "temporal-proxy.rendered" . | fromYaml }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -46,6 +47,16 @@ spec:
           env:
             - name: PROXY_CONFIG
               value: /etc/temporal-proxy/config.yaml
+            {{- with $rendered.env }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with .Values.env }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -65,6 +76,9 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/temporal-proxy
+          {{- with $rendered.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -72,6 +86,9 @@ spec:
         - name: config
           configMap:
             name: {{ include "temporal-proxy.fullname" . }}
+      {{- with $rendered.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
