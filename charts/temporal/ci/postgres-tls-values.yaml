@@ -1,5 +1,11 @@
 # CI case: full TLS (internode + frontend + web) with certificates issued by
-# cert-manager. cert-manager is installed by the CI workflow before this runs.
+# cert-manager, and mutual TLS (requireClientAuth) on the frontend. cert-manager
+# is installed by the CI workflow before this runs.
+#
+# There is no internal-frontend here, so every client — the health-check test
+# pod, the namespace-setup job, the Web UI and the internal system worker — goes
+# through the external frontend, which exercises the frontend mTLS wiring end to
+# end.
 #
 # The cert-manager Issuer/Certificate resources are created via extraObjects;
 # each Certificate writes a kubernetes.io/tls secret that server.tls/web.tls
@@ -43,6 +49,10 @@ server:
       enabled: true
       secretName: temporal-frontend-tls
       serverName: temporal-frontend
+      # Require and verify client certificates on the frontend (mutual TLS). All
+      # certificates below are issued by the same CA, so the frontend trusts the
+      # certs presented by the CLI pods, the Web UI and the internal components.
+      requireClientAuth: true
 
 web:
   tls:

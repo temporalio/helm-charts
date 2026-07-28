@@ -340,15 +340,24 @@ disabled, so callers should gate on the enabled flags. */}}
 {{- end -}}
 
 {{/* Server: the config.tls block derived from server.tls. Renders "{}" when
-disabled. server.config.tls is deep-merged on top of this by the configmap. */}}
+disabled. server.config.tls is deep-merged on top of this by the configmap.
+
+requireClientAuth (mutual TLS) can be turned on either through the concise
+server.tls.<section>.requireClientAuth flag or through a server.config.tls
+override that is merged on top. We resolve the effective value from both so that
+clientCaFiles (which the server needs to verify client certs) is emitted no
+matter which one is used; without this, an override would enable the server-side
+requirement while leaving the server with no CA to verify clients against. */}}
 {{- define "temporal.server.tls.config" -}}
 {{- $tls := .Values.server.tls -}}
+{{- $rawTls := .Values.server.config.tls | default dict -}}
 {{- $config := dict -}}
 {{- range $section := list "internode" "frontend" -}}
 {{- $s := index $tls $section -}}
 {{- if $s.enabled -}}
-{{- $server := dict "certFile" (printf "%s/tls.crt" $s.mountPath) "keyFile" (printf "%s/tls.key" $s.mountPath) "requireClientAuth" $s.requireClientAuth -}}
-{{- if $s.requireClientAuth -}}
+{{- $requireClientAuth := or $s.requireClientAuth (dig $section "server" "requireClientAuth" false $rawTls) -}}
+{{- $server := dict "certFile" (printf "%s/tls.crt" $s.mountPath) "keyFile" (printf "%s/tls.key" $s.mountPath) "requireClientAuth" $requireClientAuth -}}
+{{- if $requireClientAuth -}}
 {{- $_ := set $server "clientCaFiles" (list (printf "%s/ca.crt" $s.mountPath)) -}}
 {{- end -}}
 {{- $serverName := required (printf "server.tls.%s.serverName is required when server.tls.%s.enabled is true" $section $section) $s.serverName -}}
@@ -405,8 +414,11 @@ Each connects either to the external frontend or, when enabled, to the
 internal-frontend, and those two paths terminate TLS with different certificates:
 the frontend uses server.tls.frontend, while the internal-frontend uses the
 internode config (server.tls.internode). The helpers take the resolved section
-name ("frontend" or "internode") so the matching secret, serverName and
-client-auth setting are wired. The secret is mounted at a fixed path,
+name ("frontend" or "internode") so the matching secret and serverName are
+wired. A client certificate is always presented so the pods keep working when
+the target requires client auth (mutual TLS), however that requirement was
+turned on; a client cert the server does not ask for is simply never sent, so
+this is harmless otherwise. The secret is mounted at a fixed path,
 /etc/temporal/tls/client. Note the CLI env var names differ from the Web UI's.
 
 temporal.adminClient.tls.section resolves which section applies from whether the
@@ -433,10 +445,8 @@ chart-managed TLS, and callers gate on the empty string.
 {{- $env = append $env (dict "name" "TEMPORAL_TLS" "value" "true") -}}
 {{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_CA_CERT_PATH" "value" "/etc/temporal/tls/client/ca.crt") -}}
 {{- $env = append $env (dict "name" "TEMPORAL_TLS_SERVER_NAME" "value" (required (printf "server.tls.%s.serverName is required when server.tls.%s.enabled is true" $section $section) $tls.serverName)) -}}
-{{- if $tls.requireClientAuth -}}
 {{- $env = append $env (dict "name" "TEMPORAL_TLS_CLIENT_CERT_PATH" "value" "/etc/temporal/tls/client/tls.crt") -}}
 {{- $env = append $env (dict "name" "TEMPORAL_TLS_CLIENT_KEY_PATH" "value" "/etc/temporal/tls/client/tls.key") -}}
-{{- end -}}
 {{- end -}}
 {{- toYaml $env -}}
 {{- end -}}

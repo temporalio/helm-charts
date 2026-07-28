@@ -109,6 +109,9 @@ tests:
       - matchRegex:
           path: data['config_template.yaml']
           pattern: 'rootCaFiles:'
+      - notMatchRegex:
+          path: data['config_template.yaml']
+          pattern: 'clientCaFiles:'
 
   - it: deep-merges explicit server.config.tls over generated config
     set:
@@ -131,6 +134,11 @@ tests:
       - matchRegex:
           path: data['config_template.yaml']
           pattern: 'requireClientAuth: true'
+      # Enabling mutual TLS through the override must also emit clientCaFiles so
+      # the frontend has a CA to verify client certificates against.
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'clientCaFiles:'
 
   - it: fails when a tls section is enabled without a secretName
     set:
@@ -270,14 +278,26 @@ tests:
           content:
             name: TEMPORAL_TLS_SERVER_NAME
             value: temporal-frontend
-      # requireClientAuth defaults to false, so no client cert is presented
-      - notExists:
-          path: spec.containers[0].env[?(@.name=='TEMPORAL_TLS_CLIENT_CERT_PATH')]
+      # A client cert is always presented so the pod keeps working if the
+      # frontend requires client auth; the server ignores it otherwise.
+      - contains:
+          path: spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_CLIENT_CERT_PATH
+            value: /etc/temporal/tls/client/tls.crt
+      - contains:
+          path: spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_CLIENT_KEY_PATH
+            value: /etc/temporal/tls/client/tls.key
       - equal:
           path: spec.volumes[?(@.name=='client-tls')].secret.secretName
           value: my-frontend-secret
 
-  - it: presents a client certificate when the frontend requires client auth
+  - it: still presents a client certificate when requireClientAuth is set via server.config.tls
+    # Regression test: enabling mutual TLS through the raw config override (rather
+    # than server.tls.frontend.requireClientAuth) must not leave the client pods
+    # without a certificate.
     set:
       server:
         tls:
@@ -285,7 +305,11 @@ tests:
             enabled: true
             secretName: my-frontend-secret
             serverName: temporal-frontend
-            requireClientAuth: true
+        config:
+          tls:
+            frontend:
+              server:
+                requireClientAuth: true
     template: templates/test.yaml
     asserts:
       - contains:
@@ -344,8 +368,8 @@ tests:
 
   - it: wires the namespace job with internode tls when it targets the internal-frontend
     # internal-frontend is the default target, and it terminates TLS with the
-    # internode config, so the job uses the internode secret and (because
-    # internode requireClientAuth defaults to true) presents a client cert.
+    # internode config, so the job uses the internode secret and presents a
+    # client cert.
     set:
       server:
         internal-frontend:
@@ -409,6 +433,10 @@ tests:
       - equal:
           path: spec.template.spec.volumes[?(@.name=='client-tls')].secret.secretName
           value: my-frontend-secret
-      # frontend requireClientAuth defaults to false, so no client cert is presented
-      - notExists:
-          path: spec.template.spec.initContainers[0].env[?(@.name=='TEMPORAL_TLS_CLIENT_CERT_PATH')]
+      # A client cert is always presented so the job keeps working if the
+      # frontend requires client auth; the server ignores it otherwise.
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: TEMPORAL_TLS_CLIENT_CERT_PATH
+            value: /etc/temporal/tls/client/tls.crt

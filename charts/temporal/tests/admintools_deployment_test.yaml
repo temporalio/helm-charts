@@ -111,9 +111,13 @@ tests:
       - equal:
           path: spec.template.spec.volumes[?(@.name=='client-tls')].secret.secretName
           value: my-frontend-secret
-      # frontend requireClientAuth defaults to false, so no client cert is presented
-      - notExists:
-          path: spec.template.spec.containers[0].env[?(@.name=='TEMPORAL_TLS_CLIENT_CERT_PATH')]
+      # A client cert is always presented so admintools keeps working if the
+      # frontend requires client auth; the server ignores it otherwise.
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_TLS_CLIENT_CERT_PATH
+            value: /etc/temporal/tls/client/tls.crt
   - it: wires internode tls when it targets the internal-frontend
     set:
       server:

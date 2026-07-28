@@ -115,6 +115,12 @@ server:
       enabled: false
       secretName: ""
       mountPath: /etc/temporal/tls/frontend
+      # Require and verify client certificates on frontend connections (mutual
+      # TLS). The chart's own CLI pods (admintools, namespace job, health check)
+      # and the Web UI present a client certificate automatically; the internal
+      # server components present the internode certificate, so enable
+      # server.tls.internode and issue every certificate from a CA the frontend
+      # trusts when turning this on.
       requireClientAuth: false
       # DNS name clients expect in the frontend certificate (a SAN on the cert).
       # Required when frontend.enabled is true.
