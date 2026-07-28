@@ -78,11 +78,16 @@ spec:
   # The other ports are listed here solely to allow Istio to configure itself to intercept traffic.
   # https://istio.io/latest/docs/ops/configuration/traffic-management/traffic-routing/#headless-services
   ports:
+    {{- /* The worker role serves no gRPC API and its pods declare no `rpc`
+         container port (see server-deployment.yaml), so a `grpc-rpc` port here
+         would never resolve to an endpoint. */}}
+    {{- if ne $service "worker" }}
     - port: {{ $serviceValues.service.port }}
       targetPort: rpc
       appProtocol: {{ $serviceValues.service.appProtocol }}
       protocol: TCP
       name: grpc-rpc
+    {{- end }}
     - port: {{ $serviceValues.service.membershipPort }}
       targetPort: membership
       appProtocol: {{ $serviceValues.service.membershipAppProtocol }}
