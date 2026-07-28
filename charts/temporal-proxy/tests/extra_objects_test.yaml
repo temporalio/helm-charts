@@ -73,3 +73,32 @@ tests:
       - equal:
           path: metadata.name
           value: temporal-proxy-config
+
+  - it: renders multiple extra objects
+    set:
+      extraObjects:
+        - |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: test-config-1
+          data:
+            key: value1
+        - |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: test-config-2
+          data:
+            key: value2
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.name
+          value: test-config-1
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: test-config-2
+        documentIndex: 1

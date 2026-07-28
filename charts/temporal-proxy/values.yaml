@@ -134,4 +134,6 @@ podDisruptionBudget: {}
   # minAvailable: 1
 
 # Array of extra K8s manifests to deploy, e.g. an ExternalSecret for upstream mTLS credentials.
+# Note: unlike the chart's other templates, these objects are rendered as-is and do not
+# automatically inherit the release namespace, labels, or other chart-wide values.
 extraObjects: []
