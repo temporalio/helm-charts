@@ -1,4 +1,16 @@
 {{- if $.Values.admintools.enabled }}
+{{- /* By default the admin tools target the internal-frontend when it is enabled
+(which grants admin without an external Authorizer); set
+admintools.useExternalFrontend to true to route through the external frontend
+instead. The two paths terminate TLS with different certificates, so resolve the
+section accordingly. A custom admintools.temporalAddress points somewhere the
+chart cannot reason about, so skip chart-managed TLS then and let the user wire
+it via admintools.additionalEnv/additionalVolumes. */}}
+{{- $useInternalFrontend := and (index $.Values.server "internal-frontend").enabled (not $.Values.admintools.useExternalFrontend) }}
+{{- $tlsSection := "" }}
+{{- if not $.Values.admintools.temporalAddress }}
+{{- $tlsSection = include "temporal.adminClient.tls.section" (list $ $useInternalFrontend) }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,7 +48,7 @@ spec:
           env:
             # TEMPORAL_CLI_ADDRESS is deprecated, use TEMPORAL_ADDRESS instead
             - name: TEMPORAL_CLI_ADDRESS
-              {{- if (index $.Values.server "internal-frontend").enabled }}
+              {{- if $useInternalFrontend }}
               value: {{ include "temporal.internalFrontendAddress" $ }}
               {{- else }}
               value: {{ include "temporal.frontendAddress" $ }}
@@ -44,11 +56,14 @@ spec:
             - name: TEMPORAL_ADDRESS
               {{- if .Values.admintools.temporalAddress }}
               value: {{ .Values.admintools.temporalAddress }}
-              {{- else if (index $.Values.server "internal-frontend").enabled }}
+              {{- else if $useInternalFrontend }}
               value: {{ include "temporal.internalFrontendAddress" $ }}
               {{- else }}
               value: {{ include "temporal.frontendAddress" $ }}
               {{- end }}
+          {{- if $tlsSection }}
+          {{- include "temporal.adminClient.tls.env" (list $ $tlsSection) | nindent 12 }}
+          {{- end }}
           {{- with .Values.admintools.additionalEnv }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -70,9 +85,14 @@ spec:
                 - /
               initialDelaySeconds: 5
               periodSeconds: 5
-          {{- with $.Values.admintools.additionalVolumeMounts }}
+          {{- if or $.Values.admintools.additionalVolumeMounts $tlsSection }}
           volumeMounts:
+          {{- with $.Values.admintools.additionalVolumeMounts }}
             {{- toYaml . | nindent 12}}
+          {{- end }}
+          {{- if $tlsSection }}
+          {{- include "temporal.adminClient.tls.volumeMounts" (list $ $tlsSection) | nindent 12 }}
+          {{- end }}
           {{- end }}
           {{- with .Values.admintools.resources }}
           resources:
@@ -90,9 +110,14 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $.Values.admintools.additionalVolumes }}
+      {{- if or $.Values.admintools.additionalVolumes $tlsSection }}
       volumes:
+      {{- with $.Values.admintools.additionalVolumes }}
         {{- toYaml . | nindent 8}}
+      {{- end }}
+      {{- if $tlsSection }}
+      {{- include "temporal.adminClient.tls.volumes" (list $ $tlsSection) | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- with .Values.admintools.nodeSelector }}
       nodeSelector:

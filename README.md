@@ -429,6 +429,19 @@ Reference: <https://docs.temporal.io/references/web-ui-server-env-vars>
 
 The frontend and internal-frontend Deployments default to a `tcpSocket` readinessProbe, which works regardless of whether TLS is configured. If you are not using TLS and want a richer health check, you can opt into a gRPC probe by uncommenting the example block at `server.frontend.readinessProbe` (or `server.internal-frontend.readinessProbe`) in `values.yaml`. gRPC probes are not compatible with TLS — see [kubernetes/enhancements#4939](https://github.com/kubernetes/enhancements/issues/4939).
 
+### Admin tools and namespace creation: which frontend they use
+
+The admin tools Deployment and the namespace-setup Job (`server.config.namespaces.create`) are `temporal` CLI clients. When `server.internal-frontend` is enabled, both connect to the **internal-frontend** by default. The internal-frontend is intended for Temporal's own internal nodes and grants admin access without going through an external Authorizer/ClaimMapper, which is convenient for these admin operations. When the internal-frontend is not enabled, they connect to the external frontend.
+
+If you would rather route them through the external frontend — for example so they are subject to your Authorizer and you authenticate them explicitly, instead of relying on the internal-frontend's admin bypass — set:
+
+- `admintools.useExternalFrontend: true` for the admin tools Deployment, and/or
+- `server.config.namespaces.useExternalFrontend: true` for the namespace-setup Job.
+
+In that case, with an Authorizer/ClaimMapper on the frontend, give them admin credentials (for example a token or mTLS client certificate via `admintools.additionalEnv` / `admintools.additionalEnvSecretName`), or create the namespaces out of band and leave `server.config.namespaces.create` disabled.
+
+When server TLS is enabled (see `server.tls`), the chart wires the matching client certificate for whichever frontend each pod targets — the `server.tls.internode` secret for the internal-frontend, the `server.tls.frontend` secret for the external frontend — and sets the corresponding `TEMPORAL_TLS_*` environment. This is skipped for the admin tools when a custom `admintools.temporalAddress` is set, and for the Job when it targets an external ingress host; in those cases wire TLS yourself via the `additionalEnv` / `additionalVolumes` fields.
+
 ## Play With It
 
 ### Exploring Your Cluster
