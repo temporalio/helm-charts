@@ -1,0 +1,19 @@
+renders defaults:
+  1: |
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      labels:
+        app.kubernetes.io/instance: temporal-proxy
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: temporal-proxy
+        app.kubernetes.io/version: 1.0.0
+        helm.sh/chart: temporal-proxy-1.0.0
+      name: temporal-proxy
+      namespace: temporal-proxy
+    spec:
+      minAvailable: 1
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: temporal-proxy
+          app.kubernetes.io/name: temporal-proxy
