@@ -5,6 +5,7 @@
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: {{ include "temporal.kubernetesNamespace" $ }}
   name: {{ include "temporal.componentname" (list $ $service) }}
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "service") | nindent 4 }}
@@ -49,6 +50,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: {{ include "temporal.kubernetesNamespace" $ }}
   name: {{ include "temporal.componentname" (list $ (printf "%s-headless" $service)) }}
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}

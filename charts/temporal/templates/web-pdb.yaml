@@ -3,6 +3,7 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
+  namespace: {{ include "temporal.kubernetesNamespace" $ }}
   name: {{ include "temporal.componentname" (list $ "web") }}-pdb
   labels:
     {{- include "temporal.resourceLabels" (list $ "web" "") | nindent 4 }}

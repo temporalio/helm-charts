@@ -2,6 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
+  namespace: {{ include "temporal.kubernetesNamespace" $ }}
   name: {{ $jobName }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}

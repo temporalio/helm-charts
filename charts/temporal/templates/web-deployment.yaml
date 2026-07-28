@@ -42,7 +42,7 @@ spec:
               {{- if .Values.web.temporalAddress }}
               value: {{ .Values.web.temporalAddress }}
               {{- else }}
-              value: {{ include "temporal.frontendAddress.fqdn" $ }}
+              value: {{ include "temporal.frontendAddress" $ }}
               {{- end }}
           {{- if .Values.web.additionalEnv }}
           {{- toYaml .Values.web.additionalEnv | nindent 12 }}
