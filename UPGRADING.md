@@ -254,15 +254,15 @@ admintools:
   additionalEnvConfigMapName: my-configmap
 ```
 
-#### Disable Shims
-- `shims.dockerize` - Enable compatibility with Temporal 1.29 images (default: `true`). Set to `false` if using Temporal 1.30 or higher.
-- `shims.elasticsearchTool` - Enable compatibility with Temporal 1.29 images (default: `true`). Set to `false` if using Temporal 1.30 or higher.
+#### Enable Shims
+- `shims.dockerize` - Enable compatibility with Temporal 1.29 images (default: `false`). Set to `true` if using Temporal 1.29.
+- `shims.elasticsearchTool` - Enable compatibility with Temporal 1.29 images (default: `false`). Set to `true` if using Temporal 1.29.
 
 **Example:**
 ```yaml
 shims:
-  dockerize: false  # Disable if using Temporal 1.30+
-  elasticsearchTool: false  # Disable if using Temporal 1.30+
+  dockerize: true  # Enable if using Temporal 1.29
+  elasticsearchTool: true  # Enable if using Temporal 1.29
 ```
 
 #### Schema Job Annotations
