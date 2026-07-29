@@ -310,6 +310,7 @@ server:
           retention: 3d
   frontend:
     enabled: true
+    lifecycle: {}
     service:
       # Evaluated as template
       annotations: {}
@@ -369,6 +370,7 @@ server:
   internal-frontend:
     # Enable this to create internal-frontend
     enabled: false
+    lifecycle: {}
     service:
       # Evaluated as template
       annotations: {}
@@ -412,6 +414,7 @@ server:
     podDisruptionBudget: {}
   history:
     enabled: true
+    lifecycle: {}
     service:
       # type: ClusterIP
       port: 7234
@@ -445,6 +448,7 @@ server:
     podDisruptionBudget: {}
   matching:
     enabled: true
+    lifecycle: {}
     service:
       # type: ClusterIP
       port: 7235
@@ -478,6 +482,7 @@ server:
     podDisruptionBudget: {}
   worker:
     enabled: true
+    lifecycle: {}
     service:
       # type: ClusterIP
       port: 7239
@@ -511,6 +516,7 @@ server:
     podDisruptionBudget: {}
 admintools:
   enabled: true
+  lifecycle: {}
   # By default the admin tools connect to the internal-frontend when it is
   # enabled, which grants admin access without an external Authorizer. Set this
   # to true to connect through the external frontend instead (e.g. when the
@@ -559,6 +565,7 @@ web:
     repository: temporalio/ui
     tag: 2.52.0
     pullPolicy: IfNotPresent
+  lifecycle: {}
   service:
     # set type to NodePort if access to web needs access from outside the cluster
     # for more info see https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
