@@ -657,9 +657,9 @@ schema:
   securityContext: {}
 shims:
   # Enable compatibility with Temporal 1.29 images. Set to false if using Temporal 1.30 or higher.
-  dockerize: true
+  dockerize: false
   # Enable compatibility with Temporal 1.29 images. Set to false if using Temporal 1.30 or higher.
-  elasticsearchTool: true
+  elasticsearchTool: false
 test:
   podAnnotations: {}
   podLabels: {}
