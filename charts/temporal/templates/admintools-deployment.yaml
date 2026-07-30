@@ -78,6 +78,12 @@ spec:
                 name: {{ . }}
           {{- end }}
           {{- end }}
+          {{- if .Values.admintools.lifecycle }}
+          lifecycle:
+          {{- with .Values.admintools.lifecycle }}
+            {{ . | nindent 12 }}
+          {{- end }}
+          {{- end }}
           livenessProbe:
               exec:
                 command:

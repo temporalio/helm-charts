@@ -119,6 +119,12 @@ spec:
               containerPort: 9090
               protocol: TCP
           {{- if ne $service "worker" }}
+          {{- if $serviceValues.lifecycle }}
+          lifecycle:
+          {{- with $serviceValues.lifecycle -}}
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
           livenessProbe:
             initialDelaySeconds: 150
             tcpSocket:
