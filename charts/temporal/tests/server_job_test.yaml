@@ -860,4 +860,3 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: RELEASE-NAME-temporal
-          
