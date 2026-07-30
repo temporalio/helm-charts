@@ -43,10 +43,83 @@ Create the name of the service account
 {{- end -}}
 
 {{/*
-Define the service account as needed
+Return the service account config for a specific component.
+*/}}
+{{- define "temporal.componentServiceAccountConfig" -}}
+{{- $global := index . 0 -}}
+{{- $component := index . 1 -}}
+{{- $componentValues := dict -}}
+{{- if hasKey $global.Values.server $component -}}
+  {{- $componentValues = index $global.Values.server $component -}}
+{{- else if hasKey $global.Values $component -}}
+  {{- $componentValues = index $global.Values $component -}}
+{{- end -}}
+{{- $componentSA := dict -}}
+{{- if and (kindIs "map" $componentValues) (hasKey $componentValues "serviceAccount") -}}
+  {{- $componentSA = index $componentValues "serviceAccount" -}}
+{{- end -}}
+{{- if kindIs "map" $componentSA -}}
+{{- $componentSA | toYaml -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return whether a component should render its own service account.
+*/}}
+{{- define "temporal.componentServiceAccountEnabled" -}}
+{{- $global := index . 0 -}}
+{{- $component := index . 1 -}}
+{{- $componentValues := dict -}}
+{{- if hasKey $global.Values.server $component -}}
+  {{- $componentValues = index $global.Values.server $component -}}
+{{- else if hasKey $global.Values $component -}}
+  {{- $componentValues = index $global.Values $component -}}
+{{- end -}}
+{{- if and (kindIs "map" $componentValues) (hasKey $componentValues "enabled") (not $componentValues.enabled) -}}
+false
+{{- else -}}
+true
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the service account name for a specific component.
+Usage: {{ include "temporal.componentServiceAccountName" (list $ "frontend") }}
+Looks up the component-specific serviceAccount first; falls back to the global one.
+For server sub-services the path is server.<svc>.serviceAccount;
+for top-level components (admintools, web, schema, test) the path is <component>.serviceAccount.
+*/}}
+{{- define "temporal.componentServiceAccountName" -}}
+{{- $global := index . 0 -}}
+{{- $component := index . 1 -}}
+{{- $componentSA := include "temporal.componentServiceAccountConfig" (list $global $component) | fromYaml -}}
+{{- if and (kindIs "map" $componentSA) (hasKey $componentSA "name") -}}
+  {{- if eq (default false $componentSA.create) true -}}
+    {{ default (include "temporal.componentname" (list $global $component)) $componentSA.name }}
+  {{- else -}}
+    {{ $componentSA.name }}
+  {{- end -}}
+{{- else if and (kindIs "map" $componentSA) (eq (default false $componentSA.create) true) -}}
+  {{ include "temporal.componentname" (list $global $component) }}
+{{- else -}}
+  {{ include "temporal.serviceAccountName" $global }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Define the service account as needed.
+When called with just $, uses the global SA (backward compat).
 */}}
 {{- define "temporal.serviceAccount" -}}
 serviceAccountName: {{ include "temporal.serviceAccountName" . }}
+{{- end -}}
+
+{{/*
+Define the service account for a specific component.
+Usage: {{ include "temporal.componentServiceAccount" (list $ "frontend") }}
+*/}}
+{{- define "temporal.componentServiceAccount" -}}
+serviceAccountName: {{ include "temporal.componentServiceAccountName" . }}
 {{- end -}}
 
 {{/*

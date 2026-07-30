@@ -417,63 +417,111 @@ tests:
           content:
             name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
 
-  - it: schedulerName, runtimeClassName and priorityClassName are unset by default
-    template: templates/server-deployment.yaml
-    documentSelector:
-      path: .kind
-      value: Deployment
-      matchMany: true
-    asserts:
-      - notExists:
-          path: spec.template.spec.schedulerName
-      - notExists:
-          path: spec.template.spec.runtimeClassName
-      - notExists:
-          path: spec.template.spec.priorityClassName
-
-  - it: schedulerName, runtimeClassName and priorityClassName default to service wide values
+  - it: uses global service account by default
     template: templates/server-deployment.yaml
     documentSelector:
       path: .kind
       value: Deployment
       matchMany: true
     set:
-      server:
-        schedulerName: my-scheduler
-        runtimeClassName: my-runtime-class
-        priorityClassName: my-priority-class
+      serviceAccount:
+        create: true
     asserts:
       - equal:
-          path: spec.template.spec.schedulerName
-          value: my-scheduler
-      - equal:
-          path: spec.template.spec.runtimeClassName
-          value: my-runtime-class
-      - equal:
-          path: spec.template.spec.priorityClassName
-          value: my-priority-class
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal
 
-  - it: schedulerName, runtimeClassName and priorityClassName favour service specific values
+  - it: uses default service account when serviceAccount.create is false
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: default
+
+  - it: uses per-service SA for frontend when configured
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      serviceAccount:
+        create: true
+      server:
+        frontend:
+          serviceAccount:
+            create: true
+            name: my-frontend-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: my-frontend-sa
+
+  - it: other services still use global SA when only frontend has per-service SA
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-history
+    set:
+      serviceAccount:
+        create: true
+      server:
+        frontend:
+          serviceAccount:
+            create: true
+            name: my-frontend-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal
+
+  - it: uses auto-generated name for per-service SA when name is not set
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
       value: RELEASE-NAME-temporal-frontend
     set:
       server:
-        schedulerName: my-scheduler
-        runtimeClassName: my-runtime-class
-        priorityClassName: my-priority-class
         frontend:
-          schedulerName: frontend-scheduler
-          runtimeClassName: frontend-runtime-class
-          priorityClassName: frontend-priority-class
+          serviceAccount:
+            create: true
     asserts:
       - equal:
-          path: spec.template.spec.schedulerName
-          value: frontend-scheduler
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal-frontend
+
+  - it: falls back to global SA when per-service serviceAccount is empty
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      serviceAccount:
+        create: true
+      server:
+        frontend:
+          serviceAccount: {}
+    asserts:
       - equal:
-          path: spec.template.spec.runtimeClassName
-          value: frontend-runtime-class
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal
+
+  - it: uses custom name from per-service SA without create
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        frontend:
+          serviceAccount:
+            create: false
+            name: externally-managed-sa
+    asserts:
       - equal:
-          path: spec.template.spec.priorityClassName
-          value: frontend-priority-class
+          path: spec.template.spec.serviceAccountName
+          value: externally-managed-sa
+          

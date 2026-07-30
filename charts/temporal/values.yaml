@@ -366,6 +366,11 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
+    serviceAccount: {}
+    # serviceAccount:
+    #   create: false
+    #   name: "frontend-service-account"
+    #   extraAnnotations: {}
   internal-frontend:
     # Enable this to create internal-frontend
     enabled: false
@@ -410,6 +415,7 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
+    serviceAccount: {}
   history:
     enabled: true
     service:
@@ -443,6 +449,7 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
+    serviceAccount: {}
   matching:
     enabled: true
     service:
@@ -476,6 +483,7 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
+    serviceAccount: {}
   worker:
     enabled: true
     service:
@@ -509,6 +517,7 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
+    serviceAccount: {}
 admintools:
   enabled: true
   # By default the admin tools connect to the internal-frontend when it is
@@ -551,6 +560,7 @@ admintools:
   securityContext: {}
   minReadySeconds: 0
   podDisruptionBudget: {}
+  serviceAccount: {}
 web:
   # additionalInitContainers: []
   enabled: true
@@ -642,6 +652,7 @@ web:
   priorityClassName: ""
   minReadySeconds: 0
   podDisruptionBudget: {}
+  serviceAccount: {}
 schema:
   # Use Helm hooks to ensure schema setup completes before server pods start.
   # Set to false if using Flux, Rancher or Terraform.
@@ -655,6 +666,7 @@ schema:
   resources: {}
   containerSecurityContext: {}
   securityContext: {}
+  serviceAccount: {}
 shims:
   # Enable compatibility with Temporal 1.29 images. Set to true if using Temporal 1.29.
   dockerize: false
@@ -667,3 +679,4 @@ test:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+  serviceAccount: {}

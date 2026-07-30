@@ -741,3 +741,122 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="manage-schema-default-store")].env[?(@.name=="SQL_PORT")].value
           value: "5432"
+  - it: uses global service account by default
+    set:
+      serviceAccount:
+        create: true
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "db:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "db:3306"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal
+
+  - it: uses default service account when serviceAccount.create is false
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "db:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "db:3306"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: default
+
+  - it: uses per-service SA for schema when configured
+    set:
+      serviceAccount:
+        create: true
+      schema:
+        serviceAccount:
+          create: true
+          name: my-schema-sa
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "db:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "db:3306"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: my-schema-sa
+
+  - it: uses auto-generated name for schema per-service SA
+    set:
+      schema:
+        serviceAccount:
+          create: true
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "db:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "db:3306"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal-schema
+
+  - it: falls back to global SA when schema serviceAccount is empty
+    set:
+      serviceAccount:
+        create: true
+      schema:
+        serviceAccount: {}
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "db:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "db:3306"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal

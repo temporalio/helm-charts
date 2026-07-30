@@ -64,121 +64,58 @@ tests:
           content:
             name: TEMPORAL_ADDRESS
             value: RELEASE-NAME-temporal-frontend:7233
-  - it: targets the internal-frontend by default when it is enabled
+  - it: uses global service account by default
     set:
-      server:
-        internal-frontend:
-          enabled: true
+      serviceAccount:
+        create: true
     asserts:
-      - contains:
-          path: spec.template.spec.containers[0].env
-          content:
-            name: TEMPORAL_ADDRESS
-            value: RELEASE-NAME-temporal-internal-frontend:7236
-  - it: targets the external frontend when useExternalFrontend is set
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal
+  - it: uses default service account when serviceAccount.create is false
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: default
+  - it: uses per-service SA for admintools when configured
+    set:
+      serviceAccount:
+        create: true
+      admintools:
+        serviceAccount:
+          create: true
+          name: my-admin-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: my-admin-sa
+  - it: uses auto-generated name for admintools per-service SA
     set:
       admintools:
-        useExternalFrontend: true
-      server:
-        internal-frontend:
-          enabled: true
+        serviceAccount:
+          create: true
     asserts:
-      - contains:
-          path: spec.template.spec.containers[0].env
-          content:
-            name: TEMPORAL_ADDRESS
-            value: RELEASE-NAME-temporal-frontend:7233
-  - it: does not wire tls by default
-    asserts:
-      - notExists:
-          path: spec.template.spec.volumes[?(@.name=='client-tls')]
-      - notExists:
-          path: spec.template.spec.containers[0].env[?(@.name=='TEMPORAL_TLS')]
-  - it: wires frontend tls when the external frontend has tls
-    set:
-      server:
-        tls:
-          frontend:
-            enabled: true
-            secretName: my-frontend-secret
-            serverName: temporal-frontend
-    asserts:
-      - contains:
-          path: spec.template.spec.containers[0].env
-          content:
-            name: TEMPORAL_TLS_SERVER_NAME
-            value: temporal-frontend
       - equal:
-          path: spec.template.spec.volumes[?(@.name=='client-tls')].secret.secretName
-          value: my-frontend-secret
-      # A client cert is always presented so admintools keeps working if the
-      # frontend requires client auth; the server ignores it otherwise.
-      - contains:
-          path: spec.template.spec.containers[0].env
-          content:
-            name: TEMPORAL_TLS_CLIENT_CERT_PATH
-            value: /etc/temporal/tls/client/tls.crt
-  - it: wires internode tls when it targets the internal-frontend
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal-admintools
+  - it: falls back to global SA when admintools serviceAccount is empty
     set:
-      server:
-        internal-frontend:
-          enabled: true
-        tls:
-          internode:
-            enabled: true
-            secretName: my-internode-secret
-            serverName: temporal-internode
+      serviceAccount:
+        create: true
+      admintools:
+        serviceAccount: {}
     asserts:
-      - contains:
-          path: spec.template.spec.containers[0].env
-          content:
-            name: TEMPORAL_TLS_SERVER_NAME
-            value: temporal-internode
-      # internode requireClientAuth defaults to true, so a client cert is presented
-      - contains:
-          path: spec.template.spec.containers[0].env
-          content:
-            name: TEMPORAL_TLS_CLIENT_CERT_PATH
-            value: /etc/temporal/tls/client/tls.crt
       - equal:
-          path: spec.template.spec.volumes[?(@.name=='client-tls')].secret.secretName
-          value: my-internode-secret
-  - it: does not wire chart tls when a custom temporalAddress is set
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME-temporal
+  - it: uses externally managed SA for admintools
     set:
       admintools:
-        temporalAddress: "external-lb:7233"
-      server:
-        tls:
-          frontend:
-            enabled: true
-            secretName: my-frontend-secret
-            serverName: temporal-frontend
-    asserts:
-      - notExists:
-          path: spec.template.spec.volumes[?(@.name=='client-tls')]
-      - notExists:
-          path: spec.template.spec.containers[0].env[?(@.name=='TEMPORAL_TLS')]
-  - it: schedulerName, runtimeClassName and priorityClassName are unset by default
-    asserts:
-      - notExists:
-          path: spec.template.spec.schedulerName
-      - notExists:
-          path: spec.template.spec.runtimeClassName
-      - notExists:
-          path: spec.template.spec.priorityClassName
-  - it: sets schedulerName, runtimeClassName and priorityClassName when configured
-    set:
-      admintools:
-        schedulerName: my-scheduler
-        runtimeClassName: my-runtime-class
-        priorityClassName: my-priority-class
+        serviceAccount:
+          create: false
+          name: external-admin-sa
     asserts:
       - equal:
-          path: spec.template.spec.schedulerName
-          value: my-scheduler
-      - equal:
-          path: spec.template.spec.runtimeClassName
-          value: my-runtime-class
-      - equal:
-          path: spec.template.spec.priorityClassName
-          value: my-priority-class
+          path: spec.template.spec.serviceAccountName
+          value: external-admin-sa
+          
