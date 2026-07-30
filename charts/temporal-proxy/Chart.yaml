@@ -4,8 +4,8 @@ description: The Temporal proxy handles routing between clusters, namespace tran
 icon: https://raw.githubusercontent.com/temporalio/temporal-proxy/refs/heads/main/temporal-proxy-small.png
 
 type: application
-version: 0.1.0
-appVersion: v0.1.0
+version: 0.2.0
+appVersion: v0.2.0
 
 keywords:
   - temporal
