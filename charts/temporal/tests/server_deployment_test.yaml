@@ -78,7 +78,7 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].name
           value: my-init-container
-  - it: includes volume mounts with shim by default
+  - it: includes volume mounts without shim by default
     template: templates/server-deployment.yaml
     documentSelector:
       path: .kind
@@ -89,15 +89,15 @@ tests:
           path: spec.template.spec.containers[0].volumeMounts[?(@.name=='config')]
       - exists:
           path: spec.template.spec.containers[0].volumeMounts[?(@.name=='dynamic-config')]
-      - exists:
+      - notExists:
           path: spec.template.spec.containers[0].volumeMounts[?(@.name=='shims')]
       - exists:
           path: spec.template.spec.volumes[?(@.name=='config')]
       - exists:
           path: spec.template.spec.volumes[?(@.name=='dynamic-config')]
-      - exists:
+      - notExists:
           path: spec.template.spec.volumes[?(@.name=='shims')]
-  - it: includes additional volumes without shim when disabled
+  - it: includes volume mounts with shim when enabled
     template: templates/server-deployment.yaml
     documentSelector:
       path: .kind
@@ -105,13 +105,13 @@ tests:
       matchMany: true
     set:
       shims:
-        dockerize: false
+        dockerize: true
     asserts:
       - exists:
           path: spec.template.spec.volumes[?(@.name=='config')]
-      - notExists:
+      - exists:
           path: spec.template.spec.volumes[?(@.name=='shims')]
-      - notExists:
+      - exists:
           path: spec.template.spec.containers[0].volumeMounts[?(@.name=='shims')]
   - it: omits prometheus annotations when disabled
     template: templates/server-deployment.yaml

@@ -1,0 +1,11 @@
+{{- $rendered := include "temporal-proxy.rendered" . | fromYaml }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "temporal-proxy.fullname" . }}
+  namespace: {{ include "temporal-proxy.namespace" . }}
+  labels:
+    {{- include "temporal-proxy.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+{{ $rendered.config | toYaml | indent 4 }}
