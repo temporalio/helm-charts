@@ -524,3 +524,4 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: externally-managed-sa
+          

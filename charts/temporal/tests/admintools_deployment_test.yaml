@@ -118,3 +118,4 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: external-admin-sa
+          
