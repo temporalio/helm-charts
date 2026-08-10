@@ -43,7 +43,7 @@ spec:
       {{- end }}
       containers:
         - name: admin-tools
-          image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
+          image: "{{ include "temporal.imageRegistry" . }}{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
           imagePullPolicy: {{ .Values.admintools.image.pullPolicy }}
           env:
             # TEMPORAL_CLI_ADDRESS is deprecated, use TEMPORAL_ADDRESS instead

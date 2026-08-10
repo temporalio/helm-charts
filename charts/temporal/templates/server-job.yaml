@@ -42,7 +42,7 @@ spec:
         {{- range $_, $store := (include "temporal.persistence.eachStore" $ | fromYaml) }}
           {{- if $store.config.createDatabase }}
         - name: create-{{ $store.name }}-store
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          image: "{{ include "temporal.imageRegistry" $ }}{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
             {{- if eq $store.driver "cassandra" }}
           command: ['temporal-cassandra-tool', 'create', '-k', '{{ $store.config.keyspace }}', '--replication-factor', '{{ $store.config.replicationFactor | default 1 }}'{{- if $store.config.datacenter }}, '--datacenter', '{{ $store.config.datacenter }}'{{- end }}]
@@ -83,7 +83,7 @@ spec:
           {{- if $store.config.manageSchema }}
             {{- $schema := include "temporal.persistence.schema" $store }}
         - name: manage-schema-{{ $store.name }}-store
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          image: "{{ include "temporal.imageRegistry" $ }}{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['sh', '-c']
           args:
@@ -138,7 +138,7 @@ spec:
 
       containers:
         - name: done
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          image: "{{ include "temporal.imageRegistry" $ }}{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['sh', '-c', 'echo "Store setup completed"']
             {{- with $.Values.schema.resources }}

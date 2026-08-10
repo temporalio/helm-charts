@@ -64,6 +64,21 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].resources.requests.cpu
           value: 200m
+  - it: prefixes server image with global.imageRegistry when set
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      global:
+        imageRegistry: registry.example.com
+      server:
+        image:
+          tag: test-tag
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.example.com/temporalio/server:test-tag"
   - it: includes additional init containers
     template: templates/server-deployment.yaml
     documentSelector:

@@ -191,6 +191,34 @@ tests:
       - equal:
           path: spec.template.spec.volumes[0].name
           value: my-volume
+  - it: prefixes schema job images with global.imageRegistry when set
+    set:
+      global:
+        imageRegistry: registry.example.com
+      admintools:
+        image:
+          tag: test-tag
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "registry.example.com/temporalio/admin-tools:test-tag"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.example.com/temporalio/admin-tools:test-tag"
   - it: includes additional volume mounts
     set:
       server:

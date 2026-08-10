@@ -19,7 +19,7 @@ spec:
   {{ include "temporal.serviceAccount" . }}
   containers:
   - name: cluster-health
-    image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
+    image: "{{ include "temporal.imageRegistry" . }}{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
     imagePullPolicy: {{ .Values.admintools.image.pullPolicy }}
     command: ["temporal", "operator", "cluster", "health"]
     env:
