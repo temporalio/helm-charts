@@ -5,7 +5,7 @@ icon: https://raw.githubusercontent.com/temporalio/temporal-proxy/refs/heads/mai
 
 type: application
 version: 0.2.1
-appVersion: v0.4.1
+appVersion: v0.5.0
 
 keywords:
   - temporal
