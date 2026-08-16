@@ -27,6 +27,8 @@ server:
   # Global default settings (can be overridden per service)
   # replicaCount: 1
   # readinessProbe: {}
+  # A value replaces the built-in tcpSocket probe whole.
+  # livenessProbe: {}
   metrics:
     # Annotate pods and services directly with the following Prometheus annotations.
     # prometheus.io/job
@@ -323,6 +325,7 @@ server:
     # Defaults to a tcpSocket probe; uncomment below for a gRPC probe.
     # gRPC probes don't yet support TLS (kubernetes/enhancements#4939), so opt in only when TLS is off.
     readinessProbe: {}
+    livenessProbe: {}
     # readinessProbe:
     #   grpc:
     #     port: 7233
@@ -387,6 +390,7 @@ server:
     # Defaults to a tcpSocket probe; uncomment below for a gRPC probe.
     # gRPC probes don't yet support TLS (kubernetes/enhancements#4939), so opt in only when TLS is off.
     readinessProbe: {}
+    livenessProbe: {}
     # readinessProbe:
     #   grpc:
     #     port: 7236
@@ -425,6 +429,7 @@ server:
       membershipPort: 6934
       membershipAppProtocol: tcp
     readinessProbe: {}
+    livenessProbe: {}
     metrics:
       annotations:
         enabled: true
@@ -459,6 +464,7 @@ server:
       membershipPort: 6935
       membershipAppProtocol: tcp
     readinessProbe: {}
+    livenessProbe: {}
     metrics:
       annotations:
         enabled: true
@@ -493,6 +499,7 @@ server:
       membershipPort: 6939
       membershipAppProtocol: tcp
     readinessProbe: {}
+    livenessProbe: {}
     metrics:
       annotations:
         enabled: true
