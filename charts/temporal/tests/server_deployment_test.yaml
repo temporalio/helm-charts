@@ -336,6 +336,75 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
           value: rpc
+  - it: worker livenessProbe defaults to empty
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-worker")].kind'
+      value: Deployment
+      matchMany: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe
+  - it: non-worker livenessProbe defaults to tcpSocket
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name != "RELEASE-NAME-temporal-worker")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 150
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: rpc
+  - it: livenessProbe is set for all services
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name != "RELEASE-NAME-temporal-worker")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        livenessProbe:
+          timeoutSeconds: 5
+          failureThreshold: 6
+          tcpSocket:
+            port: rpc
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.timeoutSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.failureThreshold
+          value: 6
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+  - it: livenessProbe is set for history service
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-history")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        history:
+          livenessProbe:
+            initialDelaySeconds: 300
+            periodSeconds: 20
+            tcpSocket:
+              port: rpc
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 300
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.periodSeconds
+          value: 20
 
   - it: additional environment variables are set on all services
     template: templates/server-deployment.yaml

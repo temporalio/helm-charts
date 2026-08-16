@@ -118,7 +118,12 @@ spec:
             - name: metrics
               containerPort: 9090
               protocol: TCP
-          {{- if ne $service "worker" }}
+          {{- /* Defaults to a tcpSocket probe with a long start-up delay; users may override per-service via server.<svc>.livenessProbe. */ -}}
+          {{- $resolvedLiveness := default $.Values.server.livenessProbe $serviceValues.livenessProbe }}
+          {{- if $resolvedLiveness }}
+          livenessProbe:
+          {{- toYaml $resolvedLiveness | nindent 12 }}
+          {{- else if ne $service "worker" }}
           livenessProbe:
             initialDelaySeconds: 150
             tcpSocket:
