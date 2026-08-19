@@ -4,6 +4,7 @@ frontend TLS section (empty unless frontend TLS is enabled). */}}
 apiVersion: v1
 kind: Pod
 metadata:
+  namespace: {{ include "temporal.kubernetesNamespace" . }}
   name: "{{ include "temporal.fullname" . }}-test-cluster-health"
   labels:
     {{- include "temporal.resourceLabels" (list $ "test" "") | nindent 4 }}

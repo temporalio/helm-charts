@@ -8,6 +8,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  namespace: {{ include "temporal.kubernetesNamespace" $ }}
   name: {{ include "temporal.componentname" (list $ $service) }}
   annotations:
     {{- include "temporal.resourceAnnotations" (list $ $service "deployment") | nindent 4 }}
