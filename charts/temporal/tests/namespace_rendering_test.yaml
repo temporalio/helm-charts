@@ -66,6 +66,14 @@ set:
     podDisruptionBudget:
       maxUnavailable: 1
 tests:
+  - it: renders a numeric namespace as a string
+    template: templates/web-service.yaml
+    release:
+      namespace: "123"
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: "123"
   - it: renders namespace on server deployment
     template: templates/server-deployment.yaml
     documentSelector:

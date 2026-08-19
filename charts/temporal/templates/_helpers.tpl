@@ -28,7 +28,7 @@ If release name contains chart name it will be used as a full name.
 Create the Kubernetes namespace for namespaced resources.
 */}}
 {{- define "temporal.kubernetesNamespace" -}}
-{{- .Release.Namespace -}}
+{{- .Release.Namespace | quote -}}
 {{- end -}}
 
 {{/*
