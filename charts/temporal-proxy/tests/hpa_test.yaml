@@ -1,0 +1,85 @@
+suite: HPA test
+templates:
+  - hpa.yaml
+chart:
+  version: 1.0.0
+  appVersion: 1.0.0
+release:
+  name: temporal-proxy
+  namespace: temporal-proxy
+tests:
+  - it: skips manifest when autoscaling is disabled
+    set:
+      autoscaling.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders defaults
+    set:
+      autoscaling.enabled: true
+    asserts:
+      - matchSnapshot: {}
+
+  - it: renders custom values
+    set:
+      fullnameOverride: temporal-proxy
+      namespace: testing
+      autoscaling:
+        enabled: true
+        minReplicas: 4
+        maxReplicas: 20
+        targetCPUUtilizationPercentage: 70
+        targetMemoryUtilizationPercentage: 90
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - isAPIVersion:
+          of: autoscaling/v2
+      - equal:
+          path: metadata.name
+          value: temporal-proxy
+      - equal:
+          path: metadata.namespace
+          value: testing
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: temporal-proxy
+      - equal:
+          path: spec.minReplicas
+          value: 4
+      - equal:
+          path: spec.maxReplicas
+          value: 20
+      - equal:
+          path: spec.metrics[0].resource.target.averageUtilization
+          value: 70
+      - equal:
+          path: spec.metrics[1].resource.target.averageUtilization
+          value: 90
+
+  - it: omits cpu metric when target is unset
+    set:
+      autoscaling:
+        enabled: true
+        targetCPUUtilizationPercentage: null
+    asserts:
+      - lengthEqual:
+          path: spec.metrics
+          count: 1
+      - equal:
+          path: spec.metrics[0].resource.name
+          value: memory
+
+  - it: omits memory metric when target is unset
+    set:
+      autoscaling:
+        enabled: true
+        targetMemoryUtilizationPercentage: null
+    asserts:
+      - lengthEqual:
+          path: spec.metrics
+          count: 1
+      - equal:
+          path: spec.metrics[0].resource.name
+          value: cpu

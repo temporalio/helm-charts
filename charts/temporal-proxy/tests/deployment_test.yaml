@@ -1,0 +1,377 @@
+suite: Deployment test
+templates:
+  - deployment.yaml
+chart:
+  version: 1.0.0
+  appVersion: 1.0.0
+release:
+  name: temporal-proxy
+  namespace: temporal-proxy
+tests:
+  - it: renders defaults
+    asserts:
+      - matchSnapshot: {}
+
+  - it: sets replicas when autoscaling is disabled
+    set:
+      replicaCount: 3
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: omits replicas when autoscaling is enabled
+    set:
+      autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: defaults the image tag to the chart appVersion
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: temporalio/temporal-proxy:1.0.0
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent
+
+  - it: honors image overrides
+    set:
+      image:
+        repository: example.com/temporal-proxy
+        tag: v1.2.3
+        pullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/temporal-proxy:v1.2.3
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: wires the container port to the service port
+    set:
+      service.port: 8080
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+
+  - it: uses the service account name
+    set:
+      serviceAccount:
+        create: true
+        name: custom-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: custom-sa
+
+  - it: falls back to the default service account when create is disabled
+    set:
+      serviceAccount:
+        create: false
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: default
+
+  - it: keeps version out of the immutable selector
+    asserts:
+      - notExists:
+          path: spec.selector.matchLabels["app.kubernetes.io/version"]
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/name"]
+          value: temporal-proxy
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/instance"]
+          value: temporal-proxy
+
+  - it: renders probes by default
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /
+
+  - it: omits probes when unset
+    set:
+      livenessProbe: null
+      readinessProbe: null
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe
+      - notExists:
+          path: spec.template.spec.containers[0].readinessProbe
+
+  - it: omits optional blocks by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].resources
+      - notExists:
+          path: spec.template.spec.nodeSelector
+      - notExists:
+          path: spec.template.spec.affinity
+      - notExists:
+          path: spec.template.spec.tolerations
+      - notExists:
+          path: spec.template.spec.imagePullSecrets
+      - notExists:
+          path: spec.template.metadata.annotations
+
+  - it: renders optional blocks when set
+    set:
+      imagePullSecrets:
+        - name: regcred
+      podAnnotations:
+        prometheus.io/scrape: "true"
+      podLabels:
+        team: platform
+      resources:
+        limits:
+          cpu: 100m
+      nodeSelector:
+        disktype: ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: regcred
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.labels.team
+          value: platform
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 100m
+      - equal:
+          path: spec.template.spec.nodeSelector.disktype
+          value: ssd
+
+  - it: appends extra env vars to the container
+    set:
+      env:
+        - name: TEMPORAL_ACCOUNT
+          value: a1b2c
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ACCOUNT
+            value: a1b2c
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PROXY_CONFIG
+            value: /etc/temporal-proxy/config.yaml
+
+  - it: wires envFrom sources
+    set:
+      envFrom:
+        - secretRef:
+            name: proxy-env
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            secretRef:
+              name: proxy-env
+
+  - it: injects an env var for an apiKey secret ref
+    set:
+      config:
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+            credentials:
+              static:
+                apiKey:
+                  secretKeyRef:
+                    name: temporal-cloud
+                    key: api-key
+        routing:
+          default: cloud
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TP_UPSTREAM_CLOUD_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: temporal-cloud
+                key: api-key
+
+  - it: injects an env var for a static token secret ref
+    set:
+      config:
+        auth:
+          staticToken:
+            token:
+              secretKeyRef:
+                name: proxy-auth
+                key: token
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TP_AUTH_STATIC_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: proxy-auth
+                key: token
+
+  - it: mounts a gateway tls secret as files
+    set:
+      config:
+        tls:
+          secretName: proxy-gateway-tls
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+        routing:
+          default: cloud
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: certs-gateway
+            secret:
+              secretName: proxy-gateway-tls
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: certs-gateway
+            mountPath: /etc/temporal-proxy/certs/gateway
+            readOnly: true
+
+  - it: sanitizes an upstream apiKey env var name with underscores and uppercase
+    set:
+      config:
+        upstreams:
+          - name: My_Upstream
+            hostPort: cloud.example.com:7233
+            credentials:
+              static:
+                apiKey:
+                  secretKeyRef:
+                    name: temporal-cloud
+                    key: api-key
+        routing:
+          default: My_Upstream
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TP_UPSTREAM_MY_UPSTREAM_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: temporal-cloud
+                key: api-key
+
+  - it: mounts an upstream tls secret under an upstream slot
+    set:
+      config:
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+            tls:
+              secretName: cloud-mtls
+        routing:
+          default: cloud
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: certs-upstream-cloud
+            secret:
+              secretName: cloud-mtls
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: certs-upstream-cloud
+            mountPath: /etc/temporal-proxy/certs/upstream-cloud
+            readOnly: true
+
+  - it: orders the gateway tls volume before upstream tls volumes
+    set:
+      config:
+        tls:
+          secretName: gw-tls
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+            tls:
+              secretName: cloud-mtls
+        routing:
+          default: cloud
+    asserts:
+      # index 0 is the config volume; gateway certs must precede upstream certs
+      # so the rendered manifest stays stable (no spurious GitOps diffs).
+      - equal:
+          path: spec.template.spec.volumes[1].name
+          value: certs-gateway
+      - equal:
+          path: spec.template.spec.volumes[2].name
+          value: certs-upstream-cloud
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[1].name
+          value: certs-gateway
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[2].name
+          value: certs-upstream-cloud
+
+  - it: emits generated secret env vars before .Values.env
+    set:
+      env:
+        - name: TP_UPSTREAM_CLOUD_API_KEY
+          value: my-own-literal
+      config:
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+            credentials:
+              static:
+                apiKey:
+                  secretKeyRef:
+                    name: temporal-cloud
+                    key: api-key
+        routing:
+          default: cloud
+    asserts:
+      # PROXY_CONFIG, then the generated var, and finally the user's override.
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: TP_UPSTREAM_CLOUD_API_KEY
+      - equal:
+          path: spec.template.spec.containers[0].env[1].valueFrom.secretKeyRef.name
+          value: temporal-cloud
+      - equal:
+          path: spec.template.spec.containers[0].env[2].name
+          value: TP_UPSTREAM_CLOUD_API_KEY
+      - equal:
+          path: spec.template.spec.containers[0].env[2].value
+          value: my-own-literal
+
+  - it: mounts only the config volume when no tls secret is set
+    set:
+      config:
+        tls: {}
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+            tls: {}
+        routing:
+          default: cloud
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.volumes
+          count: 1
+      - lengthEqual:
+          path: spec.template.spec.containers[0].volumeMounts
+          count: 1

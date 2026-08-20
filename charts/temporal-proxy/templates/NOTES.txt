@@ -1,0 +1,5 @@
+Temporal proxy is installed!
+
+To verify that the proxy has started, run:
+
+  kubectl --namespace={{ .Release.Namespace }} get pods -l "app.kubernetes.io/instance={{ .Release.Name }}"

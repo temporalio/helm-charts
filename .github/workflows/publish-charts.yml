@@ -35,13 +35,13 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ secrets.TEMPORAL_CICD_APP_ID }}
           private-key: ${{ secrets.TEMPORAL_CICD_PRIVATE_KEY }}
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: true
           token: ${{ steps.generate_token.outputs.token }}
@@ -80,7 +80,7 @@ jobs:
           echo "chart_version=$CHART_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Update image tags
-        uses: mikefarah/yq@v4
+        uses: mikefarah/yq@1b9b4ac5187171d2e5e3129be0cfa827c7f9d53d # v4.53.3
         with:
           cmd: |
             yq -i '.server.image.tag = "${{ github.event.inputs.server_version }}"' charts/temporal/values.yaml
@@ -88,7 +88,7 @@ jobs:
             yq -i '.web.image.tag = "${{ github.event.inputs.ui_version }}"' charts/temporal/values.yaml
 
       - name: Update chart
-        uses: mikefarah/yq@v4
+        uses: mikefarah/yq@1b9b4ac5187171d2e5e3129be0cfa827c7f9d53d # v4.53.3
         with:
           cmd: |
             yq -i '.appVersion = "${{ github.event.inputs.server_version }}"' charts/temporal/Chart.yaml
@@ -96,18 +96,56 @@ jobs:
     
       - name: Commit changes
         working-directory: charts/temporal
+        env:
+          VERSION: ${{ steps.chart-version.outputs.chart_version }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: |
-          git commit -m "Update Chart to ${{ steps.chart-version.outputs.chart_version }}." Chart.yaml values.yaml
-          git tag -a "temporal-${{ steps.chart-version.outputs.chart_version }}" -m "Release Chart: ${{ steps.chart-version.outputs.chart_version }}"
+          TAG="temporal-${VERSION}"
 
-          git push --tags origin ${{ github.ref_name }}
+          # Fail fast with a clear message if this version is already fully released,
+          # rather than dying later with a confusing "tag already exists" error.
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1 \
+             && gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "::error::${TAG} is already released — bump to a new version instead of retrying."
+            exit 1
+          fi
+
+          # Each step below is idempotent so a re-run after a transient failure
+          # skips the work already done and proceeds to chart-releaser.
+
+          # Commit the bump only if there is something to commit.
+          if git diff --quiet Chart.yaml values.yaml; then
+            echo "Chart already bumped; nothing to commit."
+          else
+            git commit -m "Update Chart to ${VERSION}." Chart.yaml values.yaml
+          fi
+
+          # Create the tag only if it does not already exist.
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "Tag ${TAG} already exists; reusing it."
+          else
+            git tag -a "${TAG}" -m "Release Chart: ${VERSION}"
+          fi
+
+          # Push the branch and this single tag atomically; "already up to date" is success.
+          git push --atomic origin "${{ github.ref_name }}" "refs/tags/${TAG}"
 
       - name: Install Helm
-        uses: azure/setup-helm@v3
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+
+      # Package only the temporal chart ourselves so chart-releaser doesn't
+      # auto-discover and publish every chart under charts/ (e.g. temporal-proxy).
+      # skip_packaging below makes chart-releaser release exactly what we put here,
+      # keeping each chart's release independent of the others.
+      - name: Package temporal chart
+        run: |
+          mkdir -p .cr-release-packages
+          helm package charts/temporal --destination .cr-release-packages
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
+        uses: helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f # v1.7.0
         with:
+          skip_packaging: true
           mark_as_latest: "${{ github.event.inputs.mark_latest }}"
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

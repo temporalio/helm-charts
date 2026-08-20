@@ -4,7 +4,7 @@
 {{- $secondaryVisibilityStore := include "temporal.persistence.getStoreByType" (list $ "secondaryVisibility") | fromYaml -}}
 {{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
 {{- $serviceValues := index $.Values.server $service }}
-{{- if or (not (hasKey $serviceValues "enabled")) $serviceValues.enabled }}
+{{- if $serviceValues.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -63,15 +63,21 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            - name: SERVICES
+              value: {{ $service }}
             - name: TEMPORAL_SERVICES
               value: {{ $service }}
             - name: TEMPORAL_SERVER_CONFIG_FILE_PATH
               value: /etc/temporal/config/config_template.yaml
+          {{- if not (and (eq $defaultStore.driver "sql") $defaultStore.config.passwordCommand) }}
             - name: TEMPORAL_DEFAULT_STORE_PASSWORD
               {{- include "temporal.password-env" (list $ $defaultStore) | nindent 14 }}
+          {{- end }}
+          {{- if not (and (eq $visibilityStore.driver "sql") $visibilityStore.config.passwordCommand) }}
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
               {{- include "temporal.password-env" (list $ $visibilityStore) | nindent 14 }}
-          {{- if $secondaryVisibilityStore }}
+          {{- end }}
+          {{- if and $secondaryVisibilityStore (not (and (eq $secondaryVisibilityStore.driver "sql") $secondaryVisibilityStore.config.passwordCommand)) }}
             - name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
               {{- include "temporal.password-env" (list $ $secondaryVisibilityStore) | nindent 14 }}
           {{- end }}
@@ -122,9 +128,15 @@ spec:
             tcpSocket:
               port: rpc
           {{- end }}
-          {{- with default $.Values.server.readinessProbe $serviceValues.readinessProbe }}
+          {{- /* Default to tcpSocket (works with TLS); users may override per-service via server.<svc>.readinessProbe. */ -}}
+          {{- $resolvedProbe := default $.Values.server.readinessProbe $serviceValues.readinessProbe }}
+          {{- if $resolvedProbe }}
           readinessProbe:
-          {{- toYaml . | nindent 12 }}
+          {{- toYaml $resolvedProbe | nindent 12 }}
+          {{- else if ne $service "worker" }}
+          readinessProbe:
+            tcpSocket:
+              port: rpc
           {{- end }}
           volumeMounts:
             - name: config
@@ -139,6 +151,9 @@ spec:
             {{- end }}
             {{- if $.Values.server.additionalVolumeMounts }}
             {{- toYaml $.Values.server.additionalVolumeMounts | nindent 12}}
+            {{- end }}
+            {{- if or $.Values.server.tls.internode.enabled $.Values.server.tls.frontend.enabled }}
+            {{- include "temporal.server.tls.volumeMounts" $ | nindent 12 }}
             {{- end }}
           resources:
             {{- toYaml (default $.Values.server.resources $serviceValues.resources) | nindent 12 }}
@@ -169,6 +184,9 @@ spec:
         {{- if $.Values.server.additionalVolumes }}
         {{- toYaml $.Values.server.additionalVolumes | nindent 8}}
         {{- end }}
+        {{- if or $.Values.server.tls.internode.enabled $.Values.server.tls.frontend.enabled }}
+        {{- include "temporal.server.tls.volumes" $ | nindent 8 }}
+        {{- end }}
       {{- with (default $.Values.server.nodeSelector $serviceValues.nodeSelector) }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -184,6 +202,15 @@ spec:
     {{- with $serviceValues.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with (default $.Values.server.schedulerName $serviceValues.schedulerName) }}
+      schedulerName: {{ . }}
+    {{- end }}
+    {{- with (default $.Values.server.runtimeClassName $serviceValues.runtimeClassName) }}
+      runtimeClassName: {{ . }}
+    {{- end }}
+    {{- with (default $.Values.server.priorityClassName $serviceValues.priorityClassName) }}
+      priorityClassName: {{ . }}
     {{- end }}
       terminationGracePeriodSeconds: {{ default $.Values.server.terminationGracePeriodSeconds $serviceValues.terminationGracePeriodSeconds }}
 ---

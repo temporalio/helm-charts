@@ -1,9 +1,7 @@
 # Temporal Helm Chart
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftemporalio%2Ftemporal-helm-charts?ref=badge_shield)
 
-> **Note:** This version is currently an RC (release candidate). To install it, you must specify the version using `--version '>=1.0.0-0'` in your helm install command.
-
-> **For existing users:** If you're upgrading from a previous version of the Temporal Helm chart, please see [UPGRADING.md](UPGRADING.md) for important migration information and breaking changes.
+> **For users upgrading from 0.x releases:** Please see [UPGRADING.md](UPGRADING.md) for important migration information and breaking changes.
 
 Temporal is a distributed, scalable, durable, and highly available orchestration engine designed to execute asynchronous long-running business logic in a resilient way.
 
@@ -69,9 +67,11 @@ server:
             connectAddr: "mysql.example.com:3306"
             connectProtocol: tcp
             user: temporal_user
-            password: ""  # Use existingSecret in production
-            existingSecret: temporal-db-secret
-            secretKey: password
+            # Option 1: Provide password in values (chart will create a secret)
+            password: your_password
+            # Option 2: Use an existing secret (recommended for production)
+            # existingSecret: temporal-db-secret
+            # secretKey: password
             maxConns: 20
             maxIdleConns: 20
             maxConnLifetime: "1h"
@@ -85,17 +85,73 @@ server:
             connectAddr: "mysql.example.com:3306"
             connectProtocol: tcp
             user: temporal_user
+            # Use existing secret (recommended for production)
             existingSecret: temporal-db-secret
             secretKey: password
 ```
 
 **Key points:**
 - Driver is determined by which key is present (`sql:`, `cassandra:`, or `elasticsearch:`)
-- Helm-specific fields (`existingSecret`, `secretKey`) are stripped before rendering to server config
-- Password fields are stored in Kubernetes secrets and the server configuration reads them from the environment
+- **Helm-specific fields** (stripped before rendering to server config):
+  - `createDatabase`: If `true`, the chart will create the database/keyspace if it doesn't exist (default: `true`)
+  - `manageSchema`: If `true`, the chart will run schema setup/upgrade jobs (default: `true`)
+  - `existingSecret`: Reference to an existing Kubernetes secret containing credentials (e.g., `temporal-db-secret`). If not set, the chart will create a new secret.
+  - `secretKey`: Key name within the secret to read the password from (default: `password`)
+- **Password handling**: With `password` or `existingSecret`, passwords are stored in Kubernetes secrets and read from environment variables—they are never written to ConfigMaps or other manifests, even if you supply a plaintext `password` in values for bootstrap only.
+  - If `existingSecret` is set, the chart uses that secret and ignores any `password` field in values for that datastore
+  - If `existingSecret` is not set, the chart creates a secret from the `password` value in values
+  - The server configuration reads passwords from environment variables that reference these secrets
+  - As a third option, `passwordCommand` (Temporal server v1.31+, **SQL datastores only**) lets the server invoke a shell command per new connection to fetch the password — handy for short-lived credentials such as AWS RDS IAM auth tokens or GCP Cloud SQL IAM tokens. When set on a datastore, the chart skips creating a password Secret and skips wiring the `*_PASSWORD` env var for that store; the `passwordCommand` block passes through to the server config as-is.
 - All other fields pass through directly to the Temporal server config
 
 See the example values files in the `values/` directory for complete examples.
+
+#### Using an existing Kubernetes secret
+
+For production and GitOps, manage database credentials in a Kubernetes `Secret` that you (or a controller such as External Secrets) create and own outside this chart. Point each datastore at that object with `existingSecret` (the secret name) and `secretKey` (the key inside the secret that holds the password; default `password`).
+
+The secret must exist in the same namespace as the release before the chart’s jobs or pods need it. A typical manifest looks like this (`stringData` is fine if you prefer not to base64-encode by hand):
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: temporal-db-secret
+type: Opaque
+data:
+  password: <base64-encoded-password>
+```
+
+Reference it from your values (here both stores share one secret; use separate secrets if you split credentials):
+
+```yaml
+server:
+  config:
+    persistence:
+      datastores:
+        default:
+          sql:
+            pluginName: postgres12_pgx
+            driverName: postgres12_pgx
+            databaseName: temporal
+            connectAddr: "postgres.example.com:5432"
+            connectProtocol: tcp
+            user: temporal_user
+            existingSecret: temporal-db-secret
+            secretKey: password
+        visibility:
+          sql:
+            pluginName: postgres12_pgx
+            driverName: postgres12_pgx
+            databaseName: temporal_visibility
+            connectAddr: "postgres.example.com:5432"
+            connectProtocol: tcp
+            user: temporal_user
+            existingSecret: temporal-db-secret
+            secretKey: password
+```
+
+For a disposable local cluster only, you can seed a minimal secret before `helm install` with `kubectl create secret generic temporal-db-secret --from-literal=password=your_db_password`. Prefer your standard secret workflow everywhere else.
 
 ### Install with sidecar containers
 
@@ -105,6 +161,53 @@ For an example, review the values for Google's `cloud sql proxy` in the `values/
 
 ```bash
 helm install --repo https://go.temporal.io/helm-charts -f values/values.cloudsqlproxy.yaml temporal temporal --timeout 900s
+```
+
+### Install with extraObjects for external secret management
+
+You can inject additional Kubernetes manifests using the `extraObjects` configuration. This is particularly useful for GitOps scenarios where you want to manage secrets externally using tools like ExternalSecretOperator or SealedSecrets.
+
+The `extraObjects` field accepts an array of raw YAML strings rendered alongside the Temporal chart. Each entry supports Go templating (e.g. `{{ .Release.Name }}`).
+
+#### Example with ExternalSecretOperator
+
+```yaml
+extraObjects:
+  - |
+    apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: {{ .Release.Name }}-db-secret
+    spec:
+      secretStoreRef:
+        name: aws-secretsmanager
+        kind: SecretStore
+      target:
+        name: {{ .Release.Name }}-db-secret
+        creationPolicy: Owner
+      data:
+      - secretKey: password
+        remoteRef:
+          key: prod/temporal/db
+          property: password
+```
+
+
+#### Example with SealedSecrets
+
+```yaml
+extraObjects:
+  - |
+    apiVersion: bitnami.com/v1alpha1
+    kind: SealedSecret
+    metadata:
+      name: {{ .Release.Name }}-db-secret
+    spec:
+      encryptedData:
+        password: <encrypted-password>
+      template:
+        metadata:
+          name: {{ .Release.Name }}-db-secret
 ```
 
 ### Install with MySQL
@@ -124,9 +227,11 @@ server:
             driverName: mysql8
             databaseName: temporal
             connectAddr: "mysql.example.com:3306"
+            connectProtocol: tcp
             user: temporal_user
+            # Option 1: Provide password in values (chart will create a secret)
             password: your_password
-            # Or use existingSecret for production
+            # Option 2: Use an existing secret (recommended for production)
             # existingSecret: temporal-db-secret
             # secretKey: password
         visibility:
@@ -137,6 +242,7 @@ server:
             driverName: mysql8
             databaseName: temporal_visibility
             connectAddr: "mysql.example.com:3306"
+            connectProtocol: tcp
             user: temporal_user
             existingSecret: temporal-db-secret
             secretKey: password
@@ -165,6 +271,7 @@ server:
             driverName: postgres12
             databaseName: temporal
             connectAddr: "postgres.example.com:5432"
+            connectProtocol: tcp
             user: temporal_user
             existingSecret: temporal-db-secret
             secretKey: password
@@ -176,6 +283,7 @@ server:
             driverName: postgres12
             databaseName: temporal_visibility
             connectAddr: "postgres.example.com:5432"
+            connectProtocol: tcp
             user: temporal_user
             existingSecret: temporal-db-secret
             secretKey: password
@@ -206,7 +314,11 @@ server:
             port: 9042
             keyspace: temporal
             user: cassandra_user
+            # Option 1: Provide password in values (chart will create a secret)
             password: your_password
+            # Option 2: Use an existing secret (recommended for production)
+            # existingSecret: temporal-cassandra-secret
+            # secretKey: password
             replicationFactor: 3
         visibility:
           # Use SQL or Elasticsearch for visibility
@@ -217,6 +329,7 @@ server:
             driverName: mysql8
             databaseName: temporal_visibility
             connectAddr: "mysql.example.com:3306"
+            connectProtocol: tcp
             user: temporal_user
             existingSecret: temporal-db-secret
             secretKey: password
@@ -246,6 +359,7 @@ server:
             driverName: mysql8
             databaseName: temporal
             connectAddr: "mysql.example.com:3306"
+            connectProtocol: tcp
             user: temporal_user
             existingSecret: temporal-db-secret
             secretKey: password
@@ -256,8 +370,9 @@ server:
               scheme: http
               host: "elasticsearch.example.com:9200"
             username: ""
+            # Option 1: Provide password in values (chart will create a secret)
             password: ""
-            # Or use existingSecret
+            # Option 2: Use an existing secret (recommended for production)
             # existingSecret: temporal-es-secret
             # secretKey: password
             logLevel: error
@@ -309,6 +424,23 @@ TEMPORAL_AUTH_CLIENT_SECRET: xxxxxxxxxxxxxxx
 ```
 
 Reference: <https://docs.temporal.io/references/web-ui-server-env-vars>
+
+### Readiness probes
+
+The frontend and internal-frontend Deployments default to a `tcpSocket` readinessProbe, which works regardless of whether TLS is configured. If you are not using TLS and want a richer health check, you can opt into a gRPC probe by uncommenting the example block at `server.frontend.readinessProbe` (or `server.internal-frontend.readinessProbe`) in `values.yaml`. gRPC probes are not compatible with TLS — see [kubernetes/enhancements#4939](https://github.com/kubernetes/enhancements/issues/4939).
+
+### Admin tools and namespace creation: which frontend they use
+
+The admin tools Deployment and the namespace-setup Job (`server.config.namespaces.create`) are `temporal` CLI clients. When `server.internal-frontend` is enabled, both connect to the **internal-frontend** by default. The internal-frontend is intended for Temporal's own internal nodes and grants admin access without going through an external Authorizer/ClaimMapper, which is convenient for these admin operations. When the internal-frontend is not enabled, they connect to the external frontend.
+
+If you would rather route them through the external frontend — for example so they are subject to your Authorizer and you authenticate them explicitly, instead of relying on the internal-frontend's admin bypass — set:
+
+- `admintools.useExternalFrontend: true` for the admin tools Deployment, and/or
+- `server.config.namespaces.useExternalFrontend: true` for the namespace-setup Job.
+
+In that case, with an Authorizer/ClaimMapper on the frontend, give them admin credentials (for example a token or mTLS client certificate via `admintools.additionalEnv` / `admintools.additionalEnvSecretName`), or create the namespaces out of band and leave `server.config.namespaces.create` disabled.
+
+When server TLS is enabled (see `server.tls`), the chart wires the matching client certificate for whichever frontend each pod targets — the `server.tls.internode` secret for the internal-frontend, the `server.tls.frontend` secret for the external frontend — and sets the corresponding `TEMPORAL_TLS_*` environment. This is skipped for the admin tools when a custom `admintools.temporalAddress` is set, and for the Job when it targets an external ingress host; in those cases wire TLS yourself via the `additionalEnv` / `additionalVolumes` fields.
 
 ## Play With It
 
@@ -480,6 +612,14 @@ web:
     - name: TEMPORAL_UI_PUBLIC_PATH
       value: /custom-path
 ```
+
+### Schema Setup and Deployment Ordering
+
+By default, the schema Job uses [Helm hooks](https://helm.sh/docs/topics/charts_hooks/) (`pre-install`, `pre-upgrade`) to ensure database and Elasticsearch schemas are set up before server pods start.
+
+ArgoCD [maps Helm hooks to ArgoCD hooks](https://argo-cd.readthedocs.io/en/stable/user-guide/helm/) (`pre-install`/`pre-upgrade` → PreSync, `post-install`/`post-upgrade` → PostSync, `hook-weight` → sync-wave), so the default should work with ArgoCD. Caveats: ArgoCD cannot distinguish install from upgrade (every operation is a sync), and delete-policy follows [ArgoCD sync semantics](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-waves/) rather than Helm's per-hook lifecycle. If any ArgoCD-native hooks are defined, all Helm hooks are ignored.
+
+For explicit control, or when using Flux, Rancher or Terraform, set `useHelmHooks: false`.
 
 ## Uninstalling
 

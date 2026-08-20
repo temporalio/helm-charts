@@ -45,7 +45,9 @@ data:
         {{- toYaml . | nindent 8 }}
         {{- end }}
 
-      {{- with $server.config.tls }}
+      {{- $autoTls := fromYaml (include "temporal.server.tls.config" $) }}
+      {{- $tls := mergeOverwrite $autoTls (deepCopy ($server.config.tls | default dict)) }}
+      {{- with $tls }}
       tls:
         {{- toYaml . | nindent 10 }}
       {{- end }}
@@ -128,7 +130,10 @@ data:
       {{- toYaml . | nindent 6 }}
     {{- end }}
 
-    {{- if not (index $.Values.server "internal-frontend").enabled }}
+    {{- if $.Values.server.publicClientHostPort }}
+    publicClient:
+      hostPort: "{{ $.Values.server.publicClientHostPort }}"
+    {{- else if not (index $.Values.server "internal-frontend").enabled }}
     publicClient:
       hostPort: "{{ include "temporal.componentname" (list $ "frontend") }}:{{ $server.frontend.service.port }}"
     {{- end }}

@@ -10,7 +10,7 @@ server:
             pluginName: mysql8
             databaseName: temporal
             connectAddr: "_HOST_:3306"
-            # connectProtocol defaults to "tcp" if not specified
+            connectProtocol: "tcp"
             user: _USERNAME_
             password: _PASSWORD_
             maxConns: 20
@@ -23,7 +23,7 @@ server:
             pluginName: mysql8
             databaseName: temporal_visibility
             connectAddr: "_HOST_:3306"
-            # connectProtocol defaults to "tcp" if not specified
+            connectProtocol: "tcp"
             user: _USERNAME_
             password: _PASSWORD_
             maxConns: 20

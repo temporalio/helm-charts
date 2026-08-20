@@ -1,0 +1,384 @@
+suite: ConfigMap test
+templates:
+  - configmap.yaml
+chart:
+  version: 1.0.0
+  appVersion: 1.0.0
+release:
+  name: temporal-proxy
+  namespace: temporal-proxy
+tests:
+  - it: renders defaults
+    asserts:
+      - matchSnapshot: {}
+
+  - it: renders default config
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: temporal-proxy
+      - equal:
+          path: metadata.namespace
+          value: temporal-proxy
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "hostPort: :8443"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "default: default"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "name: default"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "hostPort: localhost:7233"
+
+  - it: renders custom values
+    set:
+      namespace: testing
+      config:
+        hostPort: :7000
+        upstreams:
+          - name: primary
+            hostPort: temporal.example.com:7233
+        routing:
+          default: primary
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: testing
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "hostPort: :7000"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "name: primary"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "hostPort: temporal.example.com:7233"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "default: primary"
+
+  - it: passes proxy per-request templates through verbatim
+    set:
+      config:
+        upstreams:
+          - name: cloud
+            hostPort: "{{ .RemoteNamespace }}.tmprl.cloud:7233"
+        routing:
+          default: cloud
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "\\{\\{ .RemoteNamespace \\}\\}.tmprl.cloud:7233"
+
+  - it: defaults hostPort from the service port when unset
+    set:
+      service:
+        port: 7233
+      config:
+        upstreams:
+          - name: default
+            hostPort: localhost:7233
+        routing:
+          default: default
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "hostPort: :7233"
+
+  - it: fails when a static auth token is a map that is not a secretKeyRef
+    set:
+      config:
+        auth:
+          staticToken:
+            token:
+              secretRef:
+                name: proxy-auth
+                key: token
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+        routing:
+          default: cloud
+    asserts:
+      - failedTemplate:
+          errorMessage: "auth.staticToken.token must be a string or a secretKeyRef"
+
+  - it: replaces an apiKey secret ref with an env var expansion
+    set:
+      config:
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+            credentials:
+              static:
+                apiKey:
+                  secretKeyRef:
+                    name: temporal-cloud
+                    key: api-key
+        routing:
+          default: cloud
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "apiKey: \\$\\{TP_UPSTREAM_CLOUD_API_KEY\\}"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "secretKeyRef"
+
+  - it: leaves a literal apiKey string untouched
+    set:
+      config:
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+            credentials:
+              static:
+                apiKey: "$MY_OWN_VAR"
+        routing:
+          default: cloud
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "apiKey: \\$MY_OWN_VAR"
+
+  - it: rewrites gateway tls secretName to mounted file paths
+    set:
+      config:
+        tls:
+          secretName: proxy-gateway-tls
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+        routing:
+          default: cloud
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "cert: /etc/temporal-proxy/certs/gateway/tls.crt"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "key: /etc/temporal-proxy/certs/gateway/tls.key"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "secretName"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "ca: /etc/temporal-proxy/certs/gateway"
+
+  - it: sets the ca path only when a caKey is provided
+    set:
+      config:
+        tls:
+          secretName: proxy-gateway-tls
+          caKey: ca.crt
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+        routing:
+          default: cloud
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "ca: /etc/temporal-proxy/certs/gateway/ca.crt"
+
+  - it: fails when both ca and caKey are provided with a tls block
+    set:
+      config:
+        tls:
+          secretName: proxy-gateway-tls
+          ca: /some/file.crt
+          caKey: ca.crt
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+        routing:
+          default: cloud
+    asserts:
+      - failedTemplate:
+          errorMessage: "tls for gateway sets both ca and caKey; use either ca or caKey"
+
+  - it: fails when an upstream with a tls secret has a DNS-unsafe name
+    set:
+      config:
+        upstreams:
+          - name: Bad_Name
+            hostPort: cloud.example.com:7233
+            tls:
+              secretName: cloud-mtls
+        routing:
+          default: Bad_Name
+    asserts:
+      - failedTemplate:
+          errorMessage: 'upstream name "Bad_Name" must be DNS-1123 safe (lowercase alphanumeric and ''-'') to mount a tls secret'
+
+  - it: fails when an apiKey is a map that is not a secretKeyRef
+    set:
+      config:
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+            credentials:
+              static:
+                apiKey:
+                  secretRef:
+                    name: temporal-cloud
+                    key: api-key
+        routing:
+          default: cloud
+    asserts:
+      - failedTemplate:
+          errorMessage: "upstreams[cloud].credentials.static.apiKey must be a string or a secretKeyRef"
+
+  - it: fails clearly when an upstream with a secret ref has no name
+    set:
+      config:
+        upstreams:
+          - hostPort: cloud.example.com:7233
+            credentials:
+              static:
+                apiKey:
+                  secretKeyRef:
+                    name: temporal-cloud
+                    key: api-key
+        routing:
+          default: cloud
+    asserts:
+      - failedTemplate:
+          errorMessage: "upstreams[0] must have a name to wire its credentials or tls secret"
+
+  - it: honours certKey and keyKey overrides
+    set:
+      config:
+        tls:
+          secretName: proxy-gateway-tls
+          certKey: server.pem
+          keyKey: server-key.pem
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+        routing:
+          default: cloud
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "cert: /etc/temporal-proxy/certs/gateway/server.pem"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "key: /etc/temporal-proxy/certs/gateway/server-key.pem"
+
+  - it: sets the ca path on an upstream tls when a caKey is provided
+    set:
+      config:
+        upstreams:
+          - name: onprem
+            hostPort: temporal-frontend.temporal.svc:7233
+            tls:
+              secretName: onprem-client-tls
+              caKey: ca.crt
+        routing:
+          default: onprem
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "ca: /etc/temporal-proxy/certs/upstream-onprem/ca.crt"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "cert: /etc/temporal-proxy/certs/upstream-onprem/tls.crt"
+
+  - it: strips chart-only tls keys from an upstream tls block
+    set:
+      config:
+        upstreams:
+          - name: onprem
+            hostPort: temporal-frontend.temporal.svc:7233
+            tls:
+              secretName: onprem-client-tls
+              certKey: server.pem
+              keyKey: server-key.pem
+              caKey: ca.crt
+        routing:
+          default: onprem
+    asserts:
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "secretName"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "certKey"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "keyKey"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "caKey"
+
+  - it: preserves tls fields the chart does not manage
+    set:
+      config:
+        tls:
+          secretName: proxy-gateway-tls
+          serverName: proxy.example.com
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+        routing:
+          default: cloud
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "serverName: proxy.example.com"
+
+  - it: fails when a tls block sets both secretName and an explicit cert
+    set:
+      config:
+        tls:
+          secretName: proxy-gateway-tls
+          cert: /my/own/cert.pem
+          key: /my/own/key.pem
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+        routing:
+          default: cloud
+    asserts:
+      - failedTemplate:
+          errorMessage: "tls for gateway sets both secretName and cert/key; use certKey/keyKey to point at other keys in the Secret, or drop secretName and mount the files yourself"
+
+  - it: sanitizes an upstream apiKey env var name with underscores and uppercase
+    set:
+      config:
+        upstreams:
+          - name: My_Upstream
+            hostPort: cloud.example.com:7233
+            credentials:
+              static:
+                apiKey:
+                  secretKeyRef:
+                    name: temporal-cloud
+                    key: api-key
+        routing:
+          default: My_Upstream
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "apiKey: \\$\\{TP_UPSTREAM_MY_UPSTREAM_API_KEY\\}"
+
+  - it: leaves a literal static token string untouched
+    set:
+      config:
+        auth:
+          staticToken:
+            token: "$MY_OWN_TOKEN_VAR"
+            header: Authorization
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "token: \\$MY_OWN_TOKEN_VAR"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "TP_AUTH_STATIC_TOKEN"

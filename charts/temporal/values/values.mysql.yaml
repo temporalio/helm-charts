@@ -15,7 +15,7 @@ server:
             connectAddr: "_HOST_:3306"  # or use separate host/port fields
             # host: _HOST_
             # port: 3306
-            # connectProtocol defaults to "tcp" if not specified
+            connectProtocol: "tcp"
             user: _USERNAME_
             password: _PASSWORD_
             # for a production deployment use this instead of `password` and provision the secret beforehand e.g. with a sealed secret
@@ -37,7 +37,7 @@ server:
             pluginName: mysql8
             databaseName: temporal_visibility
             connectAddr: "_HOST_:3306"
-            # connectProtocol defaults to "tcp" if not specified
+            connectProtocol: "tcp"
             user: _USERNAME_
             password: _PASSWORD_
             # for a production deployment use this instead of `password` and provision the secret beforehand e.g. with a sealed secret

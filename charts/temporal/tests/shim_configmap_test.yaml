@@ -1,0 +1,43 @@
+suite: test shim configmap
+templates:
+  - shim-configmap.yaml
+tests:
+  - it: is not created by default
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: includes only the shims which are enabled
+    set:
+      shims:
+        dockerize: true
+        elasticsearchTool: false
+    asserts:
+      - exists:
+          path: data.dockerize
+      - notExists:
+          path: data["temporal-elasticsearch-tool"]
+  - it: includes Helm hook annotations when useHelmHooks is true
+    set:
+      shims:
+        dockerize: true
+      schema:
+        useHelmHooks: true
+    asserts:
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: "pre-install,pre-upgrade"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "-1"
+      - equal:
+          path: metadata.annotations["helm.sh/hook-delete-policy"]
+          value: "before-hook-creation"
+  - it: excludes Helm hook annotations when useHelmHooks is false
+    set:
+      shims:
+        dockerize: true
+      schema:
+        useHelmHooks: false
+    asserts:
+      - isNull:
+          path: metadata.annotations

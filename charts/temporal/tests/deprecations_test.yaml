@@ -1,0 +1,111 @@
+suite: test deprecation validations
+templates:
+  - validations.yaml
+tests:
+  - it: fails when top-level cassandra key is set
+    set:
+      cassandra:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "'cassandra' is no longer a supported top-level key. The Cassandra sub-chart was removed in v1.0.0-rc.2. Configure Cassandra under server.config.persistence.datastores. See UPGRADING.md."
+
+  - it: fails when top-level elasticsearch key is set
+    set:
+      elasticsearch:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "'elasticsearch' is no longer a supported top-level key. The Elasticsearch sub-chart was removed in v1.0.0-rc.2. Configure Elasticsearch under server.config.persistence.datastores. See UPGRADING.md."
+
+  - it: fails when top-level prometheus key is set
+    set:
+      prometheus:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "'prometheus' is no longer a supported top-level key. The Prometheus sub-chart was removed in v1.0.0-rc.2. Configure scraping via server.metrics.annotations or server.metrics.serviceMonitor. See UPGRADING.md."
+
+  - it: fails when top-level grafana key is set
+    set:
+      grafana:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "'grafana' is no longer a supported top-level key. The Grafana sub-chart was removed in v1.0.0-rc.2. Import dashboards from https://github.com/temporalio/dashboards instead. See UPGRADING.md."
+
+  - it: fails when top-level mysql key is set
+    set:
+      mysql:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "'mysql' is no longer a supported top-level key. The MySQL sub-chart was removed in v1.0.0-rc.2. Configure MySQL under server.config.persistence.datastores. See UPGRADING.md."
+
+  - it: fails when top-level postgresql key is set
+    set:
+      postgresql:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "'postgresql' is no longer a supported top-level key. The PostgreSQL sub-chart was removed in v1.0.0-rc.2. Configure PostgreSQL under server.config.persistence.datastores. See UPGRADING.md."
+
+  - it: fails when schema.createDatabase is set
+    set:
+      schema.createDatabase: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "'schema.createDatabase' is no longer supported. Set 'createDatabase' on each datastore under server.config.persistence.datastores.<name>.{sql,cassandra}. See UPGRADING.md."
+
+  - it: fails when schema.setup is set
+    set:
+      schema.setup: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "'schema.setup' is no longer supported. Set 'manageSchema: true' on each datastore under server.config.persistence.datastores.<name>.{sql,cassandra,elasticsearch}. See UPGRADING.md."
+
+  - it: fails when schema.update is set
+    set:
+      schema.update: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "'schema.update' is no longer supported. Set 'manageSchema: true' on each datastore under server.config.persistence.datastores.<name>.{sql,cassandra,elasticsearch}. See UPGRADING.md."
+
+  - it: fails when legacy server.config.persistence.default format is used
+    set:
+      server.config.persistence.default.cassandra.hosts: "cassandra"
+      server.config.persistence.default.cassandra.keyspace: temporal
+    asserts:
+      - failedTemplate:
+          errorMessage: "'server.config.persistence.default' is no longer supported. Migrate to 'server.config.persistence.datastores.<name>'. See UPGRADING.md."
+
+  - it: fails when legacy server.config.persistence.visibility format is used
+    set:
+      server.config.persistence.visibility.elasticsearch.url.host: "elasticsearch:9200"
+    asserts:
+      - failedTemplate:
+          errorMessage: "'server.config.persistence.visibility' is no longer supported. Migrate to 'server.config.persistence.datastores.<name>'. See UPGRADING.md."
+
+  - it: fails when cassandra is used as visibility store
+    set:
+      server.config.persistence.defaultStore: default
+      server.config.persistence.visibilityStore: visibility
+      server.config.persistence.datastores.default.cassandra.hosts: "cassandra"
+      server.config.persistence.datastores.default.cassandra.keyspace: temporal
+      server.config.persistence.datastores.visibility.cassandra.hosts: "cassandra"
+      server.config.persistence.datastores.visibility.cassandra.keyspace: temporal_visibility
+    asserts:
+      - failedTemplate:
+          errorMessage: "Cassandra cannot be used as the visibility store (store: \"visibility\"). Use SQL (MySQL/PostgreSQL) or Elasticsearch instead."
+
+  - it: fails when imagePullSecrets is a map instead of array
+    set:
+      imagePullSecrets.name: my-secret
+    asserts:
+      - failedTemplate:
+          errorMessage: "'imagePullSecrets' must be a list, not a map. Change 'imagePullSecrets: {}' to 'imagePullSecrets: []'. See UPGRADING.md."
+
+  - it: passes with valid default values
+    asserts:
+      - hasDocuments:
+          count: 0

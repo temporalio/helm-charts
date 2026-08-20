@@ -22,3 +22,8 @@ server:
             connectProtocol: "tcp"
             user: temporal
             password: temporal
+    namespaces:
+      create: true
+      namespace:
+        - name: test
+          retention: 1d

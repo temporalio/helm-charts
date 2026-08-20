@@ -1,0 +1,33 @@
+renders defaults:
+  1: |
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    metadata:
+      labels:
+        app.kubernetes.io/instance: temporal-proxy
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: temporal-proxy
+        app.kubernetes.io/version: 1.0.0
+        helm.sh/chart: temporal-proxy-1.0.0
+      name: temporal-proxy
+      namespace: temporal-proxy
+    spec:
+      maxReplicas: 10
+      metrics:
+        - resource:
+            name: cpu
+            target:
+              averageUtilization: 80
+              type: Utilization
+          type: Resource
+        - resource:
+            name: memory
+            target:
+              averageUtilization: 80
+              type: Utilization
+          type: Resource
+      minReplicas: 1
+      scaleTargetRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: temporal-proxy
