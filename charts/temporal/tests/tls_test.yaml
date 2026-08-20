@@ -353,7 +353,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="create-test-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
-          value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
+          value: RELEASE-NAME-temporal-frontend:7233
       - contains:
           path: spec.template.spec.initContainers[0].env
           content:
@@ -389,7 +389,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="create-test-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
-          value: RELEASE-NAME-temporal-internal-frontend.NAMESPACE.svc:7236
+          value: RELEASE-NAME-temporal-internal-frontend:7236
       - contains:
           path: spec.template.spec.initContainers[0].env
           content:
@@ -429,7 +429,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="create-test-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
-          value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
+          value: RELEASE-NAME-temporal-frontend:7233
       - equal:
           path: spec.template.spec.volumes[?(@.name=='client-tls')].secret.secretName
           value: my-frontend-secret

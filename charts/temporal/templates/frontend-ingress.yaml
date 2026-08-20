@@ -8,6 +8,7 @@ apiVersion: extensions/v1beta1
   {{- end }}
 kind: Ingress
 metadata:
+  namespace: {{ include "temporal.kubernetesNamespace" $ }}
   name: {{ include "temporal.componentname" (list $ "frontend") }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "frontend" "") | nindent 4 }}

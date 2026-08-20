@@ -2,6 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  namespace: {{ include "temporal.kubernetesNamespace" $ }}
   name: "{{ include "temporal.fullname" $ }}-dynamic-config"
   labels:
     {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}

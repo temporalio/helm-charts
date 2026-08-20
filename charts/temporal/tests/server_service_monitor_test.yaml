@@ -1,0 +1,16 @@
+suite: test server service monitor
+templates:
+  - server-service-monitor.yaml
+set:
+  server:
+    metrics:
+      serviceMonitor:
+        enabled: true
+tests:
+  - it: does not render namespace selector by default
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - notExists:
+          path: spec.namespaceSelector

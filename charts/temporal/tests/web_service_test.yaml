@@ -78,7 +78,7 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: TEMPORAL_ADDRESS
-            value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
+            value: RELEASE-NAME-temporal-frontend:7233
   - it: TEMPORAL_ADDRESS can be overridden via web.temporalAddress
     template: templates/web-deployment.yaml
     set:
@@ -100,4 +100,4 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: TEMPORAL_ADDRESS
-            value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc:7233
+            value: RELEASE-NAME-temporal-frontend:7233
