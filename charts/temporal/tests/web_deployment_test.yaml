@@ -2,6 +2,13 @@ suite: test web deployment
 templates:
   - web-deployment.yaml
 tests:
+  - it: omits replica count when not configured
+    set:
+      web:
+        replicaCount: null
+    asserts:
+      - notExists:
+          path: spec.replicas
   - it: schedulerName, runtimeClassName and priorityClassName are unset by default
     asserts:
       - notExists:

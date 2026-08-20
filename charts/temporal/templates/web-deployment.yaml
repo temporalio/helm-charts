@@ -8,8 +8,8 @@ metadata:
   labels:
     {{- include "temporal.resourceLabels" (list $ "web" "deployment") | nindent 4 }}
 spec:
-  {{- if .Values.web.replicaCount }}
-  replicas: {{ .Values.web.replicaCount }}
+  {{- with .Values.web.replicaCount }}
+  replicas: {{ . }}
   {{- end }}
   selector:
     matchLabels:
