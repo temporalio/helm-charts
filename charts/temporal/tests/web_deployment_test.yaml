@@ -26,3 +26,14 @@ tests:
       - equal:
           path: spec.template.spec.priorityClassName
           value: my-priority-class
+  - it: prefixes web image with global.imageRegistry when set
+    set:
+      global:
+        imageRegistry: registry.example.com
+      web:
+        image:
+          tag: test-tag
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.example.com/temporalio/ui:test-tag"

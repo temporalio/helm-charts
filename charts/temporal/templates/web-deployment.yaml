@@ -41,7 +41,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}-web
-          image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
+          image: "{{ include "temporal.imageRegistry" . }}{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
           imagePullPolicy: {{ .Values.web.image.pullPolicy }}
           env:
             - name: TEMPORAL_ADDRESS

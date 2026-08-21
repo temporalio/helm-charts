@@ -182,3 +182,14 @@ tests:
       - equal:
           path: spec.template.spec.priorityClassName
           value: my-priority-class
+  - it: prefixes admintools image with global.imageRegistry when set
+    set:
+      global:
+        imageRegistry: registry.example.com
+      admintools:
+        image:
+          tag: test-tag
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.example.com/temporalio/admin-tools:test-tag"

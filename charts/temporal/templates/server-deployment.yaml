@@ -53,7 +53,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ $.Chart.Name }}-{{ $service }}
-          image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
+          image: "{{ include "temporal.imageRegistry" $ }}{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
           imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
           env:
             - name: POD_IP

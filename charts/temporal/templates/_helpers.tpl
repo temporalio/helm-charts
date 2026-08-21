@@ -109,6 +109,16 @@ Define the AppVersion
 {{- end -}}
 
 {{/*
+Render global image registry.
+*/}}
+{{- define "temporal.imageRegistry" -}}
+{{- $registry := (.Values.global.imageRegistry | default "") -}}
+{{- if $registry -}}
+{{- print (trimSuffix "/" $registry) "/" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Create the annotations for all resources
 */}}
 {{- define "temporal.resourceAnnotations" -}}
