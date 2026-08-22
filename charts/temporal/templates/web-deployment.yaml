@@ -29,7 +29,7 @@ spec:
       initContainers:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{ include "temporal.serviceAccount" $ }}
+      {{ include "temporal.componentServiceAccount" (list $ "web") }}
       {{- if or .Values.web.additionalVolumes .Values.web.tls.enabled }}
       volumes:
       {{- if .Values.web.additionalVolumes }}
