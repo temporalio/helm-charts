@@ -585,5 +585,3 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: externally-managed-sa
-
->>>>>>> 10cc101 (add trailing new lines at EOF)
