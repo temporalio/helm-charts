@@ -280,19 +280,13 @@ tests:
       value: Service
       matchMany: true
     asserts:
+      # No grpc-rpc port: the worker serves no gRPC API and its pods declare
+      # no `rpc` container port, so that service port could never resolve.
       - lengthEqual:
           path: spec.ports
-          count: 3
+          count: 2
       - equal:
           path: spec.ports[0]
-          value:
-            appProtocol: tcp
-            name: grpc-rpc
-            port: 7239
-            protocol: TCP
-            targetPort: rpc
-      - equal:
-          path: spec.ports[1]
           value:
             appProtocol: tcp
             name: grpc-membership
@@ -300,7 +294,7 @@ tests:
             protocol: TCP
             targetPort: membership
       - equal:
-          path: spec.ports[2]
+          path: spec.ports[1]
           value:
             appProtocol: http
             name: metrics
@@ -546,17 +540,9 @@ tests:
     asserts:
       - lengthEqual:
           path: spec.ports
-          count: 3
+          count: 2
       - equal:
           path: spec.ports[0]
-          value:
-            appProtocol: grpc
-            name: grpc-rpc
-            port: 7239
-            protocol: TCP
-            targetPort: rpc
-      - equal:
-          path: spec.ports[1]
           value:
             appProtocol: tls
             name: grpc-membership
@@ -564,7 +550,7 @@ tests:
             protocol: TCP
             targetPort: membership
       - equal:
-          path: spec.ports[2]
+          path: spec.ports[1]
           value:
             appProtocol: http
             name: metrics
