@@ -1,0 +1,216 @@
+suite: test image references
+templates:
+  - server-deployment.yaml
+  - server-configmap.yaml
+  - web-deployment.yaml
+  - admintools-deployment.yaml
+  - server-job.yaml
+  - server-namespace-job.yaml
+  - test.yaml
+set:
+  server:
+    config:
+      namespaces:
+        create: true
+        namespace:
+          - name: default
+      persistence:
+        defaultStore: default
+        visibilityStore: visibility
+        datastores:
+          default:
+            sql:
+              pluginName: mysql8
+              connectAddr: "temporal-persistence:3306"
+              databaseName: temporal
+          visibility:
+            sql:
+              pluginName: mysql8
+              connectAddr: "temporal-visibility:3306"
+              databaseName: temporal_visibility
+tests:
+  - it: pins images by tag when no digest is set
+    set:
+      server:
+        image:
+          repository: example.com/server
+          tag: v1.2.3
+      admintools:
+        image:
+          repository: example.com/admin-tools
+          tag: v4.5.6
+      web:
+        image:
+          repository: example.com/ui
+          tag: v7.8.9
+    asserts:
+      - template: templates/server-deployment.yaml
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-frontend
+        equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/server:v1.2.3
+      - template: templates/web-deployment.yaml
+        equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/ui:v7.8.9
+      - template: templates/admintools-deployment.yaml
+        equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/admin-tools:v4.5.6
+      - template: templates/server-job.yaml
+        equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/admin-tools:v4.5.6
+      - template: templates/server-namespace-job.yaml
+        equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/admin-tools:v4.5.6
+      - template: templates/test.yaml
+        equal:
+          path: spec.containers[0].image
+          value: example.com/admin-tools:v4.5.6
+
+  - it: pins images by digest, ignoring any tag
+    set:
+      server:
+        image:
+          repository: example.com/server
+          tag: v1.2.3
+          digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      admintools:
+        image:
+          repository: example.com/admin-tools
+          tag: v4.5.6
+          digest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      web:
+        image:
+          repository: example.com/ui
+          tag: v7.8.9
+          digest: sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+    asserts:
+      - template: templates/server-deployment.yaml
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-frontend
+        equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/server@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      - template: templates/server-deployment.yaml
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-history
+        equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/server@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      - template: templates/web-deployment.yaml
+        equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/ui@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      - template: templates/admintools-deployment.yaml
+        equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/admin-tools@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      - template: templates/test.yaml
+        equal:
+          path: spec.containers[0].image
+          value: example.com/admin-tools@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+
+  - it: pins the schema job init containers by digest
+    set:
+      admintools:
+        image:
+          repository: example.com/admin-tools
+          digest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    template: templates/server-job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=='create-default-store')].image
+          value: example.com/admin-tools@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=='manage-schema-default-store')].image
+          value: example.com/admin-tools@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      - equal:
+          path: spec.template.spec.containers[?(@.name=='done')].image
+          value: example.com/admin-tools@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+
+  - it: pins the namespace job init containers by digest
+    set:
+      admintools:
+        image:
+          repository: example.com/admin-tools
+          digest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    template: templates/server-namespace-job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=='create-default-namespace')].image
+          value: example.com/admin-tools@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      - equal:
+          path: spec.template.spec.containers[?(@.name=='done')].image
+          value: example.com/admin-tools@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+
+  - it: keeps digests per component
+    set:
+      server:
+        image:
+          repository: example.com/server
+          tag: v1.2.3
+      web:
+        image:
+          repository: example.com/ui
+          digest: sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+    asserts:
+      - template: templates/server-deployment.yaml
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-frontend
+        equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/server:v1.2.3
+      - template: templates/web-deployment.yaml
+        equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/ui@sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+  - it: leaves the pull policy alone when pinning by digest
+    set:
+      web:
+        image:
+          digest: sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+          pullPolicy: Always
+    template: templates/web-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: fails when a digest omits the algorithm prefix
+    set:
+      web:
+        image:
+          digest: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+    template: templates/web-deployment.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: 'web.image.digest must be in <algorithm>:<hex> form (e.g. sha256:<64 hex chars>), got "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"'
+
+  - it: fails when a digest is not hex
+    set:
+      server:
+        image:
+          digest: sha256:not-a-digest
+    template: templates/server-deployment.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: 'server.image.digest must be in <algorithm>:<hex> form (e.g. sha256:<64 hex chars>), got "sha256:not-a-digest"'
+
+  - it: fails when neither a tag nor a digest is set
+    set:
+      server:
+        image:
+          tag: null
+    template: templates/server-deployment.yaml
+    asserts:
+      - failedTemplate:
+          errorMessage: server.image.tag is required unless server.image.digest is set

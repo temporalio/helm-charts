@@ -23,6 +23,9 @@ server:
   image:
     repository: temporalio/server
     tag: 1.31.2
+    # Pin the image by digest instead of by tag, given as a full
+    # <algorithm>:<hex> digest. Takes precedence over `tag`
+    # digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
     pullPolicy: IfNotPresent
   # Global default settings (can be overridden per service)
   # replicaCount: 1
@@ -538,6 +541,9 @@ admintools:
   image:
     repository: temporalio/admin-tools
     tag: "1.31.2"
+    # Pin the image by digest instead of by tag, given as a full
+    # <algorithm>:<hex> digest. Takes precedence over `tag`.
+    # digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -575,6 +581,9 @@ web:
   image:
     repository: temporalio/ui
     tag: 2.52.0
+    # Pin the image by digest instead of by tag, given as a full
+    # <algorithm>:<hex> digest. Takes precedence over `tag`.
+    # digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
     pullPolicy: IfNotPresent
   service:
     # set type to NodePort if access to web needs access from outside the cluster

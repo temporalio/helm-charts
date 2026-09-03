@@ -182,6 +182,33 @@ Define the AppVersion
 {{- end -}}
 
 {{/*
+Render the image reference for a component.
+
+A component's image is pinned either by tag or digest. The digest takes
+precedence and the tag is ignored when both are set.
+
+Digests must be given in full <algorithm>:<hex> form (e.g. sha256:<64 hex
+chars>).
+*/}}
+{{- define "temporal.image" -}}
+{{- $global := index . 0 -}}
+{{- $component := index . 1 -}}
+{{- $image := index $global.Values $component "image" -}}
+{{- $tag := $image.tag | default "" | toString -}}
+{{- $digest := $image.digest | default "" | toString -}}
+{{- if $digest -}}
+{{- if not (regexMatch "^[a-z0-9]+([.+_-][a-z0-9]+)*:[a-fA-F0-9]{32,}$" $digest) -}}
+{{- fail (printf "%s.image.digest must be in <algorithm>:<hex> form (e.g. sha256:<64 hex chars>), got %q" $component $digest) -}}
+{{- end -}}
+{{- printf "%s@%s" $image.repository $digest -}}
+{{- else if $tag -}}
+{{- printf "%s:%s" $image.repository $tag -}}
+{{- else -}}
+{{- fail (printf "%s.image.tag is required unless %s.image.digest is set" $component $component) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Create the annotations for all resources
 */}}
 {{- define "temporal.resourceAnnotations" -}}
