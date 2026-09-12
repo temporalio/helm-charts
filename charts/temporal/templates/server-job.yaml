@@ -48,7 +48,7 @@ spec:
             {{- if eq $store.driver "cassandra" }}
           command: ['temporal-cassandra-tool', 'create', '-k', '{{ $store.config.keyspace }}', '--replication-factor', '{{ $store.config.replicationFactor | default 1 }}'{{- if $store.config.datacenter }}, '--datacenter', '{{ $store.config.datacenter }}'{{- end }}]
             {{- else if eq $store.driver "sql" }}
-          command: ['temporal-sql-tool', 'create-database']
+          command: ['temporal-sql-tool', 'create-database'{{- with $store.config.defaultDb }}, '--defaultdb', '{{ . }}'{{- end }}]
             {{- else -}}
               {{- fail (printf "createDatabase is not supported for %s store" $store.driver) -}}
             {{- end }}
