@@ -6,6 +6,10 @@ config:
   upstreams:
     - name: default
       hostPort: localhost:7233
+      # A plaintext upstream must say so: without this the proxy dials it with
+      # TLS, the handshake fails, and the process exits before it binds the
+      # gateway. Drop it (and add a tls block) for a TLS upstream.
+      insecure: true
 
   routing:
     default: default
@@ -109,15 +113,41 @@ resources: {}
 
 # This is to setup the liveness and readiness probes more information can be found here:
 # https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+#
+# These carry timings only. The gateway serves gRPC and has no HTTP handler, so
+# an httpGet probe against it cannot pass; the chart supplies the handler based
+# on whether the gateway runs TLS:
+#
+#   plaintext gateway -> grpc, checking the proxy's health service (needs 1.27)
+#   TLS gateway       -> tcpSocket, because the kubelet's grpc probe dials
+#                        plaintext and cannot do TLS
+#
+# Naming any handler here overrides that. See the chart README for the
+# grpc-health-probe exec probe, which does support TLS and works pre-1.27.
+# Setting a probe to null omits it.
+#
+# There is deliberately no startupProbe. The proxy binds the gateway only after
+# its upstream connections are ready, and that whole sequence is bounded by the
+# fx start timeout (15s by default), after which the process exits rather than
+# starting slowly. The failureThreshold below already tolerates several times
+# that, so a startupProbe would gate a boot that cannot outlast it. Tightening
+# livenessProbe past the boot ceiling is the point at which to add one.
+
+# Deliberately dumb: a restart only fixes process-local faults, so this reports
+# whether the gateway is still serving and nothing about the upstream. Wiring
+# upstream health in here turns one upstream blip into a fleet-wide restart.
 livenessProbe:
-  httpGet:
-    path: /
-    port: http
+  # 4 x 15s tolerates the boot described above before the first restart.
+  periodSeconds: 15
+  # The 1s default is shorter than a GC pause or a CPU-throttled moment, and a
+  # probe that times out counts as a failure.
+  timeoutSeconds: 5
+  failureThreshold: 4
 
 readinessProbe:
-  httpGet:
-    path: /
-    port: http
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 2
 
 # This section is for setting up autoscaling more information can be found here:
 # https://kubernetes.io/docs/concepts/workloads/autoscaling/

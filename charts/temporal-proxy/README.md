@@ -6,6 +6,9 @@ clusters, namespace translation, encryption, and more.
 The chart deploys the proxy as a single Deployment fronted by a ClusterIP Service, with its runtime configuration
 supplied through a ConfigMap.
 
+With a plaintext gateway the default probes are native gRPC probes, which need Kubernetes 1.27 or newer. See
+[Health checks](#health-checks) for the alternatives on older clusters.
+
 ## Installation
 
 The chart is published to the Temporal Helm repo at `https://go.temporal.io/helm-charts`.
@@ -120,6 +123,60 @@ config:
 
 If you'd rather manage certificate files yourself, skip `secretName` and use the chart's generic `volumes` /
 `volumeMounts` values to mount them at whatever path you set `cert`/`key`/`ca` to.
+
+## Health checks
+
+The gateway serves gRPC and has no HTTP handler, so an `httpGet` probe against it can never pass: the kubelet's prober
+speaks HTTP/1.1 and gets a protocol error, and a request forced onto HTTP/2 gets `415 invalid gRPC request
+content-type`. The probes in `values.yaml` therefore carry timings only, and the chart supplies the handler:
+
+| Gateway | Handler | Why |
+| --- | --- | --- |
+| plaintext (default) | `grpc` | Checks the proxy's [gRPC health service](https://github.com/grpc/grpc/blob/master/doc/health-checking.md). Needs Kubernetes 1.27, where native gRPC probes went GA. |
+| TLS (`config.tls` set) | `tcpSocket` | The kubelet's `grpc` probe dials plaintext and cannot do TLS ([kubernetes/enhancements#4939](https://github.com/kubernetes/enhancements/issues/4939)), so it would never connect. |
+
+Only the gateway listener matters here; an upstream's own `tls` block does not change how the kubelet reaches the pod.
+
+A `grpc` probe takes a numeric port and cannot reference a named container port the way `httpGet` can, so the chart
+fills an unset `grpc.port` in from `service.port`. Leaving `grpc.service` unset probes the empty service name, which
+the proxy reports process-wide health under; set it to a proto service full name to probe a single service. Note the
+proxy only answers for a service it forwards, so naming one left out of `config.allowedServices` fails the probe.
+
+### What each probe is for
+
+- **`livenessProbe`** is deliberately dumb. A restart only fixes process-local faults, so it reports whether the gateway
+  is still serving and nothing about the upstream. Wiring upstream health into it turns one upstream blip into a
+  fleet-wide restart, where every replica drops its connection pool and caches at the moment the upstream is recovering.
+- **`readinessProbe`** gates traffic and rollouts. `timeoutSeconds` is raised off the Kubernetes default of 1s on both,
+  which is shorter than a GC pause or a CPU-throttled moment; a probe that times out counts as a failure.
+
+There is no `startupProbe`. The proxy binds the gateway only once its upstream connections are ready, and that whole
+sequence is bounded by the fx start timeout — 15s by default — after which the process exits rather than starting
+slowly. `failureThreshold: 4` at `periodSeconds: 15` already tolerates several times that, so a `startupProbe` would
+gate a boot that cannot outlast it. If you tighten `livenessProbe` below the boot ceiling (for example
+`periodSeconds: 5` with `failureThreshold: 2`, to catch a wedged process in 10s), add one then — otherwise liveness
+will start killing containers mid-boot:
+
+```yaml
+startupProbe:
+  periodSeconds: 2
+  failureThreshold: 30
+```
+
+### Overriding the handler
+
+Naming any handler replaces the default. The chart's defaults carry no handler key, so there is nothing left behind to
+merge with yours — a probe with two handlers would be rejected by the API server.
+
+The strongest option for a TLS gateway, or for a cluster older than 1.27, is an `exec` probe running
+[`grpc-health-probe`](https://github.com/grpc-ecosystem/grpc-health-probe), which does support TLS. It has to be added
+to the image, since the published one contains only the proxy binary:
+
+```yaml
+livenessProbe:
+  exec:
+    command: ["/bin/grpc_health_probe", "-addr=:8443", "-tls", "-tls-ca-cert=/etc/temporal-proxy/certs/gateway/ca.crt"]
+```
 
 ### env / envFrom passthrough
 

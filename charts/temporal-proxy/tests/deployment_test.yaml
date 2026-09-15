@@ -90,14 +90,106 @@ tests:
           path: spec.selector.matchLabels["app.kubernetes.io/instance"]
           value: temporal-proxy
 
-  - it: renders probes by default
+  - it: probes the health service over grpc when the gateway is plaintext
     asserts:
       - equal:
-          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
-          value: /
+          path: spec.template.spec.containers[0].livenessProbe.grpc.port
+          value: 8443
       - equal:
-          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
-          value: /
+          path: spec.template.spec.containers[0].readinessProbe.grpc.port
+          value: 8443
+      # An httpGet probe against the gRPC gateway can never pass: there is no
+      # HTTP handler on the port.
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet
+      - notExists:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet
+
+  - it: falls back to tcpSocket when the gateway runs TLS
+    # The kubelet's grpc probe dials plaintext and cannot do TLS
+    # (kubernetes/enhancements#4939), so it would never connect.
+    set:
+      config.tls.secretName: proxy-gateway-tls
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8443
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
+          value: 8443
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe.grpc
+
+  - it: keeps an upstream tls block from changing the probe handler
+    # Only the gateway listener decides how the kubelet reaches the pod.
+    set:
+      config:
+        upstreams:
+          - name: cloud
+            hostPort: cloud.example.com:7233
+            tls: {}
+        routing:
+          default: cloud
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.grpc.port
+          value: 8443
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket
+
+  - it: keeps the liveness probe off the upstream and off the 1s default timeout
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.timeoutSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.failureThreshold
+          value: 4
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe.grpc.service
+
+  - it: follows the service port into every grpc probe
+    set:
+      service.port: 9999
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.grpc.port
+          value: 9999
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.grpc.port
+          value: 9999
+
+  - it: honors an explicit probe port and service name
+    set:
+      service.port: 9999
+      livenessProbe:
+        grpc:
+          port: 7777
+          service: temporal.api.workflowservice.v1.WorkflowService
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.grpc.port
+          value: 7777
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.grpc.service
+          value: temporal.api.workflowservice.v1.WorkflowService
+
+  - it: passes an exec probe through without a leftover default handler
+    # Helm merges values, so a handler in the chart defaults would survive
+    # alongside this one and produce a probe with two, which the API server
+    # rejects. The defaults carry timings only, so there is nothing to merge.
+    set:
+      livenessProbe:
+        exec:
+          command: ["/bin/grpc_health_probe", "-addr=:8443"]
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.exec.command[0]
+          value: /bin/grpc_health_probe
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe.grpc
+      - notExists:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket
 
   - it: omits probes when unset
     set:
@@ -108,6 +200,27 @@ tests:
           path: spec.template.spec.containers[0].livenessProbe
       - notExists:
           path: spec.template.spec.containers[0].readinessProbe
+
+  - it: ships no startupProbe by default
+    # The proxy's boot is bounded by the fx start timeout, which livenessProbe
+    # already tolerates. Shipping one would also hand a new probe to anyone who
+    # worked around the broken httpGet defaults by nulling the other two.
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].startupProbe
+
+  - it: renders a startupProbe when one is set
+    set:
+      startupProbe:
+        periodSeconds: 2
+        failureThreshold: 30
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.grpc.port
+          value: 8443
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 30
 
   - it: omits optional blocks by default
     asserts:

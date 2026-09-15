@@ -176,3 +176,60 @@ since there is no name to quote. */ -}}
 {{- $result := dict "config" $cfg "env" $acc.env "volumes" $acc.volumes "volumeMounts" $acc.volumeMounts -}}
 {{- $result | toYaml -}}
 {{- end -}}
+
+{{/*
+Render a probe, supplying the handler when the values do not carry one.
+
+The gateway serves gRPC and has no HTTP handler, so an httpGet probe against it
+cannot pass. The probes in values.yaml therefore carry only timings, and the
+handler is chosen here from whether the gateway runs TLS:
+
+  - plaintext gateway -> grpc, which checks the proxy's health service
+  - TLS gateway       -> tcpSocket, because the kubelet's grpc probe dials
+                         plaintext and cannot do TLS
+                         (kubernetes/enhancements#4939)
+
+A probe that already names any handler is passed through untouched, so an
+exec probe running grpc-health-probe (which does support TLS, and works on
+clusters older than 1.27) can replace either default. Leaving the handler out
+of values.yaml is what makes that override clean: Helm merges values rather
+than replacing them, so a handler in the defaults would survive alongside the
+one being set and produce a probe with two, which the API server rejects.
+
+A grpc probe takes a numeric port and cannot reference a named container port
+the way httpGet can, so an unset grpc port is filled in from service.port and
+does not drift when that changes.
+
+Args (dict): probe, port, tls.
+*/}}
+{{- define "temporal-proxy.probe" -}}
+{{- $probe := deepCopy .probe -}}
+{{- $handlers := list "grpc" "exec" "httpGet" "tcpSocket" -}}
+{{- $named := false -}}
+{{- range $handlers -}}
+{{- if hasKey $probe . -}}
+{{- $named = true -}}
+{{- end -}}
+{{- end -}}
+{{- if not $named -}}
+{{- if .tls -}}
+{{- $_ := set $probe "tcpSocket" (dict "port" .port) -}}
+{{- else -}}
+{{- $_ := set $probe "grpc" (dict "port" .port) -}}
+{{- end -}}
+{{- else if and (hasKey $probe "grpc") (not $probe.grpc.port) -}}
+{{- $_ := set $probe.grpc "port" .port -}}
+{{- end -}}
+{{- toYaml $probe -}}
+{{- end -}}
+
+{{/*
+Whether the gateway listener runs TLS, which decides the default probe handler
+above. Gateway TLS is config.tls; an upstream's own tls block is a separate
+thing and does not affect how the kubelet reaches the gateway.
+*/}}
+{{- define "temporal-proxy.gatewayTLS" -}}
+{{- if (dig "tls" "" (default dict .Values.config)) -}}
+true
+{{- end -}}
+{{- end -}}
