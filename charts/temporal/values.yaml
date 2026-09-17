@@ -188,13 +188,16 @@ server:
       # Persistence configuration follows the raw Temporal server config format.
       # Driver is determined by which top-level key is present (cassandra vs sql).
       # For SQL stores, you can use either connectAddr: "host:port" or separate host/port fields.
-      # Helm-specific fields (existingSecret, secretKey) are stripped before rendering to server config.
+      # Helm-specific fields (existingSecret, secretKey, createDatabase, manageSchema, defaultDb) are stripped before rendering to server config.
       datastores:
         default:
         # Example SQL configuration:
         # sql:
         #   createDatabase: false
         #   manageSchema: false
+        #   # Admin database to connect to when createDatabase is true (temporal-sql-tool --defaultdb).
+        #   # Use this when the server has no postgres/mysql system database (e.g. Aiven/Citus: defaultdb).
+        #   defaultDb: postgres
         #   pluginName: mysql8  # or postgres12, postgres12_pgx
         #   driverName: mysql8
         #   databaseName: temporal
@@ -243,6 +246,7 @@ server:
         # sql:
         #   createDatabase: false
         #   manageSchema: false
+        #   # defaultDb: postgres
         #   pluginName: mysql8
         #   driverName: mysql8
         #   databaseName: temporal_visibility
