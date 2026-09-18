@@ -189,22 +189,23 @@ Create the annotations for all resources
 {{- $scope := index . 1 -}}
 {{- $resourceType := index . 2 -}}
 {{- $component := "server" -}}
-{{- if (or (eq $scope "admintools") (eq $scope "web")) -}}
+{{- if (or (eq $scope "admintools") (eq $scope "web") (eq $scope "schema")) -}}
 {{- $component = $scope -}}
 {{- end -}}
+{{- $resourceAnnotations := dict -}}
 {{- with $resourceType -}}
 {{- $resourceTypeKey := printf "%sAnnotations" . -}}
-{{- $componentAnnotations := (index $global.Values $component $resourceTypeKey) -}}
+{{- $additionalAnnotations := $global.Values.additionalAnnotations | default dict -}}
+{{- $componentAnnotations := (index $global.Values $component $resourceTypeKey) | default dict -}}
 {{- $scopeAnnotations := dict -}}
 {{- if hasKey (index $global.Values $component) $scope -}}
-{{- $scopeAnnotations = (index $global.Values $component $scope $resourceTypeKey) -}}
+{{- $scopeAnnotations = (index $global.Values $component $scope $resourceTypeKey) | default dict -}}
 {{- end -}}
-{{- $resourceAnnotations := merge $scopeAnnotations $componentAnnotations -}}
+{{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $additionalAnnotations) -}}
+{{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $componentAnnotations) -}}
+{{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $scopeAnnotations) -}}
+{{- end -}}
 {{- range $annotation_name, $annotation_value := $resourceAnnotations }}
-{{ $annotation_name }}: {{ $annotation_value | quote }}
-{{- end -}}
-{{- end -}}
-{{- range $annotation_name, $annotation_value := $global.Values.additionalAnnotations }}
 {{ $annotation_name }}: {{ $annotation_value | quote }}
 {{- end -}}
 {{- end -}}

@@ -236,3 +236,108 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: external-admin-sa
+  - it: has no annotations by default
+    asserts:
+      - isNullOrEmpty:
+          path: metadata.annotations
+      - isNullOrEmpty:
+          path: spec.template.metadata.annotations
+  - it: applies global additionalAnnotations to the deployment and the pod
+    set:
+      additionalAnnotations:
+        example.com/owner: platform
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/owner"]
+          value: platform
+      - equal:
+          path: spec.template.metadata.annotations["example.com/owner"]
+          value: platform
+  - it: applies deploymentAnnotations to the deployment only
+    set:
+      admintools:
+        deploymentAnnotations:
+          example.com/deployment: admintools
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/deployment"]
+          value: admintools
+      - isNullOrEmpty:
+          path: spec.template.metadata.annotations
+  - it: applies podAnnotations to the pod only
+    set:
+      admintools:
+        podAnnotations:
+          example.com/pod: admintools
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["example.com/pod"]
+          value: admintools
+      - isNullOrEmpty:
+          path: metadata.annotations
+  - it: merges component annotations with global additionalAnnotations
+    set:
+      additionalAnnotations:
+        example.com/owner: platform
+      admintools:
+        deploymentAnnotations:
+          example.com/deployment: admintools
+        podAnnotations:
+          example.com/pod: admintools
+    asserts:
+      - equal:
+          path: metadata.annotations
+          value:
+            example.com/deployment: admintools
+            example.com/owner: platform
+      - equal:
+          path: spec.template.metadata.annotations
+          value:
+            example.com/owner: platform
+            example.com/pod: admintools
+  - it: component annotations win over global additionalAnnotations on the same key
+    set:
+      additionalAnnotations:
+        example.com/owner: platform
+      admintools:
+        deploymentAnnotations:
+          example.com/owner: admintools-deployment
+        podAnnotations:
+          example.com/owner: admintools-pod
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/owner"]
+          value: admintools-deployment
+      - equal:
+          path: spec.template.metadata.annotations["example.com/owner"]
+          value: admintools-pod
+  - it: renders non-string annotation values as strings
+    set:
+      admintools:
+        podAnnotations:
+          example.com/replicas: 5
+          example.com/enabled: true
+          example.com/ratio: 1.5
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["example.com/replicas"]
+          value: "5"
+      - equal:
+          path: spec.template.metadata.annotations["example.com/enabled"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["example.com/ratio"]
+          value: "1.5"
+  - it: renders multiline annotation values
+    set:
+      admintools:
+        podAnnotations:
+          example.com/config: |
+            first: 1
+            second: 2
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["example.com/config"]
+          value: |
+            first: 1
+            second: 2

@@ -305,3 +305,32 @@ tests:
       - matchRegex:
           path: data['config_template.yaml']
           pattern: "prometheus:\\s+listenAddress: 0.0.0.0:9090"
+
+  - it: applies additionalAnnotations to the config configmap
+    set:
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+      server:
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            datastores:
+              default:
+                sql:
+                  password: "secret"
+              visibility:
+                sql:
+                  password: "secret"
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"

@@ -1,0 +1,60 @@
+suite: test web pdb
+templates:
+  - web-pdb.yaml
+set:
+  web:
+    enabled: true
+tests:
+  - it: creates pdb when specified
+    set:
+      web:
+        podDisruptionBudget:
+          maxUnavailable: 1
+    asserts:
+      - containsDocument:
+          kind: PodDisruptionBudget
+          apiVersion: policy/v1
+          name: RELEASE-NAME-temporal-web-pdb
+      - equal:
+          path: spec.maxUnavailable
+          value: 1
+  - it: applies additionalAnnotations to the pdb
+    set:
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+      web:
+        podDisruptionBudget:
+          maxUnavailable: 1
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"
+  - it: web.pdbAnnotations override additionalAnnotations
+    set:
+      additionalAnnotations:
+        team: platform
+      web:
+        pdbAnnotations:
+          team: web-team
+        podDisruptionBudget:
+          maxUnavailable: 1
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: web-team
+  - it: omits annotations when none are set
+    set:
+      web:
+        podDisruptionBudget:
+          maxUnavailable: 1
+    asserts:
+      - notExists:
+          path: metadata.annotations
+  - it: doesn't create pdb when podDisruptionBudget is not set
+    asserts:
+      - hasDocuments:
+          count: 0

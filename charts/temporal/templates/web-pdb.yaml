@@ -7,6 +7,10 @@ metadata:
   name: {{ include "temporal.componentname" (list $ "web") }}-pdb
   labels:
     {{- include "temporal.resourceLabels" (list $ "web" "") | nindent 4 }}
+  {{- with include "temporal.resourceAnnotations" (list $ "web" "pdb") }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
 spec:
   {{- toYaml $.Values.web.podDisruptionBudget | nindent 2 }}
   selector:

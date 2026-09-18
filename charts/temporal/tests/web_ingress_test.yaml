@@ -1,0 +1,55 @@
+suite: test web ingress
+templates:
+  - web-ingress.yaml
+tests:
+  - it: applies additionalAnnotations to the web ingress
+    set:
+      web:
+        ingress:
+          enabled: true
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"
+  - it: web.ingressAnnotations override additionalAnnotations
+    set:
+      web:
+        ingressAnnotations:
+          team: web-team
+        ingress:
+          enabled: true
+      additionalAnnotations:
+        team: platform
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: web-team
+  - it: ingress.annotations override every other annotation source
+    set:
+      web:
+        ingressAnnotations:
+          team: web-team
+        ingress:
+          enabled: true
+          annotations:
+            team: ingress-team
+      additionalAnnotations:
+        team: platform
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: ingress-team
+  - it: omits annotations on the web ingress when none are set
+    set:
+      web:
+        ingress:
+          enabled: true
+    asserts:
+      - notExists:
+          path: metadata.annotations

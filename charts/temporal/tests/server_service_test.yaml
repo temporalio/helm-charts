@@ -590,3 +590,137 @@ tests:
       - equal:
           path: metadata.labels["label2"]
           value: value2
+  - it: applies additionalAnnotations to the frontend service
+    template: templates/server-service.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Service
+      matchMany: true
+    set:
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"
+  - it: applies additionalAnnotations to the headless service alongside the built-in annotations
+    template: templates/server-service.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-headless")].kind'
+      value: Service
+      matchMany: true
+    set:
+      additionalAnnotations:
+        team: platform
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations["service.alpha.kubernetes.io/tolerate-unready-endpoints"]
+          value: "true"
+  - it: server.serviceAnnotations override additionalAnnotations
+    template: templates/server-service.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Service
+      matchMany: true
+    set:
+      additionalAnnotations:
+        team: platform
+      server:
+        serviceAnnotations:
+          team: server-team
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: server-team
+  - it: per-service serviceAnnotations override server.serviceAnnotations
+    template: templates/server-service.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Service
+      matchMany: true
+    set:
+      additionalAnnotations:
+        team: platform
+      server:
+        serviceAnnotations:
+          team: server-team
+        frontend:
+          serviceAnnotations:
+            team: frontend-team
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: frontend-team
+  - it: service.annotations override serviceAnnotations and are still evaluated as a template
+    template: templates/server-service.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Service
+      matchMany: true
+    set:
+      additionalAnnotations:
+        team: platform
+      server:
+        serviceAnnotations:
+          team: server-team
+        frontend:
+          serviceAnnotations:
+            team: frontend-team
+          service:
+            annotations:
+              team: "{{ .Release.Name }}-service-team"
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: RELEASE-NAME-service-team
+  - it: omits annotations on the frontend service when none are set
+    template: templates/server-service.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
+      value: Service
+      matchMany: true
+    asserts:
+      - notExists:
+          path: metadata.annotations
+  - it: renders the built-in headless annotations when metrics annotations are enabled
+    template: templates/server-service.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-headless")].kind'
+      value: Service
+      matchMany: true
+    asserts:
+      - equal:
+          path: metadata.annotations["service.alpha.kubernetes.io/tolerate-unready-endpoints"]
+          value: "true"
+      - equal:
+          path: metadata.annotations["prometheus.io/job"]
+          value: temporal-frontend
+      - equal:
+          path: metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: metadata.annotations["prometheus.io/scheme"]
+          value: http
+      - equal:
+          path: metadata.annotations["prometheus.io/port"]
+          value: "9090"
+  - it: serviceAnnotations override the built-in headless annotations
+    template: templates/server-service.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-headless")].kind'
+      value: Service
+      matchMany: true
+    set:
+      additionalAnnotations:
+        prometheus.io/scheme: https
+    asserts:
+      - equal:
+          path: metadata.annotations["prometheus.io/scheme"]
+          value: https
