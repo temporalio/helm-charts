@@ -14,3 +14,56 @@ tests:
     asserts:
       - notExists:
           path: spec.namespaceSelector
+  - it: applies additionalAnnotations to the service monitor
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"
+  - it: server.serviceMonitorAnnotations override additionalAnnotations
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      additionalAnnotations:
+        team: platform
+      server:
+        serviceMonitorAnnotations:
+          team: server-team
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: server-team
+  - it: per-service serviceMonitorAnnotations override server.serviceMonitorAnnotations
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      additionalAnnotations:
+        team: platform
+      server:
+        serviceMonitorAnnotations:
+          team: server-team
+        frontend:
+          serviceMonitorAnnotations:
+            team: frontend-team
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: frontend-team
+  - it: omits annotations on the service monitor when none are set
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - notExists:
+          path: metadata.annotations

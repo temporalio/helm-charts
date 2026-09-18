@@ -9,8 +9,9 @@ metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "service") | nindent 4 }}
-  {{- if $serviceValues.service.annotations }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $serviceValues.service.annotations "context" $) | nindent 4 }}
+  {{- $serviceAnnotations := mergeOverwrite (include "temporal.resourceAnnotations" (list $ $service "service") | fromYaml | default dict) (deepCopy ($serviceValues.service.annotations | default dict)) -}}
+  {{- with $serviceAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" . "context" $) | nindent 4 }}
   {{- end }}
 spec:
   type: {{ $serviceValues.service.type }}
@@ -55,18 +56,21 @@ metadata:
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
     app.kubernetes.io/headless: 'true'
+  {{- /* Use the tolerate-unready-endpoints annotation in addition to the actual
+         publishNotReadyAddresses field below because the annotation will stop
+         being respected soon but the field is broken in some versions of
+         Kubernetes: https://github.com/kubernetes/kubernetes/issues/58662 */}}
+  {{- $headlessAnnotations := dict "service.alpha.kubernetes.io/tolerate-unready-endpoints" "true" -}}
+  {{- if (dig "metrics" "annotations" "enabled" $.Values.server.metrics.annotations.enabled $serviceValues) -}}
+  {{- $headlessAnnotations = mergeOverwrite $headlessAnnotations (dict
+      "prometheus.io/job" (printf "%s-%s" $.Chart.Name $service)
+      "prometheus.io/scrape" "true"
+      "prometheus.io/scheme" "http"
+      "prometheus.io/port" "9090") -}}
+  {{- end -}}
+  {{- $headlessAnnotations = mergeOverwrite $headlessAnnotations (include "temporal.resourceAnnotations" (list $ $service "service") | fromYaml | default dict) }}
   annotations:
-    # Use this annotation in addition to the actual field below because the
-    # annotation will stop being respected soon but the field is broken in
-    # some versions of Kubernetes:
-    # https://github.com/kubernetes/kubernetes/issues/58662
-    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-    {{- if (dig "metrics" "annotations" "enabled" $.Values.server.metrics.annotations.enabled $serviceValues) }}
-    prometheus.io/job: {{ $.Chart.Name }}-{{ $service }}
-    prometheus.io/scrape: 'true'
-    prometheus.io/scheme: http
-    prometheus.io/port: "9090"
-    {{- end }}
+    {{- toYaml $headlessAnnotations | nindent 4 }}
 
 spec:
   type: ClusterIP
