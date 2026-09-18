@@ -667,3 +667,246 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: externally-managed-sa
+  - it: has no deployment annotations by default
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    asserts:
+      - isNullOrEmpty:
+          path: metadata.annotations
+  - it: applies global additionalAnnotations to every service deployment and pod
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    set:
+      additionalAnnotations:
+        example.com/owner: platform
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/owner"]
+          value: platform
+      - equal:
+          path: spec.template.metadata.annotations["example.com/owner"]
+          value: platform
+  - it: applies server wide deploymentAnnotations to every service deployment only
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        deploymentAnnotations:
+          example.com/deployment: server
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/deployment"]
+          value: server
+      - notExists:
+          path: spec.template.metadata.annotations["example.com/deployment"]
+  - it: applies server wide podAnnotations to every service pod only
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        podAnnotations:
+          example.com/pod: server
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["example.com/pod"]
+          value: server
+      - isNullOrEmpty:
+          path: metadata.annotations
+  - it: applies service specific annotations to that service
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        frontend:
+          deploymentAnnotations:
+            example.com/deployment: frontend
+          podAnnotations:
+            example.com/pod: frontend
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/deployment"]
+          value: frontend
+      - equal:
+          path: spec.template.metadata.annotations["example.com/pod"]
+          value: frontend
+  - it: does not apply service specific annotations to the other services
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name != "RELEASE-NAME-temporal-frontend")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        frontend:
+          deploymentAnnotations:
+            example.com/deployment: frontend
+          podAnnotations:
+            example.com/pod: frontend
+    asserts:
+      - isNullOrEmpty:
+          path: metadata.annotations
+      - notExists:
+          path: spec.template.metadata.annotations["example.com/pod"]
+  - it: merges service specific annotations with server wide annotations
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        deploymentAnnotations:
+          example.com/deployment: server
+        podAnnotations:
+          example.com/pod: server
+        frontend:
+          deploymentAnnotations:
+            example.com/frontend-deployment: frontend
+          podAnnotations:
+            example.com/frontend-pod: frontend
+    asserts:
+      - equal:
+          path: metadata.annotations
+          value:
+            example.com/deployment: server
+            example.com/frontend-deployment: frontend
+      - equal:
+          path: spec.template.metadata.annotations["example.com/pod"]
+          value: server
+      - equal:
+          path: spec.template.metadata.annotations["example.com/frontend-pod"]
+          value: frontend
+  - it: favours service specific annotations over server wide annotations on the same key
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        deploymentAnnotations:
+          example.com/owner: server
+        podAnnotations:
+          example.com/owner: server
+        frontend:
+          deploymentAnnotations:
+            example.com/owner: frontend
+          podAnnotations:
+            example.com/owner: frontend
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/owner"]
+          value: frontend
+      - equal:
+          path: spec.template.metadata.annotations["example.com/owner"]
+          value: frontend
+  - it: favours server wide annotations over global additionalAnnotations on the same key
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    set:
+      additionalAnnotations:
+        example.com/owner: platform
+      server:
+        deploymentAnnotations:
+          example.com/owner: server-deployment
+        podAnnotations:
+          example.com/owner: server-pod
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/owner"]
+          value: server-deployment
+      - equal:
+          path: spec.template.metadata.annotations["example.com/owner"]
+          value: server-pod
+  - it: keeps the config checksum and prometheus annotations alongside custom pod annotations
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        podAnnotations:
+          example.com/pod: server
+    asserts:
+      - exists:
+          path: spec.template.metadata.annotations["checksum/config"]
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["example.com/pod"]
+          value: server
+  - it: renders non-string annotation values as strings
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        frontend:
+          deploymentAnnotations:
+            example.com/replicas: 5
+            example.com/enabled: true
+            example.com/ratio: 1.5
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/replicas"]
+          value: "5"
+      - equal:
+          path: metadata.annotations["example.com/enabled"]
+          value: "true"
+      - equal:
+          path: metadata.annotations["example.com/ratio"]
+          value: "1.5"
+  - it: renders multiline annotation values
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        frontend:
+          podAnnotations:
+            example.com/config: |
+              first: 1
+              second: 2
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["example.com/config"]
+          value: |
+            first: 1
+            second: 2
+  - it: tolerates service specific annotations being explicitly empty
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      additionalAnnotations:
+        example.com/owner: platform
+      server:
+        frontend:
+          deploymentAnnotations: null
+          podAnnotations: null
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/owner"]
+          value: platform
+      - equal:
+          path: spec.template.metadata.annotations["example.com/owner"]
+          value: platform
