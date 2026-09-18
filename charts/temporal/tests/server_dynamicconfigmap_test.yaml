@@ -1,0 +1,43 @@
+suite: test server dynamic config configmap
+templates:
+  - server-dynamicconfigmap.yaml
+tests:
+  - it: omits annotations when none are configured
+    asserts:
+      - isNullOrEmpty:
+          path: metadata.annotations
+  - it: applies additionalAnnotations to the dynamic config configmap
+    set:
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"
+  - it: does not apply configmapAnnotations to the dynamic config configmap
+    set:
+      server:
+        configmapAnnotations:
+          owner: data-eng
+    asserts:
+      - notExists:
+          path: metadata.annotations.owner
+  - it: prefers dynamicConfigmapAnnotations over additionalAnnotations
+    set:
+      additionalAnnotations:
+        owner: from-additional
+        team: platform
+      server:
+        dynamicConfigmapAnnotations:
+          owner: from-dynamic
+    asserts:
+      - equal:
+          path: metadata.annotations.owner
+          value: from-dynamic
+      - equal:
+          path: metadata.annotations.team
+          value: platform

@@ -20,7 +20,7 @@ metadata:
   name: {{ $jobName }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "database" "") | nindent 4 }}
-  {{- $jobAnnotations := include "temporal.resourceAnnotations" (list $ "schema" "job") -}}
+  {{- $jobAnnotations := mergeOverwrite (include "temporal.resourceAnnotations" (list $ "schema" "job") | fromYaml | default dict) (deepCopy ($.Values.schema.namespaceJobAnnotations | default dict)) -}}
   {{- if or $.Values.server.config.namespaces.useHelmHooks $jobAnnotations }}
   annotations:
     {{- if $.Values.server.config.namespaces.useHelmHooks }}
@@ -29,7 +29,7 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
     {{- end }}
     {{- with $jobAnnotations }}
-    {{- . | nindent 4 }}
+    {{- toYaml . | nindent 4 }}
     {{- end }}
   {{- end }}
 spec:

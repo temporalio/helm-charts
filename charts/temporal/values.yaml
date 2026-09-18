@@ -72,6 +72,10 @@ server:
   podLabels: {}
   secretLabels: {}
   secretAnnotations: {}
+  # Annotations for the config configmap
+  configmapAnnotations: {}
+  # Annotations for the dynamic config configmap only
+  dynamicConfigmapAnnotations: {}
   resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -667,7 +671,12 @@ schema:
   backoffLimit: 100
   activeDeadlineSeconds: null
   ttlSecondsAfterFinished: 86400
+  # Annotations for both the schema setup job and the namespace setup job
   jobAnnotations: {}
+  # Annotations for the schema setup job only, overriding jobAnnotations
+  setupJobAnnotations: {}
+  # Annotations for the namespace setup job only, overriding jobAnnotations
+  namespaceJobAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}
