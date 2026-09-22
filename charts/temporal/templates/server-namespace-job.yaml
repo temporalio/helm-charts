@@ -55,7 +55,12 @@ spec:
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['/bin/sh', '-c']
-          args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
+          args:
+            {{- if hasKey $namespace "retention" }}
+            - 'temporal operator namespace update -n {{ $namespace.name }} --retention {{ $namespace.retention }} || temporal operator namespace create -n {{ $namespace.name }} --retention {{ $namespace.retention }}'
+            {{- else }}
+            - 'temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}'
+            {{- end }}
           env:
             - name: TEMPORAL_ADDRESS
               {{- if $useInternalFrontend }}
