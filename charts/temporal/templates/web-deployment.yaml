@@ -52,6 +52,8 @@ spec:
               {{- else }}
               value: {{ include "temporal.frontendAddress" $ }}
               {{- end }}
+            - name: TEMPORAL_UI_DISTRIBUTION
+              value: helm
           {{- if .Values.web.tls.enabled }}
           {{- include "temporal.web.tls.env" $ | nindent 12 }}
           {{- end }}
