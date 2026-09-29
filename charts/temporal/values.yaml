@@ -571,6 +571,10 @@ admintools:
 web:
   # additionalInitContainers: []
   enabled: true
+  # Let the UI check for a newer release and show an upgrade notice. This
+  # makes the UI call out to the container registry once a day. Set false to
+  # keep the deployment from reaching the public internet.
+  notifyOnNewVersion: true
   # replicaCount: 1
   image:
     repository: temporalio/ui
