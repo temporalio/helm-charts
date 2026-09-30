@@ -860,3 +860,37 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: RELEASE-NAME-temporal
+
+  - it: reads SQL_USER from a secret when userSecretKey is set
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+                  existingSecret: db-secret
+                  userSecretKey: username
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+                  user: visibility_user
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: username
+      - contains:
+          path: spec.template.spec.initContainers[2].env
+          content:
+            name: SQL_USER
+            value: "visibility_user"

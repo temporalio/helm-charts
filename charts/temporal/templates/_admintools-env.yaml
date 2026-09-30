@@ -9,7 +9,11 @@
 - name: CASSANDRA_KEYSPACE
   value: {{ required (printf "Please specify keyspace for %s store" $store.name) $store.config.keyspace }}
 - name: CASSANDRA_USER
+{{- if $store.config.userSecretKey }}
+  {{- include "temporal.user-env" (list $root $store) | nindent 2 }}
+{{- else }}
   value: {{ $store.config.user }}
+{{- end }}
 - name: CASSANDRA_PASSWORD
   {{- include "temporal.password-env" (list $root $store) | nindent 2 }}
   {{- with $store.config.tls }}
@@ -40,7 +44,11 @@
 - name: SQL_DATABASE
   value: {{ required (printf "Please specify databaseName for %s store" $store.name) $store.config.databaseName }}
 - name: SQL_USER
+{{- if $store.config.userSecretKey }}
+  {{- include "temporal.user-env" (list $root $store) | nindent 2 }}
+{{- else }}
   value: {{ $store.config.user | quote }}
+{{- end }}
 {{- if not $store.config.passwordCommand }}
 - name: SQL_PASSWORD
   {{- include "temporal.password-env" (list $root $store) | nindent 2 }}
@@ -85,7 +93,11 @@
 - name: ES_SERVER
   value: {{ urlJoin $url }}
 - name: ES_USER
+{{- if $store.config.userSecretKey }}
+  {{- include "temporal.user-env" (list $root $store) | nindent 2 }}
+{{- else }}
   value: {{ $store.config.username | quote }}
+{{- end }}
 - name: ES_PWD
   {{- include "temporal.password-env" (list $root $store) | nindent 2 }}
 - name: ES_VERSION
