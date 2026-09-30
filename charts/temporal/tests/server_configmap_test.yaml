@@ -305,3 +305,44 @@ tests:
       - matchRegex:
           path: data['config_template.yaml']
           pattern: "prometheus:\\s+listenAddress: 0.0.0.0:9090"
+
+  - it: replaces users with environment variables when userSecretKey is set
+    set:
+      server:
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            datastores:
+              default:
+                sql:
+                  pluginName: postgres12
+                  databaseName: temporal
+                  connectAddr: "pg:5432"
+                  user: ignored
+                  existingSecret: db-secret
+                  userSecretKey: username
+              visibility:
+                elasticsearch:
+                  version: v7
+                  url:
+                    scheme: http
+                    host: "es:9200"
+                  indices:
+                    visibility: temporal_visibility
+                  existingSecret: es-secret
+                  userSecretKey: username
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'user: \{\{ env "TEMPORAL_DEFAULT_STORE_USER" \| quote \}\}'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'username: \{\{ env "TEMPORAL_VISIBILITY_STORE_USER" \| quote \}\}'
+      - notMatchRegex:
+          path: data['config_template.yaml']
+          pattern: 'userSecretKey|ignored'
