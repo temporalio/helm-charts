@@ -236,3 +236,17 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: external-admin-sa
+
+  - it: does not render automountServiceAccountToken by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.automountServiceAccountToken
+
+  - it: disables the service account token mount when set globally
+    set:
+      serviceAccount:
+        automountServiceAccountToken: false
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false

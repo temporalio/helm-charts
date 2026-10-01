@@ -33,3 +33,29 @@ tests:
       - equal:
           path: spec.template.spec.priorityClassName
           value: my-priority-class
+
+  - it: does not render automountServiceAccountToken by default
+    asserts:
+      - notExists:
+          path: spec.template.spec.automountServiceAccountToken
+
+  - it: disables the service account token mount when set globally
+    set:
+      serviceAccount:
+        automountServiceAccountToken: false
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false
+
+  - it: lets the web component override the global automountServiceAccountToken
+    set:
+      serviceAccount:
+        automountServiceAccountToken: false
+      web:
+        serviceAccount:
+          automountServiceAccountToken: true
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: true

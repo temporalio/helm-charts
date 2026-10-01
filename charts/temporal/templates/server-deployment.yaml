@@ -46,7 +46,7 @@ spec:
       labels:
         {{- include "temporal.resourceLabels" (list $ $service "pod") | nindent 8 }}
     spec:
-      {{ include "temporal.componentServiceAccount" (list $ $service) }}
+{{- include "temporal.componentServiceAccount" (list $ $service) | nindent 6 }}
       {{- with $.Values.server.securityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
