@@ -126,7 +126,16 @@ Define the service account for a specific component.
 Usage: {{ include "temporal.componentServiceAccount" (list $ "frontend") }}
 */}}
 {{- define "temporal.componentServiceAccount" -}}
+{{- $global := index . 0 -}}
 serviceAccountName: {{ include "temporal.componentServiceAccountName" . }}
+{{- $automount := $global.Values.serviceAccount.automountServiceAccountToken -}}
+{{- $componentSA := include "temporal.componentServiceAccountConfig" . | fromYaml -}}
+{{- if and (kindIs "map" $componentSA) (hasKey $componentSA "automountServiceAccountToken") -}}
+{{- $automount = index $componentSA "automountServiceAccountToken" -}}
+{{- end -}}
+{{- if not (kindIs "invalid" $automount) }}
+automountServiceAccountToken: {{ $automount }}
+{{- end -}}
 {{- end -}}
 
 {{/*

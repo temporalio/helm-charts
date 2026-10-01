@@ -667,3 +667,61 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: externally-managed-sa
+
+  - it: does not render automountServiceAccountToken by default
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.automountServiceAccountToken
+
+  - it: disables the service account token mount for every service when set globally
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    set:
+      serviceAccount:
+        automountServiceAccountToken: false
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false
+
+  - it: lets a per-service value override the global automountServiceAccountToken
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-worker
+    set:
+      serviceAccount:
+        automountServiceAccountToken: false
+      server:
+        worker:
+          serviceAccount:
+            automountServiceAccountToken: true
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: true
+
+  - it: keeps the global automountServiceAccountToken for services without an override
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-history
+    set:
+      serviceAccount:
+        automountServiceAccountToken: false
+      server:
+        worker:
+          serviceAccount:
+            automountServiceAccountToken: true
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false
