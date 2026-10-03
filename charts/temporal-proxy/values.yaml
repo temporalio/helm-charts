@@ -109,15 +109,15 @@ resources: {}
 
 # This is to setup the liveness and readiness probes more information can be found here:
 # https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+# The proxy serves the standard gRPC health service. A gRPC probe without a port uses service.port,
+# and without a service name it checks the proxy as a whole, which works whatever allowedServices is.
+# Setting httpGet, tcpSocket or exec replaces the gRPC check. gRPC probes connect in plaintext, so
+# use one of those if the proxy terminates TLS.
 livenessProbe:
-  httpGet:
-    path: /
-    port: http
+  grpc: {}
 
 readinessProbe:
-  httpGet:
-    path: /
-    port: http
+  grpc: {}
 
 # This section is for setting up autoscaling more information can be found here:
 # https://kubernetes.io/docs/concepts/workloads/autoscaling/

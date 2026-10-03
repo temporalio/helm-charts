@@ -132,6 +132,36 @@ Args (dict): tls, slot, acc.
 {{- end -}}
 
 {{/*
+Render a liveness or readiness probe from values. Handlers set to null are
+dropped, and so is the default gRPC handler when the probe sets httpGet,
+tcpSocket or exec, so overrides written for the old httpGet default still render
+a single handler. A gRPC handler without a port gets the service port, since
+gRPC probes cannot use a named port.
+
+Args (list): probe, service port.
+*/}}
+{{- define "temporal-proxy.probe" -}}
+{{- $probe := deepCopy (index . 0) -}}
+{{- range $key, $value := $probe -}}
+{{- if kindIs "invalid" $value -}}
+{{- $_ := unset $probe $key -}}
+{{- end -}}
+{{- end -}}
+{{- if hasKey $probe "grpc" -}}
+{{- if or (hasKey $probe "httpGet") (hasKey $probe "tcpSocket") (hasKey $probe "exec") -}}
+{{- $_ := unset $probe "grpc" -}}
+{{- else -}}
+{{- $grpc := default (dict) $probe.grpc -}}
+{{- if not (hasKey $grpc "port") -}}
+{{- $_ := set $grpc "port" (int (index . 1)) -}}
+{{- end -}}
+{{- $_ := set $probe "grpc" $grpc -}}
+{{- end -}}
+{{- end -}}
+{{- toYaml $probe -}}
+{{- end -}}
+
+{{/*
 Render the proxy config plus its Kubernetes wiring.
 Returns a YAML dict: { config, env, volumes, volumeMounts }.
 Consumers parse with `include "temporal-proxy.rendered" . | fromYaml`.

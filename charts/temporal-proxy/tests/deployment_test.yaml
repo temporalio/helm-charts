@@ -90,14 +90,81 @@ tests:
           path: spec.selector.matchLabels["app.kubernetes.io/instance"]
           value: temporal-proxy
 
-  - it: renders probes by default
+  - it: renders gRPC probes on the service port by default
     asserts:
       - equal:
-          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
-          value: /
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            grpc:
+              port: 8443
       - equal:
-          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
-          value: /
+          path: spec.template.spec.containers[0].readinessProbe
+          value:
+            grpc:
+              port: 8443
+
+  - it: keeps a gRPC probe service name when set
+    set:
+      readinessProbe.grpc.service: temporal.api.workflowservice.v1.WorkflowService
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.grpc
+          value:
+            port: 8443
+            service: temporal.api.workflowservice.v1.WorkflowService
+
+  - it: moves the gRPC probe port with service.port
+    set:
+      service.port: 7233
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.grpc.port
+          value: 7233
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.grpc.port
+          value: 7233
+
+  - it: keeps an explicit gRPC probe port
+    set:
+      livenessProbe.grpc.port: 9090
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.grpc.port
+          value: 9090
+
+  - it: accepts an override written for the old httpGet default
+    set:
+      readinessProbe:
+        httpGet: null
+        grpc:
+          port: 8443
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe
+          value:
+            grpc:
+              port: 8443
+
+  - it: drops the default gRPC check when another handler is set
+    set:
+      livenessProbe:
+        tcpSocket:
+          port: http
+      readinessProbe:
+        httpGet: null
+        exec:
+          command: ["true"]
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            tcpSocket:
+              port: http
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe
+          value:
+            exec:
+              command: ["true"]
 
   - it: omits probes when unset
     set:

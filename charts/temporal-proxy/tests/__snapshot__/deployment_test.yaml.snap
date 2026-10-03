@@ -35,18 +35,16 @@ renders defaults:
               image: temporalio/temporal-proxy:1.0.0
               imagePullPolicy: IfNotPresent
               livenessProbe:
-                httpGet:
-                  path: /
-                  port: http
+                grpc:
+                  port: 8443
               name: temporal-proxy
               ports:
                 - containerPort: 8443
                   name: http
                   protocol: TCP
               readinessProbe:
-                httpGet:
-                  path: /
-                  port: http
+                grpc:
+                  port: 8443
               volumeMounts:
                 - mountPath: /etc/temporal-proxy
                   name: config

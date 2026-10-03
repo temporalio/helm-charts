@@ -63,11 +63,11 @@ spec:
               protocol: TCP
           {{- with .Values.livenessProbe }}
           livenessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- include "temporal-proxy.probe" (list . $.Values.service.port) | nindent 12 }}
           {{- end }}
           {{- with .Values.readinessProbe }}
           readinessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- include "temporal-proxy.probe" (list . $.Values.service.port) | nindent 12 }}
           {{- end }}
           {{- with .Values.resources }}
           resources:
