@@ -126,7 +126,8 @@ autoscaling:
   minReplicas: 1
   maxReplicas: 10
   targetCPUUtilizationPercentage: 80
-  targetMemoryUtilizationPercentage: 80
+  # Off by default: RSS is sticky and does not fall with load, so a memory target scales up but never back down.
+  targetMemoryUtilizationPercentage: null
 
 # Additional volumes on the output Deployment definition.
 volumes: []
