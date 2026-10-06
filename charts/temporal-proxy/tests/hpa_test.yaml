@@ -82,3 +82,85 @@ tests:
       - equal:
           path: spec.metrics[0].resource.name
           value: cpu
+
+  - it: fails when no metric target is set
+    set:
+      autoscaling:
+        enabled: true
+        targetCPUUtilizationPercentage: null
+        targetMemoryUtilizationPercentage: null
+    asserts:
+      - failedTemplate:
+          errorMessage: autoscaling.enabled requires autoscaling.targetCPUUtilizationPercentage or autoscaling.targetMemoryUtilizationPercentage
+
+  - it: renders the default replicas, cpu target, and scaling behavior
+    set:
+      autoscaling.enabled: true
+    asserts:
+      - equal:
+          path: spec.minReplicas
+          value: 2
+      - equal:
+          path: spec.metrics[0].resource.target.averageUtilization
+          value: 65
+      - equal:
+          path: spec.behavior
+          value:
+            scaleUp:
+              stabilizationWindowSeconds: 60
+              policies:
+                - type: Pods
+                  value: 2
+                  periodSeconds: 60
+            scaleDown:
+              stabilizationWindowSeconds: 900
+              policies:
+                - type: Pods
+                  value: 1
+                  periodSeconds: 300
+
+  - it: renders an overridden scaling behavior
+    set:
+      autoscaling:
+        enabled: true
+        behavior:
+          scaleUp: null
+          scaleDown:
+            stabilizationWindowSeconds: 300
+            selectPolicy: Min
+            policies:
+              - type: Percent
+                value: 10
+                periodSeconds: 60
+    asserts:
+      - notExists:
+          path: spec.behavior.scaleUp
+      - equal:
+          path: spec.behavior.scaleDown
+          value:
+            stabilizationWindowSeconds: 300
+            selectPolicy: Min
+            policies:
+              - type: Percent
+                value: 10
+                periodSeconds: 60
+
+  - it: omits behavior when it is null
+    set:
+      autoscaling:
+        enabled: true
+        behavior: null
+    asserts:
+      - notExists:
+          path: spec.behavior
+
+  - it: omits behavior when all of its keys are removed
+    set:
+      autoscaling:
+        enabled: true
+        behavior:
+          scaleUp: null
+          scaleDown: null
+    asserts:
+      - notExists:
+          path: spec.behavior
