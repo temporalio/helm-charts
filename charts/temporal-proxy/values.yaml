@@ -142,7 +142,7 @@ autoscaling:
   targetCPUUtilizationPercentage: 65
   # Off by default: RSS is sticky and does not fall with load, so a memory target scales up but never back down.
   targetMemoryUtilizationPercentage: null
-  # HPA scaling behavior, rendered verbatim into spec.behavior. Set to {} to use the Kubernetes defaults.
+  # HPA scaling behavior, rendered verbatim into spec.behavior. Set to null to use the Kubernetes defaults.
   # https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/#configurable-scaling-behavior
   behavior:
     scaleUp:

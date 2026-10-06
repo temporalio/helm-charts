@@ -203,7 +203,7 @@ defaults reflect that:
   `targetMemoryUtilizationPercentage` to opt in.
 - Run at least 2 replicas.
 - `autoscaling.behavior` adds up to 2 pods per minute when scaling up, and removes 1 pod every 5 minutes after a
-  15-minute stabilization window when scaling down. It renders verbatim into the HPA's `spec.behavior`; set it to `{}`
+  15-minute stabilization window when scaling down. It renders verbatim into the HPA's `spec.behavior`; set it to `null`
   to use the Kubernetes defaults.
 
 At least one of `targetCPUUtilizationPercentage` or `targetMemoryUtilizationPercentage` must be set when autoscaling is
