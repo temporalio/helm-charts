@@ -8,6 +8,9 @@ supplied through a ConfigMap.
 
 ## Installation
 
+Requires Kubernetes 1.30 or later. The default preStop hook uses the native `sleep` action because the proxy image has
+no shell.
+
 The chart is published to the Temporal Helm repo at `https://go.temporal.io/helm-charts`.
 
 ```bash
