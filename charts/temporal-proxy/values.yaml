@@ -33,6 +33,22 @@ envFrom: []
 # https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
+# Deployment rollout strategy. Clients hold long-lived gRPC connections that do not rebalance, and
+# the tcpSocket readiness probe cannot catch every broken pod (TLS errors, upstream or KMS loss after
+# start), so the default never removes a serving pod before its replacement is Ready: a bad version
+# stalls the rollout instead of dropping capacity. Use `maxSurge: 0, maxUnavailable: 1` when the
+# cluster runs peak+1 replicas with no free node slot for a surge pod; that relies on readiness
+# catching a broken pod. Set to null to use the Kubernetes default (25% surge, 25% unavailable).
+# https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+# A new pod must stay Ready for this many seconds before the rollout continues.
+minReadySeconds: 30
+
 # This sets the container image more information can be found here:
 # https://kubernetes.io/docs/concepts/containers/images/
 image:

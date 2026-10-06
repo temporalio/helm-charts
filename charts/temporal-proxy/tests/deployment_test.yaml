@@ -90,6 +90,46 @@ tests:
           path: spec.selector.matchLabels["app.kubernetes.io/instance"]
           value: temporal-proxy
 
+  - it: renders a surge-only rollout strategy by default
+    asserts:
+      - equal:
+          path: spec.strategy
+          value:
+            type: RollingUpdate
+            rollingUpdate:
+              maxSurge: 1
+              maxUnavailable: 0
+      - equal:
+          path: spec.minReadySeconds
+          value: 30
+
+  - it: honors rollout strategy overrides
+    set:
+      strategy.rollingUpdate.maxSurge: 0
+      strategy.rollingUpdate.maxUnavailable: 1
+      minReadySeconds: 10
+    asserts:
+      - equal:
+          path: spec.strategy
+          value:
+            type: RollingUpdate
+            rollingUpdate:
+              maxSurge: 0
+              maxUnavailable: 1
+      - equal:
+          path: spec.minReadySeconds
+          value: 10
+
+  - it: omits the rollout strategy and minReadySeconds when unset
+    set:
+      strategy: null
+      minReadySeconds: null
+    asserts:
+      - notExists:
+          path: spec.strategy
+      - notExists:
+          path: spec.minReadySeconds
+
   - it: renders tcpSocket probes by default
     asserts:
       - equal:
