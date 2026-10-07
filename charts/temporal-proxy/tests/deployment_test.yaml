@@ -90,14 +90,49 @@ tests:
           path: spec.selector.matchLabels["app.kubernetes.io/instance"]
           value: temporal-proxy
 
-  - it: renders probes by default
+  - it: renders tcpSocket probes by default
     asserts:
       - equal:
-          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
-          value: /
+          path: spec.template.spec.containers[0].livenessProbe
+          value:
+            tcpSocket:
+              port: http
       - equal:
-          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
-          value: /
+          path: spec.template.spec.containers[0].readinessProbe
+          value:
+            tcpSocket:
+              port: http
+
+  - it: renders graceful shutdown settings by default
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 60
+      - equal:
+          path: spec.template.spec.containers[0].lifecycle.preStop.sleep.seconds
+          value: 15
+
+  - it: honors graceful shutdown overrides
+    set:
+      terminationGracePeriodSeconds: 90
+      lifecycle.preStop.sleep.seconds: 30
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 90
+      - equal:
+          path: spec.template.spec.containers[0].lifecycle.preStop.sleep.seconds
+          value: 30
+
+  - it: omits graceful shutdown settings when unset
+    set:
+      terminationGracePeriodSeconds: null
+      lifecycle: null
+    asserts:
+      - notExists:
+          path: spec.template.spec.terminationGracePeriodSeconds
+      - notExists:
+          path: spec.template.spec.containers[0].lifecycle
 
   - it: omits probes when unset
     set:
