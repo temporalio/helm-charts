@@ -137,7 +137,7 @@ lifecycle:
 # The defaults scale up fairly quickly and scale down slowly, one pod at a time.
 autoscaling:
   enabled: false
-  minReplicas: 2
+  minReplicas: 1
   maxReplicas: 10
   targetCPUUtilizationPercentage: 65
   # Off by default: RSS is sticky and does not fall with load, so a memory target scales up but never back down.
