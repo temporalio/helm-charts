@@ -11,6 +11,10 @@ supplied through a ConfigMap.
 Requires Kubernetes 1.30 or later. The default preStop hook uses the native `sleep` action because the proxy image has
 no shell.
 
+Rollouts default to `maxSurge: 1, maxUnavailable: 0` with `minReadySeconds: 30`, so a bad version stalls the rollout
+instead of removing serving pods. See `strategy` in [`values.yaml`](./values.yaml) for the alternative when there is
+no room for a surge pod.
+
 The chart is published to the Temporal Helm repo at `https://go.temporal.io/helm-charts`.
 
 ```bash
