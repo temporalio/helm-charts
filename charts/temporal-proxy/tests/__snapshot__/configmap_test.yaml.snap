@@ -8,6 +8,7 @@ renders defaults:
           default: default
         upstreams:
         - hostPort: localhost:7233
+          insecure: true
           name: default
     kind: ConfigMap
     metadata:
