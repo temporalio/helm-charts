@@ -12,12 +12,25 @@ renders defaults:
       name: temporal-proxy
       namespace: temporal-proxy
     spec:
+      behavior:
+        scaleDown:
+          policies:
+            - periodSeconds: 300
+              type: Pods
+              value: 1
+          stabilizationWindowSeconds: 900
+        scaleUp:
+          policies:
+            - periodSeconds: 60
+              type: Pods
+              value: 2
+          stabilizationWindowSeconds: 60
       maxReplicas: 10
       metrics:
         - resource:
             name: cpu
             target:
-              averageUtilization: 80
+              averageUtilization: 65
               type: Utilization
           type: Resource
       minReplicas: 1
