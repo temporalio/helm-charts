@@ -12,7 +12,7 @@ renders defaults:
       name: temporal-proxy
       namespace: temporal-proxy
     spec:
-      minReadySeconds: 30
+      minReadySeconds: 15
       replicas: 1
       selector:
         matchLabels:
