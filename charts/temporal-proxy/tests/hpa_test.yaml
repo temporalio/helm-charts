@@ -63,6 +63,7 @@ tests:
       autoscaling:
         enabled: true
         targetCPUUtilizationPercentage: null
+        targetMemoryUtilizationPercentage: 80
     asserts:
       - lengthEqual:
           path: spec.metrics
@@ -71,11 +72,9 @@ tests:
           path: spec.metrics[0].resource.name
           value: memory
 
-  - it: omits memory metric when target is unset
+  - it: omits memory metric by default
     set:
-      autoscaling:
-        enabled: true
-        targetMemoryUtilizationPercentage: null
+      autoscaling.enabled: true
     asserts:
       - lengthEqual:
           path: spec.metrics
