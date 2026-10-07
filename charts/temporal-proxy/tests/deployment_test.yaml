@@ -101,7 +101,7 @@ tests:
               maxUnavailable: 0
       - equal:
           path: spec.minReadySeconds
-          value: 30
+          value: 15
 
   - it: honors rollout strategy overrides
     set:
