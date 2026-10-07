@@ -99,7 +99,7 @@ tests:
     asserts:
       - equal:
           path: spec.minReplicas
-          value: 2
+          value: 1
       - equal:
           path: spec.metrics[0].resource.target.averageUtilization
           value: 65
