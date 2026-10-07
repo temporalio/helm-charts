@@ -109,15 +109,26 @@ resources: {}
 
 # This is to setup the liveness and readiness probes more information can be found here:
 # https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+# The proxy serves gRPC only, so the probes check that the listener accepts TCP connections.
 livenessProbe:
-  httpGet:
-    path: /
+  tcpSocket:
     port: http
 
 readinessProbe:
-  httpGet:
-    path: /
+  tcpSocket:
     port: http
+
+# Time Kubernetes waits after the preStop hook starts before sending SIGKILL. It must cover the
+# preStop sleep plus the proxy's own 30s shutdown budget.
+terminationGracePeriodSeconds: 60
+
+# Runs before SIGTERM. The sleep keeps the proxy serving while the pod is removed from Service
+# endpoints, so in-flight and newly routed requests are not dropped. Uses the native sleep action
+# (Kubernetes 1.30+) because the image has no shell.
+lifecycle:
+  preStop:
+    sleep:
+      seconds: 15
 
 # This section is for setting up autoscaling more information can be found here:
 # https://kubernetes.io/docs/concepts/workloads/autoscaling/

@@ -34,9 +34,12 @@ renders defaults:
                   value: /etc/temporal-proxy/config.yaml
               image: temporalio/temporal-proxy:1.0.0
               imagePullPolicy: IfNotPresent
+              lifecycle:
+                preStop:
+                  sleep:
+                    seconds: 15
               livenessProbe:
-                httpGet:
-                  path: /
+                tcpSocket:
                   port: http
               name: temporal-proxy
               ports:
@@ -44,13 +47,13 @@ renders defaults:
                   name: http
                   protocol: TCP
               readinessProbe:
-                httpGet:
-                  path: /
+                tcpSocket:
                   port: http
               volumeMounts:
                 - mountPath: /etc/temporal-proxy
                   name: config
           serviceAccountName: temporal-proxy
+          terminationGracePeriodSeconds: 60
           volumes:
             - configMap:
                 name: temporal-proxy
