@@ -16,6 +16,10 @@ metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}-pdb
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
+  {{- with include "temporal.resourceAnnotations" (list $ $service "pdb") }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
 spec:
   {{- toYaml $serviceValues.podDisruptionBudget | nindent 2 }}
   selector:

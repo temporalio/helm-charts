@@ -1,0 +1,77 @@
+suite: test frontend ingress
+templates:
+  - frontend-ingress.yaml
+tests:
+  - it: applies additionalAnnotations to the frontend ingress
+    set:
+      server:
+        frontend:
+          ingress:
+            enabled: true
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"
+  - it: server.ingressAnnotations override additionalAnnotations
+    set:
+      server:
+        ingressAnnotations:
+          team: server-team
+        frontend:
+          ingress:
+            enabled: true
+      additionalAnnotations:
+        team: platform
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: server-team
+  - it: server.frontend.ingressAnnotations override server.ingressAnnotations
+    set:
+      server:
+        ingressAnnotations:
+          team: server-team
+        frontend:
+          ingressAnnotations:
+            team: frontend-team
+          ingress:
+            enabled: true
+      additionalAnnotations:
+        team: platform
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: frontend-team
+  - it: ingress.annotations override every other annotation source
+    set:
+      server:
+        ingressAnnotations:
+          team: server-team
+        frontend:
+          ingressAnnotations:
+            team: frontend-team
+          ingress:
+            enabled: true
+            annotations:
+              team: ingress-team
+      additionalAnnotations:
+        team: platform
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: ingress-team
+  - it: omits annotations on the frontend ingress when none are set
+    set:
+      server:
+        frontend:
+          ingress:
+            enabled: true
+    asserts:
+      - notExists:
+          path: metadata.annotations

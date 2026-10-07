@@ -101,3 +101,60 @@ tests:
           content:
             name: TEMPORAL_ADDRESS
             value: RELEASE-NAME-temporal-frontend:7233
+  - it: applies additionalAnnotations to the web service
+    template: templates/web-service.yaml
+    documentSelector:
+      path: kind
+      value: Service
+    set:
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"
+  - it: web.serviceAnnotations override additionalAnnotations
+    template: templates/web-service.yaml
+    documentSelector:
+      path: kind
+      value: Service
+    set:
+      additionalAnnotations:
+        team: platform
+      web:
+        serviceAnnotations:
+          team: web-team
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: web-team
+  - it: web service.annotations override serviceAnnotations and are still evaluated as a template
+    template: templates/web-service.yaml
+    documentSelector:
+      path: kind
+      value: Service
+    set:
+      additionalAnnotations:
+        team: platform
+      web:
+        serviceAnnotations:
+          team: web-team
+        service:
+          annotations:
+            team: "{{ .Release.Name }}-service-team"
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: RELEASE-NAME-service-team
+  - it: omits annotations on the web service when none are set
+    template: templates/web-service.yaml
+    documentSelector:
+      path: kind
+      value: Service
+    asserts:
+      - notExists:
+          path: metadata.annotations

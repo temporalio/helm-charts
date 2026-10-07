@@ -57,6 +57,81 @@ tests:
       - equal:
           path: spec.unhealthyPodEvictionPolicy
           value: AlwaysAllow
+  - it: applies additionalAnnotations to the pdb
+    template: templates/server-pdb.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-pdb")].kind'
+      value: PodDisruptionBudget
+      matchMany: true
+    set:
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+      server:
+        frontend:
+          podDisruptionBudget:
+            maxUnavailable: 1
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"
+  - it: server.pdbAnnotations override additionalAnnotations
+    template: templates/server-pdb.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-pdb")].kind'
+      value: PodDisruptionBudget
+      matchMany: true
+    set:
+      additionalAnnotations:
+        team: platform
+      server:
+        pdbAnnotations:
+          team: server-team
+        frontend:
+          podDisruptionBudget:
+            maxUnavailable: 1
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: server-team
+  - it: per-service pdbAnnotations override server.pdbAnnotations
+    template: templates/server-pdb.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-pdb")].kind'
+      value: PodDisruptionBudget
+      matchMany: true
+    set:
+      additionalAnnotations:
+        team: platform
+      server:
+        pdbAnnotations:
+          team: server-team
+        frontend:
+          pdbAnnotations:
+            team: frontend-team
+          podDisruptionBudget:
+            maxUnavailable: 1
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: frontend-team
+  - it: omits annotations when none are set
+    template: templates/server-pdb.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-pdb")].kind'
+      value: PodDisruptionBudget
+      matchMany: true
+    set:
+      server:
+        frontend:
+          podDisruptionBudget:
+            maxUnavailable: 1
+    asserts:
+      - notExists:
+          path: metadata.annotations
   - it: doesn't create pdb when replica count is 0
     set:
       server:

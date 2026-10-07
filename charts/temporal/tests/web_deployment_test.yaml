@@ -33,3 +33,108 @@ tests:
       - equal:
           path: spec.template.spec.priorityClassName
           value: my-priority-class
+  - it: has no annotations by default
+    asserts:
+      - isNullOrEmpty:
+          path: metadata.annotations
+      - isNullOrEmpty:
+          path: spec.template.metadata.annotations
+  - it: applies global additionalAnnotations to the deployment and the pod
+    set:
+      additionalAnnotations:
+        example.com/owner: platform
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/owner"]
+          value: platform
+      - equal:
+          path: spec.template.metadata.annotations["example.com/owner"]
+          value: platform
+  - it: applies deploymentAnnotations to the deployment only
+    set:
+      web:
+        deploymentAnnotations:
+          example.com/deployment: web
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/deployment"]
+          value: web
+      - isNullOrEmpty:
+          path: spec.template.metadata.annotations
+  - it: applies podAnnotations to the pod only
+    set:
+      web:
+        podAnnotations:
+          example.com/pod: web
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["example.com/pod"]
+          value: web
+      - isNullOrEmpty:
+          path: metadata.annotations
+  - it: merges component annotations with global additionalAnnotations
+    set:
+      additionalAnnotations:
+        example.com/owner: platform
+      web:
+        deploymentAnnotations:
+          example.com/deployment: web
+        podAnnotations:
+          example.com/pod: web
+    asserts:
+      - equal:
+          path: metadata.annotations
+          value:
+            example.com/deployment: web
+            example.com/owner: platform
+      - equal:
+          path: spec.template.metadata.annotations
+          value:
+            example.com/owner: platform
+            example.com/pod: web
+  - it: component annotations win over global additionalAnnotations on the same key
+    set:
+      additionalAnnotations:
+        example.com/owner: platform
+      web:
+        deploymentAnnotations:
+          example.com/owner: web-deployment
+        podAnnotations:
+          example.com/owner: web-pod
+    asserts:
+      - equal:
+          path: metadata.annotations["example.com/owner"]
+          value: web-deployment
+      - equal:
+          path: spec.template.metadata.annotations["example.com/owner"]
+          value: web-pod
+  - it: renders non-string annotation values as strings
+    set:
+      web:
+        podAnnotations:
+          example.com/replicas: 5
+          example.com/enabled: true
+          example.com/ratio: 1.5
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["example.com/replicas"]
+          value: "5"
+      - equal:
+          path: spec.template.metadata.annotations["example.com/enabled"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["example.com/ratio"]
+          value: "1.5"
+  - it: renders multiline annotation values
+    set:
+      web:
+        podAnnotations:
+          example.com/config: |
+            first: 1
+            second: 2
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["example.com/config"]
+          value: |
+            first: 1
+            second: 2

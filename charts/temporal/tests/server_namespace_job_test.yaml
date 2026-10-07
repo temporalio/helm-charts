@@ -329,3 +329,54 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: RELEASE-NAME-temporal
+  - it: applies additionalAnnotations to the namespace job
+    set:
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+      server:
+        config:
+          namespaces:
+            create: true
+            useHelmHooks: false
+            namespace:
+              - name: default
+                retention: 3d
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"
+  - it: prefers namespaceJobAnnotations over jobAnnotations and additionalAnnotations on the namespace job
+    set:
+      additionalAnnotations:
+        owner: from-additional
+        team: platform
+      schema:
+        jobAnnotations:
+          owner: from-shared
+          stage: schema
+        setupJobAnnotations:
+          owner: from-setup
+        namespaceJobAnnotations:
+          owner: from-namespace
+      server:
+        config:
+          namespaces:
+            create: true
+            useHelmHooks: false
+            namespace:
+              - name: default
+                retention: 3d
+    asserts:
+      - equal:
+          path: metadata.annotations.owner
+          value: from-namespace
+      - equal:
+          path: metadata.annotations.stage
+          value: schema
+      - equal:
+          path: metadata.annotations.team
+          value: platform
