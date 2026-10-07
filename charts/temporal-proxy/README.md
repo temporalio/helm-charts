@@ -191,3 +191,20 @@ config:
               name: temporal-cloud
               key: api-key
 ```
+
+## Autoscaling
+
+Set `autoscaling.enabled: true` to create a HorizontalPodAutoscaler; the Deployment then omits `replicas` so upgrades
+don't reset the HPA's replica count. The proxy is CPU-bound, and clients hold long-lived gRPC connections that don't
+rebalance: a new replica only receives new connections, and removing a loaded pod forces its clients to reconnect. The
+defaults reflect that:
+
+- Scale on CPU only, targeting 65% utilization. Memory isn't a useful signal because proxy RSS doesn't track load; set
+  `targetMemoryUtilizationPercentage` to opt in.
+- Run at least 2 replicas.
+- `autoscaling.behavior` adds up to 2 pods per minute when scaling up, and removes 1 pod every 5 minutes after a
+  15-minute stabilization window when scaling down. It renders verbatim into the HPA's `spec.behavior`; set it to `null`
+  to use the Kubernetes defaults.
+
+At least one of `targetCPUUtilizationPercentage` or `targetMemoryUtilizationPercentage` must be set when autoscaling is
+enabled.
