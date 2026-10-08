@@ -1,5 +1,6 @@
 {{- /* The health check always connects to the external frontend, so it uses the
 frontend TLS section (empty unless frontend TLS is enabled). */}}
+{{- if .Values.test.enabled }}
 {{- $tlsSection := include "temporal.adminClient.tls.section" (list . false) }}
 apiVersion: v1
 kind: Pod
@@ -22,7 +23,17 @@ spec:
   - name: cluster-health
     image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
     imagePullPolicy: {{ .Values.admintools.image.pullPolicy }}
-    command: ["temporal", "operator", "cluster", "health"]
+    # A new pod's network can take a few seconds to come up on some CNIs (Azure CNI
+    # on AKS among them), so retry the health check briefly before failing the test.
+    command:
+      - sh
+      - -c
+      - |
+        for attempt in 1 2 3 4 5 6 7 8 9 10; do
+          temporal operator cluster health && exit 0
+          sleep 3
+        done
+        exit 1
     env:
       - name: TEMPORAL_ADDRESS
         value: {{ include "temporal.fullname" . }}-frontend:{{ .Values.server.frontend.service.port }}
@@ -58,3 +69,4 @@ spec:
     {{- include "temporal.adminClient.tls.volumes" (list . $tlsSection) | nindent 4 }}
   {{- end }}
   restartPolicy: Never
+{{- end }}

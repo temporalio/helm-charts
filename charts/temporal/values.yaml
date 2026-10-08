@@ -680,6 +680,8 @@ shims:
   # Enable compatibility with Temporal 1.29 images. Set to true if using Temporal 1.29.
   elasticsearchTool: false
 test:
+  # Set to false to leave out the cluster health pod that `helm test` runs.
+  enabled: true
   podAnnotations: {}
   podLabels: {}
   resources: {}
