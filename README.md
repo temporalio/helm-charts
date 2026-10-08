@@ -95,6 +95,7 @@ server:
 - **Helm-specific fields** (stripped before rendering to server config):
   - `createDatabase`: If `true`, the chart will create the database/keyspace if it doesn't exist (default: `true`)
   - `manageSchema`: If `true`, the chart will run schema setup/upgrade jobs (default: `true`)
+  - `defaultDb`: SQL only. Database `temporal-sql-tool create-database` connects to before creating `databaseName` (passed as `--defaultdb`). Needed when the instance has no default `postgres`/`mysql` database (for example Aiven or Citus).
   - `existingSecret`: Reference to an existing Kubernetes secret containing credentials (e.g., `temporal-db-secret`). If not set, the chart will create a new secret.
   - `secretKey`: Key name within the secret to read the password from (default: `password`)
 - **Password handling**: With `password` or `existingSecret`, passwords are stored in Kubernetes secrets and read from environment variables—they are never written to ConfigMaps or other manifests, even if you supply a plaintext `password` in values for bootstrap only.
