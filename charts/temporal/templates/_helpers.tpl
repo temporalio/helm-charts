@@ -268,7 +268,17 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
           {{- $_ := unset $storeConfig "password" -}}
         {{- end -}}
       {{- end -}}
-      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey" "createDatabase" "manageSchema") -}}
+      {{- if $storeConfig.userSecretKey -}}
+        {{- $userField := ternary "username" "user" (eq $storeType "elasticsearch") -}}
+        {{- if eq $name $defaultStore -}}
+          {{- $_ := set $storeConfig $userField "__ENV_TEMPORAL_DEFAULT_STORE_USER__" -}}
+        {{- else if eq $name $visibilityStore -}}
+          {{- $_ := set $storeConfig $userField "__ENV_TEMPORAL_VISIBILITY_STORE_USER__" -}}
+        {{- else if eq $name $secondaryVisibilityStore -}}
+          {{- $_ := set $storeConfig $userField "__ENV_TEMPORAL_SECONDARY_VISIBILITY_STORE_USER__" -}}
+        {{- end -}}
+      {{- end -}}
+      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey" "userExistingSecret" "userSecretKey" "createDatabase" "manageSchema") -}}
     {{- end -}}
   {{- end -}}
   {{- $_ := set $patchedDatastores $name $dsCopy -}}

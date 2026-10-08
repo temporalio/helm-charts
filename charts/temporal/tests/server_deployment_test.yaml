@@ -667,3 +667,66 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: externally-managed-sa
+
+  - it: injects store user env vars from secrets when userSecretKey is set
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  existingSecret: db-secret
+                  userSecretKey: username
+              visibility:
+                sql:
+                  existingSecret: db-secret
+                  userExistingSecret: visibility-user-secret
+                  userSecretKey: user
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_DEFAULT_STORE_USER
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: username
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_VISIBILITY_STORE_USER
+            valueFrom:
+              secretKeyRef:
+                name: visibility-user-secret
+                key: user
+
+  - it: does not inject store user env vars by default
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_DEFAULT_STORE_USER
+          any: true
+
+  - it: fails when userSecretKey is set without a secret
+    template: templates/server-deployment.yaml
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  userSecretKey: username
+    asserts:
+      - failedTemplate:
+          errorPattern: "Please specify existingSecret or userExistingSecret for default store"

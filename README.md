@@ -97,6 +97,8 @@ server:
   - `manageSchema`: If `true`, the chart will run schema setup/upgrade jobs (default: `true`)
   - `existingSecret`: Reference to an existing Kubernetes secret containing credentials (e.g., `temporal-db-secret`). If not set, the chart will create a new secret.
   - `secretKey`: Key name within the secret to read the password from (default: `password`)
+  - `userSecretKey`: Key name within a secret to read the datastore user from (`username` for Elasticsearch). When set, the user is injected via environment variables and the plaintext `user`/`username` value is ignored. Works for the default, visibility and secondary visibility stores.
+  - `userExistingSecret`: Secret to read `userSecretKey` from (default: `existingSecret`)
 - **Password handling**: With `password` or `existingSecret`, passwords are stored in Kubernetes secrets and read from environment variables—they are never written to ConfigMaps or other manifests, even if you supply a plaintext `password` in values for bootstrap only.
   - If `existingSecret` is set, the chart uses that secret and ignores any `password` field in values for that datastore
   - If `existingSecret` is not set, the chart creates a secret from the `password` value in values
