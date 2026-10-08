@@ -308,6 +308,8 @@ server:
       # Set to false if using Flux, Rancher or Terraform.
       useHelmHooks: true
       namespace:
+        # Retention is re-applied on every release when set, so changing it
+        # here converges namespaces that were already registered.
         - name: default
           retention: 3d
   frontend:
