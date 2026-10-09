@@ -80,7 +80,7 @@ jobs:
           echo "chart_version=$CHART_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Update image tags
-        uses: mikefarah/yq@1b9b4ac5187171d2e5e3129be0cfa827c7f9d53d # v4.53.3
+        uses: mikefarah/yq@c14f446382944492701b16c1ddb48bb9dbe683e3 # v4.53.6
         with:
           cmd: |
             yq -i '.server.image.tag = "${{ github.event.inputs.server_version }}"' charts/temporal/values.yaml
@@ -88,7 +88,7 @@ jobs:
             yq -i '.web.image.tag = "${{ github.event.inputs.ui_version }}"' charts/temporal/values.yaml
 
       - name: Update chart
-        uses: mikefarah/yq@1b9b4ac5187171d2e5e3129be0cfa827c7f9d53d # v4.53.3
+        uses: mikefarah/yq@c14f446382944492701b16c1ddb48bb9dbe683e3 # v4.53.6
         with:
           cmd: |
             yq -i '.appVersion = "${{ github.event.inputs.server_version }}"' charts/temporal/Chart.yaml
