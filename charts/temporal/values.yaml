@@ -14,6 +14,13 @@ serviceAccount:
   name:
   # extraAnnotations would let users add additional annotations
   extraAnnotations:
+  # Whether the Pods get the ServiceAccount token mounted.
+  # Leave unset to keep the Kubernetes default (true). Set to false for Pods that do not
+  # call the Kubernetes API (CIS Kubernetes Benchmark 5.1.6).
+  # Can be overridden per component via <component>.serviceAccount.automountServiceAccountToken,
+  # e.g. `web.serviceAccount.automountServiceAccountToken` or
+  # `server.worker.serviceAccount.automountServiceAccountToken`.
+  automountServiceAccountToken:
 additionalAnnotations: {}
 additionalLabels: {}
 # Array of extra K8s manifests to deploy
