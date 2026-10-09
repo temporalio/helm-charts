@@ -5,6 +5,7 @@
 {{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
 {{- $serviceValues := index $.Values.server $service }}
 {{- if $serviceValues.enabled }}
+{{- $image := merge (deepCopy ($serviceValues.image | default dict)) $.Values.server.image }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -57,8 +58,8 @@ spec:
       {{- end }}
       containers:
         - name: {{ $.Chart.Name }}-{{ $service }}
-          image: "{{ $.Values.server.image.repository }}:{{ $.Values.server.image.tag }}"
-          imagePullPolicy: {{ $.Values.server.image.pullPolicy }}
+          image: "{{ $image.repository }}:{{ $image.tag }}"
+          imagePullPolicy: {{ $image.pullPolicy }}
           env:
             - name: POD_IP
               valueFrom:
