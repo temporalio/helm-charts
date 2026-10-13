@@ -195,9 +195,7 @@ server:
         # sql:
         #   createDatabase: false
         #   manageSchema: false
-        #   # Admin database to connect to when createDatabase is true (temporal-sql-tool --defaultdb).
-        #   # Use this when the server has no postgres/mysql system database (e.g. Aiven/Citus: defaultdb).
-        #   defaultDb: postgres
+        #   defaultDb: postgres  # admin DB for create-database (--defaultdb); e.g. Aiven/Citus: defaultdb
         #   pluginName: mysql8  # or postgres12, postgres12_pgx
         #   driverName: mysql8
         #   databaseName: temporal
@@ -246,7 +244,7 @@ server:
         # sql:
         #   createDatabase: false
         #   manageSchema: false
-        #   # defaultDb: postgres
+        #   defaultDb: postgres
         #   pluginName: mysql8
         #   driverName: mysql8
         #   databaseName: temporal_visibility
