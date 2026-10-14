@@ -684,6 +684,8 @@ shims:
 test:
   podAnnotations: {}
   podLabels: {}
+  securityContext: {}
+  containerSecurityContext: {}
   resources: {}
   nodeSelector: {}
   tolerations: []
