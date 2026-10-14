@@ -269,7 +269,7 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
           {{- $_ := unset $storeConfig "password" -}}
         {{- end -}}
       {{- end -}}
-      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey" "createDatabase" "manageSchema") -}}
+      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey" "createDatabase" "manageSchema" "defaultDb") -}}
     {{- end -}}
   {{- end -}}
   {{- $_ := set $patchedDatastores $name $dsCopy -}}
