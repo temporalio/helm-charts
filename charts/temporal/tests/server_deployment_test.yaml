@@ -667,3 +667,101 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: externally-managed-sa
+
+  - it: uses server.image for all services by default
+    template: templates/server-deployment.yaml
+    set:
+      server:
+        image:
+          repository: example.com/temporal/server
+          tag: 1.2.3
+          pullPolicy: Always
+        internal-frontend:
+          enabled: true
+    documentSelector:
+      path: kind
+      value: Deployment
+      matchMany: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/temporal/server:1.2.3
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: overrides the image for a single service only
+    template: templates/server-deployment.yaml
+    set:
+      server:
+        frontend:
+          image:
+            repository: example.com/custom/server
+            tag: custom-1
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: example.com/custom/server:custom-1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-frontend
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: temporalio/server:1.32.0
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-history
+
+  - it: falls back to server.image per field
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-matching
+    set:
+      server:
+        matching:
+          image:
+            tag: canary
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: temporalio/server:canary
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent
+
+  - it: overrides pullPolicy for internal-frontend
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-internal-frontend
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+          image:
+            pullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: temporalio/server:1.32.0
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: falls back to server.image when a service image is null
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-history
+    set:
+      server:
+        history:
+          image: null
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: temporalio/server:1.32.0
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent

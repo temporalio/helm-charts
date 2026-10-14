@@ -314,6 +314,7 @@ server:
           retention: 3d
   frontend:
     enabled: true
+    image: {}
     service:
       # Evaluated as template
       annotations: {}
@@ -379,6 +380,7 @@ server:
   internal-frontend:
     # Enable this to create internal-frontend
     enabled: false
+    image: {}
     service:
       # Evaluated as template
       annotations: {}
@@ -424,6 +426,7 @@ server:
     serviceAccount: {}
   history:
     enabled: true
+    image: {}
     service:
       # type: ClusterIP
       port: 7234
@@ -459,6 +462,7 @@ server:
     serviceAccount: {}
   matching:
     enabled: true
+    image: {}
     service:
       # type: ClusterIP
       port: 7235
@@ -494,6 +498,7 @@ server:
     serviceAccount: {}
   worker:
     enabled: true
+    image: {}
     service:
       # type: ClusterIP
       port: 7239
