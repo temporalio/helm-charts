@@ -860,3 +860,64 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: RELEASE-NAME-temporal
+
+  - it: omits --defaultdb on create-database when defaultDb is unset
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  createDatabase: true
+                  pluginName: postgres12
+                  connectAddr: "postgres-host:5432"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  createDatabase: false
+                  pluginName: postgres12
+                  connectAddr: "postgres-host:5432"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-store")].command
+          value:
+            - temporal-sql-tool
+            - create-database
+
+  - it: passes --defaultdb to create-database when defaultDb is set
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  createDatabase: true
+                  defaultDb: citus
+                  pluginName: postgres12
+                  connectAddr: "postgres-host:5432"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  createDatabase: true
+                  defaultDb: defaultdb
+                  pluginName: postgres12
+                  connectAddr: "postgres-host:5432"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-store")].command
+          value:
+            - temporal-sql-tool
+            - create-database
+            - --defaultdb
+            - citus
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-visibility-store")].command
+          value:
+            - temporal-sql-tool
+            - create-database
+            - --defaultdb
+            - defaultdb
