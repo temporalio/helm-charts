@@ -52,6 +52,10 @@ spec:
               {{- else }}
               value: {{ include "temporal.frontendAddress" $ }}
               {{- end }}
+            - name: TEMPORAL_UI_DISTRIBUTION
+              value: helm
+            - name: TEMPORAL_NOTIFY_ON_NEW_VERSION
+              value: {{ .Values.web.notifyOnNewVersion | quote }}
           {{- if .Values.web.tls.enabled }}
           {{- include "temporal.web.tls.env" $ | nindent 12 }}
           {{- end }}
