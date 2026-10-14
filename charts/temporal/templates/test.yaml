@@ -18,11 +18,19 @@ metadata:
     {{- end }}
 spec:
   {{ include "temporal.componentServiceAccount" (list $ "test") }}
+  {{- with .Values.test.securityContext }}
+  securityContext:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   containers:
   - name: cluster-health
     image: "{{ .Values.admintools.image.repository }}:{{ .Values.admintools.image.tag }}"
     imagePullPolicy: {{ .Values.admintools.image.pullPolicy }}
     command: ["temporal", "operator", "cluster", "health"]
+    {{- with .Values.test.containerSecurityContext }}
+    securityContext:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     env:
       - name: TEMPORAL_ADDRESS
         value: {{ include "temporal.fullname" . }}-frontend:{{ .Values.server.frontend.service.port }}
