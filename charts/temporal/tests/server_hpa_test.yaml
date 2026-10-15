@@ -1,0 +1,154 @@
+suite: test server horizontalPodScaling
+templates:
+  - server-hpa.yaml
+set:
+  server:
+    enabled: true
+    config:
+      persistence:
+        defaultStore: default
+        visibilityStore: visibility
+        datastores:
+          default:
+            sql:
+              password: "secret"
+          visibility:
+            sql:
+              password: "secret"
+tests:
+  - it: skips manifest when horizontalPodScaling is disabled
+    template: templates/server-hpa.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders only for services that opt in
+    template: templates/server-hpa.yaml
+    set:
+      server:
+        history:
+          horizontalPodScaling:
+            enabled: true
+            desireValue: 5
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-temporal-history
+      - isKind:
+          of: HorizontalPodAutoscaler
+
+  - it: sets min and max replicas to desireValue
+    template: templates/server-hpa.yaml
+    set:
+      server:
+        matching:
+          horizontalPodScaling:
+            enabled: true
+            desireValue: 8
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-matching
+    asserts:
+      - equal:
+          path: spec.minReplicas
+          value: 8
+      - equal:
+          path: spec.maxReplicas
+          value: 8
+
+  - it: omits metrics
+    template: templates/server-hpa.yaml
+    set:
+      server:
+        frontend:
+          horizontalPodScaling:
+            enabled: true
+            desireValue: 3
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - notExists:
+          path: spec.metrics
+
+  - it: uses built-in liveness initial delay for periodSeconds on non-worker services
+    template: templates/server-hpa.yaml
+    set:
+      server:
+        history:
+          horizontalPodScaling:
+            enabled: true
+            desireValue: 3
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-history
+    asserts:
+      - equal:
+          path: spec.behavior.scaleUp.policies[0].periodSeconds
+          value: 150
+      - equal:
+          path: spec.behavior.scaleDown.policies[0].periodSeconds
+          value: 150
+      - equal:
+          path: spec.behavior.scaleUp.selectPolicy
+          value: Min
+      - equal:
+          path: spec.behavior.scaleDown.selectPolicy
+          value: Min
+      - equal:
+          path: spec.behavior.scaleUp.policies[0].type
+          value: Pods
+      - equal:
+          path: spec.behavior.scaleUp.policies[0].value
+          value: 1
+      - equal:
+          path: spec.behavior.scaleDown.stabilizationWindowSeconds
+          value: 600
+
+  - it: uses the 15 second floor for worker without configured probes
+    template: templates/server-hpa.yaml
+    set:
+      server:
+        worker:
+          horizontalPodScaling:
+            enabled: true
+            desireValue: 2
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-worker
+    asserts:
+      - equal:
+          path: spec.behavior.scaleUp.policies[0].periodSeconds
+          value: 15
+
+  - it: includes startup probe budget in periodSeconds
+    template: templates/server-hpa.yaml
+    set:
+      server:
+        history:
+          startupProbe:
+            periodSeconds: 10
+            failureThreshold: 30
+          horizontalPodScaling:
+            enabled: true
+            desireValue: 4
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-history
+    asserts:
+      - equal:
+          path: spec.behavior.scaleUp.policies[0].periodSeconds
+          value: 450
+
+  - it: fails when desireValue is unset
+    template: templates/server-hpa.yaml
+    set:
+      server:
+        frontend:
+          horizontalPodScaling:
+            enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: server.frontend.horizontalPodScaling.desireValue is required when horizontalPodScaling.enabled is true

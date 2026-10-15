@@ -551,3 +551,39 @@ chart-managed TLS, and callers gate on the empty string.
 {{- end -}}
 {{- toYaml $mounts -}}
 {{- end -}}
+
+{{/*
+Seconds between horizontalPodScaling steps: max(startup probe budget + liveness/readiness initialDelaySeconds, 15).
+Probe resolution matches server-deployment.yaml (service, then server-wide, then built-in).
+*/}}
+{{- define "temporal.server.horizontalPodScalingPeriodSeconds" -}}
+{{- $global := index . 0 -}}
+{{- $service := index . 1 -}}
+{{- $serviceValues := index $global.Values.server $service -}}
+{{- $startupBudget := 0 -}}
+{{- $resolvedStartup := default $global.Values.server.startupProbe $serviceValues.startupProbe -}}
+{{- if $resolvedStartup -}}
+{{- $startupInitial := $resolvedStartup.initialDelaySeconds | default 0 | int -}}
+{{- $startupPeriod := $resolvedStartup.periodSeconds | default 10 | int -}}
+{{- $startupThreshold := $resolvedStartup.failureThreshold | default 3 | int -}}
+{{- $startupBudget = add $startupInitial (mul $startupPeriod $startupThreshold) -}}
+{{- end -}}
+{{- $resolvedLiveness := default $global.Values.server.livenessProbe $serviceValues.livenessProbe -}}
+{{- $livenessInitial := 0 -}}
+{{- if $resolvedLiveness -}}
+{{- $livenessInitial = $resolvedLiveness.initialDelaySeconds | default 0 | int -}}
+{{- else if ne $service "worker" -}}
+{{- $livenessInitial = 150 -}}
+{{- end -}}
+{{- $resolvedReadiness := default $global.Values.server.readinessProbe $serviceValues.readinessProbe -}}
+{{- $readinessInitial := 0 -}}
+{{- if $resolvedReadiness -}}
+{{- $readinessInitial = $resolvedReadiness.initialDelaySeconds | default 0 | int -}}
+{{- end -}}
+{{- $sum := add $startupBudget (add $livenessInitial $readinessInitial) -}}
+{{- if lt $sum 15 -}}
+{{- print 15 -}}
+{{- else -}}
+{{- print $sum -}}
+{{- end -}}
+{{- end -}}
