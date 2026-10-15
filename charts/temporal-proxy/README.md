@@ -60,6 +60,29 @@ config:
       hostPort: localhost:7233
 ```
 
+### Requiring encryption
+
+Set `requireEncryption: true` to stop a release from deploying a proxy that forwards payloads in plaintext, for example
+after an upgrade or config change drops the encryption block. Rendering then fails unless `config.encryption.default.uri`
+is set, and the container runs with `PROXY_REQUIRE_ENCRYPTION=true` so the proxy itself also refuses to start without
+a key (temporal-proxy releases that include
+[temporalio/temporal-proxy#227](https://github.com/temporalio/temporal-proxy/pull/227); older releases ignore it). A
+pod that refuses to start never becomes Ready, and the default rollout strategy keeps the existing pods serving.
+
+The check is for a key, not `encryption.enabled`: a decrypt-only proxy (a key with `enabled: false`) is allowed. It is
+off by default; turning it on is recommended for production.
+
+```yaml
+requireEncryption: true
+config:
+  encryption:
+    enabled: true
+    default:
+      uri: extension://kms/payloads
+      duration: 24h
+      renewBefore: 1h
+```
+
 ### Secret-aware credentials
 
 Two fields accept either a plain string or a `secretKeyRef` object, so the ConfigMap never has to hold a secret in
