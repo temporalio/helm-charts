@@ -1,0 +1,44 @@
+{{- if $.Values.server.enabled }}
+{{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
+{{- $serviceValues := index $.Values.server $service }}
+{{- if and $serviceValues.enabled (dig "horizontalPodScaling" "enabled" false $serviceValues) }}
+{{- $desireValue := dig "horizontalPodScaling" "desireValue" nil $serviceValues }}
+{{- if not $desireValue }}
+{{- fail (printf "server.%s.horizontalPodScaling.desireValue is required when horizontalPodScaling.enabled is true" $service) }}
+{{- end }}
+{{- if lt ($desireValue | int) 1 }}
+{{- fail (printf "server.%s.horizontalPodScaling.desireValue must be at least 1" $service) }}
+{{- end }}
+{{- $periodSeconds := include "temporal.server.horizontalPodScalingPeriodSeconds" (list $ $service) | int }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  namespace: {{ include "temporal.kubernetesNamespace" $ }}
+  name: {{ include "temporal.componentname" (list $ $service) }}
+  labels:
+    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "temporal.componentname" (list $ $service) }}
+  minReplicas: {{ $desireValue | int }}
+  maxReplicas: {{ $desireValue | int }}
+  behavior:
+    scaleUp:
+      selectPolicy: Min
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: {{ $periodSeconds }}
+    scaleDown:
+      selectPolicy: Min
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: {{ $periodSeconds }}
+      stabilizationWindowSeconds: 600
+---
+{{- end }}
+{{- end }}
+{{- end }}

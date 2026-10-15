@@ -58,6 +58,38 @@ tests:
     asserts:
       - notExists:
           path: spec.replicas
+  - it: omits replica count when horizontalPodScaling is enabled even if replicaCount is set
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        replicaCount: 2
+        frontend:
+          replicaCount: 3
+          horizontalPodScaling:
+            enabled: true
+            desireValue: 5
+    asserts:
+      - notExists:
+          path: spec.replicas
+  - it: keeps replica count on services without horizontalPodScaling when another service uses horizontalPodScaling
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-history
+    set:
+      server:
+        replicaCount: 2
+        frontend:
+          horizontalPodScaling:
+            enabled: true
+            desireValue: 5
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 2
   - it: defaults to service wide resources
     template: templates/server-deployment.yaml
     documentSelector:

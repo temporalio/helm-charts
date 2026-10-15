@@ -372,6 +372,11 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
+    # Fixed-size rollout, one pod at a time. When enabled, replicaCount is ignored.
+    # Set desireValue once; pods are added or removed one per computed period.
+    horizontalPodScaling:
+      enabled: false
+      # desireValue: 3
     serviceAccount: {}
     # serviceAccount:
     #   create: false
@@ -423,6 +428,9 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
+    horizontalPodScaling:
+      enabled: false
+      # desireValue: 3
     serviceAccount: {}
   history:
     enabled: true
@@ -459,6 +467,9 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
+    horizontalPodScaling:
+      enabled: false
+      # desireValue: 3
     serviceAccount: {}
   matching:
     enabled: true
@@ -495,6 +506,9 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
+    horizontalPodScaling:
+      enabled: false
+      # desireValue: 3
     serviceAccount: {}
   worker:
     enabled: true
@@ -531,6 +545,9 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
+    horizontalPodScaling:
+      enabled: false
+      # desireValue: 3
     serviceAccount: {}
 admintools:
   enabled: true
