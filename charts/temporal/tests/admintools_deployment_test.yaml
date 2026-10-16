@@ -236,3 +236,16 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: external-admin-sa
+  - it: omits strategy when deploymentStrategy is not set
+    asserts:
+      - notExists:
+          path: spec.strategy
+  - it: sets strategy from deploymentStrategy
+    set:
+      admintools:
+        deploymentStrategy:
+          type: Recreate
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: Recreate

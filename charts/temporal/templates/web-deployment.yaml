@@ -12,6 +12,10 @@ spec:
   {{- with .Values.web.replicaCount }}
   replicas: {{ . }}
   {{- end }}
+  {{- with .Values.web.deploymentStrategy }}
+  strategy:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "temporal.name" $ }}
