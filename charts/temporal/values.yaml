@@ -372,11 +372,16 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
-    # Fixed-size rollout, one pod at a time. When enabled, replicaCount is ignored.
-    # Set desireValue once; pods are added or removed one per computed period.
-    horizontalPodScaling:
+    # Opt-in HPA for this service. Utilization targets need CPU and memory requests.
+    # History and Matching rebalance when the replica count changes.
+    # A non-empty behavior map replaces the built-in one-pod-per-period behavior.
+    autoscaling:
       enabled: false
-      # desireValue: 3
+      minReplicas: 1
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: null
+      targetMemoryUtilizationPercentage: null
+      behavior: {}
     serviceAccount: {}
     # serviceAccount:
     #   create: false
@@ -428,9 +433,16 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
-    horizontalPodScaling:
+    # Opt-in HPA for this service. Utilization targets need CPU and memory requests.
+    # History and Matching rebalance when the replica count changes.
+    # A non-empty behavior map replaces the built-in one-pod-per-period behavior.
+    autoscaling:
       enabled: false
-      # desireValue: 3
+      minReplicas: 1
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: null
+      targetMemoryUtilizationPercentage: null
+      behavior: {}
     serviceAccount: {}
   history:
     enabled: true
@@ -467,9 +479,16 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
-    horizontalPodScaling:
+    # Opt-in HPA for this service. Utilization targets need CPU and memory requests.
+    # History and Matching rebalance when the replica count changes.
+    # A non-empty behavior map replaces the built-in one-pod-per-period behavior.
+    autoscaling:
       enabled: false
-      # desireValue: 3
+      minReplicas: 1
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: null
+      targetMemoryUtilizationPercentage: null
+      behavior: {}
     serviceAccount: {}
   matching:
     enabled: true
@@ -506,9 +525,16 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
-    horizontalPodScaling:
+    # Opt-in HPA for this service. Utilization targets need CPU and memory requests.
+    # History and Matching rebalance when the replica count changes.
+    # A non-empty behavior map replaces the built-in one-pod-per-period behavior.
+    autoscaling:
       enabled: false
-      # desireValue: 3
+      minReplicas: 1
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: null
+      targetMemoryUtilizationPercentage: null
+      behavior: {}
     serviceAccount: {}
   worker:
     enabled: true
@@ -545,9 +571,16 @@ server:
     runtimeClassName: ""
     priorityClassName: ""
     podDisruptionBudget: {}
-    horizontalPodScaling:
+    # Opt-in HPA for this service. Utilization targets need CPU and memory requests.
+    # History and Matching rebalance when the replica count changes.
+    # A non-empty behavior map replaces the built-in one-pod-per-period behavior.
+    autoscaling:
       enabled: false
-      # desireValue: 3
+      minReplicas: 1
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: null
+      targetMemoryUtilizationPercentage: null
+      behavior: {}
     serviceAccount: {}
 admintools:
   enabled: true

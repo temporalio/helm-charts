@@ -58,7 +58,7 @@ tests:
     asserts:
       - notExists:
           path: spec.replicas
-  - it: omits replica count when horizontalPodScaling is enabled even if replicaCount is set
+  - it: omits replica count when autoscaling is enabled even if replicaCount is set
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
@@ -68,13 +68,13 @@ tests:
         replicaCount: 2
         frontend:
           replicaCount: 3
-          horizontalPodScaling:
+          autoscaling:
             enabled: true
-            desireValue: 5
+            targetCPUUtilizationPercentage: 75
     asserts:
       - notExists:
           path: spec.replicas
-  - it: keeps replica count on services without horizontalPodScaling when another service uses horizontalPodScaling
+  - it: keeps replica count on services without autoscaling when another service uses autoscaling
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
@@ -83,9 +83,9 @@ tests:
       server:
         replicaCount: 2
         frontend:
-          horizontalPodScaling:
+          autoscaling:
             enabled: true
-            desireValue: 5
+            targetCPUUtilizationPercentage: 75
     asserts:
       - equal:
           path: spec.replicas

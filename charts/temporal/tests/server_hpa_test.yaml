@@ -1,4 +1,4 @@
-suite: test server horizontalPodScaling
+suite: test server autoscaling
 templates:
   - server-hpa.yaml
 set:
@@ -16,7 +16,7 @@ set:
             sql:
               password: "secret"
 tests:
-  - it: skips manifest when horizontalPodScaling is disabled
+  - it: skips manifest when autoscaling is disabled
     template: templates/server-hpa.yaml
     asserts:
       - hasDocuments:
@@ -27,9 +27,9 @@ tests:
     set:
       server:
         history:
-          horizontalPodScaling:
+          autoscaling:
             enabled: true
-            desireValue: 5
+            targetCPUUtilizationPercentage: 75
     asserts:
       - hasDocuments:
           count: 1
@@ -39,48 +39,93 @@ tests:
       - isKind:
           of: HorizontalPodAutoscaler
 
-  - it: sets min and max replicas to desireValue
+  - it: renders service min and max
     template: templates/server-hpa.yaml
     set:
       server:
         matching:
-          horizontalPodScaling:
+          autoscaling:
             enabled: true
-            desireValue: 8
+            minReplicas: 3
+            maxReplicas: 12
+            targetCPUUtilizationPercentage: 75
     documentSelector:
       path: metadata.name
       value: RELEASE-NAME-temporal-matching
     asserts:
       - equal:
           path: spec.minReplicas
-          value: 8
+          value: 3
       - equal:
           path: spec.maxReplicas
-          value: 8
+          value: 12
 
-  - it: omits metrics
+  - it: renders a cpu metric
     template: templates/server-hpa.yaml
     set:
       server:
         frontend:
-          horizontalPodScaling:
+          autoscaling:
             enabled: true
-            desireValue: 3
+            targetCPUUtilizationPercentage: 75
     documentSelector:
       path: metadata.name
       value: RELEASE-NAME-temporal-frontend
     asserts:
-      - notExists:
+      - lengthEqual:
           path: spec.metrics
+          count: 1
+      - equal:
+          path: spec.metrics[0].resource.name
+          value: cpu
+      - equal:
+          path: spec.metrics[0].resource.target.averageUtilization
+          value: 75
+
+  - it: renders memory metric when set
+    template: templates/server-hpa.yaml
+    set:
+      server:
+        frontend:
+          autoscaling:
+            enabled: true
+            targetMemoryUtilizationPercentage: 80
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - lengthEqual:
+          path: spec.metrics
+          count: 1
+      - equal:
+          path: spec.metrics[0].resource.name
+          value: memory
+
+  - it: renders both cpu and memory metrics
+    template: templates/server-hpa.yaml
+    set:
+      server:
+        history:
+          autoscaling:
+            enabled: true
+            targetCPUUtilizationPercentage: 70
+            targetMemoryUtilizationPercentage: 85
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-history
+    asserts:
+      - lengthEqual:
+          path: spec.metrics
+          count: 2
 
   - it: uses built-in liveness initial delay for periodSeconds on non-worker services
     template: templates/server-hpa.yaml
     set:
       server:
         history:
-          horizontalPodScaling:
+          autoscaling:
             enabled: true
-            desireValue: 3
+            targetCPUUtilizationPercentage: 75
     documentSelector:
       path: metadata.name
       value: RELEASE-NAME-temporal-history
@@ -112,9 +157,9 @@ tests:
     set:
       server:
         worker:
-          horizontalPodScaling:
+          autoscaling:
             enabled: true
-            desireValue: 2
+            targetCPUUtilizationPercentage: 75
     documentSelector:
       path: metadata.name
       value: RELEASE-NAME-temporal-worker
@@ -131,9 +176,9 @@ tests:
           startupProbe:
             periodSeconds: 10
             failureThreshold: 30
-          horizontalPodScaling:
+          autoscaling:
             enabled: true
-            desireValue: 4
+            targetCPUUtilizationPercentage: 75
     documentSelector:
       path: metadata.name
       value: RELEASE-NAME-temporal-history
@@ -142,13 +187,60 @@ tests:
           path: spec.behavior.scaleUp.policies[0].periodSeconds
           value: 450
 
-  - it: fails when desireValue is unset
+  - it: replaces behavior when the service sets a non-empty map
+    template: templates/server-hpa.yaml
+    set:
+      server:
+        history:
+          autoscaling:
+            enabled: true
+            targetCPUUtilizationPercentage: 75
+            behavior:
+              scaleDown:
+                stabilizationWindowSeconds: 300
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-history
+    asserts:
+      - equal:
+          path: spec.behavior.scaleDown.stabilizationWindowSeconds
+          value: 300
+      - notExists:
+          path: spec.behavior.scaleUp
+
+  - it: fails when no metric target is set
     template: templates/server-hpa.yaml
     set:
       server:
         frontend:
-          horizontalPodScaling:
+          autoscaling:
             enabled: true
     asserts:
       - failedTemplate:
-          errorMessage: server.frontend.horizontalPodScaling.desireValue is required when horizontalPodScaling.enabled is true
+          errorMessage: server.frontend.autoscaling requires targetCPUUtilizationPercentage or targetMemoryUtilizationPercentage when enabled
+
+  - it: fails when maxReplicas is below minReplicas
+    template: templates/server-hpa.yaml
+    set:
+      server:
+        frontend:
+          autoscaling:
+            enabled: true
+            minReplicas: 5
+            maxReplicas: 2
+            targetCPUUtilizationPercentage: 75
+    asserts:
+      - failedTemplate:
+          errorMessage: server.frontend.autoscaling.maxReplicas must be greater than or equal to minReplicas
+
+  - it: fails when minReplicas is below 1
+    template: templates/server-hpa.yaml
+    set:
+      server:
+        frontend:
+          autoscaling:
+            enabled: true
+            minReplicas: 0
+    asserts:
+      - failedTemplate:
+          errorMessage: server.frontend.autoscaling.minReplicas must be at least 1
