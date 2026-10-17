@@ -77,6 +77,7 @@ requireEncryption: true
 config:
   encryption:
     enabled: true
+    namespaceBinding: strict
     default:
       uri: extension://kms/payloads
       duration: 24h
