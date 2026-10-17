@@ -450,3 +450,59 @@ tests:
       - lengthEqual:
           path: spec.template.spec.containers[0].volumeMounts
           count: 1
+
+  - it: does not set PROXY_REQUIRE_ENCRYPTION by default
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PROXY_REQUIRE_ENCRYPTION
+            value: "true"
+
+  - it: sets PROXY_REQUIRE_ENCRYPTION when requireEncryption is on and a key is configured
+    set:
+      requireEncryption: true
+      config.encryption:
+        enabled: true
+        default:
+          uri: testing://a2V5
+          duration: 1h
+          renewBefore: 10m
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PROXY_REQUIRE_ENCRYPTION
+            value: "true"
+
+  - it: allows a decrypt-only config when requireEncryption is on
+    set:
+      requireEncryption: true
+      config.encryption:
+        enabled: false
+        default:
+          uri: testing://a2V5
+          duration: 1h
+          renewBefore: 10m
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PROXY_REQUIRE_ENCRYPTION
+            value: "true"
+
+  - it: fails when requireEncryption is on and there is no encryption block
+    set:
+      requireEncryption: true
+    asserts:
+      - failedTemplate:
+          errorMessage: requireEncryption is set but config.encryption.default.uri is not; configure an encryption key or set requireEncryption=false
+
+  - it: fails when requireEncryption is on and encryption has no key
+    set:
+      requireEncryption: true
+      config.encryption:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: requireEncryption is set but config.encryption.default.uri is not; configure an encryption key or set requireEncryption=false
