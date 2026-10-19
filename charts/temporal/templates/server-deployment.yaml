@@ -144,6 +144,17 @@ spec:
             tcpSocket:
               port: rpc
           {{- end }}
+          {{- $resolvedStartup := default $.Values.server.startupProbe $serviceValues.startupProbe }}
+          {{- if $resolvedStartup }}
+          startupProbe:
+          {{- toYaml $resolvedStartup | nindent 12 }}
+          {{- else if ne $service "worker" }}
+          startupProbe:
+            periodSeconds: 10
+            failureThreshold: 30
+            tcpSocket:
+              port: rpc
+          {{- end }}
           volumeMounts:
             - name: config
               mountPath: /etc/temporal/config/config_template.yaml
