@@ -341,3 +341,16 @@ tests:
           value: |
             first: 1
             second: 2
+  - it: omits strategy when deploymentStrategy is not set
+    asserts:
+      - notExists:
+          path: spec.strategy
+  - it: sets strategy from deploymentStrategy
+    set:
+      admintools:
+        deploymentStrategy:
+          type: Recreate
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: Recreate

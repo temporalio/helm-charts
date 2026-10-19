@@ -200,6 +200,34 @@ tests:
       - equal:
           path: metadata.namespace
           value: target-namespace
+  - it: renders namespace on component service accounts
+    template: templates/serviceaccount.yaml
+    set:
+      server:
+        frontend:
+          serviceAccount:
+            create: true
+        history:
+          serviceAccount:
+            create: true
+      admintools:
+        serviceAccount:
+          create: true
+      web:
+        serviceAccount:
+          create: true
+      schema:
+        serviceAccount:
+          create: true
+      test:
+        serviceAccount:
+          create: true
+    asserts:
+      - hasDocuments:
+          count: 7
+      - equal:
+          path: metadata.namespace
+          value: target-namespace
   - it: renders namespace on test pod
     template: templates/test.yaml
     asserts:
