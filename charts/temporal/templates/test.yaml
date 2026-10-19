@@ -33,7 +33,7 @@ spec:
     {{- end }}
     env:
       - name: TEMPORAL_ADDRESS
-        value: {{ include "temporal.fullname" . }}-frontend:{{ .Values.server.frontend.service.port }}
+        value: {{ include "temporal.frontendAddress" . }}
       {{- if $tlsSection }}
       {{- include "temporal.adminClient.tls.env" (list . $tlsSection) | nindent 6 }}
       {{- end }}

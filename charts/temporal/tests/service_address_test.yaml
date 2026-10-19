@@ -1,0 +1,111 @@
+suite: test frontend and web service addresses with a long release name
+templates:
+  - server-service.yaml
+  - web-service.yaml
+  - web-deployment.yaml
+  - web-ingress.yaml
+  - frontend-ingress.yaml
+  - admintools-deployment.yaml
+  - server-namespace-job.yaml
+  - test.yaml
+# A 53 character release name (the Helm maximum) makes the full name long
+# enough that component Service names are truncated. Every reference to a
+# Service must use the same truncated name.
+release:
+  name: acme-payments-production-orchestration-cluster-west-1
+tests:
+  - it: truncates the frontend Service name
+    template: templates/server-service.yaml
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.name
+          value: acme-payments-production-orchestration-cluster-west-1-frontend
+  - it: truncates the web Service name
+    template: templates/web-service.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: acme-payments-production-orchestration-cluster-west-1-tempo-web
+  - it: points the web UI at the frontend Service
+    template: templates/web-deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: acme-payments-production-orchestration-cluster-west-1-frontend:7233
+  - it: points admintools at the frontend Service
+    template: templates/admintools-deployment.yaml
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: acme-payments-production-orchestration-cluster-west-1-frontend:7233
+  - it: points admintools at the internal-frontend Service when enabled
+    template: templates/admintools-deployment.yaml
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: acme-payments-production-orchestration-cluste-internal-frontend:7236
+  - it: points the namespace job at the internal-frontend Service when enabled
+    template: templates/server-namespace-job.yaml
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          value: acme-payments-production-orchestration-cluste-internal-frontend:7236
+  - it: points the test pod at the frontend Service
+    template: templates/test.yaml
+    asserts:
+      - contains:
+          path: spec.containers[0].env
+          content:
+            name: TEMPORAL_ADDRESS
+            value: acme-payments-production-orchestration-cluster-west-1-frontend:7233
+  - it: routes the frontend ingress to the frontend Service
+    template: templates/frontend-ingress.yaml
+    capabilities:
+      apiVersions:
+        - networking.k8s.io/v1
+    set:
+      server:
+        frontend:
+          ingress:
+            enabled: true
+            hosts:
+              - temporal.example.com
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: acme-payments-production-orchestration-cluster-west-1-frontend
+  - it: routes the web ingress to the web Service
+    template: templates/web-ingress.yaml
+    capabilities:
+      apiVersions:
+        - networking.k8s.io/v1
+    set:
+      web:
+        ingress:
+          enabled: true
+          hosts:
+            - temporal-ui.example.com
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: acme-payments-production-orchestration-cluster-west-1-tempo-web
