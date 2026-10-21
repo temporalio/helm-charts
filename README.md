@@ -164,6 +164,16 @@ For an example, review the values for Google's `cloud sql proxy` in the `values/
 helm install --repo https://go.temporal.io/helm-charts -f values/values.cloudsqlproxy.yaml temporal temporal --timeout 900s
 ```
 
+### Install from a private registry
+
+If you mirror Temporal images to a private registry (e.g., for air-gapped clusters), set `global.imageRegistry` to prefix every image in the chart with that registry, and `imagePullSecrets` if the registry requires credentials. Image repositories are prefixed as-is, so `temporalio/server` becomes `registry.example.com/temporalio/server`. Don't include the registry in per-component `image.repository` values when `global.imageRegistry` is set.
+
+For an example, review `values/values.private-registry.yaml` and pass that file to `helm install`:
+
+```bash
+helm install --repo https://go.temporal.io/helm-charts -f values/values.private-registry.yaml temporal temporal --timeout 900s
+```
+
 ### Install with extraObjects for external secret management
 
 You can inject additional Kubernetes manifests using the `extraObjects` configuration. This is particularly useful for GitOps scenarios where you want to manage secrets externally using tools like ExternalSecretOperator or SealedSecrets.
