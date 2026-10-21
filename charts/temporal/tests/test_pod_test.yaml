@@ -60,6 +60,17 @@ tests:
       - equal:
           path: spec.imagePullSecrets[0].name
           value: my-registry-secret
+  - it: prefixes test pod image with global.imageRegistry when set
+    set:
+      global:
+        imageRegistry: registry.example.com
+      admintools:
+        image:
+          tag: test-tag
+    asserts:
+      - equal:
+          path: spec.containers[0].image
+          value: "registry.example.com/temporalio/admin-tools:test-tag"
   - it: does not set custom pod labels by default
     asserts:
       - notExists:
