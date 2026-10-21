@@ -24,6 +24,26 @@ tests:
       - containsDocument:
           kind: Job
           apiVersion: batch/v1
+  - it: prefixes namespace job images with global.imageRegistry when set
+    set:
+      global:
+        imageRegistry: registry.example.com
+      admintools:
+        image:
+          tag: test-tag
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "registry.example.com/temporalio/admin-tools:test-tag"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.example.com/temporalio/admin-tools:test-tag"
   - it: uses a fixed job name when useHelmHooks is true
     release:
       name: test

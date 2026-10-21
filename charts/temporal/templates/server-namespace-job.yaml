@@ -52,7 +52,7 @@ spec:
       initContainers:
         {{- range $namespace := $.Values.server.config.namespaces.namespace }}
         - name: create-{{ $namespace.name }}-namespace
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          image: "{{ include "temporal.imageRegistry" $ }}{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['/bin/sh', '-c']
           args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
@@ -102,7 +102,7 @@ spec:
         {{- end }}
       containers:
         - name: done
-          image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
+          image: "{{ include "temporal.imageRegistry" $ }}{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['sh', '-c', 'echo "Namespace setup completed"']
           {{- with $.Values.schema.resources }}

@@ -58,7 +58,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ $.Chart.Name }}-{{ $service }}
-          image: "{{ $image.repository }}:{{ $image.tag }}"
+          image: "{{ include "temporal.imageRegistry" $ }}{{ $image.repository }}:{{ $image.tag }}"
           imagePullPolicy: {{ $image.pullPolicy }}
           env:
             - name: POD_IP
