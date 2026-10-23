@@ -138,7 +138,9 @@ Consumers parse with `include "temporal-proxy.rendered" . | fromYaml`.
 
 Secret-bearing fields (upstream apiKey, static token) become ${VAR} env
 references, and tls blocks with a secretName become mounted files, via the
-temporal-proxy.secretRef and temporal-proxy.tlsMount helpers.
+temporal-proxy.secretRef and temporal-proxy.tlsMount helpers. With
+requireEncryption, a config without an encryption key fails the render and
+the container gets PROXY_REQUIRE_ENCRYPTION=true.
 */}}
 {{- define "temporal-proxy.rendered" -}}
 {{- $cfg := deepCopy .Values.config -}}
@@ -169,6 +171,12 @@ since there is no name to quote. */ -}}
 {{- end -}}
 {{- $_ := include "temporal-proxy.tlsMount" (dict "tls" $up.tls "slot" (printf "upstream-%s" $up.name) "acc" $acc) -}}
 {{- end -}}
+{{- end -}}
+{{- if .Values.requireEncryption -}}
+{{- if not (and $cfg.encryption $cfg.encryption.default $cfg.encryption.default.uri) -}}
+{{- fail "requireEncryption is set but config.encryption.default.uri is not; configure an encryption key or set requireEncryption=false" -}}
+{{- end -}}
+{{- $_ := set $acc "env" (append $acc.env (dict "name" "PROXY_REQUIRE_ENCRYPTION" "value" "true")) -}}
 {{- end -}}
 {{- if and $cfg.auth $cfg.auth.staticToken -}}
 {{- $_ := include "temporal-proxy.secretRef" (dict "holder" $cfg.auth.staticToken "field" "token" "var" "TP_AUTH_STATIC_TOKEN" "acc" $acc "path" "auth.staticToken.token") -}}

@@ -382,3 +382,10 @@ tests:
       - notMatchRegex:
           path: data["config.yaml"]
           pattern: "TP_AUTH_STATIC_TOKEN"
+
+  - it: fails when requireEncryption is on and there is no encryption key
+    set:
+      requireEncryption: true
+    asserts:
+      - failedTemplate:
+          errorMessage: requireEncryption is set but config.encryption.default.uri is not; configure an encryption key or set requireEncryption=false

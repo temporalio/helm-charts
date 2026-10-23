@@ -10,6 +10,13 @@ config:
   routing:
     default: default
 
+# Refuse to run a proxy without an encryption key, so an upgrade or config change cannot deploy a proxy that
+# forwards payloads in plaintext. When true, rendering fails unless config.encryption.default.uri is set, and the
+# proxy is started with PROXY_REQUIRE_ENCRYPTION=true so it also refuses to start without a key. It checks for a
+# key rather than encryption.enabled, so a decrypt-only proxy (a key with enabled: false) is allowed.
+# Recommended for production.
+requireEncryption: false
+
 # Extra environment variables for the proxy container. Use these to supply
 # values referenced with ${VAR} in the config (e.g. Temporal Cloud account id,
 # KMS credentials). Chart-generated secret env vars are merged in automatically.
