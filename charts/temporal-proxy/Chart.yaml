@@ -5,7 +5,7 @@ icon: https://raw.githubusercontent.com/temporalio/temporal-proxy/refs/heads/mai
 
 type: application
 version: 0.3.0
-appVersion: v1.0.0
+appVersion: v1.0.1
 kubeVersion: ">=1.30.0-0"
 
 keywords:
