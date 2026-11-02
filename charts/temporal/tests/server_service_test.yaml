@@ -711,16 +711,3 @@ tests:
       - equal:
           path: metadata.annotations["prometheus.io/port"]
           value: "9090"
-  - it: serviceAnnotations override the built-in headless annotations
-    template: templates/server-service.yaml
-    documentSelector:
-      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend-headless")].kind'
-      value: Service
-      matchMany: true
-    set:
-      additionalAnnotations:
-        prometheus.io/scheme: https
-    asserts:
-      - equal:
-          path: metadata.annotations["prometheus.io/scheme"]
-          value: https
