@@ -12,11 +12,8 @@ metadata:
   name: {{ include "temporal.componentname" (list $ "web") }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "web" "") | nindent 4 }}
-{{- $annotations := mergeOverwrite (include "temporal.resourceAnnotations" (list $ "web" "") | fromYaml | default dict) (deepCopy (.Values.web.ingress.annotations | default dict)) }}
-{{- with $annotations }}
   annotations:
-{{ toYaml . | indent 4 }}
-{{- end }}
+    {{- include "temporal.resourceAnnotations" (list $ "web" "" .Values.web.ingress.annotations) | nindent 4 }}
 spec:
   {{- with .Values.web.ingress.className }}
   ingressClassName: {{ . | quote }}

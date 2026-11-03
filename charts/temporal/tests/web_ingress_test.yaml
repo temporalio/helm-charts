@@ -36,5 +36,5 @@ tests:
         ingress:
           enabled: true
     asserts:
-      - notExists:
+      - isEmpty:
           path: metadata.annotations
