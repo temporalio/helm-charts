@@ -117,7 +117,7 @@ tests:
       - equal:
           path: metadata.annotations['cost-center']
           value: "1234"
-  - it: web.serviceAnnotations override additionalAnnotations
+  - it: web service.annotations override additionalAnnotations and are evaluated as a template
     template: templates/web-service.yaml
     documentSelector:
       path: kind
@@ -126,23 +126,6 @@ tests:
       additionalAnnotations:
         team: platform
       web:
-        serviceAnnotations:
-          team: web-team
-    asserts:
-      - equal:
-          path: metadata.annotations.team
-          value: web-team
-  - it: web service.annotations override serviceAnnotations and are still evaluated as a template
-    template: templates/web-service.yaml
-    documentSelector:
-      path: kind
-      value: Service
-    set:
-      additionalAnnotations:
-        team: platform
-      web:
-        serviceAnnotations:
-          team: web-team
         service:
           annotations:
             team: "{{ .Release.Name }}-service-team"

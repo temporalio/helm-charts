@@ -623,7 +623,7 @@ tests:
       - equal:
           path: metadata.annotations["service.alpha.kubernetes.io/tolerate-unready-endpoints"]
           value: "true"
-  - it: server.serviceAnnotations override additionalAnnotations
+  - it: service.annotations override additionalAnnotations and are evaluated as a template
     template: templates/server-service.yaml
     documentSelector:
       path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
@@ -633,46 +633,7 @@ tests:
       additionalAnnotations:
         team: platform
       server:
-        serviceAnnotations:
-          team: server-team
-    asserts:
-      - equal:
-          path: metadata.annotations.team
-          value: server-team
-  - it: per-service serviceAnnotations override server.serviceAnnotations
-    template: templates/server-service.yaml
-    documentSelector:
-      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
-      value: Service
-      matchMany: true
-    set:
-      additionalAnnotations:
-        team: platform
-      server:
-        serviceAnnotations:
-          team: server-team
         frontend:
-          serviceAnnotations:
-            team: frontend-team
-    asserts:
-      - equal:
-          path: metadata.annotations.team
-          value: frontend-team
-  - it: service.annotations override serviceAnnotations and are still evaluated as a template
-    template: templates/server-service.yaml
-    documentSelector:
-      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-frontend")].kind'
-      value: Service
-      matchMany: true
-    set:
-      additionalAnnotations:
-        team: platform
-      server:
-        serviceAnnotations:
-          team: server-team
-        frontend:
-          serviceAnnotations:
-            team: frontend-team
           service:
             annotations:
               team: "{{ .Release.Name }}-service-team"

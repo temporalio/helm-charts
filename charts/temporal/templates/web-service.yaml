@@ -6,8 +6,8 @@ metadata:
   name: {{ include "temporal.componentname" (list $ "web") }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "web" "") | nindent 4 }}
-  {{- $serviceAnnotations := include "temporal.resourceAnnotations" (list $ "web" "service" .Values.web.service.annotations) -}}
-  {{- with $serviceAnnotations }}
+  {{- $annotations := include "temporal.resourceAnnotations" (list $ "web" "" .Values.web.service.annotations) -}}
+  {{- with $annotations }}
   annotations: {{- include "common.tplvalues.render" ( dict "value" . "context" $) | nindent 4 }}
   {{- end }}
 spec:
