@@ -188,6 +188,10 @@ Create the annotations for all resources
 {{- $global := index . 0 -}}
 {{- $scope := index . 1 -}}
 {{- $resourceType := index . 2 -}}
+{{- $extraAnnotations := dict -}}
+{{- if gt (len .) 3 -}}
+{{- $extraAnnotations = index . 3 | default dict -}}
+{{- end -}}
 {{- $component := "server" -}}
 {{- if (or (eq $scope "admintools") (eq $scope "web") (eq $scope "schema")) -}}
 {{- $component = $scope -}}
@@ -206,6 +210,7 @@ Create the annotations for all resources
 {{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $additionalAnnotations) -}}
 {{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $componentAnnotations) -}}
 {{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $scopeAnnotations) -}}
+{{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $extraAnnotations) -}}
 {{- range $annotation_name, $annotation_value := $resourceAnnotations }}
 {{ $annotation_name }}: {{ $annotation_value | quote }}
 {{- end -}}

@@ -358,7 +358,7 @@ tests:
         jobAnnotations:
           owner: from-shared
           stage: schema
-        setupJobAnnotations:
+        schemaJobAnnotations:
           owner: from-setup
         namespaceJobAnnotations:
           owner: from-namespace

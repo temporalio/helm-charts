@@ -890,7 +890,7 @@ tests:
       - equal:
           path: metadata.annotations['cost-center']
           value: "1234"
-  - it: prefers setupJobAnnotations over jobAnnotations and additionalAnnotations on the schema job
+  - it: prefers schemaJobAnnotations over jobAnnotations and additionalAnnotations on the schema job
     set:
       additionalAnnotations:
         owner: from-additional
@@ -900,8 +900,8 @@ tests:
         jobAnnotations:
           owner: from-shared
           stage: schema
-        setupJobAnnotations:
-          owner: from-setup
+        schemaJobAnnotations:
+          owner: from-schema
         namespaceJobAnnotations:
           owner: from-namespace
       server:
@@ -921,7 +921,7 @@ tests:
     asserts:
       - equal:
           path: metadata.annotations.owner
-          value: from-setup
+          value: from-schema
       - equal:
           path: metadata.annotations.stage
           value: schema

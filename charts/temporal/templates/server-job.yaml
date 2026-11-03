@@ -12,7 +12,7 @@ metadata:
     "helm.sh/hook-weight": "0"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
     {{- end }}
-    {{- include "temporal.resourceAnnotations" (list $ "schema" "job") | nindent 4 }}
+    {{- include "temporal.resourceAnnotations" (list $ "schema" "job" $.Values.schema.schemaJobAnnotations) | nindent 4 }}
 spec:
   backoffLimit: {{ $.Values.schema.backoffLimit }}
   activeDeadlineSeconds: {{ $.Values.schema.activeDeadlineSeconds }}
