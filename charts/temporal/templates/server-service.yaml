@@ -9,7 +9,7 @@ metadata:
   name: {{ include "temporal.componentname" (list $ $service) }}
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "service") | nindent 4 }}
-  {{- $serviceAnnotations := mergeOverwrite (include "temporal.resourceAnnotations" (list $ $service "service") | fromYaml | default dict) (deepCopy ($serviceValues.service.annotations | default dict)) -}}
+  {{- $serviceAnnotations := include "temporal.resourceAnnotations" (list $ $service "service" $serviceValues.service.annotations) -}}
   {{- with $serviceAnnotations }}
   annotations: {{- include "common.tplvalues.render" ( dict "value" . "context" $) | nindent 4 }}
   {{- end }}
@@ -68,7 +68,7 @@ metadata:
     prometheus.io/scheme: http
     prometheus.io/port: "9090"
     {{- end }}
-    {{- include "temporal.resourceAnnotations" (list $ "" "dynamicConfigmap") | nindent 4 }}
+    {{- include "temporal.resourceAnnotations" (list $ $service "") | nindent 4 }}
 
 spec:
   type: ClusterIP
