@@ -1,12 +1,13 @@
 suite: test web ingress
 templates:
   - web-ingress.yaml
+set:
+  web:
+    ingress:
+      enabled: true
 tests:
   - it: applies additionalAnnotations to the web ingress
     set:
-      web:
-        ingress:
-          enabled: true
       additionalAnnotations:
         team: platform
         cost-center: "1234"
@@ -21,7 +22,6 @@ tests:
     set:
       web:
         ingress:
-          enabled: true
           annotations:
             team: ingress-team
       additionalAnnotations:
@@ -31,10 +31,6 @@ tests:
           path: metadata.annotations.team
           value: ingress-team
   - it: omits annotations on the web ingress when none are set
-    set:
-      web:
-        ingress:
-          enabled: true
     asserts:
       - isNullOrEmpty:
           path: metadata.annotations
