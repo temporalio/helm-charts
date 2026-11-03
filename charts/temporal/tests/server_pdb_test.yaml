@@ -90,7 +90,7 @@ tests:
           podDisruptionBudget:
             maxUnavailable: 1
     asserts:
-      - isEmpty:
+      - isNullOrEmpty:
           path: metadata.annotations
   - it: doesn't create pdb when replica count is 0
     set:

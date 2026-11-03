@@ -39,7 +39,7 @@ tests:
         podDisruptionBudget:
           maxUnavailable: 1
     asserts:
-      - isEmpty:
+      - isNullOrEmpty:
           path: metadata.annotations
   - it: doesn't create pdb when podDisruptionBudget is not set
     asserts:

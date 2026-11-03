@@ -296,7 +296,7 @@ tests:
       schema:
         useHelmHooks: false
     asserts:
-      - isEmpty:
+      - isNullOrEmpty:
           path: metadata.annotations
 
   - it: merges Helm hook annotations with custom jobAnnotations

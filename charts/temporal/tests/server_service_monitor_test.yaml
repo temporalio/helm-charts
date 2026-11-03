@@ -34,5 +34,5 @@ tests:
       path: metadata.name
       value: RELEASE-NAME-temporal-frontend
     asserts:
-      - isEmpty:
+      - isNullOrEmpty:
           path: metadata.annotations
