@@ -12,10 +12,8 @@ metadata:
   name: {{ include "temporal.componentname" (list $ "frontend") }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "frontend" "") | nindent 4 }}
-{{- with .Values.server.frontend.ingress.annotations }}
   annotations:
-{{ toYaml . | indent 4 }}
-{{- end }}
+    {{- include "temporal.resourceAnnotations" (list $ "frontend" "" .Values.server.frontend.ingress.annotations) | nindent 4 }}
 spec:
   {{- with .Values.server.frontend.ingress.className }}
   ingressClassName: {{ . | quote }}

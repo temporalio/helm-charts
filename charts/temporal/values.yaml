@@ -674,7 +674,12 @@ schema:
   backoffLimit: 100
   activeDeadlineSeconds: null
   ttlSecondsAfterFinished: 86400
+  # Annotations for both the schema setup job and the namespace setup job
   jobAnnotations: {}
+  # Annotations for the schema setup job only, overriding jobAnnotations
+  schemaJobAnnotations: {}
+  # Annotations for the namespace setup job only, overriding jobAnnotations
+  namespaceJobAnnotations: {}
   podAnnotations: {}
   podLabels: {}
   resources: {}

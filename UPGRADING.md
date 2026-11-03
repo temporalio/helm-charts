@@ -266,13 +266,19 @@ shims:
 ```
 
 #### Schema Job Annotations
-- `schema.jobAnnotations` - Add custom annotations to the schema job
+- `schema.jobAnnotations` - Add custom annotations to both the schema job and the namespace job
+- `schema.schemaJobAnnotations` - Add custom annotations to the schema job only, overriding `schema.jobAnnotations`
+- `schema.namespaceJobAnnotations` - Add custom annotations to the namespace job only, overriding `schema.jobAnnotations`
 
 **Example:**
 ```yaml
 schema:
   jobAnnotations:
     my-annotation: value
+  schemaJobAnnotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  namespaceJobAnnotations:
+    argocd.argoproj.io/sync-wave: "1"
 ```
 
 #### Test Pod Annotations

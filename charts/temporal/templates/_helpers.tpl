@@ -188,23 +188,30 @@ Create the annotations for all resources
 {{- $global := index . 0 -}}
 {{- $scope := index . 1 -}}
 {{- $resourceType := index . 2 -}}
+{{- $extraAnnotations := dict -}}
+{{- if gt (len .) 3 -}}
+{{- $extraAnnotations = index . 3 | default dict -}}
+{{- end -}}
 {{- $component := "server" -}}
-{{- if (or (eq $scope "admintools") (eq $scope "web")) -}}
+{{- if (or (eq $scope "admintools") (eq $scope "web") (eq $scope "schema")) -}}
 {{- $component = $scope -}}
 {{- end -}}
+{{- $resourceAnnotations := dict -}}
+{{- $scopeAnnotations := dict -}}
+{{- $componentAnnotations := dict -}}
+{{- $additionalAnnotations := $global.Values.additionalAnnotations | default dict -}}
 {{- with $resourceType -}}
 {{- $resourceTypeKey := printf "%sAnnotations" . -}}
-{{- $componentAnnotations := (index $global.Values $component $resourceTypeKey) -}}
-{{- $scopeAnnotations := dict -}}
+{{- $componentAnnotations = (index $global.Values $component $resourceTypeKey) | default dict -}}
 {{- if hasKey (index $global.Values $component) $scope -}}
-{{- $scopeAnnotations = (index $global.Values $component $scope $resourceTypeKey) -}}
+{{- $scopeAnnotations = (index $global.Values $component $scope $resourceTypeKey) | default dict -}}
 {{- end -}}
-{{- $resourceAnnotations := merge $scopeAnnotations $componentAnnotations -}}
+{{- end -}}
+{{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $additionalAnnotations) -}}
+{{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $componentAnnotations) -}}
+{{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $scopeAnnotations) -}}
+{{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $extraAnnotations) -}}
 {{- range $annotation_name, $annotation_value := $resourceAnnotations }}
-{{ $annotation_name }}: {{ $annotation_value | quote }}
-{{- end -}}
-{{- end -}}
-{{- range $annotation_name, $annotation_value := $global.Values.additionalAnnotations }}
 {{ $annotation_name }}: {{ $annotation_value | quote }}
 {{- end -}}
 {{- end -}}
