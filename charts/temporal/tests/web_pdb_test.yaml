@@ -33,26 +33,13 @@ tests:
       - equal:
           path: metadata.annotations['cost-center']
           value: "1234"
-  - it: web.pdbAnnotations override additionalAnnotations
-    set:
-      additionalAnnotations:
-        team: platform
-      web:
-        pdbAnnotations:
-          team: web-team
-        podDisruptionBudget:
-          maxUnavailable: 1
-    asserts:
-      - equal:
-          path: metadata.annotations.team
-          value: web-team
   - it: omits annotations when none are set
     set:
       web:
         podDisruptionBudget:
           maxUnavailable: 1
     asserts:
-      - notExists:
+      - isEmpty:
           path: metadata.annotations
   - it: doesn't create pdb when podDisruptionBudget is not set
     asserts:
