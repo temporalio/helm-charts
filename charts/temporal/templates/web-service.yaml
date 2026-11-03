@@ -6,7 +6,7 @@ metadata:
   name: {{ include "temporal.componentname" (list $ "web") }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "web" "") | nindent 4 }}
-  {{- $serviceAnnotations := mergeOverwrite (include "temporal.resourceAnnotations" (list $ "web" "service") | fromYaml | default dict) (deepCopy (.Values.web.service.annotations | default dict)) -}}
+  {{- $serviceAnnotations := include "temporal.resourceAnnotations" (list $ "web" "service" .Values.web.service.annotations) -}}
   {{- with $serviceAnnotations }}
   annotations: {{- include "common.tplvalues.render" ( dict "value" . "context" $) | nindent 4 }}
   {{- end }}
