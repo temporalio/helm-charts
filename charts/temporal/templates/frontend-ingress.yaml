@@ -12,8 +12,8 @@ metadata:
   name: {{ include "temporal.componentname" (list $ "frontend") }}
   labels:
     {{- include "temporal.resourceLabels" (list $ "frontend" "") | nindent 4 }}
-{{- $ingressAnnotations := mergeOverwrite (include "temporal.resourceAnnotations" (list $ "frontend" "ingress") | fromYaml | default dict) (deepCopy (.Values.server.frontend.ingress.annotations | default dict)) }}
-{{- with $ingressAnnotations }}
+{{- $annotations := mergeOverwrite (include "temporal.resourceAnnotations" (list $ "frontend" "") | fromYaml | default dict) (deepCopy (.Values.server.frontend.ingress.annotations | default dict)) }}
+{{- with $annotations }}
   annotations:
 {{ toYaml . | indent 4 }}
 {{- end }}

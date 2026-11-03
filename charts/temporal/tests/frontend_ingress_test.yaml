@@ -18,44 +18,10 @@ tests:
       - equal:
           path: metadata.annotations['cost-center']
           value: "1234"
-  - it: server.ingressAnnotations override additionalAnnotations
+  - it: ingress.annotations override additionalAnnotations
     set:
       server:
-        ingressAnnotations:
-          team: server-team
         frontend:
-          ingress:
-            enabled: true
-      additionalAnnotations:
-        team: platform
-    asserts:
-      - equal:
-          path: metadata.annotations.team
-          value: server-team
-  - it: server.frontend.ingressAnnotations override server.ingressAnnotations
-    set:
-      server:
-        ingressAnnotations:
-          team: server-team
-        frontend:
-          ingressAnnotations:
-            team: frontend-team
-          ingress:
-            enabled: true
-      additionalAnnotations:
-        team: platform
-    asserts:
-      - equal:
-          path: metadata.annotations.team
-          value: frontend-team
-  - it: ingress.annotations override every other annotation source
-    set:
-      server:
-        ingressAnnotations:
-          team: server-team
-        frontend:
-          ingressAnnotations:
-            team: frontend-team
           ingress:
             enabled: true
             annotations:
