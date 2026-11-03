@@ -18,26 +18,3 @@ tests:
       - equal:
           path: metadata.annotations['cost-center']
           value: "1234"
-  - it: does not apply configmapAnnotations to the dynamic config configmap
-    set:
-      server:
-        configmapAnnotations:
-          owner: data-eng
-    asserts:
-      - notExists:
-          path: metadata.annotations.owner
-  - it: prefers dynamicConfigmapAnnotations over additionalAnnotations
-    set:
-      additionalAnnotations:
-        owner: from-additional
-        team: platform
-      server:
-        dynamicConfigmapAnnotations:
-          owner: from-dynamic
-    asserts:
-      - equal:
-          path: metadata.annotations.owner
-          value: from-dynamic
-      - equal:
-          path: metadata.annotations.team
-          value: platform

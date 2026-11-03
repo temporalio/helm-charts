@@ -193,18 +193,19 @@ Create the annotations for all resources
 {{- $component = $scope -}}
 {{- end -}}
 {{- $resourceAnnotations := dict -}}
+{{- $scopeAnnotations := dict -}}
+{{- $componentAnnotations := dict -}}
+{{- $additionalAnnotations := $global.Values.additionalAnnotations | default dict -}}
 {{- with $resourceType -}}
 {{- $resourceTypeKey := printf "%sAnnotations" . -}}
-{{- $additionalAnnotations := $global.Values.additionalAnnotations | default dict -}}
-{{- $componentAnnotations := (index $global.Values $component $resourceTypeKey) | default dict -}}
-{{- $scopeAnnotations := dict -}}
+{{- $componentAnnotations = (index $global.Values $component $resourceTypeKey) | default dict -}}
 {{- if hasKey (index $global.Values $component) $scope -}}
 {{- $scopeAnnotations = (index $global.Values $component $scope $resourceTypeKey) | default dict -}}
+{{- end -}}
 {{- end -}}
 {{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $additionalAnnotations) -}}
 {{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $componentAnnotations) -}}
 {{- $resourceAnnotations = mergeOverwrite $resourceAnnotations (deepCopy $scopeAnnotations) -}}
-{{- end -}}
 {{- range $annotation_name, $annotation_value := $resourceAnnotations }}
 {{ $annotation_name }}: {{ $annotation_value | quote }}
 {{- end -}}

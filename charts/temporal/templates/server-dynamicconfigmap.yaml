@@ -7,7 +7,7 @@ metadata:
   labels:
     {{- include "temporal.resourceLabels" (list $ "" "") | nindent 4 }}
   annotations:
-    {{- include "temporal.resourceAnnotations" (list $ "" "dynamicConfigmap") | nindent 4 }}
+    {{- include "temporal.resourceAnnotations" (list $ "" "") | nindent 4 }}
 data:
   dynamic_config.yaml: |-
   {{- if $.Values.server.dynamicConfig }}
