@@ -418,6 +418,80 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].livenessProbe.periodSeconds
           value: 20
+  - it: worker startupProbe defaults to empty
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-worker")].kind'
+      value: Deployment
+      matchMany: true
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].startupProbe
+  - it: non-worker startupProbe defaults to tcpSocket
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name != "RELEASE-NAME-temporal-worker")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.periodSeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 30
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.tcpSocket.port
+          value: rpc
+      - notExists:
+          path: spec.template.spec.containers[0].startupProbe.initialDelaySeconds
+  - it: startupProbe is set for all services
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name != "RELEASE-NAME-temporal-worker")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        startupProbe:
+          timeoutSeconds: 5
+          failureThreshold: 6
+          tcpSocket:
+            port: rpc
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.timeoutSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 6
+      - notExists:
+          path: spec.template.spec.containers[0].startupProbe.periodSeconds
+  - it: startupProbe is set for history service
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: '$[?(@.metadata.name == "RELEASE-NAME-temporal-history")].kind'
+      value: Deployment
+      matchMany: true
+    set:
+      server:
+        history:
+          startupProbe:
+            periodSeconds: 20
+            failureThreshold: 15
+            tcpSocket:
+              port: rpc
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.periodSeconds
+          value: 20
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 15
 
   - it: additional environment variables are set on all services
     template: templates/server-deployment.yaml
