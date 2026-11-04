@@ -2,6 +2,13 @@ suite: test admintools deployment
 templates:
   - admintools-deployment.yaml
 tests:
+  - it: applies the configured revision history limit
+    set:
+      revisionHistoryLimit: 7
+    asserts:
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 7
   - it: includes additional init containers
     set:
       admintools:

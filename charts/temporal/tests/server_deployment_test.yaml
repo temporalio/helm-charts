@@ -26,6 +26,18 @@ set:
         requests:
           cpu: 200m
 tests:
+  - it: applies the configured revision history limit to every server deployment
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: .kind
+      value: Deployment
+      matchMany: true
+    set:
+      revisionHistoryLimit: 7
+    asserts:
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 7
   - it: defaults to service wide replica count
     template: templates/server-deployment.yaml
     documentSelector:
