@@ -5,6 +5,7 @@
 {{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
 {{- $serviceValues := index $.Values.server $service }}
 {{- if $serviceValues.enabled }}
+{{- include "temporal.server.autoscaling.validate" (list $ $service) }}
 {{- $image := merge (deepCopy ($serviceValues.image | default dict)) $.Values.server.image }}
 apiVersion: apps/v1
 kind: Deployment
@@ -16,10 +17,12 @@ metadata:
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "deployment") | nindent 4 }}
 spec:
+  {{- if not $serviceValues.autoscaling.enabled }}
   {{- if $serviceValues.replicaCount }}
   replicas: {{ $serviceValues.replicaCount }}
   {{- else if $.Values.server.replicaCount }}
   replicas: {{ $.Values.server.replicaCount }}
+  {{- end }}
   {{- end }}
   {{- with (default $.Values.server.deploymentStrategy $serviceValues.deploymentStrategy) }}
   strategy:

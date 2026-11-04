@@ -1,0 +1,61 @@
+{{- if $.Values.server.enabled }}
+{{- range $service := (list "frontend" "internal-frontend" "history" "matching" "worker") }}
+{{- $serviceValues := index $.Values.server $service }}
+{{- if $serviceValues.autoscaling.enabled }}
+{{- include "temporal.server.autoscaling.validate" (list $ $service) }}
+{{- $hpa := include "temporal.server.autoscaling.resolve" (list $ $service) | fromYaml }}
+{{- $periodSeconds := include "temporal.server.autoscalingPeriodSeconds" (list $ $service) | int }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  namespace: {{ include "temporal.kubernetesNamespace" $ }}
+  name: {{ include "temporal.componentname" (list $ $service) }}
+  labels:
+    {{- include "temporal.resourceLabels" (list $ $service "") | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "temporal.componentname" (list $ $service) }}
+  minReplicas: {{ $hpa.minReplicas | int }}
+  maxReplicas: {{ $hpa.maxReplicas | int }}
+  metrics:
+    {{- if $hpa.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $hpa.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if $hpa.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ $hpa.targetMemoryUtilizationPercentage }}
+    {{- end }}
+  {{- if $hpa.behavior }}
+  behavior:
+    {{- toYaml $hpa.behavior | nindent 4 }}
+  {{- else }}
+  behavior:
+    scaleUp:
+      selectPolicy: Min
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: {{ $periodSeconds }}
+    scaleDown:
+      selectPolicy: Min
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: {{ $periodSeconds }}
+      stabilizationWindowSeconds: 600
+  {{- end }}
+---
+{{- end }}
+{{- end }}
+{{- end }}
