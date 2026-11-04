@@ -2,6 +2,30 @@ suite: test pod
 templates:
   - test.yaml
 tests:
+  - it: renders the test pod by default
+    asserts:
+      - hasDocuments:
+          count: 1
+  - it: does not render the test pod when test.enabled is false
+    set:
+      test:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: retries the health check instead of failing on the first call
+    asserts:
+      - equal:
+          path: spec.containers[0].command
+          value:
+            - sh
+            - -c
+            - |
+              for attempt in 1 2 3 4 5 6 7 8 9 10; do
+                temporal operator cluster health && exit 0
+                sleep 3
+              done
+              exit 1
   - it: has helm test hook annotation by default
     asserts:
       - equal:
