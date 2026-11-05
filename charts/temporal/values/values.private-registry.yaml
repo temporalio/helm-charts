@@ -1,0 +1,8 @@
+global:
+  # Prefixed to every image repository in the chart, e.g.
+  # temporalio/server -> registry.example.com/temporalio/server
+  imageRegistry: registry.example.com
+
+# Credentials for pulling from the registry above (a docker-registry Secret)
+imagePullSecrets:
+  - name: registry-credentials

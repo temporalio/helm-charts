@@ -3,6 +3,10 @@ fullnameOverride: ""
 # Chart debug mode
 # (eg. disable helm hook delete policy)
 debug: false
+global:
+  # Prefix all chart images with this registry, for example: registry.example.com
+  # When empty, image repositories are used as defined under each component.
+  imageRegistry: ""
 imagePullSecrets: []
 # Custom Service account management
 serviceAccount:
