@@ -766,7 +766,7 @@ tests:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: IfNotPresent
 
-  - it: injects store user env vars from secrets when userSecretKey is set
+  - it: injects store env vars from secrets for secretKeys fields
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
@@ -779,12 +779,14 @@ tests:
               default:
                 sql:
                   existingSecret: db-secret
-                  userSecretKey: username
+                  secretKeys:
+                    user: username
+                    connectAddr: host
               visibility:
                 sql:
-                  existingSecret: db-secret
-                  userExistingSecret: visibility-user-secret
-                  userSecretKey: user
+                  existingSecret: visibility-secret
+                  secretKeys:
+                    user: user
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
@@ -797,13 +799,21 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].env
           content:
+            name: TEMPORAL_DEFAULT_STORE_CONNECTADDR
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: host
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
             name: TEMPORAL_VISIBILITY_STORE_USER
             valueFrom:
               secretKeyRef:
-                name: visibility-user-secret
+                name: visibility-secret
                 key: user
 
-  - it: does not inject store user env vars by default
+  - it: does not inject store secretKeys env vars by default
     template: templates/server-deployment.yaml
     documentSelector:
       path: metadata.name
@@ -815,7 +825,7 @@ tests:
             name: TEMPORAL_DEFAULT_STORE_USER
           any: true
 
-  - it: fails when userSecretKey is set without a secret
+  - it: fails when secretKeys is set without existingSecret
     template: templates/server-deployment.yaml
     set:
       server:
@@ -824,7 +834,8 @@ tests:
             datastores:
               default:
                 sql:
-                  userSecretKey: username
+                  secretKeys:
+                    user: username
     asserts:
       - failedTemplate:
-          errorPattern: "Please specify existingSecret or userExistingSecret for default store"
+          errorPattern: "Please specify existingSecret for default store when secretKeys is set"

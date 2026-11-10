@@ -268,17 +268,22 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
           {{- $_ := unset $storeConfig "password" -}}
         {{- end -}}
       {{- end -}}
-      {{- if $storeConfig.userSecretKey -}}
-        {{- $userField := ternary "username" "user" (eq $storeType "elasticsearch") -}}
-        {{- if eq $name $defaultStore -}}
-          {{- $_ := set $storeConfig $userField "__ENV_TEMPORAL_DEFAULT_STORE_USER__" -}}
-        {{- else if eq $name $visibilityStore -}}
-          {{- $_ := set $storeConfig $userField "__ENV_TEMPORAL_VISIBILITY_STORE_USER__" -}}
-        {{- else if eq $name $secondaryVisibilityStore -}}
-          {{- $_ := set $storeConfig $userField "__ENV_TEMPORAL_SECONDARY_VISIBILITY_STORE_USER__" -}}
+      {{- $envPrefix := "" -}}
+      {{- if eq $name $defaultStore -}}
+        {{- $envPrefix = "TEMPORAL_DEFAULT_STORE" -}}
+      {{- else if eq $name $visibilityStore -}}
+        {{- $envPrefix = "TEMPORAL_VISIBILITY_STORE" -}}
+      {{- else if eq $name $secondaryVisibilityStore -}}
+        {{- $envPrefix = "TEMPORAL_SECONDARY_VISIBILITY_STORE" -}}
+      {{- end -}}
+      {{- range $field, $_ := (include "temporal.persistence.secretKeys" (list (dict "name" $name "config" $storeConfig)) | fromYaml) -}}
+        {{- if $envPrefix -}}
+          {{- $_ := set $storeConfig $field (printf "__ENV_%s_%s__" $envPrefix (upper $field)) -}}
+        {{- else -}}
+          {{- $_ := unset $storeConfig $field -}}
         {{- end -}}
       {{- end -}}
-      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey" "userExistingSecret" "userSecretKey" "createDatabase" "manageSchema" "defaultDb") -}}
+      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey" "secretKeys" "createDatabase" "manageSchema" "defaultDb") -}}
     {{- end -}}
   {{- end -}}
   {{- $_ := set $patchedDatastores $name $dsCopy -}}

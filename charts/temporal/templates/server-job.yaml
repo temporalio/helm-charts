@@ -46,9 +46,17 @@ spec:
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
             {{- if eq $store.driver "cassandra" }}
-          command: ['temporal-cassandra-tool', 'create', '-k', '{{ $store.config.keyspace }}', '--replication-factor', '{{ $store.config.replicationFactor | default 1 }}'{{- if $store.config.datacenter }}, '--datacenter', '{{ $store.config.datacenter }}'{{- end }}]
+          command: ['temporal-cassandra-tool', 'create', '-k', '{{ ternary "$(CASSANDRA_KEYSPACE)" $store.config.keyspace (hasKey ($store.config.secretKeys | default dict) "keyspace") }}', '--replication-factor', '{{ $store.config.replicationFactor | default 1 }}'{{- if $store.config.datacenter }}, '--datacenter', '{{ $store.config.datacenter }}'{{- end }}]
             {{- else if eq $store.driver "sql" }}
+              {{- $defaultDbArg := "" }}
+              {{- with $store.config.defaultDb }}
+                {{- $defaultDbArg = printf " --defaultdb %s" (quote .) }}
+              {{- end }}
+              {{- with include "temporal.admintools-cmd-prefix" $store }}
+          command: ['sh', '-c', {{ printf "%stemporal-sql-tool create-database%s" . $defaultDbArg | squote }}]
+              {{- else }}
           command: ['temporal-sql-tool', 'create-database'{{- with $store.config.defaultDb }}, '--defaultdb', {{ . | quote }}{{- end }}]
+              {{- end }}
             {{- else -}}
               {{- fail (printf "createDatabase is not supported for %s store" $store.driver) -}}
             {{- end }}
@@ -92,9 +100,9 @@ spec:
             - temporal-cassandra-tool setup-schema -v 0.0 && temporal-cassandra-tool update-schema --schema-dir /etc/temporal/schema/cassandra/{{ $schema }}/versioned
             {{- else if eq $store.driver "sql" }}
               {{- if eq $store.config.pluginName "mysql8" }}
-            - temporal-sql-tool setup-schema -v 0.0 && temporal-sql-tool update-schema --schema-dir /etc/temporal/schema/mysql/v8/{{ $schema }}/versioned
+            - {{ include "temporal.admintools-cmd-prefix" $store }}temporal-sql-tool setup-schema -v 0.0 && temporal-sql-tool update-schema --schema-dir /etc/temporal/schema/mysql/v8/{{ $schema }}/versioned
               {{- else if or (eq $store.config.pluginName "postgres12") (eq $store.config.pluginName "postgres12_pgx") }}
-            - temporal-sql-tool setup-schema -v 0.0 && temporal-sql-tool update-schema --schema-dir /etc/temporal/schema/postgresql/v12/{{ $schema }}/versioned
+            - {{ include "temporal.admintools-cmd-prefix" $store }}temporal-sql-tool setup-schema -v 0.0 && temporal-sql-tool update-schema --schema-dir /etc/temporal/schema/postgresql/v12/{{ $schema }}/versioned
               {{- else -}}
                 {{- fail (printf "manageSchema is not supported for %s SQL database plugin" $store.config.pluginName) -}}
               {{- end }}

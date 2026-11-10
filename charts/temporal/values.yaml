@@ -208,10 +208,11 @@ server:
         #   password: ""  # optional, use existingSecret instead
         #   existingSecret: temporal-db-secret  # Helm-specific, stripped before rendering
         #   secretKey: password  # Helm-specific, default: password
-        #   # Optionally read the user from a secret instead of `user` (Helm-specific).
-        #   # The secret defaults to existingSecret; set userExistingSecret to use another.
-        #   # userExistingSecret: temporal-db-user-secret
-        #   # userSecretKey: username
+        #   # Optionally read other fields from existingSecret (Helm-specific).
+        #   # Maps config field -> key in existingSecret; overrides the plaintext value.
+        #   # secretKeys:
+        #   #   user: username
+        #   #   connectAddr: host
         #   # Server v1.31+ alternative to password/existingSecret (SQL datastores
         #   # only). When set, no password Secret is created and no SQL_PASSWORD
         #   # env is wired; the server invokes the command per new connection.

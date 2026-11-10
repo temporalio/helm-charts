@@ -354,7 +354,7 @@ tests:
           path: data['config_template.yaml']
           pattern: "prometheus:\\s+listenAddress: 0.0.0.0:9090"
 
-  - it: replaces users with environment variables when userSecretKey is set
+  - it: replaces secretKeys fields with environment variables
     set:
       server:
         config:
@@ -369,7 +369,9 @@ tests:
                   connectAddr: "pg:5432"
                   user: ignored
                   existingSecret: db-secret
-                  userSecretKey: username
+                  secretKeys:
+                    user: username
+                    connectAddr: host
               visibility:
                 elasticsearch:
                   version: v7
@@ -379,7 +381,8 @@ tests:
                   indices:
                     visibility: temporal_visibility
                   existingSecret: es-secret
-                  userSecretKey: username
+                  secretKeys:
+                    username: username
     template: templates/server-configmap.yaml
     documentSelector:
       path: metadata.name
@@ -390,7 +393,26 @@ tests:
           pattern: 'user: \{\{ env "TEMPORAL_DEFAULT_STORE_USER" \| quote \}\}'
       - matchRegex:
           path: data['config_template.yaml']
-          pattern: 'username: \{\{ env "TEMPORAL_VISIBILITY_STORE_USER" \| quote \}\}'
+          pattern: 'connectAddr: \{\{ env "TEMPORAL_DEFAULT_STORE_CONNECTADDR" \| quote \}\}'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'username: \{\{ env "TEMPORAL_VISIBILITY_STORE_USERNAME" \| quote \}\}'
       - notMatchRegex:
           path: data['config_template.yaml']
-          pattern: 'userSecretKey|ignored'
+          pattern: 'secretKeys|ignored|pg:5432'
+
+  - it: fails when secretKeys contains password
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  existingSecret: db-secret
+                  secretKeys:
+                    password: pass
+    template: templates/server-configmap.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "secretKeys for default store must not contain password, use secretKey instead"
