@@ -50,8 +50,8 @@ spec:
       {{ include "temporal.componentServiceAccount" (list $ "schema") }}
       restartPolicy: OnFailure
       initContainers:
-        {{- range $namespace := $.Values.server.config.namespaces.namespace }}
-        - name: create-{{ $namespace.name }}-namespace
+        {{- range $i, $namespace := $.Values.server.config.namespaces.namespace }}
+        - name: create-namespace-{{ $i }}
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['/bin/sh', '-c']

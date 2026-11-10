@@ -68,7 +68,7 @@ tests:
               - name: default
     asserts:
       - equal:
-          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          path: spec.template.spec.initContainers[?(@.name=="create-namespace-0")].env[?(@.name=="TEMPORAL_ADDRESS")].value
           value: acme-payments-production-orchestration-cluste-internal-frontend:7236
   - it: points the test pod at the frontend Service
     template: templates/test.yaml

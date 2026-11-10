@@ -75,10 +75,30 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.initContainers[0].name
-          value: create-default-namespace
+          value: create-namespace-0
       - equal:
           path: spec.template.spec.initContainers[1].name
-          value: create-my-namespace-namespace
+          value: create-namespace-1
+  - it: accepts namespace names that are not valid Kubernetes container names
+    # Temporal namespace names may contain '_' (and may exceed 63 characters),
+    # but init container names must be RFC 1123 labels. The container name must
+    # not be derived from the namespace name.
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+              - name: dummy_ns
+                retention: 1d
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[1].name
+          value: create-namespace-1
+      - equal:
+          path: spec.template.spec.initContainers[1].args[0]
+          value: temporal operator namespace describe -n dummy_ns || temporal operator namespace create -n dummy_ns --retention 1d
   - it: sets TEMPORAL_ADDRESS to the frontend service by default
     set:
       server:
@@ -89,7 +109,7 @@ tests:
               - name: default
     asserts:
       - equal:
-          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          path: spec.template.spec.initContainers[?(@.name=="create-namespace-0")].env[?(@.name=="TEMPORAL_ADDRESS")].value
           value: RELEASE-NAME-temporal-frontend:7233
   - it: sets TEMPORAL_ADDRESS to the internal-frontend service when enabled
     # The namespace job is a one-off admin tools invocation, so by default it
@@ -105,7 +125,7 @@ tests:
               - name: default
     asserts:
       - equal:
-          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          path: spec.template.spec.initContainers[?(@.name=="create-namespace-0")].env[?(@.name=="TEMPORAL_ADDRESS")].value
           value: RELEASE-NAME-temporal-internal-frontend:7236
 
   - it: routes the namespace job to the external frontend when useExternalFrontend is set
@@ -121,7 +141,7 @@ tests:
               - name: default
     asserts:
       - equal:
-          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          path: spec.template.spec.initContainers[?(@.name=="create-namespace-0")].env[?(@.name=="TEMPORAL_ADDRESS")].value
           value: RELEASE-NAME-temporal-frontend:7233
   - it: includes additional environment variables
     set:
@@ -139,13 +159,13 @@ tests:
         additionalEnvConfigMapName: env-configmap
     asserts:
       - equal:
-          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].env[?(@.name=="MY_ENV_VAR")].value
+          path: spec.template.spec.initContainers[?(@.name=="create-namespace-0")].env[?(@.name=="MY_ENV_VAR")].value
           value: my-value
       - equal:
-          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].envFrom[0].secretRef.name
+          path: spec.template.spec.initContainers[?(@.name=="create-namespace-0")].envFrom[0].secretRef.name
           value: env-secret
       - equal:
-          path: spec.template.spec.initContainers[?(@.name=="create-default-namespace")].envFrom[1].configMapRef.name
+          path: spec.template.spec.initContainers[?(@.name=="create-namespace-0")].envFrom[1].configMapRef.name
           value: env-configmap
   - it: includes Helm hook annotations by default
     set:
