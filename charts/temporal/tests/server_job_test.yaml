@@ -921,3 +921,115 @@ tests:
             - create-database
             - --defaultdb
             - defaultdb
+
+  - it: reads SQL settings from a secret when secretKeys is set
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  databaseName: temporal
+                  existingSecret: db-secret
+                  secretKeys:
+                    user: username
+                    connectAddr: host
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+                  user: visibility_user
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: username
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SQL_CONNECT_ADDR
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: host
+      - notContains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: SQL_HOST
+          any: true
+      - equal:
+          path: spec.template.spec.initContainers[0].command
+          value: ['sh', '-c', 'addr="${SQL_CONNECT_ADDR%%,*}" && export SQL_HOST="${addr%:*}" SQL_PORT="${addr##*:}" && temporal-sql-tool create-database']
+      - matchRegex:
+          path: spec.template.spec.initContainers[1].args[0]
+          pattern: '^addr="\$\{SQL_CONNECT_ADDR%%,\*\}" && export SQL_HOST="\$\{addr%:\*\}" SQL_PORT="\$\{addr##\*:\}" && temporal-sql-tool setup-schema'
+      - contains:
+          path: spec.template.spec.initContainers[2].env
+          content:
+            name: SQL_USER
+            value: "visibility_user"
+      - equal:
+          path: spec.template.spec.initContainers[2].command
+          value: ['temporal-sql-tool', 'create-database']
+
+  - it: reads the Cassandra keyspace from a secret when secretKeys is set
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                cassandra:
+                  hosts: cassandra
+                  port: 9042
+                  existingSecret: cassandra-secret
+                  secretKeys:
+                    keyspace: keyspace
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].command
+          value: ['temporal-cassandra-tool', 'create', '-k', '$(CASSANDRA_KEYSPACE)', '--replication-factor', '1']
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: CASSANDRA_KEYSPACE
+            valueFrom:
+              secretKeyRef:
+                name: cassandra-secret
+                key: keyspace
+
+  - it: passes --defaultdb when connectAddr is read from a secret
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: postgres12
+                  databaseName: temporal
+                  defaultDb: citus
+                  existingSecret: db-secret
+                  secretKeys:
+                    connectAddr: host
+              visibility:
+                sql:
+                  pluginName: postgres12
+                  connectAddr: "postgres-host:5432"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].command
+          value: ['sh', '-c', 'addr="${SQL_CONNECT_ADDR%%,*}" && export SQL_HOST="${addr%:*}" SQL_PORT="${addr##*:}" && temporal-sql-tool create-database --defaultdb "citus"']

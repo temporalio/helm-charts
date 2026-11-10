@@ -268,7 +268,22 @@ app.kubernetes.io/part-of: {{ $global.Chart.Name }}
           {{- $_ := unset $storeConfig "password" -}}
         {{- end -}}
       {{- end -}}
-      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey" "createDatabase" "manageSchema" "defaultDb") -}}
+      {{- $envPrefix := "" -}}
+      {{- if eq $name $defaultStore -}}
+        {{- $envPrefix = "TEMPORAL_DEFAULT_STORE" -}}
+      {{- else if eq $name $visibilityStore -}}
+        {{- $envPrefix = "TEMPORAL_VISIBILITY_STORE" -}}
+      {{- else if eq $name $secondaryVisibilityStore -}}
+        {{- $envPrefix = "TEMPORAL_SECONDARY_VISIBILITY_STORE" -}}
+      {{- end -}}
+      {{- range $field, $_ := (include "temporal.persistence.secretKeys" (list (dict "name" $name "config" $storeConfig)) | fromYaml) -}}
+        {{- if $envPrefix -}}
+          {{- $_ := set $storeConfig $field (printf "__ENV_%s_%s__" $envPrefix (upper $field)) -}}
+        {{- else -}}
+          {{- $_ := unset $storeConfig $field -}}
+        {{- end -}}
+      {{- end -}}
+      {{- $_ := set $dsCopy $storeType (omit $storeConfig "existingSecret" "secretKey" "secretKeys" "createDatabase" "manageSchema" "defaultDb") -}}
     {{- end -}}
   {{- end -}}
   {{- $_ := set $patchedDatastores $name $dsCopy -}}
