@@ -58,6 +58,38 @@ tests:
     asserts:
       - notExists:
           path: spec.replicas
+  - it: omits replica count when autoscaling is enabled even if replicaCount is set
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      server:
+        replicaCount: 2
+        frontend:
+          replicaCount: 3
+          autoscaling:
+            enabled: true
+            targetCPUUtilizationPercentage: 75
+    asserts:
+      - notExists:
+          path: spec.replicas
+  - it: keeps replica count on services without autoscaling when another service uses autoscaling
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-history
+    set:
+      server:
+        replicaCount: 2
+        frontend:
+          autoscaling:
+            enabled: true
+            targetCPUUtilizationPercentage: 75
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 2
   - it: defaults to service wide resources
     template: templates/server-deployment.yaml
     documentSelector:
