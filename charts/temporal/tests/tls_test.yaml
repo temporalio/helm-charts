@@ -366,6 +366,31 @@ tests:
           path: spec.template.spec.initContainers[0].volumeMounts[?(@.name=='client-tls')].mountPath
           value: /etc/temporal/tls/client
 
+  - it: does not wire chart tls into the namespace job when a custom temporalAddress is set
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            temporalAddress: external-lb:7233
+            namespace:
+              - name: test
+                retention: 1d
+        tls:
+          frontend:
+            enabled: true
+            secretName: my-frontend-secret
+            serverName: temporal-frontend
+    template: templates/server-namespace-job.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-namespace-0")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          value: external-lb:7233
+      - notExists:
+          path: spec.template.spec.volumes[?(@.name=='client-tls')]
+      - notExists:
+          path: spec.template.spec.initContainers[0].env[?(@.name=='TEMPORAL_TLS_SERVER_NAME')]
+
   - it: wires the namespace job with internode tls when it targets the internal-frontend
     # internal-frontend is the default target, and it terminates TLS with the
     # internode config, so the job uses the internode secret and presents a

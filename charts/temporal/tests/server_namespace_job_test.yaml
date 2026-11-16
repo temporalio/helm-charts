@@ -111,6 +111,34 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[?(@.name=="create-namespace-0")].env[?(@.name=="TEMPORAL_ADDRESS")].value
           value: RELEASE-NAME-temporal-frontend:7233
+  - it: sets TEMPORAL_ADDRESS to server.config.namespaces.temporalAddress when set
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+        config:
+          namespaces:
+            create: true
+            temporalAddress: RELEASE-NAME-temporal-frontend.NAMESPACE.svc.cluster.local:7233
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-namespace-0")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          value: RELEASE-NAME-temporal-frontend.NAMESPACE.svc.cluster.local:7233
+  - it: falls back to the frontend service when server.config.namespaces.temporalAddress is empty
+    set:
+      server:
+        config:
+          namespaces:
+            create: true
+            temporalAddress: ""
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name=="create-namespace-0")].env[?(@.name=="TEMPORAL_ADDRESS")].value
+          value: RELEASE-NAME-temporal-frontend:7233
   - it: sets TEMPORAL_ADDRESS to the internal-frontend service when enabled
     # The namespace job is a one-off admin tools invocation, so by default it
     # targets the internal-frontend when that is enabled.

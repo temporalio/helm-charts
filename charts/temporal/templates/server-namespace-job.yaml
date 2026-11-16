@@ -6,11 +6,15 @@ an external Authorizer); set server.config.namespaces.useExternalFrontend to tru
 to route it through the external frontend instead (e.g. when you can authenticate
 it and do not want to rely on the internal-frontend bypass). The two paths
 terminate TLS with different certificates, so resolve the section accordingly;
-an external ingress host has no chart-managed certificate, so skip TLS there. */}}
+an external ingress host has no chart-managed certificate, so skip TLS there.
+A custom server.config.namespaces.temporalAddress points somewhere the chart
+cannot reason about, so skip chart-managed TLS then as well and let the user
+wire it via admintools.additionalEnv/additionalVolumes. */}}
 {{- $useInternalFrontend := and (index $.Values.server "internal-frontend").enabled (not $.Values.server.config.namespaces.useExternalFrontend) }}
+{{- $customAddress := $.Values.server.config.namespaces.temporalAddress }}
 {{- $viaIngress := and (not $useInternalFrontend) $.Values.server.frontend.ingress.enabled }}
 {{- $tlsSection := "" }}
-{{- if not $viaIngress }}
+{{- if not (or $customAddress $viaIngress) }}
 {{- $tlsSection = include "temporal.adminClient.tls.section" (list $ $useInternalFrontend) }}
 {{- end }}
 apiVersion: batch/v1
@@ -58,7 +62,9 @@ spec:
           args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
           env:
             - name: TEMPORAL_ADDRESS
-              {{- if $useInternalFrontend }}
+              {{- if $customAddress }}
+              value: {{ $customAddress | quote }}
+              {{- else if $useInternalFrontend }}
               value: {{ include "temporal.internalFrontendAddress" $ }}
               {{- else if $.Values.server.frontend.ingress.enabled }}
               value: "{{ index $.Values.server.frontend.ingress.hosts 0 }}"
