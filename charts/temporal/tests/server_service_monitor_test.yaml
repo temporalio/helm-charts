@@ -14,3 +14,25 @@ tests:
     asserts:
       - notExists:
           path: spec.namespaceSelector
+  - it: applies additionalAnnotations to the service monitor
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    set:
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"
+  - it: omits annotations on the service monitor when none are set
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-frontend
+    asserts:
+      - isNullOrEmpty:
+          path: metadata.annotations

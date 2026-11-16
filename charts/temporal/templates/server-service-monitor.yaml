@@ -13,6 +13,8 @@ metadata:
     {{- with (default $.Values.server.metrics.serviceMonitor.additionalLabels $serviceValues.metrics.serviceMonitor.additionalLabels) }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+  annotations:
+    {{- include "temporal.resourceAnnotations" (list $ $service "") | indent 4 }}
 spec:
   endpoints:
   - port: metrics

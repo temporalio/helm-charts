@@ -296,8 +296,9 @@ tests:
       schema:
         useHelmHooks: false
     asserts:
-      - isNull:
+      - isNullOrEmpty:
           path: metadata.annotations
+
   - it: merges Helm hook annotations with custom jobAnnotations
     set:
       server:
@@ -860,6 +861,73 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: RELEASE-NAME-temporal
+
+  - it: applies additionalAnnotations to the schema job
+    set:
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+      schema:
+        useHelmHooks: false
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"
+  - it: prefers schemaJobAnnotations over jobAnnotations and additionalAnnotations on the schema job
+    set:
+      additionalAnnotations:
+        owner: from-additional
+        team: platform
+      schema:
+        useHelmHooks: false
+        jobAnnotations:
+          owner: from-shared
+          stage: schema
+        schemaJobAnnotations:
+          owner: from-schema
+        namespaceJobAnnotations:
+          owner: from-namespace
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-persistence:3306"
+                  databaseName: temporal
+              visibility:
+                sql:
+                  pluginName: mysql8
+                  connectAddr: "temporal-visibility:3306"
+                  databaseName: temporal_visibility
+    asserts:
+      - equal:
+          path: metadata.annotations.owner
+          value: from-schema
+      - equal:
+          path: metadata.annotations.stage
+          value: schema
+      - equal:
+          path: metadata.annotations.team
+          value: platform
 
   - it: omits --defaultdb on create-database when defaultDb is unset
     set:

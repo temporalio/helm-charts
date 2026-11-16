@@ -39,5 +39,19 @@ tests:
       schema:
         useHelmHooks: false
     asserts:
-      - isNull:
+      - isNullOrEmpty:
           path: metadata.annotations
+  - it: applies additionalAnnotations
+    set:
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+      shims:
+        dockerize: true
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"

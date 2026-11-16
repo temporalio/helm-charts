@@ -1,0 +1,38 @@
+suite: test frontend ingress
+templates:
+  - frontend-ingress.yaml
+set:
+  server:
+    frontend:
+      ingress:
+        enabled: true
+tests:
+  - it: applies additionalAnnotations to the frontend ingress
+    set:
+      additionalAnnotations:
+        team: platform
+        cost-center: "1234"
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: platform
+      - equal:
+          path: metadata.annotations['cost-center']
+          value: "1234"
+  - it: ingress.annotations override additionalAnnotations
+    set:
+      server:
+        frontend:
+          ingress:
+            annotations:
+              team: ingress-team
+      additionalAnnotations:
+        team: platform
+    asserts:
+      - equal:
+          path: metadata.annotations.team
+          value: ingress-team
+  - it: omits annotations on the frontend ingress when none are set
+    asserts:
+      - isNullOrEmpty:
+          path: metadata.annotations
