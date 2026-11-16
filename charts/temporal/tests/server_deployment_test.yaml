@@ -5,6 +5,8 @@ templates:
 set:
   server:
     enabled: true
+    image:
+      tag: 1.32.0
     config:
       persistence:
         defaultStore: default
