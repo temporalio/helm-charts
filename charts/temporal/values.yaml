@@ -308,9 +308,10 @@ server:
       # Override the address the namespace-setup job connects to. When unset it
       # uses the internal-frontend, the frontend ingress host or the frontend
       # Service, as described above. Set a fully-qualified name (e.g.
-      # <fullname>-frontend.<namespace>.svc.cluster.local:7233) to keep the
-      # client's DNS lookups inside the cluster domain. Chart-managed TLS is
-      # skipped when this is set.
+      # <fullname>-frontend.<namespace>.svc.cluster.local:7233) so the client
+      # never sends a single-label name to the upstream resolver; end it with a
+      # dot to skip the DNS search path as well. Chart-managed TLS is skipped
+      # when this is set.
       # temporalAddress: ""
       # Use Helm hooks to ensure namespace creation runs as a post-install/post-upgrade step,
       # after the frontend is created, and is cleaned up automatically on the next release.
