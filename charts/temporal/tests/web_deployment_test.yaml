@@ -2,6 +2,13 @@ suite: test web deployment
 templates:
   - web-deployment.yaml
 tests:
+  - it: applies the configured revision history limit
+    set:
+      revisionHistoryLimit: 7
+    asserts:
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 7
   - it: omits replica count when not configured
     set:
       web:

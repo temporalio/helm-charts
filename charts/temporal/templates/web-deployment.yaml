@@ -9,6 +9,7 @@ metadata:
   labels:
     {{- include "temporal.resourceLabels" (list $ "web" "deployment") | nindent 4 }}
 spec:
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   {{- with .Values.web.replicaCount }}
   replicas: {{ . }}
   {{- end }}

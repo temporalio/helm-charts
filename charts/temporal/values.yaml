@@ -4,6 +4,8 @@ fullnameOverride: ""
 # (eg. disable helm hook delete policy)
 debug: false
 imagePullSecrets: []
+# Maximum number of old ReplicaSets to retain for every Deployment.
+revisionHistoryLimit: 3
 # Custom Service account management
 serviceAccount:
   # Whether to create service account or not

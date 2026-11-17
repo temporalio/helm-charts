@@ -21,6 +21,7 @@ metadata:
   labels:
     {{- include "temporal.resourceLabels" (list $ "admintools" "deployment") | nindent 4 }}
 spec:
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   replicas: 1
   {{- with .Values.admintools.deploymentStrategy }}
   strategy:

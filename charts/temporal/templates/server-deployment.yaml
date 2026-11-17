@@ -16,6 +16,7 @@ metadata:
   labels:
     {{- include "temporal.resourceLabels" (list $ $service "deployment") | nindent 4 }}
 spec:
+  revisionHistoryLimit: {{ $.Values.revisionHistoryLimit }}
   {{- if $serviceValues.replicaCount }}
   replicas: {{ $serviceValues.replicaCount }}
   {{- else if $.Values.server.replicaCount }}
