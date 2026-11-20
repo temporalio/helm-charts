@@ -99,6 +99,58 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[1].args[0]
           value: temporal operator namespace describe -n dummy_ns || temporal operator namespace create -n dummy_ns --retention 1d
+  - it: enables archival on created namespaces when namespaceDefaults enable it
+    set:
+      server:
+        namespaceDefaults:
+          archival:
+            history:
+              state: enabled
+            visibility:
+              state: enabled
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+                retention: 3d
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].args[0]
+          value: temporal operator namespace describe -n default || temporal operator namespace create -n default --retention 3d --history-archival-state enabled --visibility-archival-state enabled
+  - it: only enables the archival types that namespaceDefaults enable
+    set:
+      server:
+        namespaceDefaults:
+          archival:
+            history:
+              state: Enabled
+            visibility:
+              state: disabled
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].args[0]
+          value: temporal operator namespace describe -n default || temporal operator namespace create -n default --history-archival-state enabled
+  - it: renders without archival flags when a namespaceDefaults archival entry is null
+    set:
+      server:
+        namespaceDefaults:
+          archival:
+            history: null
+        config:
+          namespaces:
+            create: true
+            namespace:
+              - name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].args[0]
+          value: temporal operator namespace describe -n default || temporal operator namespace create -n default
   - it: sets TEMPORAL_ADDRESS to the frontend service by default
     set:
       server:
