@@ -13,6 +13,7 @@ an external ingress host has no chart-managed certificate, so skip TLS there. */
 {{- if not $viaIngress }}
 {{- $tlsSection = include "temporal.adminClient.tls.section" (list $ $useInternalFrontend) }}
 {{- end }}
+{{- $archival := ($.Values.server.namespaceDefaults | default dict).archival | default dict }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -55,7 +56,7 @@ spec:
           image: "{{ $.Values.admintools.image.repository }}:{{ $.Values.admintools.image.tag }}"
           imagePullPolicy: {{ $.Values.admintools.image.pullPolicy }}
           command: ['/bin/sh', '-c']
-          args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}']
+          args: ['temporal operator namespace describe -n {{ $namespace.name }} || temporal operator namespace create -n {{ $namespace.name }}{{- if hasKey $namespace "retention" }} --retention {{ $namespace.retention }}{{- end }}{{- if eq (lower (($archival.history | default dict).state | default "")) "enabled" }} --history-archival-state enabled{{- end }}{{- if eq (lower (($archival.visibility | default dict).state | default "")) "enabled" }} --visibility-archival-state enabled{{- end }}']
           env:
             - name: TEMPORAL_ADDRESS
               {{- if $useInternalFrontend }}
