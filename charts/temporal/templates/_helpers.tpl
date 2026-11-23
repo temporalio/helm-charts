@@ -551,3 +551,77 @@ chart-managed TLS, and callers gate on the empty string.
 {{- end -}}
 {{- toYaml $mounts -}}
 {{- end -}}
+
+{{/*
+Seconds between autoscaling steps: max(startup probe budget + liveness/readiness initialDelaySeconds, 15).
+Probe resolution matches server-deployment.yaml (service, then server-wide, then built-in).
+*/}}
+{{- define "temporal.server.autoscalingPeriodSeconds" -}}
+{{- $global := index . 0 -}}
+{{- $service := index . 1 -}}
+{{- $serviceValues := index $global.Values.server $service -}}
+{{- $startupBudget := 0 -}}
+{{- $resolvedStartup := default $global.Values.server.startupProbe $serviceValues.startupProbe -}}
+{{- if $resolvedStartup -}}
+{{- $startupInitial := $resolvedStartup.initialDelaySeconds | default 0 | int -}}
+{{- $startupPeriod := $resolvedStartup.periodSeconds | default 10 | int -}}
+{{- $startupThreshold := $resolvedStartup.failureThreshold | default 3 | int -}}
+{{- $startupBudget = add $startupInitial (mul $startupPeriod $startupThreshold) -}}
+{{- end -}}
+{{- $resolvedLiveness := default $global.Values.server.livenessProbe $serviceValues.livenessProbe -}}
+{{- $livenessInitial := 0 -}}
+{{- if $resolvedLiveness -}}
+{{- $livenessInitial = $resolvedLiveness.initialDelaySeconds | default 0 | int -}}
+{{- else if ne $service "worker" -}}
+{{- $livenessInitial = 150 -}}
+{{- end -}}
+{{- $resolvedReadiness := default $global.Values.server.readinessProbe $serviceValues.readinessProbe -}}
+{{- $readinessInitial := 0 -}}
+{{- if $resolvedReadiness -}}
+{{- $readinessInitial = $resolvedReadiness.initialDelaySeconds | default 0 | int -}}
+{{- end -}}
+{{- $sum := add $startupBudget (add $livenessInitial $readinessInitial) -}}
+{{- if lt $sum 15 -}}
+{{- print 15 -}}
+{{- else -}}
+{{- print $sum -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Resolve autoscaling fields from the service block only.
+*/}}
+{{- define "temporal.server.autoscaling.resolve" -}}
+{{- $root := index . 0 -}}
+{{- $service := index . 1 -}}
+{{- $serviceValues := index $root.Values.server $service -}}
+{{- $svcHpa := $serviceValues.autoscaling | default dict -}}
+{{- dict "minReplicas" $svcHpa.minReplicas "maxReplicas" $svcHpa.maxReplicas "targetCPUUtilizationPercentage" $svcHpa.targetCPUUtilizationPercentage "targetMemoryUtilizationPercentage" $svcHpa.targetMemoryUtilizationPercentage "behavior" $svcHpa.behavior | toYaml -}}
+{{- end -}}
+
+{{/*
+Fail the render when autoscaling is misconfigured for a service.
+*/}}
+{{- define "temporal.server.autoscaling.validate" -}}
+{{- $root := index . 0 -}}
+{{- $service := index . 1 -}}
+{{- $serviceValues := index $root.Values.server $service -}}
+{{- if $serviceValues.autoscaling.enabled }}
+{{- $hpa := include "temporal.server.autoscaling.resolve" (list $root $service) | fromYaml -}}
+{{- if eq $hpa.minReplicas nil }}
+{{- fail (printf "server.%s.autoscaling.minReplicas is required when autoscaling.enabled is true" $service) }}
+{{- end }}
+{{- if lt ($hpa.minReplicas | int) 1 }}
+{{- fail (printf "server.%s.autoscaling.minReplicas must be at least 1" $service) }}
+{{- end }}
+{{- if not $hpa.maxReplicas }}
+{{- fail (printf "server.%s.autoscaling.maxReplicas is required when autoscaling.enabled is true" $service) }}
+{{- end }}
+{{- if lt ($hpa.maxReplicas | int) ($hpa.minReplicas | int) }}
+{{- fail (printf "server.%s.autoscaling.maxReplicas must be greater than or equal to minReplicas" $service) }}
+{{- end }}
+{{- if not (or $hpa.targetCPUUtilizationPercentage $hpa.targetMemoryUtilizationPercentage) }}
+{{- fail (printf "server.%s.autoscaling requires targetCPUUtilizationPercentage or targetMemoryUtilizationPercentage when enabled" $service) }}
+{{- end }}
+{{- end }}
+{{- end -}}
