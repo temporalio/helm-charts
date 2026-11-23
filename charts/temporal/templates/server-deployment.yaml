@@ -83,6 +83,17 @@ spec:
             - name: TEMPORAL_SECONDARY_VISIBILITY_STORE_PASSWORD
               {{- include "temporal.password-env" (list $ $secondaryVisibilityStore) | nindent 14 }}
           {{- end }}
+          {{- with include "temporal.persistence.secretKeysEnv" (list $defaultStore "TEMPORAL_DEFAULT_STORE") }}
+            {{- . | trim | nindent 12 }}
+          {{- end }}
+          {{- with include "temporal.persistence.secretKeysEnv" (list $visibilityStore "TEMPORAL_VISIBILITY_STORE") }}
+            {{- . | trim | nindent 12 }}
+          {{- end }}
+          {{- if $secondaryVisibilityStore }}
+            {{- with include "temporal.persistence.secretKeysEnv" (list $secondaryVisibilityStore "TEMPORAL_SECONDARY_VISIBILITY_STORE") }}
+              {{- . | trim | nindent 12 }}
+            {{- end }}
+          {{- end }}
           {{- if (index $.Values.server "internal-frontend").enabled }}
             - name: USE_INTERNAL_FRONTEND
               value: "1"

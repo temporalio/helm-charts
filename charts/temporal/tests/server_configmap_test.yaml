@@ -353,3 +353,66 @@ tests:
       - matchRegex:
           path: data['config_template.yaml']
           pattern: "prometheus:\\s+listenAddress: 0.0.0.0:9090"
+
+  - it: replaces secretKeys fields with environment variables
+    set:
+      server:
+        config:
+          persistence:
+            defaultStore: default
+            visibilityStore: visibility
+            datastores:
+              default:
+                sql:
+                  pluginName: postgres12
+                  databaseName: temporal
+                  connectAddr: "pg:5432"
+                  user: ignored
+                  existingSecret: db-secret
+                  secretKeys:
+                    user: username
+                    connectAddr: host
+              visibility:
+                elasticsearch:
+                  version: v7
+                  url:
+                    scheme: http
+                    host: "es:9200"
+                  indices:
+                    visibility: temporal_visibility
+                  existingSecret: es-secret
+                  secretKeys:
+                    username: username
+    template: templates/server-configmap.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-config
+    asserts:
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'user: \{\{ env "TEMPORAL_DEFAULT_STORE_USER" \| quote \}\}'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'connectAddr: \{\{ env "TEMPORAL_DEFAULT_STORE_CONNECTADDR" \| quote \}\}'
+      - matchRegex:
+          path: data['config_template.yaml']
+          pattern: 'username: \{\{ env "TEMPORAL_VISIBILITY_STORE_USERNAME" \| quote \}\}'
+      - notMatchRegex:
+          path: data['config_template.yaml']
+          pattern: 'secretKeys|ignored|pg:5432'
+
+  - it: fails when secretKeys contains password
+    set:
+      server:
+        config:
+          persistence:
+            datastores:
+              default:
+                sql:
+                  existingSecret: db-secret
+                  secretKeys:
+                    password: pass
+    template: templates/server-configmap.yaml
+    asserts:
+      - failedTemplate:
+          errorPattern: "secretKeys for default store must not contain password, use secretKey instead"

@@ -1,15 +1,28 @@
 {{- define "temporal.admintools-env" -}}
 {{- $root := index . 0 -}}
 {{- $store := index . 1 -}}
+{{- $secretKeys := include "temporal.persistence.secretKeys" (list $store) | fromYaml -}}
 {{- if eq $store.driver "cassandra" -}}
 - name: CASSANDRA_HOST
+{{- if hasKey $secretKeys "hosts" }}
+  {{- include "temporal.persistence.secretKeyRef" (list $store "hosts") | nindent 2 }}
+{{- else }}
   value: {{ splitList "," (required (printf "Please specify hosts for %s store" $store.name) $store.config.hosts) | first }}
+{{- end }}
 - name: CASSANDRA_PORT
   value: {{ $store.config.port | quote }}
 - name: CASSANDRA_KEYSPACE
+{{- if hasKey $secretKeys "keyspace" }}
+  {{- include "temporal.persistence.secretKeyRef" (list $store "keyspace") | nindent 2 }}
+{{- else }}
   value: {{ required (printf "Please specify keyspace for %s store" $store.name) $store.config.keyspace }}
+{{- end }}
 - name: CASSANDRA_USER
+{{- if hasKey $secretKeys "user" }}
+  {{- include "temporal.persistence.secretKeyRef" (list $store "user") | nindent 2 }}
+{{- else }}
   value: {{ $store.config.user }}
+{{- end }}
 - name: CASSANDRA_PASSWORD
   {{- include "temporal.password-env" (list $root $store) | nindent 2 }}
   {{- with $store.config.tls }}
@@ -33,14 +46,28 @@
 {{- else if eq $store.driver "sql" -}}
 - name: SQL_PLUGIN
   value: {{ required (printf "Please specify pluginName for %s store (e.g., mysql8, postgres12, postgres12_pgx)" $store.name) $store.config.pluginName }}
+{{- if hasKey $secretKeys "connectAddr" }}
+{{- /* SQL_HOST and SQL_PORT are split from this by temporal.admintools-cmd-prefix */}}
+- name: SQL_CONNECT_ADDR
+  {{- include "temporal.persistence.secretKeyRef" (list $store "connectAddr") | nindent 2 }}
+{{- else }}
 - name: SQL_HOST
   value: {{ required (printf "Please specify connectAddr for %s store" $store.name) $store.config.connectAddr | splitList "," | first | splitList ":" | first }}
 - name: SQL_PORT
   value: {{ required (printf "Port must be specified in connectAddr for %s store. Expected format: 'host:port' (e.g., 'localhost:5432')" $store.name) ($store.config.connectAddr | splitList "," | first | splitList ":" | rest | first) | quote }}
+{{- end }}
 - name: SQL_DATABASE
+{{- if hasKey $secretKeys "databaseName" }}
+  {{- include "temporal.persistence.secretKeyRef" (list $store "databaseName") | nindent 2 }}
+{{- else }}
   value: {{ required (printf "Please specify databaseName for %s store" $store.name) $store.config.databaseName }}
+{{- end }}
 - name: SQL_USER
+{{- if hasKey $secretKeys "user" }}
+  {{- include "temporal.persistence.secretKeyRef" (list $store "user") | nindent 2 }}
+{{- else }}
   value: {{ $store.config.user | quote }}
+{{- end }}
 {{- if not $store.config.passwordCommand }}
 - name: SQL_PASSWORD
   {{- include "temporal.password-env" (list $root $store) | nindent 2 }}
@@ -85,7 +112,11 @@
 - name: ES_SERVER
   value: {{ urlJoin $url }}
 - name: ES_USER
+{{- if hasKey $secretKeys "username" }}
+  {{- include "temporal.persistence.secretKeyRef" (list $store "username") | nindent 2 }}
+{{- else }}
   value: {{ $store.config.username | quote }}
+{{- end }}
 - name: ES_PWD
   {{- include "temporal.password-env" (list $root $store) | nindent 2 }}
 - name: ES_VERSION
