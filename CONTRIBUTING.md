@@ -30,6 +30,29 @@ Feel free to submit a draft PR early if you need feedback or assistance during t
 
 Note: When you submit your first PR, you will be asked to sign the [Temporal Contributor License Agreement (CLA)](https://cla-assistant.io/temporalio/helm-charts) before we merge your PR.
 
+## Running Unit Tests
+
+The unit tests use the [helm-unittest plugin](https://github.com/helm-unittest/helm-unittest). To match CI, use Helm 3.19.2 and install version 1.0.3 of the plugin:
+
+```shell
+helm plugin install https://github.com/helm-unittest/helm-unittest.git --version v1.0.3
+```
+
+Run all unit tests from the repository root:
+
+```shell
+helm unittest charts/*
+```
+
+To test one chart or one test suite while developing, run:
+
+```shell
+helm unittest charts/temporal
+helm unittest -f 'tests/server_deployment_test.yaml' charts/temporal
+```
+
+Test suites are stored in each chart's `tests` directory. Some tests use snapshots in `tests/__snapshot__`; if an intentional change causes a snapshot failure, update the snapshots with `helm unittest --update-snapshot <chart>` and review the resulting diff before committing it.
+
 ## Types of Changes We Accept
 
 We prioritize and accept changes that enable customization required for Temporal to run on specific Kubernetes platforms, to meet security requirements, or enable use of Temporal Server features. Changes that we are likely to accept include:
@@ -73,4 +96,3 @@ If you would like to discuss the Temporal Helm Charts or seek advice about a pot
 ## Code of Conduct
 
 By participating in this project you agree to abide by the [Temporal Code of Conduct](https://temporal.io/code-of-conduct).
-
