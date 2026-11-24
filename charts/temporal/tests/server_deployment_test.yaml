@@ -767,3 +767,20 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: IfNotPresent
+  - it: omits the internal-frontend http container port when httpPort is 0
+    template: templates/server-deployment.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-internal-frontend
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+          service:
+            httpPort: 0
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: http
+          any: true
