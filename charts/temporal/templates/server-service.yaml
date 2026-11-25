@@ -27,12 +27,14 @@ spec:
       {{- if hasKey $serviceValues.service "nodePort" }}
       nodePort: {{ $serviceValues.service.nodePort }}
       {{- end }}
+    {{- if $serviceValues.service.httpPort }}
     - port: {{ $serviceValues.service.httpPort }}
       targetPort: http
       appProtocol: {{ $serviceValues.service.httpAppProtocol }}
       protocol: TCP
       name: http
       # TODO: Allow customizing the node HTTP port
+    {{- end }}
   selector:
     app.kubernetes.io/name: {{ include "temporal.name" $ }}
     app.kubernetes.io/instance: {{ $.Release.Name }}

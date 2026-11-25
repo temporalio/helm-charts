@@ -389,6 +389,9 @@ server:
       appProtocol: tcp
       membershipPort: 6936
       membershipAppProtocol: tcp
+      # Port of the HTTP API. Set to 0 to disable it: Temporal then opens no
+      # HTTP listener, and the chart omits the port from the Service and the
+      # container.
       httpPort: 7246
       httpAppProtocol: http
     # Defaults to a tcpSocket probe; uncomment below for a gRPC probe.

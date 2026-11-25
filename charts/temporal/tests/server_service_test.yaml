@@ -590,3 +590,24 @@ tests:
       - equal:
           path: metadata.labels["label2"]
           value: value2
+  - it: omits the internal-frontend http port when httpPort is 0
+    template: templates/server-service.yaml
+    documentSelector:
+      path: metadata.name
+      value: RELEASE-NAME-temporal-internal-frontend
+    set:
+      server:
+        internal-frontend:
+          service:
+            httpPort: 0
+    asserts:
+      - notContains:
+          path: spec.ports
+          content:
+            name: http
+          any: true
+      - contains:
+          path: spec.ports
+          content:
+            name: grpc-rpc
+          any: true

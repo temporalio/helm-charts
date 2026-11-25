@@ -353,3 +353,15 @@ tests:
       - matchRegex:
           path: data['config_template.yaml']
           pattern: "prometheus:\\s+listenAddress: 0.0.0.0:9090"
+  - it: disables the internal-frontend http listener when httpPort is 0
+    template: templates/server-configmap.yaml
+    set:
+      server:
+        internal-frontend:
+          enabled: true
+          service:
+            httpPort: 0
+    asserts:
+      - matchRegex:
+          path: data["config_template.yaml"]
+          pattern: "internal-frontend:\\n\\s+rpc:\\n\\s+grpcPort: 7236\\n\\s+httpPort: 0\\n"

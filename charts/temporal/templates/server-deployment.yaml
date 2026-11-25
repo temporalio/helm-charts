@@ -116,7 +116,7 @@ spec:
             - name: membership
               containerPort: {{ $serviceValues.service.membershipPort }}
               protocol: TCP
-          {{- if or (eq $service "frontend") (eq $service "internal-frontend") }}
+          {{- if and (or (eq $service "frontend") (eq $service "internal-frontend")) $serviceValues.service.httpPort }}
             - name: http
               containerPort: {{ $serviceValues.service.httpPort }}
               protocol: TCP
