@@ -12,5 +12,8 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+      {{- with .Values.service.appProtocol }}
+      appProtocol: {{ . }}
+      {{- end }}
   selector:
     {{- include "temporal-proxy.selectorLabels" . | nindent 4 }}

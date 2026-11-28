@@ -48,3 +48,20 @@ tests:
       - equal:
           path: spec.ports[0].port
           value: 8080
+
+  - it: omits appProtocol by default
+    asserts:
+      - notExists:
+          path: spec.ports[0].appProtocol
+
+  - it: sets appProtocol on the port
+    set:
+      service:
+        appProtocol: grpc
+    asserts:
+      - equal:
+          path: spec.ports[0].appProtocol
+          value: grpc
+      - equal:
+          path: spec.ports[0].name
+          value: http

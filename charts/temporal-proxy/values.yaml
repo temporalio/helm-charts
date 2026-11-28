@@ -117,6 +117,10 @@ service:
   # This sets the ports more information can be found here:
   # https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 8443
+  # Application protocol of the port, omitted when empty. Service meshes use it for protocol selection; for example,
+  # Istio treats the port as gRPC when this is set to "grpc":
+  # https://istio.io/latest/docs/ops/configuration/traffic-management/protocol-selection/#explicit-protocol-selection
+  appProtocol: ""
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
